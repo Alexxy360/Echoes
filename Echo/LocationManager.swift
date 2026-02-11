@@ -24,7 +24,8 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     override init() {
         super.init()
         manager.delegate = self
-        manager.desiredAccuracy = kCLLocationAccuracyBest
+        manager.desiredAccuracy = kCLLocationAccuracyNearestTenMeters
+        manager.distanceFilter = 10
         manager.allowsBackgroundLocationUpdates = true
         manager.pausesLocationUpdatesAutomatically = false
         
@@ -42,26 +43,20 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
             }
         }
     }
+    internal func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.last else { return }
+        userLocation = location
+        if Date().timeIntervalSince(lastUploadTime) > 10 {
+                    updateFirebase()
+                    lastUploadTime = Date()
+                }
+            }
     
     func requestLocation() {
         manager.requestAlwaysAuthorization()
         manager.startUpdatingLocation()
     }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        userLocation = location
-        updatePosition()
-    }
-    
-    private func updatePosition() {
-        if Date().timeIntervalSince(lastUploadTime) < 2 { return }
-        
-        print("📍 [GPS] Wysyłam aktualizację do Firebase...")
-        updateFirebase()
-        self.lastUploadTime = Date()
-    }
-    
+ 
     private func updateFirebase() {
         guard let location = userLocation else { return }
         
