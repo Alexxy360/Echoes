@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<gpx version="1.1" creator="Xcode">
+    
+    <wpt lat="51.118843" lon="17.015202">
+        <name>Start</name>
+        <time>2025-01-01T12:00:00Z</time>
+    </wpt>
+
+    <wpt lat="51.117183" lon="17.019307">
+        <name>Punkt 2</name>
+        <time>2025-01-01T12:00:20Z</time>
+    </wpt>
+
+    <wpt lat="51.120539" lon="17.015875">
+        <name>Punkt 3</name>
+        <time>2025-01-01T12:00:40Z</time>
+    </wpt>
+
+    <wpt lat="51.120043" lon="17.010325">
+        <name>Punkt 4</name>
+        <time>2025-01-01T12:01:00Z</time>
+    </wpt>
+
+    <wpt lat="51.118843" lon="17.015202">
+        <name>Meta</name>
+        <time>2025-01-01T12:01:20Z</time>
+    </wpt>
+    
+</gpx>
