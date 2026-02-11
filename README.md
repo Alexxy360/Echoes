@@ -9,6 +9,12 @@ It allows users to discover what people nearby are listening to in real-time and
 
 > "Jak Cię widzą, tak Cię słyszą." (As you are seen, so you are heard.)
 
+## 🎸 Inspiration & Concept
+
+This project is a technical and artistic tribute to the song **"Echoes"** from Pink Floyd's 1971 album, *Meddle*. 
+
+> *"Overhead the albatross hangs motionless upon the air / And deep beneath the rolling waves in labyrinths of coral caves / The echo of a distant time comes willowing across the sand"*
+
 ## 🌟 Key Features
 
 * **📍 Real-time Presence:** Visualize nearby users on a dynamic map using `MapKit`.
