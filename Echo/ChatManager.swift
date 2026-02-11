@@ -10,6 +10,7 @@ struct ChatMessage: Identifiable {
     let timestamp: Date
     let coordinate: CLLocationCoordinate2D
     
+    
     var isFromCurrentUser: Bool {
         return senderId == (UIDevice.current.identifierForVendor?.uuidString ?? "")
     }
@@ -19,11 +20,12 @@ struct ChatMessage: Identifiable {
 class ChatManager {
     private let db = Firestore.firestore()
     var messages: [ChatMessage] = []
+    private var listener: ListenerRegistration?
     
     func listenForMessages(userLocation: CLLocation?) {
         guard let userLocation = userLocation else { return }
-        
-        db.collection("messages")
+        self.listener?.remove()
+        self.listener = db.collection("messages")
             .order(by: "timestamp", descending: false)
             .limit(to: 100)
             .addSnapshotListener { [weak self] snapshot, error in
