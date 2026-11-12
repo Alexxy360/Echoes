@@ -130,3 +130,10 @@ Ograniczenia: nie przełączono aplikacji z Firebase, nie przypisano jeszcze kon
 - `Docs/CLOUDKIT_DECYZJE_DOSTEPU.md`: rozdzielono Bundle ID w projekcie, App ID w Apple i rejestrację Firebase; wyjaśniono filtr 3 km, publiczność danych i egzekwowanie zasad na przykładach. Dodano konsekwencje dla blokad, spamu, zgłoszeń i kasowania oraz propozycję rozdziału danych.
 - Rejestracja App ID nie została zatwierdzona. Automatyczna kontrola odrzuciła Register do czasu bezpośredniej zgody. Właściciel poprosił o wyjaśnienia, a nie zatwierdził zapis. Nie przyjęto wariantu A/B ani nie zmieniono publiczności danych.
 - Weryfikacja: sprawdzono treść względem obserwowanej listy identyfikatorów i dokumentacji Apple, poprawność odnośników i diff; zmiana wyłącznie dokumentacyjna.
+
+## CK-00b — 2026-11-12 — budżet początkowy i późniejsza rozbudowa
+
+- `Docs/STRATEGIA_KOSZTOW.md`: dodano strategię 0 zł dodatkowych opłat za usługi na start, oddzielono istniejące członkostwo Apple, opisano granice pierwszej wersji, zachowanie wymagań prywatności i moderacji oraz przygotowanie do późniejszego dodania usług/migracji.
+- `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: wpisano priorytet budżetowy i wymóg konkretnej zgody przed dodatkowymi opłatami. Przychód nie jest gwarancją, że wcześniej nie pojawią się limity; opisano monitoring oraz opcje ograniczenia funkcji.
+- Nie uruchomiono płatności, nie zatwierdzono App ID ani zmiany dostępu do rekordów.
+- Weryfikacja: sprawdzono aktualne warunki CloudKit i throttling w dokumentacji Apple, odnośniki lokalne oraz diff. Zmiany wyłącznie dokumentacyjne; nie powtarzano testów aplikacji.

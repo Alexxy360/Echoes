@@ -122,6 +122,8 @@ Odbiór: działająca aplikacja na produkcyjnym CloudKit, próby dwóch kont i p
 
 ## Rozbudowa i koszty
 
+Priorytet właściciela: **0 zł dodatkowych opłat za usługi na start**. Szczegóły: [strategia kosztów](STRATEGIA_KOSZTOW.md). Nie uruchamiać płatnego hostingu/API ani automatycznego upgrade bez konkretnej zgody. Zakres pierwszej wersji dopasować do darmowych możliwości, zachowując wymagania ochrony i moderacji. Rozbudowa po przychodach ma być możliwa przez dodanie potrzebnej usługi; nie zakładamy konieczności wymiany całej bazy. Budżet nie zatwierdza publiczności danych A/B ani rejestracji App ID.
+
 Profile tekstowe, zdjęcia i wiadomości mierzymy osobno. Awatary mają miniatury i cache; mapa nie pobiera galerii. Liczbę kont odróżniamy od liczby aktywnych użytkowników i operacji. Darmowa przestrzeń nie oznacza braku throttlingu ani darmowego działania dodatkowego backendu. Plan nie zakłada aktywacji Firebase Blaze.
 
 ## Oficjalne podstawy
