@@ -1,5 +1,7 @@
 # Echoes
 
+> Kierunek rozwoju: migracja do CloudKit. Aktualny kod nadal korzysta z adaptera Firebase. Kolejność prac i odbiór opisuje [plan migracji](Docs/PLAN_MIGRACJI_CLOUDKIT.md), a wykonane modyfikacje — [dziennik zmian](Docs/DZIENNIK_ZMIAN.md).
+
 Aplikacja iOS do odkrywania muzyki i rozmów w okolicy. Projekt edukacyjny inspirowany „Echoes” Pink Floyd; zachowuje mapę MapKit i kolorystykę pierwotnego prototypu.
 
 ## Wymagania

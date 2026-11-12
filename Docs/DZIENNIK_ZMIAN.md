@@ -80,3 +80,17 @@ Dokładny zakres plików tego etapu (pełne różnice w commicie FOUND-01):
 - Usunięto zastąpiony plik `Echo/ChatManager.swift`.
 - Usunięto zastąpiony plik `Echo/LocationManager.swift`.
 - Usunięto zastąpiony plik `Echo/NearbyUser.swift`.
+
+## CK-00 — 2026-11-12 — plan migracji i zasady prowadzenia zmian
+
+Stan: wykonano dokumentację; migracja kodu do CloudKit jeszcze nie jest wdrożona. Commit poprzednich fundamentów: `466f45ce9b6d69ca18d4a81bd5ebb6bd1470603b`. Commit tego wpisu ma ID CK-00 w tytule.
+
+Wykonane modyfikacje:
+
+- `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: dodano kolejność CK-01–CK-08, model trwałych i tymczasowych danych, profile i CKAsset, kryteria odbioru, etap sprawdzenia ról, wymagania moderacji i kasowania, odłączenie Firebase oraz procedurę produkcyjną.
+- `Docs/DZIENNIK_ZMIAN.md`: utworzono rejestr wykonanych zmian, retrospektywny wpis FOUND-01 i obowiązek uzupełniania dziennika przy każdym kolejnym commicie; zapisano stałą zasadę commit/push większych etapów.
+- `README.md`: wskazano nowy kierunek migracji i oba dokumenty; zaznaczono, że aktualny klient nadal używa Firebase.
+
+Weryfikacja: sprawdzono oficjalny model baz i kont CloudKit, zgodność plików z wcześniejszą weryfikacją oraz poprawność odnośników lokalnych i diff. W tym etapie zmieniono wyłącznie dokumentację; nie ponawiano testów aplikacji.
+
+Ograniczenia: nie skonfigurowano kontenera Apple ani nie promowano schematu. Dane w chmurze nie zostały zmienione. Szczegóły przyszłych funkcji produktu pozostają do ustalenia; nie obiecujemy gotowych zabezpieczeń ani braku kosztów ewentualnej dodatkowej usługi. Push nie oznacza wdrożenia aplikacji ani sukcesu zdalnego CI.
