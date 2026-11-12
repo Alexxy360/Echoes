@@ -94,3 +94,16 @@ Wykonane modyfikacje:
 Weryfikacja: sprawdzono oficjalny model baz i kont CloudKit, zgodność plików z wcześniejszą weryfikacją oraz poprawność odnośników lokalnych i diff. W tym etapie zmieniono wyłącznie dokumentację; nie ponawiano testów aplikacji.
 
 Ograniczenia: nie skonfigurowano kontenera Apple ani nie promowano schematu. Dane w chmurze nie zostały zmienione. Szczegóły przyszłych funkcji produktu pozostają do ustalenia; nie obiecujemy gotowych zabezpieczeń ani braku kosztów ewentualnej dodatkowej usługi. Push nie oznacza wdrożenia aplikacji ani sukcesu zdalnego CI.
+
+## CK-01a — 2026-11-12 — rozpoznanie konta, architektura i preflight
+
+Stan: wykonana niezależna część CK-01; pełny odbiór uprawnień CloudKit pozostaje otwarty.
+
+- `Docs/CLOUDKIT_ARCHITEKTURA.md`: dodano fakty z konta i lokalnego profilu, macierz właściciela/odbiorców/operatora oraz warianty A/B z konkretnymi różnicami ochrony.
+- `scripts/cloudkit-preflight.py`: dodano narzędzie tylko do odczytu, sprawdzające jawny kontener, usługę CloudKit, środowisko i profil; bez sekretów w wynikach i bez zgadywania kontenera.
+- `scripts/test_cloudkit_preflight.py`: 5 testów offline granic konfiguracji.
+- `Docs/CLOUDKIT_WERYFIKACJA.md`: oddzielono testy lokalne od niewykonanych prób na prawdziwych kontach; zapisano kryteria dalszego odbioru.
+- `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: uaktualniono postęp bez oznaczania CK-01 jako ukończonego.
+- `.gitignore`: dodano wykluczenie plików cache Pythona.
+
+Weryfikacja: 5 testów Python przeszło; obecne entitlements poprawnie odrzucone jako nieskonfigurowane. Po samodzielnej akceptacji umowy przez właściciela potwierdzono dostęp do listy App IDs. Nie zapisano danych osobowych z konta w repozytorium. Rejestracja App ID oczekuje na osobne potwierdzenie; nie zmieniono danych ani schematu chmury.

@@ -1,6 +1,6 @@
 # Plan migracji Echoes do CloudKit
 
-Data: 12 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: plan przygotowany; klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu CloudKit ani migracji danych.
+Data: 12 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01 w realizacji; wykonano rozpoznanie konta, macierz architektury i preflight; klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu CloudKit ani migracji danych.
 
 ## Cel i zakres
 
@@ -28,6 +28,8 @@ Nie zakładamy, że sama zmiana bazy zapewnia wszystkie dotychczasowe zabezpiecz
 Commit punktu powrotu: `466f45ce9b6d69ca18d4a81bd5ebb6bd1470603b`. Push jest wykonywany dla ukończonego etapu; aktualny wynik potwierdza zgodność HEAD z origin/codex/foundation-hardening.
 
 ### CK-01 — prototyp uprawnień i decyzje architektoniczne
+
+Postęp: sprawdzono zespół, lokalny profil i dostęp do portalu, przygotowano [macierz i warianty architektury](CLOUDKIT_ARCHITEKTURA.md) oraz narzędzie preflight z testami. Właściciel odblokował dostęp przez samodzielną akceptację umowy Apple. Rejestracja App ID, kontener i test dwóch kont oczekują; etap nie jest zakończony. [Dowody i pozostałe próby](CLOUDKIT_WERYFIKACJA.md).
 
 1. Sprawdzić dostęp zespołu do iCloud/CloudKit, Bundle ID i istniejące kontenery. Nie wymyślać identyfikatora kontenera bez sprawdzenia konta Apple.
 2. W środowisku Development przetestować odczyt/zapis dwóch użytkowników, zmianę konta iCloud, brak konta i niedostępność sieci. Nie publikować schematu produkcyjnego na tym etapie.
