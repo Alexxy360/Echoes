@@ -1,70 +1,63 @@
-# 📡 ECHOES
+# Echoes
 
-![Swift](https://img.shields.io/badge/Swift-5.9-orange?style=flat-square)
-![Platform](https://img.shields.io/badge/Platform-iOS%2017.0+-lightgrey?style=flat-square)
-![Firebase](https://img.shields.io/badge/Backend-Firebase-yellow?style=flat-square)
+Aplikacja iOS do odkrywania muzyki i rozmów w okolicy. Projekt edukacyjny inspirowany „Echoes” Pink Floyd; zachowuje mapę MapKit i kolorystykę pierwotnego prototypu.
 
-**Echoes** is a hyper-local social experience that visualizes the "soundtrack of the city."
-It allows users to discover what people nearby are listening to in real-time and engage in proximity-based chats.
+## Wymagania
 
-> "Jak Cię widzą, tak Cię słyszą." (As you are seen, so you are heard.)
+- iOS / iPadOS **26.1+**, Xcode **26.1+** (sprawdzono Xcode 27.1).
+- Backend: **Node.js 22**, Java 21+ do emulatora Firestore; lokalne testy wykonano na Java 25.
+- W produkcji: Firebase Auth Anonymous, App Check oraz wdrożone callable Cloud Functions i Firestore. Cloud Functions wymaga planu Blaze.
+- Apple Music jest opcjonalne; integracja dotyczy aplikacji Muzyka, nie Spotify.
 
-## 🎸 Inspiration & Concept
+## Zachowanie i prywatność
 
-This project is a technical and artistic tribute to the song **"Echoes"** from Pink Floyd's 1971 album, *Meddle*. 
+Aplikacja uruchamia się z ukrytym profilem. Uprawnienie When In Use jest wymagane dopiero przy użyciu lokalizacji; Always i praca GPS w tle nie są włączone. Widoczność profilu oraz udostępnianie muzyki są osobnymi wyborami.
 
-> *"Overhead the albatross hangs motionless upon the air / And deep beneath the rolling waves in labyrinths of coral caves / The echo of a distant time comes willowing across the sand"*
+Bieżąca pozycja służy do zapytań o okolicę i jest przesyłana do backendu. Backend zapisuje wyłącznie pozycję przybliżoną do siatki około 500 m; nie przechowuje dokładnej trasy GPS. Publiczna mapa pokazuje przybliżone profile. Czat dotyczy okolicy około 3 km, z uwzględnieniem przybliżenia miejsca wiadomości, i nie zwraca współrzędnych wiadomości odbiorcom.
 
-## 🌟 Key Features
+Obecność wygasa po 10 minutach bez odnowienia, wiadomości po 2 godzinach, zgłoszenia po 30 dniach. Widoczność wygasa niezależnie od fizycznego kasowania TTL. Utrata sieci może opóźnić natychmiastowe ukrycie profilu, co aplikacja sygnalizuje. Pseudonim i akceptacja zasad pozostają w UserDefaults; wiadomości są przechowywane przez klienta wyłącznie w pamięci procesu.
 
-* **📍 Real-time Presence:** Visualize nearby users on a dynamic map using `MapKit`.
-* **🎵 Music Sync:** Automatically broadcasts your currently playing Apple Music track to users within range.
-* **💬 Proximity Chat:** A geofenced chatroom (3km radius) powered by `Firestore`.
-* **👻 Ghost Mode:** Automatic user clean-up after 10 minutes of inactivity to ensure map relevance.
-* **🔒 Privacy First:** No historical location tracking. Data is transient.
+Backend ogranicza zapytania przestrzennie, sprawdza odległość przed wyborem strony wyników, uwierzytelnia autora i wymaga App Check poza emulatorami. Zapisy są limitowane, a ponowienie wiadomości z tym samym identyfikatorem jest idempotentne. Pozycja przekazana przez telefon nie jest dowodem fizycznego pobytu — nie obiecujemy odporności na fałszowanie GPS.
 
-## 🛠 Tech Stack
+## Uruchomienie
 
-* **UI:** SwiftUI (ZStack architecture, complex animations).
-* **Location:** CoreLocation (Background updates, precise geolocation).
-* **Backend:** Firebase Firestore (Real-time listeners).
-* **Music:** MediaPlayer / MusicKit integration.
-* **Architecture:** MVVM (Model-View-ViewModel).
+1. Otwórz **Echoes.xcodeproj** i wspólny schemat **Echoes**.
+2. Dodaj własny GoogleService-Info.plist do katalogu Echo, zgodny z projektem Firebase oraz Bundle ID aplikacji. Plik jest ignorowany przez Git.
+3. Wybierz własny zespół podpisywania dla urządzenia.
+4. Wdrożenie usług opisuje [Docs/DEPLOYMENT.md](Docs/DEPLOYMENT.md). Nowy klient nie będzie działał z samymi starymi regułami testowymi.
 
-## 🚀 Installation & Setup
+Do obejrzenia interfejsu bez backendu dodaj do zmiennych środowiska schematu Debug **ECHOES_DEMO_MODE=1**. To fikcyjne dane demonstracyjne, nie test produkcyjnego Firebase. Zmienna jest ignorowana w Release.
 
-### Prerequisites
-* Xcode 15+
-* iOS 17.0+ Simulator or Device
-* Apple Music Subscription (for full feature testing)
+Do pracy z emulatorami dodaj **ECHOES_USE_EMULATORS=1** i uruchom lokalny backend. Debug automatycznie używa projektu demo-echoes. Domyślny host dla symulatora: 127.0.0.1; urządzenie fizyczne wymaga adresu lokalnego komputera w ECHOES_EMULATOR_HOST.
 
-### Getting Started
+## Testy
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/Alexxy360/Echoes.git](https://github.com/Alexxy360/Echoes.git)
-    cd Echoes
-    ```
+```sh
+swift test --package-path EchoesCore
+npm ci --ignore-scripts
+npm --prefix backend ci --ignore-scripts
+npm run test:backend
+npm run test:integration
+```
 
-2.  **Firebase Configuration (Crucial):**
-    > ⚠️ **Note:** The `GoogleService-Info.plist` file is excluded from this repository for security reasons.
-    * Create a project in the [Firebase Console](https://console.firebase.google.com/).
-    * Add an iOS app to the project.
-    * Download your own `GoogleService-Info.plist`.
-    * Drag and drop it into the `Echo/` folder in Xcode.
+Testy UI uruchom przez Product → Test w schemacie Echoes. Testują prywatne wejście, wysłanie wiadomości, błąd bez utraty szkicu, ustawienia i największy Dynamic Type. Korzystają wyłącznie z trybu demonstracyjnego. Skrypt scripts/ci-ios.py automatyzuje kompilację Release i testy UI w CI; w jego środowisku może uruchomić dostępny symulator.
 
-3.  **Build and Run:**
-    * Open `Echoes.xcodeproj`.
-    * Ensure all SPM packages (Firebase, etc.) are fetched.
-    * Press `Cmd + R`.
+Workflow [.github/workflows/checks.yml](.github/workflows/checks.yml) sprawdza Swift, backend, reguły w emulatorze, audyt npm i aplikację iOS. Nie wdraża produkcji ani nie używa kluczy administracyjnych.
 
-## 📸 Screenshots
+Zależności runtime backendu i narzędzia mają pliki blokady. Root package.json zawiera jawne poprawki pośrednich zależności Firebase CLI; ich zgodność sprawdzono przebiegiem emulatorów. Przy aktualizacjach ponawiać te testy oraz sprawdzać pakowanie i wdrożenie na środowisku testowym.
 
-| Map View | Loading Screen |
-|:---:|:---:|
-|<img src="Docs/map.png" width="300"> | <img src="Docs/loading.png" width="300"> |
+## Struktura
 
+- EchoesCore — modele, walidacja, czas, linki oraz testowalna sesja społecznościowa.
+- Echo/Services — adapter Firebase, GPS, zdarzenia aplikacji Muzyka i składanie zależności.
+- Echo/Views oraz ContentView i ChatView — komponenty SwiftUI i dostępne stany interfejsu.
+- backend/src — funkcje serwerowe i testy domeny oraz integracji.
+- firestore.rules — blokada bezpośredniego dostępu klienta do dokumentów.
+- firestore.indexes.json — indeksy i konfiguracja TTL do wdrożenia.
+- Docs/DEPLOYMENT.md — wdrożenie, ograniczenia, koszty i moderacja.
 
-## 📜 License
+## Przed publikacją
 
-This project is created for educational purposes.
+Właściciel musi podać kontakt do obsługi (SUPPORT_URL), ustanowić proces moderacji oraz aktywować i sprawdzić usługi Firebase. Konfiguracja App Store privacy musi odpowiadać rzeczywistemu wdrożeniu. Własny manifest PrivacyInfo.xcprivacy opisuje użycie UserDefaults i kategorie danych.
+
+Stare kolekcje users i messages nie są automatycznie migrowane ani usuwane. Fizyczne testy Apple Music, App Attest, baterii i urządzeń innych niż zweryfikowany symulator pozostają częścią odbioru urządzeniowego. Kod jest nadal projektem edukacyjnym; ten plik nie ustanawia nowej licencji.

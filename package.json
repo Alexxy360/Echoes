@@ -1,0 +1,18 @@
+{
+  "name": "echoes-workspace",
+  "private": true,
+  "scripts": {
+    "test:backend": "npm --prefix backend test",
+    "test:integration": "firebase emulators:exec --project demo-echoes --only auth,firestore,functions 'npm --prefix backend run test:integration'"
+  },
+  "devDependencies": {
+    "firebase-tools": "15.36.0",
+    "prettier": "3.10.1"
+  },
+  "overrides": {
+    "glob": "14.0.6",
+    "minimatch@>=7 <11.0.1": "11.0.8",
+    "uuid@<11.1.1": "11.1.1",
+    "@opentelemetry/core@<2.8.0": "2.8.0"
+  }
+}

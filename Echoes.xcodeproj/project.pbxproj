@@ -6,9 +6,23 @@
 	objectVersion = 77;
 	objects = {
 
+        A20000000000000000000001 = {isa = PBXNativeTarget; name = EchoesUITests; productName = EchoesUITests; productType = "com.apple.product-type.bundle.ui-testing"; productReference = A20000000000000000000002; buildConfigurationList = A20000000000000000000010; buildPhases = (A20000000000000000000004, A20000000000000000000005); dependencies = (A20000000000000000000008); fileSystemSynchronizedGroups = (A20000000000000000000003); };
+        A20000000000000000000002 = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = EchoesUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+        A20000000000000000000003 = {isa = PBXFileSystemSynchronizedRootGroup; path = EchoesUITests; sourceTree = "<group>"; };
+        A20000000000000000000004 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A20000000000000000000005 = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+        A20000000000000000000007 = {isa = PBXContainerItemProxy; containerPortal = FAF217C82F2ECC9400EF97EC; proxyType = 1; remoteGlobalIDString = FAF217CF2F2ECC9400EF97EC; remoteInfo = Echoes; };
+        A20000000000000000000008 = {isa = PBXTargetDependency; target = FAF217CF2F2ECC9400EF97EC; targetProxy = A20000000000000000000007; };
+        A20000000000000000000010 = {isa = XCConfigurationList; buildConfigurations = (A20000000000000000000011, A20000000000000000000012); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+        A20000000000000000000011 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = 22YC9RAP4P; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.1; PRODUCT_BUNDLE_IDENTIFIER = mpvEcho.Echo.UITests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = Echoes; }; };
+        A20000000000000000000012 = {isa = XCBuildConfiguration; name = Release; buildSettings = {CODE_SIGN_STYLE = Automatic; DEVELOPMENT_TEAM = 22YC9RAP4P; GENERATE_INFOPLIST_FILE = YES; IPHONEOS_DEPLOYMENT_TARGET = 26.1; PRODUCT_BUNDLE_IDENTIFIER = mpvEcho.Echo.UITests; PRODUCT_NAME = "$(TARGET_NAME)"; SWIFT_VERSION = 5.0; TARGETED_DEVICE_FAMILY = "1,2"; TEST_TARGET_NAME = Echoes; }; };
+
+
 /* Begin PBXBuildFile section */
-		FAF217ED2F2F794A00EF97EC /* FirebaseAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = FAF217EC2F2F794A00EF97EC /* FirebaseAnalytics */; };
-		FAF217EF2F2F794A00EF97EC /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = FAF217EE2F2F794A00EF97EC /* FirebaseFirestore */; };
+        A10000000000000000000001 /* FirebaseFunctions in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000011; };
+        A10000000000000000000002 /* FirebaseAppCheck in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000012; };
+        A10000000000000000000003 /* EchoesCore in Frameworks */ = {isa = PBXBuildFile; productRef = A10000000000000000000013; };
+		FAF217ED2F2F794A00EF97EC /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = FAF217EC2F2F794A00EF97EC /* FirebaseAuth */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -20,6 +34,8 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				"Echoes-Info.plist",
+                    "Echoes-Debug-Info.plist",
+                    "Location.gpx",
 			);
 			target = FAF217CF2F2ECC9400EF97EC /* Echoes */;
 		};
@@ -41,8 +57,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FAF217ED2F2F794A00EF97EC /* FirebaseAnalytics in Frameworks */,
-				FAF217EF2F2F794A00EF97EC /* FirebaseFirestore in Frameworks */,
+                A10000000000000000000001,
+                A10000000000000000000002,
+                A10000000000000000000003,
+				FAF217ED2F2F794A00EF97EC /* FirebaseAuth in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -52,6 +70,7 @@
 		FAF217C72F2ECC9400EF97EC = {
 			isa = PBXGroup;
 			children = (
+                A20000000000000000000003,
 				FAF217D22F2ECC9400EF97EC /* Echo */,
 				FAF217D12F2ECC9400EF97EC /* Products */,
 			);
@@ -60,6 +79,7 @@
 		FAF217D12F2ECC9400EF97EC /* Products */ = {
 			isa = PBXGroup;
 			children = (
+                A20000000000000000000002,
 				FAF217D02F2ECC9400EF97EC /* Echoes.app */,
 			);
 			name = Products;
@@ -85,8 +105,10 @@
 			);
 			name = Echoes;
 			packageProductDependencies = (
-				FAF217EC2F2F794A00EF97EC /* FirebaseAnalytics */,
-				FAF217EE2F2F794A00EF97EC /* FirebaseFirestore */,
+                A10000000000000000000011,
+                A10000000000000000000012,
+                A10000000000000000000013,
+				FAF217EC2F2F794A00EF97EC /* FirebaseAuth */,
 			);
 			productName = Echo;
 			productReference = FAF217D02F2ECC9400EF97EC /* Echoes.app */;
@@ -117,6 +139,7 @@
 			mainGroup = FAF217C72F2ECC9400EF97EC;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+                A10000000000000000000020,
 				FAF217EB2F2F794A00EF97EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -124,6 +147,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+                A20000000000000000000001,
 				FAF217CF2F2ECC9400EF97EC /* Echoes */,
 			);
 		};
@@ -277,14 +301,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+                CODE_SIGN_ENTITLEMENTS = Echo/Echo.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 22YC9RAP4P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "Echo/Echoes-Info.plist";
-				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Chcę pokazać znajomym na mapie, czego słucham.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "I want to show your position on the map to show you music played by people around you.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_FILE = "Echo/Echoes-Debug-Info.plist";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Po włączeniu udostępniania muzyki inni użytkownicy w okolicy zobaczą tytuł i wykonawcę z aplikacji Muzyka.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pozycja służy do wyszukiwania profili i wiadomości w okolicy. Twój profil jest widoczny dopiero po włączeniu udostępniania; publiczna pozycja jest przybliżona.";
+				INFOPLIST_KEY_FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED = YES;
+                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -312,14 +338,16 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
+                CODE_SIGN_ENTITLEMENTS = Echo/Echo.entitlements;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 22YC9RAP4P;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "Echo/Echoes-Info.plist";
-				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Chcę pokazać znajomym na mapie, czego słucham.";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "I want to show your position on the map to show you music played by people around you.";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Po włączeniu udostępniania muzyki inni użytkownicy w okolicy zobaczą tytuł i wykonawcę z aplikacji Muzyka.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Pozycja służy do wyszukiwania profili i wiadomości w okolicy. Twój profil jest widoczny dopiero po włączeniu udostępniania; publiczna pozycja jest przybliżona.";
+				INFOPLIST_KEY_FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED = YES;
+                INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -369,22 +397,23 @@
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
 			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 12.8.0;
+				kind = exactVersion;
+				version = 12.19.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
 
+/* Begin XCLocalSwiftPackageReference section */
+        A10000000000000000000020 = {isa = XCLocalSwiftPackageReference; relativePath = EchoesCore; };
+/* End XCLocalSwiftPackageReference section */
 /* Begin XCSwiftPackageProductDependency section */
-		FAF217EC2F2F794A00EF97EC /* FirebaseAnalytics */ = {
+        A10000000000000000000011 = {isa = XCSwiftPackageProductDependency; package = FAF217EB2F2F794A00EF97EC; productName = FirebaseFunctions; };
+        A10000000000000000000012 = {isa = XCSwiftPackageProductDependency; package = FAF217EB2F2F794A00EF97EC; productName = FirebaseAppCheck; };
+        A10000000000000000000013 = {isa = XCSwiftPackageProductDependency; package = A10000000000000000000020; productName = EchoesCore; };
+		FAF217EC2F2F794A00EF97EC /* FirebaseAuth */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = FAF217EB2F2F794A00EF97EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseAnalytics;
-		};
-		FAF217EE2F2F794A00EF97EC /* FirebaseFirestore */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = FAF217EB2F2F794A00EF97EC /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
-			productName = FirebaseFirestore;
+			productName = FirebaseAuth;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

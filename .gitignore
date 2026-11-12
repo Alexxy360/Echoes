@@ -32,3 +32,14 @@ Token.swift
 GoogleService-Info.plist
 
 Testing.gpx
+# Backend and local verification
+node_modules/
+backend/lib/
+backend/.env*
+!backend/.env.example
+.firebase/
+*-debug.log
+.ci-deriveddata/
+.sourcepackages/
+.test-results/
+*.xcresult
