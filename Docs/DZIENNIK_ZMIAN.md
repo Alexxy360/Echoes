@@ -124,3 +124,9 @@ Stan: pakiet gotowy i sprawdzony lokalnie; pełny adapter oraz test prawdziwego 
 Weryfikacja: 8 testów Swift przeszło; pakiet skompilował się dla iOS Simulator arm64/x86_64. Do tego 5 testów preflight z CK-01a przeszło w oryginalnym repozytorium. Testy nie korzystają z kont iCloud, nie testują ról na serwerze i nie zastępują prób dwóch prawdziwych kont.
 
 Ograniczenia: nie przełączono aplikacji z Firebase, nie przypisano jeszcze kontenera i nie utworzono rekordów. Nie wdrożono nowej polityki publiczności danych ani dodatkowego hostingu.
+
+## CK-01b — 2026-11-12 — wyjaśnienie rejestracji i modelu dostępu
+
+- `Docs/CLOUDKIT_DECYZJE_DOSTEPU.md`: rozdzielono Bundle ID w projekcie, App ID w Apple i rejestrację Firebase; wyjaśniono filtr 3 km, publiczność danych i egzekwowanie zasad na przykładach. Dodano konsekwencje dla blokad, spamu, zgłoszeń i kasowania oraz propozycję rozdziału danych.
+- Rejestracja App ID nie została zatwierdzona. Automatyczna kontrola odrzuciła Register do czasu bezpośredniej zgody. Właściciel poprosił o wyjaśnienia, a nie zatwierdził zapis. Nie przyjęto wariantu A/B ani nie zmieniono publiczności danych.
+- Weryfikacja: sprawdzono treść względem obserwowanej listy identyfikatorów i dokumentacji Apple, poprawność odnośników i diff; zmiana wyłącznie dokumentacyjna.
