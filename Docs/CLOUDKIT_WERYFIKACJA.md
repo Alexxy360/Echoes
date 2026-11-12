@@ -42,3 +42,11 @@ Testy avatarów tworzą wyłącznie obrazy syntetyczne: potwierdzono usunięcie 
 ## Decyzja o dostępie po próbie
 
 Właściciel wybrał: **ograniczanie odczytu przez dodatkową usługę, najpierw zbadanie darmowego limitu**. Bezpośredni publiczny odczyt mapy/czatu nie jest zatwierdzony. Sprawdzenie dostawcy i prototyp pośrednika nie są jeszcze odbiorem jego ochrony ani zgodą na płatności.
+
+## CK-01e — klucz S2S Development i pierwsza próba
+
+Po konkretnej zgodzie właściciela zapisano w Apple klucz publiczny „Echoes Development gateway probe 2026-11-12” w `iCloud.mpvEcho.Echo`, wyłącznie Development. Portal potwierdził „Server-to-server key created successfully”. Klucz prywatny pozostaje lokalnie poza Git, w pliku z uprawnieniami 0600 i katalogu 0700; nie przekazano go Cloudflare. Fingerprint SHA-256 publicznego SPKI: `8c42a2a2bcfc81ebff8ef0838923f84654ccf8dc8401777d9c26f51766e68b11`. Sam identyfikator klucza nie jest potrzebny w repozytorium.
+
+[Pierwszy raport S2S](evidence/cloudkit-s2s-probe-development-initial.json): zapis niepotwierdzony, `NOT_FOUND`, odczyt niewykonany, nieobecność testowego UUID potwierdzona podczas sprzątania. Raport nie jest pozytywnym odbiorem S2S. Odczyt listy schematu potwierdził brak typu `EchoesGatewayProbeV1`; istnieją wyłącznie `EchoesAccessProbeV1` i `Users`. Nie poszerzano odczytu o dane użytkowników. Zgłoszenie zapisu do nieistniejącego typu nie utworzyło automatycznie definicji w tej ścieżce.
+
+Automatyczna kontrola odrzuciła próbę utworzenia trwałego typu Development jako nieobjętą wcześniejszą zgodą na klucz/rekord. Nie obchodzono blokady. Właściciel został poproszony o osobną zgodę na nowy typ, pola nonce String / schemaVersion Int64, wyłącznie serwerowy dostęp i ponowienie próby. Do czasu odpowiedzi schemat nie jest zmieniony; formularz jest jedynie przygotowany.

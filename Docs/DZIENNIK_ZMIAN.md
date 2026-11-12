@@ -188,3 +188,13 @@ Stan: sprawdzono kandydata Workers Free i wykonano pierwszy komponent serwerowy;
 - `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `Docs/CLOUDKIT_ARCHITEKTURA.md`, `README.md`: zaktualizowano postęp i powiązano dokumentację.
 
 Weryfikacja: 12 testów Node 22 przeszło; bez opt-in skrypt sieciowy zakończył się kodem 2 przed odczytem klucza/siecią; potwierdzenie Free odczytano z panelu konta, limity sprawdzono w oficjalnej dokumentacji. Nie ponawiano testów iOS: etap nie zmienia kodu aplikacji. Nie utworzono ani nie przekazano prawdziwego klucza, nie skonfigurowano ról CloudKit, nie wdrożono pośrednika i nie włączono opłat. Pozostają rzeczywista próba S2S, logowanie, odbiór A/B i pomiar wydajności/limitów.
+
+## CK-01e — 2026-11-12 — rejestracja S2S Development i diagnostyka schematu
+
+- Po konkretnej zgodzie właściciela zarejestrowano klucz „Echoes Development gateway probe 2026-11-12” w Development kontenera iCloud.mpvEcho.Echo. Portal potwierdził zapis. Prywatny klucz pozostaje lokalnie poza Git, z uprawnieniami 0600 w katalogu 0700; nie został przekazany Cloudflare. W repozytorium zapisujemy tylko fingerprint klucza publicznego, bez klucza prywatnego i bez Key ID.
+- Wykonano zatwierdzoną lokalną próbę jednego losowego rekordu EchoesGatewayProbeV1. Odpowiedź zapisu NOT_FOUND; brak testowego rekordu potwierdzony przez sprzątanie. Nie wykonano operacji na profilach ani Production.
+- Odczytowa diagnostyka API i lista typów Development wskazały brak EchoesGatewayProbeV1. Automatyczna kontrola odrzuciła utworzenie trwałego typu bez osobnej, jednoznacznej zgody. Nie obchodzono blokady, a właściciel otrzymał pytanie o dokładny zakres. Samo wypełnienie formularza nie utworzyło typu.
+- `Docs/evidence/cloudkit-s2s-probe-development-initial.json`: dodano bezpieczny raport pierwszej rzeczywistej próby, oznaczony jako nieudany zapis z potwierdzoną nieobecnością UUID.
+- `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `gateway/README.md`: odnotowano rzeczywistą konfigurację, ograniczenia uprawnienia i stan odbioru; 12 wcześniejszych testów lokalnych nie zastępuje tego wyniku sieciowego.
+
+Stan: klucz Development zarejestrowany; pełny test S2S nieprzyjęty. Nie wdrożono Worker, nie przekazano mu sekretu i nie uruchomiono płatności. Następna próba zależy od zgody na konkretny typ Development.

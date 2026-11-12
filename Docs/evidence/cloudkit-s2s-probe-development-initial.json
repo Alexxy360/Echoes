@@ -1,0 +1,11 @@
+{
+  "runIdentifier": "e6191ba4-d63c-46a6-9f9d-c0c50ca5c747",
+  "startedAt": "2026-11-12T21:04:04.393Z",
+  "environment": "Development",
+  "recordType": "EchoesGatewayProbeV1",
+  "syntheticRecordName": "gateway-probe-806b9e31-e64e-472f-a774-c20a18b12032",
+  "writeSucceeded": false,
+  "readBackSucceeded": false,
+  "cleanupSucceeded": true,
+  "errorCode": "NOT_FOUND"
+}
