@@ -29,3 +29,9 @@ Stan: 12 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została p
 | Fizyczne kasowanie i moderacja | Niezaimplementowane w CloudKit | Konkretny wykonawca i proces także bez aktywnego klienta. |
 
 Nie wykonano promocji schematu, transferu starych danych, testów penetracyjnych, pomiaru baterii ani pełnego testu obciążeniowego. Wyniki poprzedniej implementacji Firebase są historyczne i nie stanowią odbioru CloudKit.
+
+## CK-03a — profil i zdjęcia
+
+Pakiet zawiera obecnie 21 przechodzących testów: wcześniejsze 8 obsługi konta, 9 nowego profilu i 4 przygotowania avatarów. Profil testowano offline ze stubem bazy: izolacja kont i starych odpowiedzi, brak cichego nadpisania, brak zapisu po nieudanym wczytaniu, nowszy schemat, nieznane pola i usunięcie własnego rekordu. To nie jest potwierdzenie ról na serwerze.
+
+Testy avatarów tworzą wyłącznie obrazy syntetyczne: potwierdzono usunięcie GPS i informacji o aparacie, normalizację orientacji, limit boku 512/128 px i wyniku 256/32 KB oraz odrzucanie nieprawidłowego wejścia. Nie uploadowano zdjęć ani nie testowano jeszcze CKAsset z prawdziwym kontem.

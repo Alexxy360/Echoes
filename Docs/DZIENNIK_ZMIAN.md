@@ -137,3 +137,17 @@ Ograniczenia: nie przełączono aplikacji z Firebase, nie przypisano jeszcze kon
 - `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: wpisano priorytet budżetowy i wymóg konkretnej zgody przed dodatkowymi opłatami. Przychód nie jest gwarancją, że wcześniej nie pojawią się limity; opisano monitoring oraz opcje ograniczenia funkcji.
 - Nie uruchomiono płatności, nie zatwierdzono App ID ani zmiany dostępu do rekordów.
 - Weryfikacja: sprawdzono aktualne warunki CloudKit i throttling w dokumentacji Apple, odnośniki lokalne oraz diff. Zmiany wyłącznie dokumentacyjne; nie powtarzano testów aplikacji.
+
+## CK-03a — 2026-11-12 — prywatny profil i lokalne przygotowanie avatarów
+
+Stan: zaimplementowane komponenty warstwy danych i zdjęć; jeszcze niewłączone do głównego interfejsu. Publiczny profil, upload CKAsset oraz odbiór dwóch kont pozostają do realizacji.
+
+- `EchoesCloudKit/Package.swift`: dodano zależność od lokalnego EchoesCore, bez zewnętrznej usługi i opłat.
+- `EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileStore.swift`: dodano model prywatnego pseudonimu, wersjonowany kodek CKRecord, natywny magazyn wyłącznie privateCloudDatabase oraz testowalny store. Wymagane jest poprawne wczytanie przed zapisem; awaria sieci nie jest interpretowana jako pusty profil. Zapis zachowuje change tag i obce pola, odrzuca konflikty i nowszy schemat. Zmiana konta natychmiast ukrywa cache poprzedniego użytkownika; także błąd zapisu/usunięcia nie przywraca obcych danych.
+- `EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateProfileTests.swift`: 9 testów profilu, w tym spóźnione odczyty/zapisy, konflikt bez ponowienia, brak odczytu przed zapisem, offline, nowszy schemat, zachowanie dodatkowych pól oraz usunięcie rekordu bez usuwania konta Apple.
+- `EchoesCloudKit/Sources/EchoesCloudKit/AvatarPreparer.swift`: dodano lokalne przygotowanie zdjęć z limitami wejścia, wymiarów i wyniku; miniatury, orientacja w pikselach oraz usunięcie źródłowych metadanych GPS/aparatu. Brak uploadu.
+- `EchoesCloudKit/Tests/EchoesCloudKitTests/AvatarTests.swift`: 4 testy syntetycznych zdjęć — GPS/metadata, orientacja, wymiary/transfer oraz odrzucanie nieprawidłowych i zbyt dużych danych.
+- `EchoesCloudKit/README.md`: opisano format rekordu, zakres komponentów i sposób bezpiecznego użycia.
+- `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`: dodano rzeczywisty postęp i wyniki bez deklarowania zakończenia CK-03.
+
+Weryfikacja: 21 testów pakietu przeszło (8 konta, 9 profilu, 4 avatarów); wykonano kompilacje modułu dla iOS opisane w raporcie weryfikacji. Testy używają stubów CloudKit i obrazów syntetycznych. Nie przesłano danych użytkowników do chmury i nie zmieniono polityki publiczności danych.
