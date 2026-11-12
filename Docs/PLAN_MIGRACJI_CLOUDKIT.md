@@ -1,6 +1,6 @@
 # Plan migracji Echoes do CloudKit
 
-Data: 12 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01 w realizacji; wykonano rozpoznanie konta, macierz architektury i preflight; klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu CloudKit ani migracji danych.
+Data: 12 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01 w realizacji; zarejestrowano App ID i kontener, skonfigurowano podpisany Debug oraz wykonano rzeczywisty test prywatnej bazy jednego konta. Zwykły klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu Production ani migracji danych użytkowników.
 
 ## Cel i zakres
 
@@ -29,7 +29,7 @@ Commit punktu powrotu: `466f45ce9b6d69ca18d4a81bd5ebb6bd1470603b`. Push jest wyk
 
 ### CK-01 — prototyp uprawnień i decyzje architektoniczne
 
-Postęp: sprawdzono zespół, lokalny profil i dostęp do portalu, przygotowano [macierz i warianty architektury](CLOUDKIT_ARCHITEKTURA.md) oraz narzędzie preflight z testami. Właściciel odblokował dostęp przez samodzielną akceptację umowy Apple. Rejestracja App ID, kontener i test dwóch kont oczekują; etap nie jest zakończony. [Dowody i pozostałe próby](CLOUDKIT_WERYFIKACJA.md).
+Postęp CK-01c: po konkretnych zgodach właściciela zarejestrowano App ID `mpvEcho.Echo`, utworzono i przypisano `iCloud.mpvEcho.Echo`, potwierdzono Dev w konsoli i zgodny profil/podpis Debug. Na iPhonie 15 Pro przeszło utworzenie, odczyt, kontrola metadanych autora i usunięcie losowego rekordu prywatnego. Preflight: 8 testów. Właściciel wybrał ograniczanie odczytu przez dodatkową usługę, najpierw z badaniem darmowego limitu. Test dwóch kont i konkretny prototyp pośrednika oczekują; etap nie jest zakończony. [Dowody i pozostałe próby](CLOUDKIT_WERYFIKACJA.md), [ograniczony tryb diagnostyczny](CLOUDKIT_DIAGNOSTYKA.md).
 
 1. Sprawdzić dostęp zespołu do iCloud/CloudKit, Bundle ID i istniejące kontenery. Nie wymyślać identyfikatora kontenera bez sprawdzenia konta Apple.
 2. W środowisku Development przetestować odczyt/zapis dwóch użytkowników, zmianę konta iCloud, brak konta i niedostępność sieci. Nie publikować schematu produkcyjnego na tym etapie.
@@ -41,7 +41,7 @@ Odbiór: dowody testów dwóch kont i macierz uprawnień. Niespełnionych wymaga
 
 ### CK-02 — adapter CloudKit i tożsamość
 
-Postęp CK-02a: dodano niezależny pakiet EchoesCloudKit z natywnym źródłem konta, sesją tożsamości, walidacją konfiguracji i klasyfikacją błędów. Przeszło 8 testów oraz kompilacja iOS Simulator. Pakiet nie jest jeszcze adapterem CommunityClient i nie jest podłączony do głównej aplikacji; pełny CK-02 pozostaje otwarty do konfiguracji kontenera i odbioru prawdziwego iCloud.
+Postęp CK-02b: pakiet EchoesCloudKit podłączono jako lokalną zależność aplikacji; jego natywne źródło konta sprawdzono w podpisanym hoście Debug na prawdziwym iCloud. Tryb diagnostyczny pomija Firebase, mapę, GPS i muzykę. Zwykły CommunityClient nie jest jeszcze przełączony. Pełny CK-02 wymaga adaptera społecznościowego i pozostałych prób kont/sieci; nie kończy go pojedynczy udany test prywatny.
 
 - Zachować niezależny EchoesCore i wstrzykiwanie zależności. Dopasować CommunityClient do CloudKit, zamiast kopiować do niego założenia Firebase.
 - Dodać obsługę konta iCloud oraz izolację cache po zmianie tożsamości; nie traktować identyfikatora Firebase/IDFV jako identyfikatora CloudKit.
@@ -124,7 +124,7 @@ Odbiór: działająca aplikacja na produkcyjnym CloudKit, próby dwóch kont i p
 
 ## Rozbudowa i koszty
 
-Priorytet właściciela: **0 zł dodatkowych opłat za usługi na start**. Szczegóły: [strategia kosztów](STRATEGIA_KOSZTOW.md). Nie uruchamiać płatnego hostingu/API ani automatycznego upgrade bez konkretnej zgody. Zakres pierwszej wersji dopasować do darmowych możliwości, zachowując wymagania ochrony i moderacji. Rozbudowa po przychodach ma być możliwa przez dodanie potrzebnej usługi; nie zakładamy konieczności wymiany całej bazy. Budżet nie zatwierdza publiczności danych A/B ani rejestracji App ID.
+Priorytet właściciela: **0 zł dodatkowych opłat za usługi na start**. Szczegóły: [strategia kosztów](STRATEGIA_KOSZTOW.md). Nie uruchamiać płatnego hostingu/API ani automatycznego upgrade bez konkretnej zgody. Zakres pierwszej wersji dopasować do darmowych możliwości, zachowując wymagania ochrony i moderacji. Rozbudowa po przychodach ma być możliwa przez dodanie potrzebnej usługi; nie zakładamy konieczności wymiany całej bazy. Budżet nie zatwierdza publiczności danych A/B. App ID i kontener zarejestrowano dopiero po osobnych, konkretnych zgodach właściciela.
 
 Profile tekstowe, zdjęcia i wiadomości mierzymy osobno. Awatary mają miniatury i cache; mapa nie pobiera galerii. Liczbę kont odróżniamy od liczby aktywnych użytkowników i operacji. Darmowa przestrzeń nie oznacza braku throttlingu ani darmowego działania dodatkowego backendu. Plan nie zakłada aktywacji Firebase Blaze.
 

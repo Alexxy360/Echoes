@@ -30,6 +30,21 @@ class PreflightTests(unittest.TestCase):
     def test_environment_must_match(self):
         self.assertTrue(preflight.inspect(self.entitlements, self.container, 'Production'))
 
+    def test_apple_profile_can_allow_multiple_environments_and_services(self):
+        self.entitlements['com.apple.developer.icloud-services'] = '*'
+        self.entitlements['com.apple.developer.icloud-container-environment'] = ['Development', 'Production']
+        self.assertEqual(preflight.inspect(self.entitlements, self.container, 'Development', provisioning=True), [])
+        self.assertTrue(preflight.inspect(self.entitlements, self.container, 'Development'))
+
+    def test_profile_still_requires_the_explicit_container(self):
+        self.entitlements['com.apple.developer.icloud-services'] = '*'
+        self.entitlements['com.apple.developer.icloud-container-identifiers'] = ['iCloud.*']
+        self.assertTrue(preflight.inspect(self.entitlements, self.container, 'Development', provisioning=True))
+
+    def test_profile_cannot_allow_an_unlisted_environment(self):
+        self.entitlements['com.apple.developer.icloud-container-environment'] = ['Production']
+        self.assertTrue(preflight.inspect(self.entitlements, self.container, 'Development', provisioning=True))
+
     def test_other_container_cannot_pass(self):
         self.assertTrue(preflight.inspect(self.entitlements, 'iCloud.example.other', 'Development'))
 

@@ -66,6 +66,8 @@ Stare kolekcje users i messages nie są automatycznie migrowane ani usuwane. Fiz
 
 ## Przygotowywany moduł CloudKit
 
-[EchoesCloudKit](EchoesCloudKit/README.md) zawiera niezależną obsługę konta iCloud i błędów, jeszcze niepodłączoną do głównej aplikacji. Testy: `swift test --package-path EchoesCloudKit`. Kontrola konfiguracji i testy: `python3 scripts/cloudkit-preflight.py --entitlements Echo/Echo.entitlements` oraz `python3 scripts/test_cloudkit_preflight.py`. Preflight ma obecnie zgłaszać brak konfiguracji; nie potwierdza połączenia z usługą.
+[EchoesCloudKit](EchoesCloudKit/README.md) zawiera obsługę konta iCloud, prywatnego profilu i lokalnego przygotowania zdjęć. Jest zależnością aplikacji, lecz używa go na razie tylko osobny [tryb diagnostyczny Debug](Docs/CLOUDKIT_DIAGNOSTYKA.md). Podpisany Debug z kontenerem `iCloud.mpvEcho.Echo` przeszedł test losowego rekordu prywatnego na iPhonie. Zwykłe funkcje społecznościowe i Release nadal korzystają z dotychczasowej ścieżki Firebase.
+
+Testy: `swift test --package-path EchoesCloudKit` i `python3 scripts/test_cloudkit_preflight.py`. Preflight uruchamiać dla rzeczywistych uprawnień podpisanej aplikacji i jej profilu zgodnie z instrukcją diagnostyczną. Sam preflight nie potwierdza połączenia ani ról CloudKit.
 
 [Architektura i warianty dostępu](Docs/CLOUDKIT_ARCHITEKTURA.md) oraz [wyniki weryfikacji](Docs/CLOUDKIT_WERYFIKACJA.md) oddzielają gotowy kod lokalny od pozostałego odbioru CloudKit.

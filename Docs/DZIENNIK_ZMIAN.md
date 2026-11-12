@@ -151,3 +151,23 @@ Stan: zaimplementowane komponenty warstwy danych i zdjęć; jeszcze niewłączon
 - `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`: dodano rzeczywisty postęp i wyniki bez deklarowania zakończenia CK-03.
 
 Weryfikacja: 21 testów pakietu przeszło (8 konta, 9 profilu, 4 avatarów); wykonano kompilacje modułu dla iOS opisane w raporcie weryfikacji. Testy używają stubów CloudKit i obrazów syntetycznych. Nie przesłano danych użytkowników do chmury i nie zmieniono polityki publiczności danych.
+
+## CK-01c / CK-02b — 2026-11-12 — konfiguracja Apple i podpisana próba prywatna
+
+Stan: faktyczne połączenie z CloudKit Development jednego konta potwierdzone. Pełne CK-01/CK-02 nadal otwarte do odbioru dwóch kont, adaptera i zasad dostępu.
+
+- Po oddzielnych, konkretnych zgodach właściciela zarejestrowano App ID Echoes `mpvEcho.Echo`, utworzono kontener `iCloud.mpvEcho.Echo` w zespole `22YC9RAP4P` i przypisano tylko do tego App ID. Ponowne otwarcie konfiguracji potwierdziło jeden aktywny kontener; konsola potwierdziła Dev. Właściciel sam zaakceptował wcześniejszą umowę Apple.
+- Po osobnej zgodzie wygenerowano zgodny profil, podpisano Debug, zainstalowano go na iPhonie 15 Pro bez odinstalowania/kasowania danych i wykonano ograniczony test syntetyczny. Nie uruchomiono dodatkowo płatnej usługi.
+- `Echoes.xcodeproj/project.pbxproj`: dodano lokalną zależność EchoesCloudKit oraz osobne entitlements Debug. Porównano Package.resolved; wersje i rewizje zewnętrznych pakietów pozostają te same, plik nie wymagał zmiany.
+- `Echo/Echo-Debug.entitlements`: jawny potwierdzony kontener, CloudKit, wyłącznie Development. Release zachowuje wcześniejszy plik do CK-06.
+- `Echo/EchoApp.swift`: przełącznik Debug `ECHOES_CLOUDKIT_PROBE` uruchamia diagnostykę bez Firebase, GPS i muzyki; zwykłe ścieżki aplikacji pozostają poprzednie.
+- `Echo/Services/CloudKitProbe.swift`, `Echo/Views/CloudKitProbeView.swift`: test dostępności konta, zapisu/odczytu nonce i metadanych autora oraz kasowania tylko UUID rekordu testowego. Brak automatycznych ponowień; próba sprzątania także po błędzie odpowiedzi, osobny błąd sprzątania, izolacja zmiany konta. Lokalny raport ma czas/runIdentifier, bez raw userRecordID i danych profilu. Implementacja i przełączniki wyłącznie Debug.
+- Skorygowano diagnostykę autora: prywatny rekord zwrócił CKCurrentUserDefaultName zamiast resolved userRecordID. Drugi przebieg potwierdził alias, nonce i cleanup. Nie używamy tego porównania jako publicznej reguły dostępu. Oba rekordy testowe usunięto.
+- `scripts/cloudkit-preflight.py`, `scripts/test_cloudkit_preflight.py`: rozróżniono zakres profilu Apple (`*` usług, lista środowisk) od konkretnych uprawnień podpisanej aplikacji. Kontener nadal musi być jawny. Dodano 3 testy granic; łącznie 8.
+- `EchoesCloudKit/Sources/EchoesCloudKit/CloudKitConfiguration.swift`: doprecyzowano komentarz, że walidacja dotyczy konkretnego podpisu aplikacji, a nie zakresu profilu. Bez zmiany zachowania.
+- `Docs/CLOUDKIT_DIAGNOSTYKA.md`, `Docs/evidence/cloudkit-private-probe-development.json`: instrukcja i bezpieczny raport z prawdziwego urządzenia.
+- `README.md`, `EchoesCloudKit/README.md`, `Docs/CLOUDKIT_ARCHITEKTURA.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_DECYZJE_DOSTEPU.md`, `Docs/STRATEGIA_KOSZTOW.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: aktualizacja stanu faktycznego, ograniczeń i decyzji właściciela o pośredniku ograniczającym odczyt z uprzednim badaniem darmowego limitu.
+
+Weryfikacja: podpisany Debug na iPhonie — konto, zapis, odczyt, autor i cleanup poprawne; preflight podpisu/profilu entitlements-match; 8 testów preflight; kompilacje całej aplikacji Debug (urządzenie/symulator) i Release bez podpisywania; 4 testy UI demo przeszły. Wcześniejsze 21 testów pakietu przeszło, jego zachowanie nie zmieniło się w tym etapie.
+
+Ograniczenia: nie ma jeszcze testu kont A/B, publicznych ról, zmiany konta/offline na urządzeniu, uploadu zdjęć, produkcyjnej moderacji ani ukończonej migracji. Nie promowano schematu Production, nie przenoszono dawnych danych i nie dodano sekretów/profili do Git. Wybrany pośrednik wymaga następnego prototypu; brak zgody na dodatkowe opłaty.

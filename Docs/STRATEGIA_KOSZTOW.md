@@ -37,6 +37,6 @@ Przed uruchomieniem nowej płatnej usługi: konkretna potrzeba, szacunek obcią�
 
 ## Stan migracji
 
-Strategia nie kończy CK-01 ani nie zatwierdza wariantu dostępu A/B. Rejestracja App ID nadal oczekuje na zgodę na konkretny zapis w Apple Developer; istniejący program Apple i Bundle ID projektu nie zastępują tej rejestracji.
+Strategia nie kończy CK-01 ani nie zatwierdza wariantu dostępu A/B. App ID i kontener zarejestrowano po odrębnych zgodach na konkretne operacje Apple; podpisany test prywatnej bazy Development przeszedł. Nie uruchomiono dodatkowego abonamentu ani płatnego hostingu.
 
 Źródła: [CloudKit w członkostwie Apple](https://developer.apple.com/programs/whats-included/), [ograniczanie żądań CloudKit](https://developer.apple.com/documentation/technotes/tn3162-understanding-cloudkit-throttles).

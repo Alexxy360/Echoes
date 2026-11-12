@@ -1,12 +1,12 @@
 # CloudKit: rejestracja aplikacji i decyzje o dostępie
 
-Stan: 12 listopada 2026. Dokument wyjaśnia decyzje; nie jest zgodą właściciela na rejestrację App ID, udostępnienie danych ani dodatkowe koszty.
+Stan: 12 listopada 2026. Właściciel zatwierdził rejestrację App ID/kontenera i prywatną próbę urządzeniową. Następnie wybrał ograniczanie odczytu mapy/czatu przez dodatkową usługę, z uprzednim sprawdzeniem darmowego limitu. Nie zatwierdził płatności ani bezpośredniego publicznego odczytu tych danych.
 
 ## Dlaczego App ID trzeba zarejestrować
 
-Bundle ID `mpvEcho.Echo` jest wpisany w projekcie Xcode. To nie jest to samo co jawny App ID w portalu Apple ani rejestracja aplikacji w Firebase. Na sprawdzonej liście zespołu `22YC9RAP4P` nie było jawnego App ID dla tego Bundle ID; był ogólny wildcard. CloudKit wymaga jawnego App ID z usługą iCloud oraz przypisanym kontenerem. Dlatego przygotowano formularz, zachowując istniejący Bundle ID, bez tworzenia nowej aplikacji w App Store.
+Bundle ID `mpvEcho.Echo` jest wpisany w projekcie Xcode. To nie jest to samo co jawny App ID w portalu Apple ani rejestracja aplikacji w Firebase. Na sprawdzonej liście zespołu `22YC9RAP4P` nie było jawnego App ID dla tego Bundle ID; był ogólny wildcard. CloudKit wymaga jawnego App ID z usługą iCloud oraz przypisanym kontenerem. Dlatego po odrębnej zgodzie właściciela zarejestrowano App ID i przypisano zatwierdzony kontener `iCloud.mpvEcho.Echo`, zachowując istniejący Bundle ID, bez tworzenia nowej aplikacji w App Store. Zgodny podpisany Debug przeszedł syntetyczną próbę prywatną; nie oznacza to zatwierdzenia wariantu A/B.
 
-Kliknięcie Register nie zostało wykonane: automatyczna kontrola wymaga bezpośredniej zgody na trwały zapis w koncie Apple. Pytanie właściciela o wyjaśnienie nie jest taką zgodą. Formularz pozostaje niezatwierdzony. Akceptacja umowy Apple odblokowała portal, ale sama nie zarejestrowała App ID.
+Początkowe kliknięcie Register zablokowała automatyczna kontrola. Później właściciel jednoznacznie zatwierdził tę operację, osobno utworzenie/przypisanie kontenera oraz podpisywanie, instalację i próbę. Operacje wykonano po tych zgodach; akceptacja umowy sama nie była traktowana jako rejestracja.
 
 ## Co oznacza zakres 3 km
 
@@ -44,7 +44,7 @@ CloudKit jest backendem: przechowuje dane i sprawdza uprawnienia Apple. Nie jest
 - Obecność i lokalny czat: najpierw ustalić, czy okolica jest wyłącznie sposobem odkrywania treści, czy warunkiem dostępu do nich. To decyzja produktowa i prywatności, nie detal biblioteki.
 - Moderacja i retencja: zaprojektować działający proces dla publikacji publicznej; nie deklarować gotowej ochrony na podstawie filtrów klienta.
 
-Rekomendowanym punktem wyjścia dla publicznej aplikacji społecznościowej jest CloudKit dla danych oraz zaufana ścieżka egzekwowania krytycznych zasad. Nie wybrano dostawcy tej dodatkowej usługi, nie wyceniono jej i nie uruchomiono płatności. Jeśli priorytetem jest brak dodatkowej usługi, trzeba świadomie przyjąć inny zakres gwarancji, zanim przełączymy aplikację.
+Przyjęty kierunek to CloudKit dla danych oraz dodatkowa usługa ograniczająca odczyt mapy/czatu. Najpierw badamy darmowe limity i prototyp; nie wybrano jeszcze docelowego wdrożenia i nie uruchomiono płatności. Chronione typy nie mogą mieć bocznej ścieżki odczytu bezpośrednio przez klienta. Pozostałe szczegóły tożsamości, moderacji i retencji wymagają implementacji i testów.
 
 ## Dokumentacja
 

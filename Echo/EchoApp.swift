@@ -10,7 +10,9 @@ struct EchoApp: App {
 
     init() {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1" {
+            if ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
+                || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1"
+            {
                 _services = State(initialValue: AppServices.preview())
                 return
             }
@@ -19,7 +21,19 @@ struct EchoApp: App {
         _services = State(initialValue: AppServices())
     }
 
-    var body: some Scene { WindowGroup { ContentView(services: services) } }
+    var body: some Scene {
+        WindowGroup {
+            #if DEBUG
+                if ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1" {
+                    CloudKitProbeView()
+                } else {
+                    ContentView(services: services)
+                }
+            #else
+                ContentView(services: services)
+            #endif
+        }
+    }
 
     private static func configureFirebase() {
         guard let path = Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist"),

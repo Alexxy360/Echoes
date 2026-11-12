@@ -22,7 +22,7 @@ public struct CloudKitConfiguration: Equatable, Sendable {
         self.environment = environment
     }
 
-    /// Checks signed app/profile entitlements supplied by build tooling. Does not grant capabilities.
+    /// Checks signed app entitlements supplied by build tooling. Profiles express allowed ranges separately. Does not grant capabilities.
     public func validateEntitlements(_ entitlements: [String: Any]) throws {
         guard let services = entitlements["com.apple.developer.icloud-services"] as? [String],
             services.contains("CloudKit"),

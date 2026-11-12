@@ -1,6 +1,6 @@
 # EchoesCloudKit
 
-Niezależna warstwa przygotowywanej migracji. Nie jest jeszcze adapterem CommunityClient i nie jest podłączona do głównej aplikacji. Nie publikuje danych i nie zmienia konfiguracji Apple.
+Niezależna warstwa przygotowywanej migracji. Jest lokalną zależnością głównej aplikacji i działa w ograniczonym trybie diagnostycznym Debug; nie jest jeszcze adapterem CommunityClient. Sam pakiet nie rejestruje usług Apple ani nie publikuje danych społecznościowych. Podpisany host przeszedł syntetyczny test prywatnej bazy Development jednego konta; [zakres i wyniki](../Docs/CLOUDKIT_WERYFIKACJA.md).
 
 - `CloudKitConfiguration`: jawny identyfikator kontenera i środowisko; walidacja uprawnień dostarczonych przez narzędzia podpisywania. Nie generuje kontenera i nie nadaje uprawnień.
 - `NativeCloudKitAccountSource`: natywne accountStatus/userRecordID. Tworzyć wyłącznie w uprawnionym, podpisanym hoście po konfiguracji kontenera.

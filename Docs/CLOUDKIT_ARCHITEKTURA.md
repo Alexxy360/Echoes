@@ -1,16 +1,17 @@
 # Architektura migracji CloudKit — CK-01
 
-Status 12 listopada 2026: rozpoznanie i przygotowanie lokalne; odbiór prawdziwych uprawnień dwóch kont jeszcze niewykonany. Aplikacja nadal używa poprzedniego adaptera Firebase. Brak zmiany dostępu do produkcyjnych danych.
+Status 12 listopada 2026: podpisany test prywatnego CloudKit Development jednego konta przeszedł. Odbiór uprawnień dwóch kont jeszcze niewykonany. Zwykła ścieżka aplikacji nadal używa poprzedniego adaptera Firebase. Brak zmiany dostępu do produkcyjnych danych.
 
 ## Ustalenia z konta i projektu
 
 - Bundle ID: `mpvEcho.Echo`, zespół: `22YC9RAP4P`.
-- Potwierdzono dostęp do zalogowanej konsoli CloudKit właściwego zespołu. Widok bazy zwrócił „No Containers”: brak widocznych kontenerów, nie dowód, że konto ma już poprawnie skonfigurowany kontener.
-- Certificates, Identifiers & Profiles zwraca „Access Unavailable” i wskazuje zaktualizowaną Apple Developer Program License Agreement. Właściciel samodzielnie zaakceptował umowę; potwierdzono zniknięcie blokady i dostęp do listy App IDs. Nie akceptowano umowy w jego imieniu.
-- Lokalny profil podpisywania dla zespołu ma wildcard aplikacji i nie deklaruje usług ani kontenerów iCloud. `Echo/Echo.entitlements` również nie zawiera CloudKit.
-- Oficjalny `cktool` jest dostępny; nie ma zapisanego tokenu zarządzania. Nie eksportowano ani nie generowano tokenu.
-- Lista App IDs nie zawierała `mpvEcho.Echo`. Przygotowano formularz rejestracji Echoes z tym Bundle ID i usługą iCloud/CloudKit. Rejestracja wymaga bezpośredniego potwierdzenia właściciela; nie została jeszcze zatwierdzona.
-- Nie przypisano wymyślonego kontenera. Trzeba zarejestrować/powiązać rzeczywisty kontener i potwierdzić jego dostęp w Development.
+- Właściciel samodzielnie zaakceptował zaktualizowaną umowę Apple; nie akceptowano jej w jego imieniu.
+- Po konkretnych zgodach właściciela zarejestrowano jawny App ID Echoes z iCloud/CloudKit oraz pusty kontener `iCloud.mpvEcho.Echo`. Po zapisaniu ponowne otwarcie konfiguracji potwierdziło jeden przypisany kontener. Konsola CloudKit potwierdziła jego wybór w Dev.
+- Wcześniejszy profil wildcard nie zapewniał CloudKit. Nowy profil wygenerowano po osobnej zgodzie na podpisywanie i instalację Debug. Odczyt podpisu aplikacji i profilu potwierdził jawny kontener; aplikacja ma wyłącznie środowisko Development. Profile Apple mogą deklarować zakres usług `*` i listę środowisk; preflight odróżnia taki zakres od konkretnych uprawnień podpisanej aplikacji.
+- Debug używa `Echo/Echo-Debug.entitlements`. Release zachowuje `Echo/Echo.entitlements` do etapu CK-06; nie został przełączony na CloudKit.
+- Na iPhonie 15 Pro przeszło utworzenie, odczyt i usunięcie jednego losowego rekordu w privateCloudDatabase oraz sprawdzenie metadanych twórcy. To nie jest odbiór publicznych ról ani izolacji dwóch kont. [Raport i granice weryfikacji](CLOUDKIT_WERYFIKACJA.md).
+- Oficjalny `cktool` jest dostępny; nie ma zapisanego tokenu zarządzania. Nie eksportowano ani nie generowano tokenu. Profile, certyfikaty i dane urządzenia nie trafiają do repozytorium.
+- Nie promowano schematu do Production i nie migrowano danych użytkowników. Jedyny nowy typ Development służy syntetycznej próbie; rekordy obu wykonanych prób zostały usunięte.
 
 ## Rozdział danych
 
@@ -44,11 +45,11 @@ CloudKit zapewnia role odczytu i zapisu rekordów; obecne Cloud Functions dodatk
 | A — zachowanie obecnych ograniczeń, rekomendowany punkt wyjścia | CloudKit przechowuje profile/zasoby; zaufana usługa pośredniczy w publikowaniu i pobieraniu chronionych treści, walidacji, zgłoszeniach i retencji. Dostęp bezpośredni klienta nie może omijać tej ścieżki. | Wymaga hostingu, projektu uwierzytelnienia i osobnej wyceny; nie uruchamiamy automatycznie dodatkowych opłat. |
 | B — wyłącznie bezpośredni CloudKit | Publiczne profile, obecność i lokalny czat są publicznymi danymi; okolica i blokady filtrują UI. Moderacja i kasowanie mają odrębny, dokładnie opisany proces operatorski. | Mniejsze wymagania infrastruktury, ale zmiana gwarancji dostępu oraz słabsze możliwości egzekwowania reguł treści i spamu. Wymaga świadomego przyjęcia tych skutków przez właściciela. |
 
-Na tym etapie nie wybrano B i nie opublikowano rekordów. Kierunek CloudKit pozostaje przyjęty; po sprawdzeniu konta i prototypie trzeba zatwierdzić model dostępu przed CK-04/CK-05. Wariant A nie oznacza automatycznej zgody na płatny hosting, a jego dostawca i sposób wiązania tożsamości z CloudKit pozostają do zaprojektowania. Żaden sekret operatora nie trafi do aplikacji.
+Właściciel wybrał kierunek A: dodatkową usługę ograniczającą odczyt, z uprzednim sprawdzeniem darmowych limitów. B nie jest zatwierdzony. Nie opublikowano rekordów społecznościowych; wykonano wyłącznie syntetyczną próbę prywatną. Konkretny pośrednik i jego uwierzytelnianie wymagają prototypu i odbioru przed CK-04/CK-05. Wariant A nie oznacza automatycznej zgody na płatny hosting, a jego dostawca i sposób wiązania tożsamości z CloudKit pozostają do zaprojektowania. Żaden sekret operatora nie trafi do aplikacji.
 
 ## Niezależny postęp CK-02
 
-Przygotowano `EchoesCloudKit` jako oddzielny pakiet, jeszcze niewłączony do produkcyjnego klienta. Zawiera walidację jawnej konfiguracji, natywne źródło statusu/tożsamości iCloud, sesję z unieważnianiem poprzedniej tożsamości oraz klasyfikację błędów. Nie zawiera pozornie działających implementacji wysyłania, moderacji ani pustych sukcesów. Zachowujemy istniejący interfejs i dane do czasu rzeczywistego odbioru nowej ścieżki.
+Przygotowano `EchoesCloudKit` jako oddzielny pakiet i połączono go z podpisanym trybem diagnostycznym Debug. Nie jest jeszcze adapterem produkcyjnego klienta społecznościowego. Zawiera walidację jawnej konfiguracji, natywne źródło statusu/tożsamości iCloud, sesję z unieważnianiem poprzedniej tożsamości oraz klasyfikację błędów. Nie zawiera pozornie działających implementacji wysyłania, moderacji ani pustych sukcesów. Zachowujemy istniejący interfejs i dane do czasu rzeczywistego odbioru nowej ścieżki.
 
 Źródło natywne należy tworzyć dopiero w poprawnie podpisanej aplikacji z uprawnieniami do zweryfikowanego kontenera. Inicjalizacja CloudKit z dowolnego nieuprawnionego programu CLI nie jest testem poprawnej konfiguracji.
 

@@ -1,0 +1,15 @@
+{
+  "accountAvailable": true,
+  "cleanupSucceeded": true,
+  "container": "iCloud.mpvEcho.Echo",
+  "creatorMatchesResolvedIdentity": false,
+  "creatorPresent": true,
+  "creatorUsesCurrentUserAlias": true,
+  "creatorVerified": true,
+  "environment": "Development",
+  "readBackSucceeded": true,
+  "runIdentifier": "60749670-DA22-4BE6-BD5B-427C5CDBC07E",
+  "startedAt": "2026-11-12T20:34:21Z",
+  "syntheticRecordName": "echoes-probe-0C6F4D21-BA14-4BF6-9486-69D48DE87F12",
+  "writeSucceeded": true
+}
