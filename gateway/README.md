@@ -1,0 +1,25 @@
+# Echoes CloudKit gateway — komponenty prototypu
+
+Kandydat do hostingu: Cloudflare Workers Free, po sprawdzeniu limitów. [Projekt i kryteria odbioru](../Docs/CLOUDKIT_POSREDNIK_FREE.md).
+
+Obecny kod to wyłącznie **serwerowy konstruktor podpisanego żądania do CloudKit Development**, oraz ograniczona funkcja próbna, bez endpointu HTTP, logowania i wdrożenia. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów administratora.
+
+Testy na Node 22 (bez instalowania zależności):
+
+```sh
+node --test gateway/test/*.test.mjs
+```
+
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie wykonują fetch. Dwanaście testów offline nie potwierdza akceptacji przez serwer ani 10 ms CPU Cloudflare.
+
+Podpisywanie korzysta z node:crypto. Dla compatibility_date 2026-11-12 zgodność Node jest domyślna; starsze daty wymagają nodejs_compat. Zgodność runtime i CPU należy sprawdzić na hostingu. Brak wrangler.toml i skryptu deploy jest zamierzony do czasu przygotowania konkretnej, ograniczonej próby; nie ma domyślnego endpointu Production.
+
+Rzeczywisty klucz powinien być PKCS#8 P-256, przechowywany w sekretach usługi. Nie umieszczać go w aplikacji, env śledzonym przez Git, logach lub czacie. Utworzenie przypisania S2S w Apple i przekazanie prywatnego klucza do hostingu jest osobnym przyznaniem dostępu; sam darmowy plan tego nie zatwierdza.
+
+## Przygotowana próba S2S Development
+
+`src/cloudkit-probe.mjs` tworzy wyłącznie jeden losowy `EchoesGatewayProbeV1/gateway-probe-UUID`, sprawdza jego nonce i schemat, a następnie próbuje go usunąć. Nie przyjmuje identyfikatora użytkownika/rekordu jako wejścia. Sprawdza błędy per-record mimo HTTP 200, limituje odpowiedź do 64 KiB, ma timeout i nie ponawia zapisu. Gdy wynik create jest nieznany, sprząta tylko wygenerowany UUID; odpowiedź EXISTS blokuje kasowanie. Wyłącznie ten dyspozycyjny UUID jest sprzątany przez forceDelete, bo nieznany wynik create może nie dostarczyć change tag. Nie przenosić takiej semantyki na dane użytkowników.
+
+`node gateway/scripts/probe-development.mjs` bez osobnego opt-in **odmawia uruchomienia i nie czyta klucza ani sieci**. Po zgodzie na rejestrację S2S i tę konkretną próbę wymagane są ECHOES_ALLOW_SYNTHETIC_DEV_PROBE=1, ECHOES_CK_DEV_KEY_ID i ECHOES_CK_DEV_KEY_FILE (ścieżka lokalna, bez sekretu w argumencie). Skrypt jest przypisany do iCloud.mpvEcho.Echo/development; nie ma przełącznika Production. Raport drukuje tylko booleany, czas/UUID oraz bezpieczny kod błędu.
+
+Klucz S2S ma uprawnienia do całej bazy publicznej wskazanego kontenera i środowiska; kod ograniczonej próby nie zawęża kryptograficznego zakresu tego klucza. Przed rejestracją trzeba uzyskać konkretną zgodę. Ten etap nie przekazuje klucza do Cloudflare; to późniejszy, osobny odbiorca sekretu.

@@ -18,6 +18,7 @@ jobs:
         with:
           distribution: temurin
           java-version: "25"
+      - run: node --test gateway/test/*.test.mjs
       - run: npm ci --ignore-scripts
       - run: npm --prefix backend ci --ignore-scripts
       - run: npm audit --audit-level=moderate

@@ -71,3 +71,5 @@ Stare kolekcje users i messages nie są automatycznie migrowane ani usuwane. Fiz
 Testy: `swift test --package-path EchoesCloudKit` i `python3 scripts/test_cloudkit_preflight.py`. Preflight uruchamiać dla rzeczywistych uprawnień podpisanej aplikacji i jej profilu zgodnie z instrukcją diagnostyczną. Sam preflight nie potwierdza połączenia ani ról CloudKit.
 
 [Architektura i warianty dostępu](Docs/CLOUDKIT_ARCHITEKTURA.md) oraz [wyniki weryfikacji](Docs/CLOUDKIT_WERYFIKACJA.md) oddzielają gotowy kod lokalny od pozostałego odbioru CloudKit.
+
+[Pośrednik z darmowym limitem](Docs/CLOUDKIT_POSREDNIK_FREE.md): po decyzji o ograniczaniu odczytu zbadano Workers Free; `gateway` zawiera pierwszy lokalny komponent podpisywania Development i 6 testów offline. Nie jest jeszcze wdrożonym backendem ani gotowym uwierzytelnianiem.

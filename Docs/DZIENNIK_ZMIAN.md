@@ -171,3 +171,20 @@ Stan: faktyczne połączenie z CloudKit Development jednego konta potwierdzone. 
 Weryfikacja: podpisany Debug na iPhonie — konto, zapis, odczyt, autor i cleanup poprawne; preflight podpisu/profilu entitlements-match; 8 testów preflight; kompilacje całej aplikacji Debug (urządzenie/symulator) i Release bez podpisywania; 4 testy UI demo przeszły. Wcześniejsze 21 testów pakietu przeszło, jego zachowanie nie zmieniło się w tym etapie.
 
 Ograniczenia: nie ma jeszcze testu kont A/B, publicznych ról, zmiany konta/offline na urządzeniu, uploadu zdjęć, produkcyjnej moderacji ani ukończonej migracji. Nie promowano schematu Production, nie przenoszono dawnych danych i nie dodano sekretów/profili do Git. Wybrany pośrednik wymaga następnego prototypu; brak zgody na dodatkowe opłaty.
+
+## CK-01d — 2026-11-12 — darmowy pośrednik: limity, projekt i podpisywanie
+
+Stan: sprawdzono kandydata Workers Free i wykonano pierwszy komponent serwerowy; jeszcze bez wdrożenia, logowania i uprawnień sieciowych.
+
+- Właściciel wybrał ograniczanie odczytu mapy/czatu przez dodatkową usługę, najpierw z badaniem darmowego limitu. Po samodzielnym zalogowaniu właściciela panel Cloudflare potwierdził Free / Current plan / $0; nie aktywowano Paid ani nie podawano karty. Prywatne dane konta Cloudflare nie trafiają do repozytorium.
+- `Docs/CLOUDKIT_POSREDNIK_FREE.md`: zapisano zweryfikowane limity, własne scenariusze obciążenia, brak automatycznych opłat, wymóg fail closed, proponowane logowanie Apple, kontrolę zakresu/antyspamu/retencji oraz kryteria próby A/B i pomiarów CPU. CloudKit nadal jest miejscem danych; nie zamieniono go na D1.
+- `gateway/src/cloudkit-request.mjs`: serwerowy konstruktor P-256/SHA-256 żądań CloudKit wyłącznie Development/public na stałej domenie Apple. Lista operacji, limit 64 KiB, brak przekierowań, ukryty materiał klucza i bezpieczny błąd konfiguracji. Nie jest endpointem ani ogólnym proxy.
+- `gateway/test/cloudkit-request.test.mjs`: 6 testów na efemerycznych kluczach; weryfikacja podpisu, modyfikacji payload/path, Unicode, złej konfiguracji/algorytmu, limitów i redakcji klucza. Brak sieci, realnych kluczy i danych użytkowników.
+- `gateway/src/cloudkit-probe.mjs`, `gateway/scripts/probe-development.mjs`: przygotowano ograniczoną próbę sieciową jednego UUID z nonce, obsługą błędów HTTP 200, timeoutem i sprzątaniem po nieznanym wyniku. EXISTS chroni przed kasowaniem wcześniejszego rekordu. Wyłącznie nowy dyspozycyjny UUID używa forceDelete; nie jest to ścieżka danych użytkowników. Skrypt bez jawnego opt-in nie czyta klucza i nie korzysta z sieci.
+- `gateway/test/cloudkit-probe.test.mjs`: 6 dodatkowych testów próby ze stubem, w tym nieznany zapis, kolizja, per-record error, limit odpowiedzi i błąd sprzątania.
+- `.gitignore`: dodano ochronę lokalnych plików PEM/P8, .dev.vars, .wrangler i .secrets.
+- `gateway/package.json`, `gateway/README.md`: prywatny moduł bez zależności runtime i instrukcja testów Node 22; jasno oznaczono brak gotowego backendu, deploy i pomiaru CPU.
+- `.github/workflows/checks.yml`: dodano uruchomienie testów gateway w istniejącym jobie Node 22; CI nie wdraża usługi.
+- `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `Docs/CLOUDKIT_ARCHITEKTURA.md`, `README.md`: zaktualizowano postęp i powiązano dokumentację.
+
+Weryfikacja: 12 testów Node 22 przeszło; bez opt-in skrypt sieciowy zakończył się kodem 2 przed odczytem klucza/siecią; potwierdzenie Free odczytano z panelu konta, limity sprawdzono w oficjalnej dokumentacji. Nie ponawiano testów iOS: etap nie zmienia kodu aplikacji. Nie utworzono ani nie przekazano prawdziwego klucza, nie skonfigurowano ról CloudKit, nie wdrożono pośrednika i nie włączono opłat. Pozostają rzeczywista próba S2S, logowanie, odbiór A/B i pomiar wydajności/limitów.

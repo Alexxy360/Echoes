@@ -47,3 +47,10 @@ backend/.env*
 # Python diagnostic tooling
 __pycache__/
 *.pyc
+
+# CloudKit server / local Worker secrets
+*.pem
+*.p8
+.dev.vars*
+.wrangler/
+.secrets/
