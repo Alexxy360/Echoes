@@ -41,6 +41,8 @@ Odbiór: dowody testów dwóch kont i macierz uprawnień. Niespełnionych wymaga
 
 ### CK-02 — adapter CloudKit i tożsamość
 
+Postęp CK-02a: dodano niezależny pakiet EchoesCloudKit z natywnym źródłem konta, sesją tożsamości, walidacją konfiguracji i klasyfikacją błędów. Przeszło 8 testów oraz kompilacja iOS Simulator. Pakiet nie jest jeszcze adapterem CommunityClient i nie jest podłączony do głównej aplikacji; pełny CK-02 pozostaje otwarty do konfiguracji kontenera i odbioru prawdziwego iCloud.
+
 - Zachować niezależny EchoesCore i wstrzykiwanie zależności. Dopasować CommunityClient do CloudKit, zamiast kopiować do niego założenia Firebase.
 - Dodać obsługę konta iCloud oraz izolację cache po zmianie tożsamości; nie traktować identyfikatora Firebase/IDFV jako identyfikatora CloudKit.
 - Obsłużyć brak iCloud, restricted, czasową niedostępność, retryAfter, częściowe błędy, anulowanie, konflikty i idempotencję ponowienia.

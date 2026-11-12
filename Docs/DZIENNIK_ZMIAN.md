@@ -107,3 +107,20 @@ Stan: wykonana niezależna część CK-01; pełny odbiór uprawnień CloudKit po
 - `.gitignore`: dodano wykluczenie plików cache Pythona.
 
 Weryfikacja: 5 testów Python przeszło; obecne entitlements poprawnie odrzucone jako nieskonfigurowane. Po samodzielnej akceptacji umowy przez właściciela potwierdzono dostęp do listy App IDs. Nie zapisano danych osobowych z konta w repozytorium. Rejestracja App ID oczekuje na osobne potwierdzenie; nie zmieniono danych ani schematu chmury.
+
+## CK-02a — 2026-11-12 — niezależna podstawa konta iCloud
+
+Stan: pakiet gotowy i sprawdzony lokalnie; pełny adapter oraz test prawdziwego konta pozostają do wdrożenia.
+
+- `EchoesCloudKit/Package.swift`: nowy pakiet Swift 6, iOS 17+/macOS 14+, bez zewnętrznych zależności. Minimum głównej aplikacji pozostaje iOS 26.1.
+- `EchoesCloudKit/Sources/EchoesCloudKit/CloudKitConfiguration.swift`: jawny identyfikator kontenera i środowisko, walidacja zgodności uprawnień; brak automatycznie wymyślonego kontenera.
+- `EchoesCloudKit/Sources/EchoesCloudKit/CloudKitAccountSession.swift`: natywne accountStatus/userRecordID, osobna testowalna sesja, natychmiastowe usunięcie starej tożsamości, revision do izolacji cache, odrzucanie starych odpowiedzi, obsługa anulowania i cyklu obserwatora.
+- `EchoesCloudKit/Sources/EchoesCloudKit/CloudKitFailure.swift`: bezpieczne komunikaty, retryAfter, konflikt i częściowy sukces bez automatycznego ponawiania potencjalnie wykonanych zapisów.
+- `EchoesCloudKit/Tests/EchoesCloudKitTests/CloudKitTests.swift`: 8 testów zachowania z kontrolowanymi odpowiedziami konta.
+- `EchoesCloudKit/README.md`: zakres modułu, sposób użycia i ograniczenia testów.
+- `.github/workflows/checks.yml`: dodano testy nowego pakietu i preflight do kontroli iOS.
+- `README.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: wskazano przygotowany pakiet i rzeczywisty postęp migracji.
+
+Weryfikacja: 8 testów Swift przeszło; pakiet skompilował się dla iOS Simulator arm64/x86_64. Do tego 5 testów preflight z CK-01a przeszło w oryginalnym repozytorium. Testy nie korzystają z kont iCloud, nie testują ról na serwerze i nie zastępują prób dwóch prawdziwych kont.
+
+Ograniczenia: nie przełączono aplikacji z Firebase, nie przypisano jeszcze kontenera i nie utworzono rekordów. Nie wdrożono nowej polityki publiczności danych ani dodatkowego hostingu.

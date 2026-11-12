@@ -63,3 +63,9 @@ Zależności runtime backendu i narzędzia mają pliki blokady. Root package.jso
 Właściciel musi podać kontakt do obsługi (SUPPORT_URL), ustanowić proces moderacji oraz aktywować i sprawdzić usługi Firebase. Konfiguracja App Store privacy musi odpowiadać rzeczywistemu wdrożeniu. Własny manifest PrivacyInfo.xcprivacy opisuje użycie UserDefaults i kategorie danych.
 
 Stare kolekcje users i messages nie są automatycznie migrowane ani usuwane. Fizyczne testy Apple Music, App Attest, baterii i urządzeń innych niż zweryfikowany symulator pozostają częścią odbioru urządzeniowego. Kod jest nadal projektem edukacyjnym; ten plik nie ustanawia nowej licencji.
+
+## Przygotowywany moduł CloudKit
+
+[EchoesCloudKit](EchoesCloudKit/README.md) zawiera niezależną obsługę konta iCloud i błędów, jeszcze niepodłączoną do głównej aplikacji. Testy: `swift test --package-path EchoesCloudKit`. Kontrola konfiguracji i testy: `python3 scripts/cloudkit-preflight.py --entitlements Echo/Echo.entitlements` oraz `python3 scripts/test_cloudkit_preflight.py`. Preflight ma obecnie zgłaszać brak konfiguracji; nie potwierdza połączenia z usługą.
+
+[Architektura i warianty dostępu](Docs/CLOUDKIT_ARCHITEKTURA.md) oraz [wyniki weryfikacji](Docs/CLOUDKIT_WERYFIKACJA.md) oddzielają gotowy kod lokalny od pozostałego odbioru CloudKit.
