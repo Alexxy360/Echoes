@@ -1,0 +1,10 @@
+{
+  "observedAt": "2026-11-13T10:47:50.622Z",
+  "environment": "Development",
+  "syntheticRecordName": "gateway-probe-6291ca43-203d-4021-be91-210a6e3a424f",
+  "operation": "lookup-only",
+  "httpStatus": 200,
+  "recordAbsent": true,
+  "recordPresent": false,
+  "errorCode": "NOT_FOUND"
+}

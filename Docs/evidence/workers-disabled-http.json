@@ -1,0 +1,48 @@
+{
+  "observedAt": "2026-11-13T10:37:56.350877+00:00",
+  "service": "echoes-development-probe",
+  "cloudKitOperations": 0,
+  "checks": [
+    {
+      "name": "health",
+      "status": 200,
+      "expected": 200,
+      "body": {
+        "status": "ok",
+        "mode": "development-diagnostic"
+      },
+      "noStore": true,
+      "nosniff": true
+    },
+    {
+      "name": "disabled",
+      "status": 503,
+      "expected": 503,
+      "body": {
+        "error": "diagnostic-disabled"
+      },
+      "noStore": true,
+      "nosniff": true
+    },
+    {
+      "name": "method",
+      "status": 405,
+      "expected": 405,
+      "body": {
+        "error": "method-not-allowed"
+      },
+      "noStore": true,
+      "nosniff": true
+    },
+    {
+      "name": "unknown",
+      "status": 404,
+      "expected": 404,
+      "body": {
+        "error": "not-found"
+      },
+      "noStore": true,
+      "nosniff": true
+    }
+  ]
+}

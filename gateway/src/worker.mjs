@@ -3,6 +3,7 @@ import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
 import { probeCloudKitDevelopment } from "./cloudkit-probe.mjs";
 import { activeProbeConfiguration, handleDevelopmentProbe, jsonResponse } from "./probe-http.mjs";
 import { runReservedProbe } from "./probe-gate.mjs";
+import { inspectDevelopmentRuntime } from "./runtime-check.mjs";
 
 export default {
   fetch(request, env) {
@@ -28,6 +29,9 @@ export class DevelopmentProbe extends DurableObject {
         keyID: this.env.CLOUDKIT_KEY_ID, privateKeyPEM: this.env.CLOUDKIT_PRIVATE_KEY,
       });
     } catch { return jsonResponse({ error: "diagnostic-disabled" }, 503); }
+    if (this.env.PROBE_LOCAL_CHECK_ONLY === "1") {
+      return jsonResponse(inspectDevelopmentRuntime(signer, config.runID));
+    }
     return runReservedProbe(this.ctx.storage.sql, config.runID,
       (context) => probeCloudKitDevelopment(signer, fetch, context), () => this.ctx.storage.sync());
   }

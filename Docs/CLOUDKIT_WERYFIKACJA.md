@@ -45,7 +45,7 @@ Właściciel wybrał: **ograniczanie odczytu przez dodatkową usługę, najpierw
 
 ## CK-01e — klucz S2S Development i pierwsza próba
 
-Po konkretnej zgodzie właściciela zapisano w Apple klucz publiczny „Echoes Development gateway probe 2026-11-12” w `iCloud.mpvEcho.Echo`, wyłącznie Development. Portal potwierdził „Server-to-server key created successfully”. Klucz prywatny pozostaje lokalnie poza Git, w pliku z uprawnieniami 0600 i katalogu 0700; nie przekazano go Cloudflare. Fingerprint SHA-256 publicznego SPKI: `8c42a2a2bcfc81ebff8ef0838923f84654ccf8dc8401777d9c26f51766e68b11`. Sam identyfikator klucza nie jest potrzebny w repozytorium.
+Po konkretnej zgodzie właściciela zapisano w Apple klucz publiczny „Echoes Development gateway probe 2026-11-12” w `iCloud.mpvEcho.Echo`, wyłącznie Development. Portal potwierdził „Server-to-server key created successfully”. Klucz prywatny pozostaje lokalnie poza Git, w pliku z uprawnieniami 0600 i katalogu 0700; na tym etapie nie przekazano go Cloudflare; późniejszy transfer opisuje CK-01j. Fingerprint SHA-256 publicznego SPKI: `8c42a2a2bcfc81ebff8ef0838923f84654ccf8dc8401777d9c26f51766e68b11`. Sam identyfikator klucza nie jest potrzebny w repozytorium.
 
 [Pierwszy raport S2S](evidence/cloudkit-s2s-probe-development-initial.json): zapis niepotwierdzony, `NOT_FOUND`, odczyt niewykonany, nieobecność testowego UUID potwierdzona podczas sprzątania. Raport nie jest pozytywnym odbiorem S2S. Odczyt listy schematu potwierdził brak typu `EchoesGatewayProbeV1`; istnieją wyłącznie `EchoesAccessProbeV1` i `Users`. Nie poszerzano odczytu o dane użytkowników. Zgłoszenie zapisu do nieistniejącego typu nie utworzyło automatycznie definicji w tej ścieżce.
 
@@ -65,11 +65,11 @@ Dodano rolę `EchoesGatewayProbeService`, prawa Create/Read/Write wyłącznie dl
 
 Przypisanie roli dotyczy konta, nie wyłącznie pliku klucza. Urządzenie zalogowane jako ten operator również ma jego prawa. Przed produkcją wymagana jest oddzielna tożsamość serwisowa i test natywnych, nieuprzywilejowanych kont A/B; nie deklarujemy jeszcze ich odbioru. Wcześniejszych domyślnych ról innych typów nie zmieniano.
 
-Klucz zachowano w trwałym lokalnym katalogu poza wszystkimi worktree Git (katalog 0700, pliki 0600), aby nie polegać wyłącznie na plikach tymczasowych. Nie przekazano go Cloudflare i nie uruchomiono płatności. Test lokalny nie jest jeszcze testem pośrednika sieciowego ani limitem CPU Workers.
+Klucz zachowano w trwałym lokalnym katalogu poza wszystkimi worktree Git (katalog 0700, pliki 0600), aby nie polegać wyłącznie na plikach tymczasowych. Na tamtym etapie nie przekazano go Cloudflare; późniejszy transfer opisuje CK-01j. Nie uruchomiono płatności. Test lokalny nie jest jeszcze testem pośrednika sieciowego ani limitem CPU Workers.
 
 ## CK-01g — lokalny prototyp Workers
 
-Przeszło 25 testów Node 22 (12 wcześniejszych, kontekst, 6 HTTP i 6 rezerwacji SQLite). Dodatkowo sprawdzono składnię MJS. Są to testy lokalne SQLite/Node, nie runtime Cloudflare. Prototyp jest wyłączony, endpoint nie jest wdrożony i sekret nie trafił do Cloudflare. Npm/curl nie połączyły się poprawnie z oficjalnym registry.npmjs.org; instalacja Miniflare nie nastąpiła. [Zakres i dalsze próby](WORKERS_DIAGNOSTYKA.md).
+Przeszło 25 testów Node 22 (12 wcześniejszych, kontekst, 6 HTTP i 6 rezerwacji SQLite). Dodatkowo sprawdzono składnię MJS. Są to testy lokalne SQLite/Node, nie runtime Cloudflare. Stan historyczny CK-01g: prototyp był wyłączony, niewdrożony i bez transferu sekretu. Aktualizację zawiera CK-01j. Npm/curl nie połączyły się poprawnie z oficjalnym registry.npmjs.org; instalacja Miniflare nie nastąpiła. [Zakres i dalsze próby](WORKERS_DIAGNOSTYKA.md).
 
 ## CK-02c — porównanie konta urządzenia z tożsamością serwera
 
@@ -79,4 +79,22 @@ Właściciel potwierdził, że obecnie dysponuje tylko tym kontem. Konta operato
 
 ## CK-01h — stan Cloudflare przed publikacją prototypu
 
-Utworzono pustą usługę echoes-development-probe z domyślną odpowiedzią Hello World. Plan Free / Current plan / $0 potwierdzono ponownie w panelu 13 listopada. Brak sekretów, bindings i dostępu do CloudKit. [Zapis obserwacji](evidence/cloudflare-development-worker-bootstrap.json). Automatyczna kontrola zatrzymała dodanie pierwszego pliku do zdalnego edytora jako niezatwierdzoną modyfikację aktywnej usługi. Kod prototypu Echoes nadal nie jest wdrożony; oczekuje konkretna zgoda na zdalny kod, konfigurację próby i nowego odbiorcę klucza. Nie zmieniono CloudKit Production ani nie uruchomiono opłat.
+Utworzono pustą usługę echoes-development-probe z domyślną odpowiedzią Hello World. Plan Free / Current plan / $0 potwierdzono ponownie w panelu 13 listopada. Brak sekretów, bindings i dostępu do CloudKit. [Zapis obserwacji](evidence/cloudflare-development-worker-bootstrap.json). Automatyczna kontrola zatrzymała dodanie pierwszego pliku do zdalnego edytora jako niezatwierdzoną modyfikację aktywnej usługi. Na tym etapie kod prototypu nie był wdrożony; późniejsze zgody i działania opisuje CK-01j. Nie zmieniono CloudKit Production ani nie uruchomiono opłat.
+
+## CK-01j — 2026-11-13 — wdrożenie diagnostyki i poprawka zgodności Workers
+
+Po wyjaśnieniu roli Cloudflare właściciel jednoznacznie zatwierdził kod, SQLite, klucz Development jako sekret oraz jedną próbę. Osobno zatwierdził tymczasowy token wdrożenia ograniczony do tej jednej usługi. W panelu potwierdzono Individual Workers Editor / echoes-development-probe, bez uprawnień do innych usług; ustawiono okno około 2 h. Nie zmieniono planu Workers Free, CloudKit Production ani danych użytkowników.
+
+Kod opublikowano w Dashboard, a klasę DevelopmentProbe utworzono przez oficjalne API z new_sqlite_classes / v1. Pierwszy upload API odrzucił błędną nazwę części multipart (No such module: worker.js); poprawienie filename=worker.js pozwoliło wdrożyć klasę SQLite. Metadane zwróciły startup_time_ms=4 — to czas startu, nie pomiar CPU żądania. Runtime HTTP potwierdził 200 /health, 503 dla wyłączonej próby, 405 dla metody i 404 dla obcej trasy. Po aktywacji bez klucza Apple potwierdzono 401 bez tokenu, 400 dla obcego wejścia i 503 diagnostic-disabled z Durable Object. Żaden z tych preflightów nie wykonuje operacji CloudKit. [Raport wyłączonego HTTP](evidence/workers-disabled-http.json), [preflight runtime](evidence/workers-runtime-preflight.json).
+
+Następnie przesłano klucz wyłącznie do sekretu CLOUDKIT_PRIVATE_KEY tej usługi i wykonano jeden POST /probe. Wynik: HTTP 502, TRANSPORT_FAILED przy create i cleanup. Trwała rezerwacja zachowała RUN_ID i kontekst; nie skasowano jej ani nie ponowiono zapisu pod nowym UUID. [Raport próby](evidence/workers-cloudkit-probe-failed.json). Lokalny podpisany lookup tego dokładnego UUID zwrócił NOT_FOUND: rekord nie pozostał w Development. [Potwierdzenie nieobecności](evidence/workers-cloudkit-probe-absence.json). To nie jest sukces testu Cloudflare → CloudKit.
+
+Przyczyna: użyty redirect:error jest zgodny z Node, ale Workers rzuca TypeError przy konstruowaniu Request, zanim wyśle żądanie. Poprawka ustawia manual; istniejący odczyt odpowiedzi odrzuca 3xx bez podążania za Location. [Oficjalna dokumentacja Request](https://developers.cloudflare.com/workers/runtime-apis/request/). Dodano regresję z dwoma rzeczywistymi serwerami loopback: cel przekierowania nie otrzymuje żadnego żądania ani podpisanych nagłówków, create nie jest ponawiane.
+
+Dodano też bramkowany tym samym tokenem, UUID i terminem PROBE_LOCAL_CHECK_ONLY: samo skonstruowanie podpisanego żądania wewnątrz DO, bez fetch, SQLite i eksportu podpisu/klucza/treści wyjątku. To pomoc do odbioru runtime przed następnym zapisem. Pierwsze wdrożenie tego trybu po wznowieniu pracy odrzuciło 401, ponieważ poprzedni token zdążył wygasnąć; nie przedłużano go automatycznie.
+
+Poprzednia aktywacja wygasła. Po wznowieniu pracy ustawiono także jawne PROBE_ENABLED=0 i usunięto CLOUDKIT_PRIVATE_KEY oraz PROBE_BEARER_TOKEN z aktywnej wersji. Wygasły token API usunięto w panelu, a lokalne tymczasowe kopie sekretów usunięto z /private/tmp. Oryginalny klucz Apple pozostaje w chronionym Application Support. Usunięcie bindingów aktywnej wersji nie jest deklaracją wyczyszczenia historii wersji dostawcy ani unieważnienia S2S w Apple; tego klucza Apple nie odwołano. Rezerwacja SQLite pozostaje jako dowód wykonania, nie jest czyszczona do ponowienia.
+
+Weryfikacja poprawki: 27 testów Node 22 przeszło, składnia wygenerowanego pliku poprawna. Test loopback początkowo zablokował sandbox (listen EPERM), a po dopuszczeniu lokalnych portów przeszedł cały zestaw. Nie instalowano zależności i nie wyłączano TLS. Npm pozostaje niedostępny z tej sieci; wdrożenie używało panelu/oficjalnego API. Pełny test S2S po poprawce, pomiar CPU i A/B nadal wymagają odbioru; nie zmieniono aplikacji iOS ani adaptera Firebase.
+
+Poprawiony pakiet opublikowano przez Dashboard jako aktywną wersję `476028fa`, przy PROBE_ENABLED=0 i bez obydwu sekretów. Publikacja kodu nie jest dowodem ukończenia próby S2S po poprawce.

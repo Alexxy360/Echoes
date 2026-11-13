@@ -27,7 +27,7 @@ test("signs the exact UTF-8 body, timestamp and fixed CloudKit Development path"
   const request = new CloudKitDevelopmentSigner(configuration).request("records/lookup", payload, now);
   assert.equal(request.url, "https://api.apple-cloudkit.com/database/1/iCloud.example.echoes/development/public/records/lookup");
   assert.equal(request.method, "POST");
-  assert.equal(request.redirect, "error");
+  assert.equal(request.redirect, "manual");
   assert.equal(request.headers.get("Cache-Control"), "no-store");
   assert.equal(request.headers.get("X-Apple-CloudKit-Request-ISO8601Date"), "2026-11-12T12:00:00Z");
   assert.equal(await signatureValid(request), true);

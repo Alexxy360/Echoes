@@ -1,0 +1,17 @@
+{
+  "observedAt": "2026-11-13T10:45:43.894826+00:00",
+  "status": 502,
+  "activationRunIdentifier": "f536f8e9-2c94-4871-8d6c-f37f76650863",
+  "report": {
+    "runIdentifier": "f536f8e9-2c94-4871-8d6c-f37f76650863",
+    "startedAt": "2026-11-13T10:45:43.833Z",
+    "environment": "Development",
+    "recordType": "EchoesGatewayProbeV1",
+    "syntheticRecordName": "gateway-probe-6291ca43-203d-4021-be91-210a6e3a424f",
+    "writeSucceeded": false,
+    "readBackSucceeded": false,
+    "cleanupSucceeded": false,
+    "errorCode": "TRANSPORT_FAILED",
+    "cleanupErrorCode": "TRANSPORT_FAILED"
+  }
+}

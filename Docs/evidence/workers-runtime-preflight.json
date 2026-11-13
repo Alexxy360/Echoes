@@ -1,0 +1,38 @@
+{
+  "observedAt": "2026-11-13T10:44:38.916884+00:00",
+  "service": "echoes-development-probe",
+  "cloudKitOperations": 0,
+  "privateKeyTransferred": false,
+  "checks": [
+    {
+      "name": "unauthorized",
+      "status": 401,
+      "expected": 401,
+      "body": {
+        "error": "unauthorized"
+      },
+      "noStore": true,
+      "nosniff": true
+    },
+    {
+      "name": "invalid-input",
+      "status": 400,
+      "expected": 400,
+      "body": {
+        "error": "invalid-input"
+      },
+      "noStore": true,
+      "nosniff": true
+    },
+    {
+      "name": "durable-object-without-key",
+      "status": 503,
+      "expected": 503,
+      "body": {
+        "error": "diagnostic-disabled"
+      },
+      "noStore": true,
+      "nosniff": true
+    }
+  ]
+}

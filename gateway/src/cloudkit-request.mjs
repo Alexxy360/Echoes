@@ -59,7 +59,9 @@ export class CloudKitDevelopmentSigner {
     }).toString("base64");
     return new Request("https://api.apple-cloudkit.com" + path, {
       method: "POST",
-      redirect: "error",
+      // Workers rejects redirect:"error" before sending. Manual mode never forwards signed headers.
+      // The caller rejects non-2xx responses rather than following Location.
+      redirect: "manual",
       headers: {
         "Content-Type": "application/json",
         "Cache-Control": "no-store",
