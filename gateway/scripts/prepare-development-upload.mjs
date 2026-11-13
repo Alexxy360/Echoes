@@ -6,6 +6,7 @@ const metadata = {
   compatibility_flags: ["nodejs_compat"],
   bindings: [
     { name: "PROBE_ENABLED", type: "plain_text", text: "0" },
+    { name: "PROBE_LOCAL_CHECK_ONLY", type: "plain_text", text: "0" },
     { name: "CLOUDKIT_CONTAINER", type: "plain_text", text: "iCloud.mpvEcho.Echo" },
     { name: "CLOUDKIT_ENVIRONMENT", type: "plain_text", text: "development" },
     { name: "PROBE_RUN_ID", type: "plain_text", text: "" },

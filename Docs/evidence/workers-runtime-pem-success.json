@@ -1,0 +1,7 @@
+{
+  "mode": "local-runtime-check",
+  "requestConstructed": true,
+  "signaturePresent": true,
+  "networkRequests": 0,
+  "cloudKitWrites": 0
+}

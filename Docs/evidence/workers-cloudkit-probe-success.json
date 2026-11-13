@@ -1,0 +1,15 @@
+{
+  "observedAt": "2026-11-13T21:01:41.157796+00:00",
+  "httpStatus": 200,
+  "activationRunIdentifier": "d4d13b6e-cdb8-4289-8683-cd868ea8eaab",
+  "report": {
+    "runIdentifier": "d4d13b6e-cdb8-4289-8683-cd868ea8eaab",
+    "startedAt": "2026-11-13T21:01:37.710Z",
+    "environment": "Development",
+    "recordType": "EchoesGatewayProbeV1",
+    "syntheticRecordName": "gateway-probe-6b46d485-d984-4b12-ab85-5b215d273a8b",
+    "writeSucceeded": true,
+    "readBackSucceeded": true,
+    "cleanupSucceeded": true
+  }
+}

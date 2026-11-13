@@ -98,3 +98,9 @@ Poprzednia aktywacja wygasła. Po wznowieniu pracy ustawiono także jawne PROBE_
 Weryfikacja poprawki: 27 testów Node 22 przeszło, składnia wygenerowanego pliku poprawna. Test loopback początkowo zablokował sandbox (listen EPERM), a po dopuszczeniu lokalnych portów przeszedł cały zestaw. Nie instalowano zależności i nie wyłączano TLS. Npm pozostaje niedostępny z tej sieci; wdrożenie używało panelu/oficjalnego API. Pełny test S2S po poprawce, pomiar CPU i A/B nadal wymagają odbioru; nie zmieniono aplikacji iOS ani adaptera Firebase.
 
 Poprawiony pakiet opublikowano przez Dashboard jako aktywną wersję `476028fa`, przy PROBE_ENABLED=0 i bez obydwu sekretów. Publikacja kodu nie jest dowodem ukończenia próby S2S po poprawce.
+
+## CK-01k — udany test Workers → CloudKit Development
+
+Po osobnej zgodzie na jedną próbę do 30 min kontrola bez sieci wykryła niezgodny KeyObject w options.key. Po zachowaniu walidacji P-256 i użyciu PEM podpisanie Request w Workers przeszło. Następnie rzeczywisty zapis, odczyt i usunięcie jednego rekordu przeszły (HTTP 200); ponowienie tego samego RUN_ID zwróciło zapisany raport. [Wynik S2S](evidence/workers-cloudkit-probe-success.json), [wynik ponowienia](evidence/workers-probe-replay.json), [szczegóły i ograniczenia](WORKERS_DIAGNOSTYKA.md#ck-01k--2026-11-13--zaliczona-próba-workers--cloudkit).
+
+Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez tokenu. Bez nowego tokenu wdrożenia i bez opłat. Wszystkie 27 testów Node przeszło po poprawce. Zagregowane metryki małej diagnostyki nie wykazały przekroczeń CPU; nie zastępują testu obciążenia ani pomiaru DO. A/B, odrębna tożsamość produkcyjna i logowanie użytkowników nadal oczekują. Oryginalny klucz Apple nie jest odwołany, a usunięcie bindingów aktywnej wersji nie oznacza purgowania historii hostingu.

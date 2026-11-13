@@ -8,6 +8,7 @@
   "observability": { "enabled": false },
   "vars": {
     "PROBE_ENABLED": "0",
+    "PROBE_LOCAL_CHECK_ONLY": "0",
     "CLOUDKIT_CONTAINER": "iCloud.mpvEcho.Echo",
     "CLOUDKIT_ENVIRONMENT": "development",
     "PROBE_RUN_ID": "",

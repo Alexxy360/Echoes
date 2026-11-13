@@ -1,0 +1,12 @@
+{
+  "observedAt": "2026-11-13T21:06:24.482895+00:00",
+  "service": "echoes-development-probe",
+  "surface": "Cloudflare Dashboard Workers Metrics",
+  "range": "Last 24 hours",
+  "versions": "All deployed versions",
+  "invocations": 38,
+  "subrequests": 5,
+  "cpuTimeCardDisplayed": "581 \u00b5s",
+  "exceededCpuTimeLimitsCount": 0,
+  "scopeLimit": "Aggregated diagnostic traffic across versions; not an isolated measurement of the successful probe, not a Durable Object CPU measurement and not a load test."
+}

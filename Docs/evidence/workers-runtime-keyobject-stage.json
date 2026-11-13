@@ -1,0 +1,10 @@
+{
+  "mode": "local-runtime-check",
+  "requestConstructed": false,
+  "networkRequests": 0,
+  "cloudKitWrites": 0,
+  "errorName": "TypeError",
+  "phase": "signature",
+  "errorArgument": "options.key",
+  "errorCode": "ERR_INVALID_ARG_TYPE"
+}

@@ -21,5 +21,6 @@
   "correctedCodeDeployment": "Cloudflare Dashboard active version 476028fa",
   "secretRemovalScope": "active deployed configuration; no claim of purging provider version history",
   "cloudKitS2SKeyRevoked": false,
-  "correctedVersion": "476028fa"
+  "correctedVersion": "476028fa",
+  "subsequentSuccessfulProbeEvidence": "workers-cloudkit-probe-success.json"
 }

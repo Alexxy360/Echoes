@@ -270,3 +270,14 @@ Weryfikacja: odczytano stan repozytorium i zdalnego edytora; nadal tylko worker.
 Weryfikacja: 27 testów lokalnych, składnia pakietu, rzeczywiste HTTP/DO, potwierdzona nieobecność UUID i sprzątanie aktywnej konfiguracji. startup_time_ms=4 nie jest pomiarem CPU. Pełny S2S po poprawce nadal wymaga nowej ograniczonej próby; dotychczas zatwierdzona jedna zakończyła się błędem, a okno uprawnień wygasło. A/B pozostaje niezaliczony. Nie aktywowano opłat, nie zmieniono CloudKit Production, aplikacji iOS ani istniejącej lokalnej zmiany project.pbxproj.
 
 Poprawiony kod opublikowano w Dashboard: aktywna wersja 476028fa. Potwierdzono PROBE_ENABLED=0 oraz brak obydwu sekretów w aktywnej konfiguracji; pełnego S2S po poprawce nie uruchamiano.
+
+## CK-01k — 2026-11-13 — podpis PEM i udany test Cloudflare–CloudKit
+
+- Po jednoznacznej zgodzie na jedną ponowną próbę do 30 min skonfigurowano nowy RUN_ID/token przez Dashboard, bez nowego tokenu API i bez zmiany poprzedniej rezerwacji. Kontrola bez sieci poprzedziła jedyny nowy zapis.
+- gateway/src/cloudkit-request.mjs: zachowano walidację P-256, do sign() przekazano zweryfikowany PEM zamiast KeyObject odrzucanego przez ten runtime. Klucz jest prywatnym polem, algorytm/DER/protokół nie zmieniły się. Opcjonalna diagnostyka przekazuje tylko stałe etapy bez danych wejściowych.
+- gateway/src/runtime-check.mjs: bezpieczna faza i kategoria argumentu z zamkniętej listy, bez treści wyjątku/klucza/podpisu. Preflight wskazał signature/options.key; po poprawce potwierdził podpisany Request z networkRequests=0.
+- gateway/wrangler.jsonc i scripts/prepare-development-upload.mjs: jawny PROBE_LOCAL_CHECK_ONLY=0 obok PROBE_ENABLED=0. Brak automatycznej aktywacji.
+- Rzeczywisty POST /probe: HTTP 200, utworzenie/odczyt/usunięcie EchoesGatewayProbeV1 przeszły. Ponowienie RUN_ID zwróciło ten sam raport z SQLite. Następnie wyłączono próbę i usunięto obydwa sekrety aktywnej wersji oraz lokalny token. Potwierdzono końcowe 503. Klucz Apple nadal istnieje lokalnie i w rejestracji Apple; nie deklarujemy usunięcia historii wersji hostingu.
+- Docs/evidence/workers-runtime-*.json, workers-cloudkit-probe-success.json, workers-probe-replay.json, workers-successful-probe-cleanup.json i workers-diagnostic-metrics.json: niepoufne wyniki błędu, poprawki, sukcesu, zamknięcia i metryk. Historyczny raport wdrożenia otrzymał odnośnik do późniejszego sukcesu. README i dokumenty planu/architektury/pośrednika/weryfikacji mają aktualny status.
+
+Weryfikacja: 27 testów Node po zmianie podpisywania, poprawna składnia, rzeczywisty Workers preflight i S2S. Karta CPU Time 581 µs przy 38 wywołaniach i brak przekroczeń dotyczą wyłącznie małej diagnostyki wielu wersji, nie wydajności produktu/DO. Bez opłat, danych użytkowników, zmian CloudKit Production i iOS. CK-01 nadal oczekuje A/B i pozostałych kryteriów. Zastaną zmianę project.pbxproj zachowano poza commitem.

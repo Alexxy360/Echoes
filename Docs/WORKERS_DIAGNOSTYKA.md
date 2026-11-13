@@ -1,6 +1,6 @@
 # Prototyp diagnostyczny Workers — CK-01g
 
-Stan: 13 listopada 2026. Kod diagnostyki i SQLite wdrożono w Workers Free. HTTP i zabezpieczenia wejścia przeszły, ale pierwszy test CloudKit z hostingu nie przeszedł przez nieobsługiwany redirect:error. Poprawkę manual sprawdzono w 27 testach lokalnych; pełny odbiór S2S/CPU nadal oczekuje. Próba jest wyłączona i nie ma sekretów w aktywnej konfiguracji. To techniczna próba jednego syntetycznego rekordu, a nie logowanie ani backend użytkowników Echoes.
+Stan: 13 listopada 2026. Kod diagnostyki i SQLite wdrożono w Workers Free. HTTP, zabezpieczenia wejścia i syntetyczny test CloudKit z hostingu przeszły po poprawkach redirect i formatu klucza. Przeszło 27 testów lokalnych; docelowe obciążenie/CPU i dostęp zwykłych kont nadal wymagają odbioru. Próba jest wyłączona i nie ma sekretów w aktywnej konfiguracji. To techniczna próba jednego syntetycznego rekordu, a nie logowanie ani backend użytkowników Echoes.
 
 ## Zakres
 
@@ -72,3 +72,17 @@ Poprzednia aktywacja wygasła. Po wznowieniu pracy ustawiono także jawne PROBE_
 Weryfikacja poprawki: 27 testów Node 22 przeszło, składnia wygenerowanego pliku poprawna. Test loopback początkowo zablokował sandbox (listen EPERM), a po dopuszczeniu lokalnych portów przeszedł cały zestaw. Nie instalowano zależności i nie wyłączano TLS. Npm pozostaje niedostępny z tej sieci; wdrożenie używało panelu/oficjalnego API. Pełny test S2S po poprawce, pomiar CPU i A/B nadal wymagają odbioru; nie zmieniono aplikacji iOS ani adaptera Firebase.
 
 Poprawiony pakiet opublikowano przez Dashboard jako aktywną wersję `476028fa`, przy PROBE_ENABLED=0 i bez obydwu sekretów. Publikacja kodu nie jest dowodem ukończenia próby S2S po poprawce.
+
+## CK-01k — 2026-11-13 — zaliczona próba Workers → CloudKit
+
+Właściciel osobno zatwierdził jedną ponowną próbę z aktywacją do 30 min. Użyto Dashboard i istniejącego SQLite, bez nowego tokenu wdrożenia. Nowy RUN_ID nie zmienia poprzedniej rezerwacji. Sekrety dodano przy wyłączonej próbie, a pierwszym trybem był PROBE_LOCAL_CHECK_ONLY=1 z terminem 29 min od ustawienia konfiguracji.
+
+Preflight bez sieci ujawnił drugi problem: sign() w tym runtime Workers odrzucił KeyObject w options.key (ERR_INVALID_ARG_TYPE). Stałe etapy diagnostyczne wskazały signature/options.key, bez ujawnienia wyjątku, klucza i podpisu. Zachowano walidację EC prime256v1, a do sign() przekazano zweryfikowany PKCS#8 PEM z prywatnego pola. Nie zmieniono P-256/SHA-256, DER ani bajtów protokołu Apple. [Błąd](evidence/workers-runtime-keyobject-stage.json), [udany preflight PEM](evidence/workers-runtime-pem-success.json).
+
+Po wyłączeniu local-only wykonano jeden przebieg d4d13b6e-cdb8-4289-8683-cd868ea8eaab. Apple potwierdziło writeSucceeded=true, readBackSucceeded=true i cleanupSucceeded=true; HTTP 200. Rozpoczęcie 21:01:37 UTC, wynik około 21:01:41 UTC (22:01 czasu polskiego). [Rzeczywisty wynik](evidence/workers-cloudkit-probe-success.json). Ponowienie tego samego RUN_ID zwróciło identyczny raport, UUID i czas rozpoczęcia ze ścieżki ukończonej rezerwacji SQLite. [Dowód ponowienia](evidence/workers-probe-replay.json). Nie kasowano rezerwacji ani nie wykonywano nowego create.
+
+Po sukcesie opublikowano PROBE_ENABLED=0 i usunięto CLOUDKIT_PRIVATE_KEY oraz PROBE_BEARER_TOKEN z aktywnej wersji. Końcowy POST /probe bez tokenu zwraca 503, lokalny token usunięto. Oryginalnego klucza Apple nie odwołano; nie deklarujemy wyczyszczenia historii wersji hostingu. [Stan zamknięcia](evidence/workers-successful-probe-cleanup.json).
+
+Po zmianie formatu klucza przeszło 27 testów Node, w tym niezależne verify podpisu i rzeczywiste przekierowanie loopback bez wycieku nagłówków. Dashboard Workers Metrics / Last 24 hours / All deployed versions pokazał 38 wywołań, kartę CPU Time 581 µs i 0 Exceeded CPU Time Limits. To mały, zagregowany ruch wielu wersji, nie pomiar samego DO ani pojedynczego udanego przebiegu i nie test obciążenia. [Ograniczony odczyt metryk](evidence/workers-diagnostic-metrics.json).
+
+Połączenie Cloudflare Free → CloudKit Development działa dla tego ograniczonego testu. CK-01 i migracja pozostają otwarte: A/B, odrębna tożsamość serwisowa produkcji, logowanie użytkowników, reguły okolicy/blokad/moderacji, retencja i obciążenie. Bez opłat, zmian CloudKit Production, danych użytkowników i przełączenia adaptera Firebase.

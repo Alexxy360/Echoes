@@ -1,0 +1,18 @@
+{
+  "observedAt": "2026-11-13T21:04:42.567501+00:00",
+  "service": "echoes-development-probe",
+  "cloudKitEnvironment": "Development",
+  "successfulRunIdentifier": "d4d13b6e-cdb8-4289-8683-cd868ea8eaab",
+  "probeEnabled": false,
+  "localCheckOnly": false,
+  "activePrivateKeyBinding": false,
+  "activeProbeBearerBinding": false,
+  "newDeploymentTokenCreated": false,
+  "cloudKitProductionModified": false,
+  "cloudKitS2SKeyRevoked": false,
+  "secretRemovalScope": "active deployed version; no claim of purging provider version history",
+  "sourcePublishedVersion": "47a6ae3b",
+  "sourceBundleSHA256": "c9db34a49dad572ecf6669afed09d0f637257a54af3aade842ade472e0944ce8",
+  "finalUnauthenticatedProbeStatus": 503,
+  "activeConfigurationVersion": "e7893d58"
+}
