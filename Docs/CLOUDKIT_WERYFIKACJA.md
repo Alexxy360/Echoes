@@ -25,7 +25,7 @@ Stan: 13 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została p
 | Próba | Stan | Warunek odbioru |
 | --- | --- | --- |
 | Jawny App ID, kontener i profil | Potwierdzone dla Debug Development; prywatny test jednego konta przeszedł | Spójne uprawnienia portalu, podpisanej aplikacji i rzeczywistego kontenera. |
-| Dwa konta A/B w Development | Niewykonana | B nie odczyta prywatnych danych A ani nie zmieni cudzych rekordów; opisać faktyczny zakres publicznego odczytu. |
+| Dwa konta A/B w Development | Oczekuje na drugie konto; iPhone potwierdzony jako operator | B nie odczyta prywatnych danych A ani nie zmieni cudzych rekordów; opisać faktyczny zakres publicznego odczytu. |
 | Brak iCloud i zmiana konta na urządzeniu | Testy stubów przeszły; live niewykonany | Brak przecieku cache i poprawny komunikat w prawdziwym hoście. |
 | Offline, ponowienie i konflikt | Klasyfikacja błędów przetestowana; live niewykonany | Brak duplikatów i nadpisania zmian. |
 | Spójność roli i dostępu z pominięciem UI | Niewykonana | Sprawdzić bezpośrednie operacje w Development; nie utożsamiać filtrów klienta z ACL. |
@@ -70,3 +70,9 @@ Klucz zachowano w trwałym lokalnym katalogu poza wszystkimi worktree Git (katal
 ## CK-01g — lokalny prototyp Workers
 
 Przeszło 25 testów Node 22 (12 wcześniejszych, kontekst, 6 HTTP i 6 rezerwacji SQLite). Dodatkowo sprawdzono składnię MJS. Są to testy lokalne SQLite/Node, nie runtime Cloudflare. Prototyp jest wyłączony, endpoint nie jest wdrożony i sekret nie trafił do Cloudflare. Npm/curl nie połączyły się poprawnie z oficjalnym registry.npmjs.org; instalacja Miniflare nie nastąpiła. [Zakres i dalsze próby](WORKERS_DIAGNOSTYKA.md).
+
+## CK-02c — porównanie konta urządzenia z tożsamością serwera
+
+13 listopada 2026 skompilowano i podpisano Debug, zaktualizowano zatwierdzoną aplikację na ponownie podłączonym iPhonie 15 Pro bez odinstalowania/danych i uruchomiono osobną kontrolę konta. Wymagała odblokowania ekranu przez właściciela. [Raport rzeczywisty](evidence/cloudkit-identity-check-device.json) potwierdza dostępne konto zgodne z kontem twórcy klucza. Nie odczytano profilu ani rekordów aplikacji, GPS lub muzyki; wynik zawiera wyłącznie UUID/czas i booleany.
+
+Właściciel potwierdził, że obecnie dysponuje tylko tym kontem. Konta operatora nie używamy jako dowodu odmowy dla zwykłego użytkownika. Natywna próba A/B pozostaje otwarta; nie wylogowywano właściciela i nie zmieniano Apple ID. Odbiór przed publikacją nadal wymaga osobnego, nieuprzywilejowanego konta testowego.

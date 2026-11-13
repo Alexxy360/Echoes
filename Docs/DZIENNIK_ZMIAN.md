@@ -226,3 +226,13 @@ Weryfikacja: rzeczywisty test S2S Development zakończył się poprawnym zapisem
 - `Docs/WORKERS_DIAGNOSTYKA.md`, `gateway/README.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `README.md`: kontrakt i stan prototypu oraz wyraźne ograniczenia odbioru.
 
 Weryfikacja: 25 testów lokalnych przeszło na Node 22.23.5; składnia MJS poprawna. Pierwsza wersja adaptera testowego wykonywała SQL dopiero przy odczycie kursora, co nie odpowiadało sql.exec; poprawiono adapter na natychmiastowe wykonanie i wszystkie testy przeszły. Nie powtarzano testów iOS bez zmiany aplikacji. Instalacja Miniflare nie powiodła się przez ECONNRESET/TLS oficjalnego registry; nie zmieniano weryfikacji certyfikatów i nie użyto nieoficjalnego źródła. Nie wdrożono endpointu, nie przyznano hostingowi dostępu, nie zmieniono planu i nie uruchomiono opłat. Pozostają runtime/CPU, realna próba HTTP i logowanie Apple użytkowników.
+
+## CK-02c — 2026-11-13 — kontrola tożsamości bez operacji na rekordach
+
+- `Echo/Services/CloudKitIdentityCheck.swift`: nowa diagnostyka Debug — natywne konto iCloud i porównanie SHA-256 tożsamości z podanym przez operatora wzorcem. Brak operacji na rekordach i profilach. Raport lokalny zawiera tylko UUID/czas, tryb, booleany oraz bezpieczny błąd. To nie jest mechanizm autoryzacji aplikacji.
+- `Echo/Views/CloudKitIdentityCheckView.swift`: osobny ekran porównania, opcjonalny autorun, stan oczekiwania i bezpieczny błąd, bez surowej tożsamości na ekranie.
+- `Echo/EchoApp.swift`: przełącznik Debug ECHOES_CLOUDKIT_IDENTITY_CHECK uruchamia nowy ekran i pomija Firebase/funkcje społecznościowe; Release zachowuje dotychczasową ścieżkę.
+- `Docs/evidence/cloudkit-identity-check-device.json`: rzeczywisty wynik z ponownie podłączonego iPhone’a 15 Pro — konto dostępne i zgodne z kontem operatora klucza. Nie odczytano profilu/GPS/muzyki, nie zmieniono Apple ID ani danych CloudKit.
+- `Docs/CLOUDKIT_DIAGNOSTYKA.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: opis trybu, wynik urządzeniowy i wymaganie drugiego konta. Właściciel ma obecnie tylko jedno; A/B pozostaje niezaliczony i jest warunkiem publikacji.
+
+Weryfikacja: podpisana kompilacja Debug przeszła, instalacja zaktualizowała istniejącą wersję bez kasowania danych, po samodzielnym odblokowaniu ekranu przez właściciela aplikacja zwróciła świeży raport z nowym UUID. Nie dodawano testów odtwarzających porównanie SHA-256 i nie powtarzano niepowiązanych testów backendu. Obsługa konta nadal korzysta z istniejącego, testowanego modułu EchoesCloudKit. Nie zmieniono ról ani schematu i nie uruchomiono opłat.

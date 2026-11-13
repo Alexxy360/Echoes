@@ -41,7 +41,7 @@ Odbiór: dowody testów dwóch kont i macierz uprawnień. Niespełnionych wymaga
 
 ### CK-02 — adapter CloudKit i tożsamość
 
-Postęp CK-02b: pakiet EchoesCloudKit podłączono jako lokalną zależność aplikacji; jego natywne źródło konta sprawdzono w podpisanym hoście Debug na prawdziwym iCloud. Tryb diagnostyczny pomija Firebase, mapę, GPS i muzykę. Zwykły CommunityClient nie jest jeszcze przełączony. Pełny CK-02 wymaga adaptera społecznościowego i pozostałych prób kont/sieci; nie kończy go pojedynczy udany test prywatny.
+Postęp CK-02b: pakiet EchoesCloudKit podłączono jako lokalną zależność aplikacji; jego natywne źródło konta sprawdzono w podpisanym hoście Debug na prawdziwym iCloud. Tryb diagnostyczny pomija Firebase, mapę, GPS i muzykę. Zwykły CommunityClient nie jest jeszcze przełączony. Pełny CK-02 wymaga adaptera społecznościowego i pozostałych prób kont/sieci; nie kończy go pojedynczy udany test prywatny. CK-02c: dodano osobną kontrolę tożsamości bez operacji na rekordach; podpisana próba na iPhonie potwierdziła konto operatorskie. Właściciel ma na razie tylko jedno konto, więc test A/B oczekuje na inne konto i pozostaje obowiązkowy przed publikacją.
 
 - Zachować niezależny EchoesCore i wstrzykiwanie zależności. Dopasować CommunityClient do CloudKit, zamiast kopiować do niego założenia Firebase.
 - Dodać obsługę konta iCloud oraz izolację cache po zmianie tożsamości; nie traktować identyfikatora Firebase/IDFV jako identyfikatora CloudKit.

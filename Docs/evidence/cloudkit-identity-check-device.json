@@ -1,0 +1,9 @@
+{
+  "accountAvailable": true,
+  "accountMatchesServiceIdentity": true,
+  "container": "iCloud.mpvEcho.Echo",
+  "environment": "Development",
+  "mode": "account-identity-only",
+  "runIdentifier": "571651FC-BFB8-42F7-B4CC-E74350214520",
+  "startedAt": "2026-11-13T09:28:14Z"
+}

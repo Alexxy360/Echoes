@@ -44,3 +44,13 @@ python3 scripts/cloudkit-preflight.py --entitlements /tmp/echoes-signed-entitlem
 `entitlements-match` potwierdza konfigurację dostarczonych plików, a wynik próby urządzeniowej — konkretne operacje na jednym koncie. Żaden z nich sam nie potwierdza izolacji dwóch kont.
 
 Podstawa interpretacji aliasu: [CKCurrentUserDefaultName](https://developer.apple.com/documentation/cloudkit/ckcurrentuserdefaultname) oraz zaobserwowane `creatorUsesCurrentUserAlias` w raporcie. Brak aliasu i brak zgodnego resolved ID pozostawia autora niepotwierdzonym.
+
+## Kontrola tożsamości konta — CK-02c
+
+Wyłącznie Debug: `ECHOES_CLOUDKIT_IDENTITY_CHECK=1`, opcjonalnie `ECHOES_CLOUDKIT_IDENTITY_AUTORUN=1`. W `ECHOES_CLOUDKIT_SERVICE_ID_HASH` operator przekazuje SHA-256 userRecordName ustalonego wcześniej z zatwierdzonego klucza. Hash jest porównywany lokalnie; raport nie zapisuje ani surowej tożsamości, ani jej hasha.
+
+Ten osobny ekran pomija Firebase i funkcje społecznościowe. Wykonuje wyłącznie natywne sprawdzenie dostępności konta i jego identyfikatora. Nie pobiera prywatnego/publicznego profilu i nie odczytuje, nie tworzy ani nie kasuje rekordów aplikacji. Zapisuje lokalnie `Documents/cloudkit-identity-result.json`: UUID/czas, tryb i booleany oraz ewentualny bezpieczny błąd.
+
+Wynik z iPhone’a 15 Pro: konto dostępne, zgodne z tożsamością klucza. [Raport](evidence/cloudkit-identity-check-device.json), przebieg `571651FC-BFB8-42F7-B4CC-E74350214520`, `2026-11-13T09:28:14Z`. Nie jest to próba odmowy dostępu dla innego użytkownika. Właściciel ma obecnie tylko jedno konto; A/B pozostaje warunkiem odbioru przed publikacją.
+
+Tryb oraz ekran nie trafiają do Release. Sam wynik porównania jest diagnostyką operatora, nie mechanizmem autoryzacji backendu.
