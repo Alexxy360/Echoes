@@ -72,4 +72,4 @@ Testy: `swift test --package-path EchoesCloudKit` i `python3 scripts/test_cloudk
 
 [Architektura i warianty dostępu](Docs/CLOUDKIT_ARCHITEKTURA.md) oraz [wyniki weryfikacji](Docs/CLOUDKIT_WERYFIKACJA.md) oddzielają gotowy kod lokalny od pozostałego odbioru CloudKit.
 
-[Pośrednik z darmowym limitem](Docs/CLOUDKIT_POSREDNIK_FREE.md): po decyzji o ograniczaniu odczytu zbadano Workers Free; `gateway` zawiera komponenty podpisywania/diagnostyki Development i 12 testów offline. Lokalny test S2S zapisu, odczytu i usunięcia przeszedł po skonfigurowaniu osobnej roli dla tożsamości klucza; S2S podlega rolom konta operatora. Nie jest jeszcze wdrożonym backendem ani gotowym uwierzytelnianiem.
+[Pośrednik z darmowym limitem](Docs/CLOUDKIT_POSREDNIK_FREE.md): po decyzji o ograniczaniu odczytu zbadano Workers Free; `gateway` zawiera komponenty podpisywania/diagnostyki Development oraz wyłączony prototyp HTTP/SQLite z 25 testami lokalnymi. Lokalny test S2S zapisu, odczytu i usunięcia przeszedł po skonfigurowaniu osobnej roli dla tożsamości klucza; S2S podlega rolom konta operatora. Nie jest jeszcze wdrożonym backendem ani gotowym uwierzytelnianiem.

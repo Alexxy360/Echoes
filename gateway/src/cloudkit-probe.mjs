@@ -42,16 +42,34 @@ function safeCode(error) {
   return error instanceof ProbeError ? error.code : "TRANSPORT_FAILED";
 }
 
-/** Trusted diagnostic only. Creates/deletes one server-chosen UUID; no user-selected record access. */
-export async function probeCloudKitDevelopment(signer, fetchImplementation = fetch) {
-  const report = {
+const uuid = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+const uuidPattern = new RegExp("^" + uuid + "$");
+const namePattern = new RegExp("^gateway-probe-" + uuid + "$");
+
+/** Trusted server generates this before reserving a durable run. Never derive it from HTTP input. */
+export function makeDevelopmentProbeContext() {
+  return {
     runIdentifier: randomUUID(), startedAt: new Date().toISOString(),
     environment: "Development", recordType,
-    syntheticRecordName: "gateway-probe-" + randomUUID(),
+    syntheticRecordName: "gateway-probe-" + randomUUID(), nonce: randomUUID(),
+  };
+}
+
+/** Trusted diagnostic only. A persisted context lets the operator reconcile a crash without a second write. */
+export async function probeCloudKitDevelopment(signer, fetchImplementation = fetch, context = makeDevelopmentProbeContext()) {
+  if (context?.environment !== "Development" || context.recordType !== recordType ||
+      !uuidPattern.test(context.runIdentifier ?? "") || !namePattern.test(context.syntheticRecordName ?? "") ||
+      !uuidPattern.test(context.nonce ?? "") || typeof context.startedAt !== "string" ||
+      !Number.isFinite(Date.parse(context.startedAt))) {
+    throw new TypeError("Invalid server-generated Development context.");
+  }
+  const { nonce } = context;
+  const report = {
+    runIdentifier: context.runIdentifier, startedAt: context.startedAt,
+    environment: "Development", recordType, syntheticRecordName: context.syntheticRecordName,
     writeSucceeded: false, readBackSucceeded: false, cleanupSucceeded: false,
   };
   const name = report.syntheticRecordName;
-  const nonce = randomUUID();
   async function call(operation, payload) {
     const response = await fetchImplementation(signer.request(operation, payload), {
       signal: AbortSignal.timeout(10_000),

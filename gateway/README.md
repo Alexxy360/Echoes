@@ -2,7 +2,7 @@
 
 Kandydat do hostingu: Cloudflare Workers Free, po sprawdzeniu limitów. [Projekt i kryteria odbioru](../Docs/CLOUDKIT_POSREDNIK_FREE.md).
 
-Obecny kod to wyłącznie **serwerowy konstruktor podpisanego żądania do CloudKit Development**, oraz ograniczona funkcja próbna, bez endpointu HTTP, logowania i wdrożenia. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów tożsamości serwerowej.
+Obecny kod zawiera serwerowe podpisywanie i ograniczoną próbę CloudKit Development oraz domyślnie wyłączony prototyp HTTP Workers z rezerwacją SQLite. Nie został wdrożony i nie ma jeszcze logowania użytkowników. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów tożsamości serwerowej.
 
 Testy na Node 22 (bez instalowania zależności):
 
@@ -10,9 +10,9 @@ Testy na Node 22 (bez instalowania zależności):
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie wykonują fetch. Dwanaście testów offline nie potwierdza akceptacji przez serwer ani 10 ms CPU Cloudflare.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie wykonują fetch. Pakiet ma obecnie 25 testów lokalnych, w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
 
-Podpisywanie korzysta z node:crypto. Dla compatibility_date 2026-11-12 zgodność Node jest domyślna; starsze daty wymagają nodejs_compat. Zgodność runtime i CPU należy sprawdzić na hostingu. Brak wrangler.toml i skryptu deploy jest zamierzony do czasu przygotowania konkretnej, ograniczonej próby; nie ma domyślnego endpointu Production.
+Podpisywanie korzysta z node:crypto. Dla compatibility_date 2026-11-12 zgodność Node jest domyślna; starsze daty wymagają nodejs_compat. Zgodność runtime i CPU należy sprawdzić na hostingu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma endpointu Production ani automatycznego deploy. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
 Rzeczywisty klucz powinien być PKCS#8 P-256, przechowywany w sekretach usługi. Nie umieszczać go w aplikacji, env śledzonym przez Git, logach lub czacie. Utworzenie przypisania S2S w Apple i przekazanie prywatnego klucza do hostingu jest osobnym przyznaniem dostępu; sam darmowy plan tego nie zatwierdza.
 

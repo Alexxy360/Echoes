@@ -90,3 +90,18 @@ test("mismatched or oversized response is not accepted, and only the generated U
     assert.equal(mock.requests[2].operations[0].record.recordName, report.syntheticRecordName);
   }
 });
+
+test("persisted server context keeps its UUID and never exports its nonce or extra fields", async () => {
+  const { makeDevelopmentProbeContext } = await import("../src/cloudkit-probe.mjs");
+  const context = { ...makeDevelopmentProbeContext(), unusedPrivateDetail: "SYNTHETIC-SECRET" };
+  const mock = server();
+  const report = await probeCloudKitDevelopment(signer, mock.fetch, context);
+  assert.equal(report.syntheticRecordName, context.syntheticRecordName);
+  assert.equal(Object.hasOwn(report, "nonce"), false);
+  assert.equal(Object.hasOwn(report, "unusedPrivateDetail"), false);
+  assert.equal(JSON.stringify(report).includes("SYNTHETIC-SECRET"), false);
+  let calls = 0;
+  await assert.rejects(() => probeCloudKitDevelopment(signer, async () => { calls++; },
+    { ...context, syntheticRecordName: "somebody-else" }), /Invalid server-generated/);
+  assert.equal(calls, 0);
+});
