@@ -10,7 +10,7 @@ Testy na Node 22 (bez instalowania zależności):
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 40 testów lokalnych (13 dotyczy wyłącznie lokalnej weryfikacji Apple JWT), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 57 testów lokalnych (13 dotyczy verifiera Apple JWT, 17 wyzwań/sesji SQLite), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -37,3 +37,7 @@ PROBE_LOCAL_CHECK_ONLY=1 pozwala przy nadal obowiązującym tokenie, UUID i term
 ## Lokalny komponent weryfikacji Apple — CK-02d
 
 apple-identity.mjs oraz apple-public-keys.mjs weryfikują RS256 i publiczne klucze Apple ze stałego adresu, issuer/audience/czas/nonce. Nie są importowane przez Worker ani bundler i nie tworzą endpointu, wyzwania ani sesji. expectedNonce pochodzi wyłącznie ze zaufanego magazynu wyzwań serwera; sam verifier pozwala ponownie zweryfikować ten sam token. Przed wdrożeniem konieczne jest atomowe zużycie wyzwania, limity, sesja, wymiana kodu i obsługa cofnięcia zgody. [Zakres, testy i dalszy odbiór](../Docs/APPLE_LOGOWANIE_GATEWAY.md).
+
+## Lokalne wyzwania i sesje — CK-02e
+
+AuthenticationState i AppleLoginCoordinator dodają wyzwanie 5 min, atomową rezerwację przed wymianą kodu, sesję do 10 min, skróty tokenów, trwałe wylogowanie/generacje i blokadę konta. Wymagają spójnego magazynu z transactionSync/sync oraz jawnego adaptera wymiany kodu; brak pozornego domyślnego sukcesu. Nie są podłączone do HTTP/Workers ani iOS. Prawdziwa wymiana Apple i refresh/revocation nadal nie są zaimplementowane. [Kontrakt i ograniczenia](../Docs/SESJE_I_WYZWANIA_GATEWAY.md).

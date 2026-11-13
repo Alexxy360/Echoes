@@ -1,0 +1,16 @@
+{
+  "recordedOn": "2026-11-13",
+  "newTestsPassed": 17,
+  "gatewaySuitePassed": 57,
+  "realSQLite": true,
+  "syntheticJWTAndKeys": true,
+  "realAppleCodeExchange": false,
+  "externalNetworkInNewTests": false,
+  "workerModulesDeployed": false,
+  "cloudResourcesCreated": false,
+  "oneUseChallengeLocalImplemented": true,
+  "sessionLocalImplemented": true,
+  "nativeLoginImplemented": false,
+  "distributedRoutingVerified": false,
+  "retentionAlarmConfigured": false
+}

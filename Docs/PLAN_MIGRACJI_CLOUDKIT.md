@@ -53,6 +53,8 @@ Odbiór: testy kontraktu adaptera oraz prawdziwa próba konta iCloud na urządze
 
 Postęp CK-02d: lokalna serwerowa weryfikacja Apple identity tokenów RS256 i pobieranie publicznych kluczy ze stałego adresu, cache i limity odpowiedzi. Przeszło 13 nowych testów, cały gateway ma 40. Komponent nie jest podłączony do HTTP ani wdrożony; nonce sam nie zastępuje atomowego zużycia wyzwania, sesji i odwołania zgody. Nie zmieniano App ID ani iOS. [Zakres i dalszy odbiór](APPLE_LOGOWANIE_GATEWAY.md).
 
+Postęp CK-02e: lokalne jednorazowe wyzwania i sesje w SQLite, z claim przed wymianą kodu, potwierdzeniem trwałości, skrótami tokenów, generacją wylogowania wszystkich i blokadą konta. 17 nowych testów, cały gateway ma 57. Bez wdrożenia/HTTP/iOS. Wymagany adapter wymiany kodu jest zależnością bez domyślnego sukcesu; prawdziwy Apple exchange, refresh/revocation, routing/limity między instancjami i retencja nadal oczekują. [Kryteria](SESJE_I_WYZWANIA_GATEWAY.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.

@@ -30,3 +30,7 @@ Przeszło 13 nowych testów na syntetycznych RSA/tokenach bez sieci/danych użyt
 3. Krótka sesja serwera, wygasanie, wylogowanie/unieważnienie i zasady autora. sub z telefonu nie jest sesją.
 4. Konfiguracja Sign in with Apple, natywny przepływ, zmiana konta, prawdziwy token i testy Workers/CPU. Node nie potwierdza tego etapu na hostingu.
 5. Zwykłe konta A/B i odrębna tożsamość serwisowa przed produkcją. Wynik konta operatora nie zastępuje tych testów.
+
+## CK-02e — lokalne wyzwania i sesje
+
+Dodano oddzielny, niewdrożony magazyn SQLite i koordynator łączący verifier z jednorazowym wyzwaniem, wymaganym adapterem wymiany kodu oraz sesją. 17 nowych testów przeszło, cały gateway ma 57. Wylogowanie, generacje unieważnienia i blokady są trwałe w obrębie spójnego magazynu. Prawdziwy adapter Apple, refresh/revocation, routing i HTTP/iOS nadal oczekują. [Przepływ, limity i wyniki](SESJE_I_WYZWANIA_GATEWAY.md). Sam verifier nadal nie zużywa wyzwania; robi to dopiero koordynator/magazyn.

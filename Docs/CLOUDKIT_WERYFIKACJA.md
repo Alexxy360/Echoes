@@ -108,3 +108,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02d — lokalna weryfikacja Apple identity tokenów
 
 13 nowych testów na syntetycznych RSA/JWT przeszło, a cały gateway ma 40 przechodzących testów. Sprawdzono niezależny podpis, alg/issuer/aud/nonce/czasy, format i rozmiar tokenu, redakcję claims, stały host kluczy, cache/rotację/współbieżność, brak wygasłego cache podczas awarii i odrzucanie przekierowań. Nie używano prawdziwego ID tokenu, danych konta ani sieci w testach. Publiczną konfigurację OpenID/JWKS Apple odczytano osobno jako podstawę protokołu. Nie wdrożono tych modułów w Workers ani nie zmieniono iOS. [Granice i kryteria](APPLE_LOGOWANIE_GATEWAY.md).
+
+## CK-02e — wyzwania i sesje SQLite
+
+17 nowych testów przeszło; cały zestaw ma 57. Prawdziwy lokalny SQLite potwierdza jedną wymianę kodu i sesję przy równoległości, zachowanie claimed po ponownym otwarciu, limity i wygaśnięcie, trwałe wylogowanie/blokadę, rollback oraz brak tokenów/nonce/sub w tabelach. ID tokeny/RSA są syntetyczne; adapter wymiany kodu jest testowy, bez sieci. Bez wdrożenia/nowego zasobu i zmian iOS. [Dowody i ograniczenia](SESJE_I_WYZWANIA_GATEWAY.md).
