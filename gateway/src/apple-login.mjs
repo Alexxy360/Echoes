@@ -21,6 +21,7 @@ export class AppleLoginCoordinator {
       const challenge = await this.#state.beginVerification(challengeID);
       const identity = await this.#verifier.verify(identityToken, challenge);
       await this.#state.claimChallenge(challengeID, challenge.expectedNonce);
+      await this.#state.reserveLoginCredential(challengeID, identity.appleSubject);
       let exchanged;
       try {
         exchanged = await this.#exchange({ authorizationCode });

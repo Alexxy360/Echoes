@@ -3,6 +3,7 @@ import { test } from "node:test";
 import { createHash, generateKeyPairSync, sign } from "node:crypto";
 import { AppleIdentityTokenVerifier, AppleIdentityError } from "../src/apple-identity.mjs";
 import { ApplePublicKeySource, AppleKeysUnavailable, AppleKeyNotFound, appleKeysURL } from "../src/apple-public-keys.mjs";
+import { appleSubjectHash } from "../src/refresh-credential-vault.mjs";
 
 // Synthetic issuer key and claims. These tests never read user tokens or use the network.
 const pair = generateKeyPairSync("rsa", { modulusLength: 2048 });
@@ -49,6 +50,35 @@ test("verifies a synthetic Node RSA signature with WebCrypto and exports only th
   assert.equal(JSON.stringify(result).includes(claims.name), false);
   await verifier.verify(token(), { expectedNonce }); assert.equal(calls(), 1);
   // A verifier alone deliberately does not consume the server's challenge.
+});
+
+test("refresh verification binds a signed response to the server subject without inventing a new nonce", async () => {
+  const { verifier } = fixture(), expectedSubjectHash = appleSubjectHash(claims.sub);
+  const withoutNonce = token({ ...claims, nonce: undefined });
+  const result = await verifier.verifyRefresh(withoutNonce, { expectedSubjectHash });
+  assert.deepEqual(result, { appleSubject: claims.sub, issuedAt: claims.iat, expiresAt: claims.exp });
+  await rejected(verifier, withoutNonce);
+  await verifier.verifyRefresh(token(), { expectedSubjectHash });
+});
+
+test("refresh cannot select another subject, issuer, audience, algorithm or stale proof", async () => {
+  const { verifier } = fixture(), expectedSubjectHash = appleSubjectHash(claims.sub);
+  for (const change of [{ sub: "another.user" }, { aud: "another.app" }, { iss: "https://attacker.invalid" },
+    { iat: timestamp - 601 }, { exp: timestamp }, { iat: timestamp + 31 }]) {
+    await assert.rejects(() => verifier.verifyRefresh(token({ ...claims, nonce: undefined, ...change }), { expectedSubjectHash }),
+      error => error instanceof AppleIdentityError && error.code === "INVALID_IDENTITY" && error.cause === undefined);
+  }
+  await assert.rejects(() => verifier.verifyRefresh(token(claims, { ...header, alg: "HS256" }), { expectedSubjectHash }));
+  const other = generateKeyPairSync("rsa", { modulusLength: 2048 });
+  await assert.rejects(() => verifier.verifyRefresh(token(claims, header, other.privateKey), { expectedSubjectHash }));
+});
+
+test("refresh verification requires a valid server-side subject hash before fetching keys", async () => {
+  const { verifier, calls } = fixture();
+  for (const expectedSubjectHash of [undefined, "client.user", "", "a".repeat(63)]) {
+    await assert.rejects(() => verifier.verifyRefresh(token(), { expectedSubjectHash }));
+  }
+  assert.equal(calls(), 0);
 });
 
 test("tampered claims or a different signing key cannot impersonate the Apple subject", async () => {

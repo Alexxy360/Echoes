@@ -80,3 +80,7 @@ Jednorazowe wyzwania, sesje i unieważnianie mają implementację/testy SQLite. 
 ## CK-02f — lokalny OAuth i szyfrowanie
 
 Adapter protokołu Apple i AES-256-GCM dla refresh są podłączone do lokalnego koordynatora; cały zestaw ma obecnie 80 testów. Bez nowych zasobów, opłat, nadania klucza czy wdrożenia. Cykl odnowienia/odwołania, limity/retencja credential, routing i rzeczywisty odbiór nadal wymagane. [Szczegóły](APPLE_OAUTH_I_TOKENY.md).
+
+## CK-02g — lokalne odnowienie i limity credential
+
+Dodano access/renewal, wykrywanie replay, wspólną kontrolę Apple najwyżej raz na 24 h, limity credential przed siecią i retencję w partiach. Cały gateway ma 116 testów. Limity (5000 ciphertextów/rezerwacji w magazynie, 64/sub) blokują wzrost zamiast uruchamiać opłaty; nie są gwarancją liczby użytkowników. Harmonogram, HTTP i pomiar Workers CPU nadal wymagane. Bez nowych usług/sekretów i wdrożenia. [Kontrakt](ODNAWIANIE_SESJI_GATEWAY.md).

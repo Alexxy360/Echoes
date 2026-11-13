@@ -1,6 +1,6 @@
 # Wymiana kodu Apple i ochrona tokenów — CK-02f
 
-Stan: 13 listopada 2026. Kod lokalny, połączony z koordynatorem logowania i testami SQLite. Nie wdrożono go do Workers/iOS, nie wykonano prawdziwej wymiany kodu ani nie utworzono klucza Sign in with Apple. Diagnostyczny Worker nadal jest wyłączony i nie ma sekretów w aktywnej wersji.
+Stan bazowego CK-02f: 13 listopada 2026. Aktualizacja CK-02g: 14 listopada 2026; [odnawianie i retencja](ODNAWIANIE_SESJI_GATEWAY.md) opisują bieżącą implementację. Kod lokalny, połączony z koordynatorem logowania i testami SQLite. Nie wdrożono go do Workers/iOS, nie wykonano prawdziwej wymiany kodu ani nie utworzono klucza Sign in with Apple. Diagnostyczny Worker nadal jest wyłączony i nie ma sekretów w aktywnej wersji.
 
 ## Kontrakt Apple
 
@@ -10,7 +10,7 @@ Stan: 13 listopada 2026. Kod lokalny, połączony z koordynatorem logowania i te
 
 Każda operacja ma limit 5 s obejmujący sieć i ciało odpowiedzi, do 64 KiB, ścisły UTF-8/JSON, ograniczone rozmiary tokenów i brak podążania za przekierowaniem. Błędy mają zamknięte kody, bez error_description, przyczyny, kodu autoryzacyjnego, tokenu czy klucza. Nie ma automatycznych ponowień. Access token jest walidowany i pomijany w wyniku adaptera. Wynik wymiany zawiera ID token i refresh token wyłącznie do wewnętrznego przetworzenia; nie jest odpowiedzią HTTP dla aplikacji.
 
-Refresh może zwrócić nowy token lub sam ID token. Ten adapter tylko realizuje protokół transportowy: **nie wydaje nowej sesji na podstawie refresh i nie zastępuje weryfikacji tożsamości**. Weryfikacja odnowionej tożsamości i rotacja wymagają osobnego przepływu; polityki nonce/świeżości pierwotnego logowania nie należy kopiować do niego bez analizy. Odwołanie uznaje wyłącznie pustą odpowiedź 200; ponowne odwołanie już unieważnionego tokenu ma taki sam wynik według [Apple Token revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens).
+Refresh może zwrócić nowy token lub sam ID token. Ten adapter tylko realizuje protokół transportowy: **nie wydaje nowej sesji na podstawie refresh i nie zastępuje weryfikacji tożsamości**. CK-02g dodaje osobny koordynator i verifyRefresh z powiązaniem sub po stronie serwera; polityki nonce/świeżości pierwotnego logowania nie należy kopiować do niego bez analizy. Odwołanie uznaje wyłącznie pustą odpowiedź 200; ponowne odwołanie już unieważnionego tokenu ma taki sam wynik według [Apple Token revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens).
 
 ## Zaszyfrowany magazyn i sesja
 
@@ -20,7 +20,7 @@ Klucz szyfrowania to oddzielny losowy sekret 256-bitowy, nie klucz Apple ani Clo
 
 Przepływ koordynatora:
 
-1. Zweryfikować token telefonu i trwale zarezerwować jednorazowe wyzwanie.
+1. Zweryfikować token telefonu i trwale zarezerwować jednorazowe wyzwanie oraz miejsce na credential.
 2. Jeden raz wymienić kod. Ponownie zweryfikować podpis/nonce/audience odpowiedzi Apple.
 3. Zaszyfrować refresh token z kontekstem zweryfikowanej odpowiedzi. Zapisać `auth_refresh_credentials_v1` jako pending i potwierdzić trwałość.
 4. Sprawdzić zgodność obu tożsamości. W jednej transakcji powiązać pending credential z kontem, zużyć wyzwanie i zapisać sesję. Brak credential lub inny subject blokuje transakcję.
@@ -35,10 +35,14 @@ Tabela zawiera UUID, skrót sub, ciphertext, status pending/bound, wewnętrzne a
 - Różne zweryfikowane sub nie wydają sesji. Zaszyfrowany pending zachowuje sub z odpowiedzi Apple i pozostaje do uzgodnienia; nie przypisujemy go drugiemu kontu.
 - Wygaśnięcie wyzwania podczas wymiany blokuje sesję, ale pozwala zachować znany token jako pending. Cleanup nie kasuje claimed przez dodatkowe 24 h. Nie przywraca to prawa do logowania ani ponowienia kodu.
 - Nie odwołujemy automatycznie zgody Apple po błędzie/limicie sesji: mogłoby to przerwać działające autoryzacje tego samego użytkownika. Logout aplikacji i odwołanie zgody Apple to różne operacje.
-- Credential nie jest kasowany przez purgeExpired sesji. Przed HTTP wymagane są: kontrolowany proces odwołania/usuwania, rozwiązywanie pending/nieznanych wyników, limity liczby/przestrzeni wpisów i harmonogram retencji. Bez tego wielokrotne logowania mogą powiększać tabelę. Nie traktować szyfrowania jako zamiennika retencji.
+- CK-02g dodaje limity/rezerwację credential oraz cleanup partii starszych niż 30 dni z ochroną aktualnego credential ważnych grantów. To nie jest odwołanie zgody Apple. Przed HTTP wymagane są nadal kontrolowany proces odwołania/usuwania, obsługa pending/nieznanych wyników i harmonogram. Nie traktować szyfrowania jako zamiennika retencji.
 
 ## Dowody i dalszy odbiór
 
 10 testów OAuth, 6 vault i 24 stanu/logowania (w tym 7 nowych integracyjnych). Pełna regresja gateway: **80/80** na Node 22.23.5. Żądania Apple zastępuje transport testowy; użyte klucze i tokeny są syntetyczne. Istniejąca regresja przekierowań używa loopback, bez Apple/Cloudflare. [Raport](evidence/apple-oauth-vault-local-tests.json).
 
 Przed aktywacją nadal wymagane: konfiguracja Sign in with Apple i świadome nadanie klucza, ochrona/rotacja prawdziwych sekretów, opisany wyżej cykl credential, spójny routing/limity HTTP, natywny przepływ i Keychain, rzeczywisty test Apple, Workers/CPU oraz zwykłe konta A/B. Nie dodano żadnych uprawnień, kosztów, endpointów ani operacji na prawdziwych tokenach użytkownika.
+
+## CK-02g — bieżąca integracja
+
+Odnowienie ma osobny koordynator i proof HMAC; wymaga innego klucza niż vault. Kontrola Apple co najmniej po 24 h, globalnie na konto; odnowiona tożsamość jest weryfikowana do oczekiwanego sub. Nowy refresh przechodzi osobny trwały staging przed sesją, także gdy logout lub nowsze logowanie uniemożliwia jej wydanie. Cała regresja ma obecnie 116 testów. Nadal bez prawdziwej wymiany Apple, nowych sekretów i wdrożenia. [Zasady replay/awarii, retencja i pozostały odbiór](ODNAWIANIE_SESJI_GATEWAY.md).

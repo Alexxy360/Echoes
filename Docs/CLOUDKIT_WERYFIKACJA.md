@@ -116,3 +116,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02f — OAuth i zaszyfrowane credential lokalnie
 
 80/80 testów gateway, w tym 23 nowe: 10 OAuth, 6 AES-256-GCM i 7 integracyjnych SQLite/logowania (24 razem w tej grupie). Niezależnie zweryfikowano podpis ES256 raw, ograniczenia transportu, szyfrowanie i kontekst, rotację klucza w pamięci, zapis pending/bound, awarie i odtworzenie. Odpowiedzi Apple są syntetyczne; brak rzeczywistego kodu/refresh/revoke i zmian chmury/iOS. To dowód lokalnej implementacji, nie zaliczenie prawdziwego logowania ani Workers CPU. [Raport](evidence/apple-oauth-vault-local-tests.json), [kontrakt i pozostały odbiór](APPLE_OAUTH_I_TOKENY.md).
+
+## CK-02g — odnowienie i retencja lokalnie
+
+116/116 testów gateway, w tym 36 nowych: 29 integracyjnych, 3 verifiera refresh, 4 HMAC. Testy odtwarzają replay po wielu rotacjach, współbieżność/dwa granty, dobową kontrolę, późny sukces/błąd po logout/blokadzie/relogin, SQL/sync i zachowanie pending ciphertext, reopen z oddzielnymi kluczami, limity i bounded cleanup. Transport Apple syntetyczny, SQLite rzeczywiste lokalne. Nie jest to dowód A/B, prawdziwego Apple/Keychain ani Workers CPU. Bez zmian usług, sekretów, iOS i kosztów. [Raport](evidence/session-renewal-local-tests.json), [kontrakt i pozostały odbiór](ODNAWIANIE_SESJI_GATEWAY.md).

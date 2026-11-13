@@ -38,3 +38,7 @@ Dodano oddzielny, niewdrożony magazyn SQLite i koordynator łączący verifier 
 ## CK-02f — lokalny adapter OAuth i ochrona refresh
 
 Do koordynatora podłączono konkretny adapter protokołu Apple, osobny podpis ES256 oraz obowiązkowe szyfrowanie/pending credential przed sesją. Cała regresja ma 80 testów, w tym 23 nowe. Nie wykonano rzeczywistej wymiany ani konfiguracji Sign in with Apple; nie ma wdrożenia. Cykl refresh/odwołania, limity/retencja i pozostały odbiór są nadal otwarte. [Szczegóły](APPLE_OAUTH_I_TOKENY.md).
+
+## CK-02g — weryfikacja odpowiedzi refresh
+
+verifyRefresh współdzieli sprawdzanie podpisu/czasu/issuer/native audience, ale wiąże sub ze skrótem zaufanego magazynu zamiast wymyślania nonce nowego logowania. Pierwotne verify nadal wymaga nonce. To metoda wewnętrzna wyłącznie dla odpowiedzi serwerowego adaptera, nie alternatywny endpoint klienta. 3 nowe testy dają 16 verifiera/JWKS; cały gateway ma 116. Osobny koordynator obejmuje dobową kontrolę, rotację i unieważnianie replay. Bez prawdziwych tokenów i wdrożenia. [Szczegóły](ODNAWIANIE_SESJI_GATEWAY.md).

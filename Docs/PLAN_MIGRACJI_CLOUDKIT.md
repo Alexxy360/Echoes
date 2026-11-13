@@ -1,6 +1,6 @@
 # Plan migracji Echoes do CloudKit
 
-Aktualizacja: 13 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01 w realizacji; zarejestrowano App ID i kontener, skonfigurowano podpisany Debug oraz wykonano rzeczywisty test prywatnej bazy jednego konta. Zwykły klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu Production ani migracji danych użytkowników.
+Aktualizacja: 14 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01/CK-02 w realizacji; zarejestrowano App ID i kontener, skonfigurowano podpisany Debug oraz wykonano rzeczywisty test prywatnej bazy jednego konta. Zwykły klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu Production ani migracji danych użytkowników.
 
 ## Cel i zakres
 
@@ -56,6 +56,8 @@ Postęp CK-02d: lokalna serwerowa weryfikacja Apple identity tokenów RS256 i po
 Postęp CK-02e: lokalne jednorazowe wyzwania i sesje w SQLite, z claim przed wymianą kodu, potwierdzeniem trwałości, skrótami tokenów, generacją wylogowania wszystkich i blokadą konta. 17 nowych testów, cały gateway ma 57. Bez wdrożenia/HTTP/iOS. Wymagany adapter wymiany kodu jest zależnością bez domyślnego sukcesu; prawdziwy Apple exchange, refresh/revocation, routing/limity między instancjami i retencja nadal oczekują. [Kryteria](SESJE_I_WYZWANIA_GATEWAY.md).
 
 Postęp CK-02f: konkretny lokalny adapter wymiany kodu/refresh/revoke Apple, osobny ES256 client_secret oraz AES-256-GCM z wersjonowanym kluczem. Zaszyfrowany refresh jest trwale zapisany przed powiązaniem z kontem i wydaniem sesji; awarie nie ponawiają jednorazowego kodu. 23 nowe testy, cały gateway ma 80. Bez nowych uprawnień/sekretów, żądań Apple/Cloudflare i wdrożenia. Retencja/limity credential, cykl refresh/odwołania, konfiguracja Apple i natywny/Workers odbiór pozostają wymagane. [Kontrakt i granice](APPLE_OAUTH_I_TOKENY.md).
+
+Postęp CK-02g: lokalne rotowane pary access/renewal z limitem bezwzględnym 30 dni, integralność HMAC i wykrywanie starej rotacji z unieważnieniem tej sesji. Kontrola Apple najwyżej raz na 24 h na konto; lease/revision, rezerwacja przestrzeni przed siecią i trwały staging nowego ciphertext przed sesją. Limity credential i cleanup w partiach mają kod/testy, ale brak alarmu. 36 nowych testów, cały gateway 116. Bez wdrożenia i prawdziwych tokenów; kolejka revoke/usunięcia danych, natywny przepływ/Keychain, HTTP i rzeczywiste próby nadal wymagane. [Kontrakt i granice](ODNAWIANIE_SESJI_GATEWAY.md).
 
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 

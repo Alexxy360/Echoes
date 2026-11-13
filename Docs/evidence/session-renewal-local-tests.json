@@ -1,0 +1,22 @@
+{
+  "stage": "CK-02g",
+  "observedAtUTC": "2026-11-13T23:08:00Z",
+  "localDate": "2026-11-14 Europe/Warsaw",
+  "runtime": "Node.js 22.23.5",
+  "command": "node --test gateway/test/*.test.mjs",
+  "passed": 116,
+  "failed": 0,
+  "newTests": 36,
+  "groups": { "authenticationStateLoginRenewal": 53, "appleIdentityAndJWKS": 16, "renewalIntegrity": 4, "oauth": 10, "vault": 6, "previousDiagnostics": 27 },
+  "accessLifetimeMaximumSeconds": 600,
+  "renewalAbsoluteLifetimeSeconds": 2592000,
+  "providerCheckIntervalSeconds": 86400,
+  "storage": "real local SQLite through synchronous test adapter",
+  "appleTransport": "synthetic responses only",
+  "replay": "integrity-protected old sequence revokes that grant family",
+  "cloudDeployment": false,
+  "realUserTokens": false,
+  "externalAppleOrCloudflareRequests": 0,
+  "newServicesSecretsOrCharges": false,
+  "remainingAcceptance": ["Apple revocation and app data deletion workflow", "alarm and HTTP limits/routing", "native authentication/Keychain", "real Apple tokens", "Workers runtime/CPU", "ordinary accounts A/B"]
+}
