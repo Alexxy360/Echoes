@@ -246,3 +246,11 @@ Weryfikacja: podpisana kompilacja Debug przeszła, instalacja zaktualizowała is
 - `Docs/WORKERS_DIAGNOSTYKA.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: rozdzielono pustą usługę od niewdrożonego prototypu, opisano oczekującą zgodę na kod/konfigurację i nowego odbiorcę klucza.
 
 Weryfikacja: panel pokazał gotową usługę i Hello World w preview, kod zdalny zawiera tylko plik dostawcy, a plan jest Free. Nie jest to test S2S z Cloudflare, DO ani 10 ms CPU. Zmiany repozytorium dotyczą wyłącznie raportów; nie powtarzano testów kodu. Zastaną, niepowiązaną zmianę project.pbxproj zachowano poza tym commitem.
+
+## CK-01i — 2026-11-13 — wyjaśnienie roli dodatkowego dostawcy
+
+- Właściciel napisał „możesz zrobić, ale wytłumacz” i poprosił o jasne wyjaśnienie Cloudflare. Wyjaśniono rozdział: CloudKit pozostaje backendem/bazą Apple, a Workers ma uruchamiać dodatkową logikę dostępu; aktualny zakres to wyłącznie próba syntetyczna, bez profili/mapy/czatu. Zaznaczono, że konkretny dostawca był wyborem technicznym po decyzji o dodatkowej usłudze i powinien był zostać przedstawiony wyraźniej.
+- `Docs/CLOUDKIT_POSREDNIK_FREE.md`: dodano opis celu, odpowiedzialności, granicy kontroli GPS, osobnego utrzymania i obecnego stanu próby.
+- Po wyjaśnieniu podjęto próbę wznowienia zatwierdzanego zakresu, lecz automatyczna kontrola ponownie odrzuciła kliknięcie New File. Stwierdziła brak jednoznacznego potwierdzenia po wyjaśnieniu zakresu. Nie obchodzono blokady, nie dodano pliku, nie przekazano klucza i nie opublikowano kodu Echoes. Właściciel otrzymuje osobne pytanie potwierdzające konkretny zakres.
+
+Weryfikacja: odczytano stan repozytorium i zdalnego edytora; nadal tylko worker.js dostawcy. Sprawdzono istnienie i uprawnienia lokalnego klucza bez wypisywania jego wartości. Zmiany są wyłącznie dokumentacyjne, dlatego nie powtarzano testów kodu. Lokalna zmiana project.pbxproj pozostaje nietknięta i poza commitem.

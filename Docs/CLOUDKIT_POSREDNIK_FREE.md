@@ -2,6 +2,16 @@
 
 Stan: 13 listopada 2026. Właściciel wybrał ograniczanie odczytu mapy/czatu przez dodatkową usługę i najpierw zbadanie darmowego limitu. Kandydat: **Cloudflare Workers Free**. Po samodzielnym logowaniu właściciela panel Workers plans potwierdził **Free / Current plan / $0**. Nie aktywowano Paid, nie dodawano karty i utworzono tylko pustą usługę Hello World, bez kodu Echoes i dostępu do CloudKit.
 
+## Po co Cloudflare w tym projekcie
+
+CloudKit pozostaje backendem Apple: przechowuje dane i egzekwuje role rekordów. Cloudflare Workers jest wybranym kandydatem do uruchamiania dodatkowego kodu serwerowego potrzebnego Echoes. Nie jest częścią Apple i nie zastępuje CloudKit.
+
+Docelowo telefon będzie wysyłał chronione zapytania mapy/czatu do pośrednika. Pośrednik ma sprawdzić sesję użytkownika, zakres zapytania o okolicę, blokady i limity przed operacją CloudKit. Sama oficjalna aplikacja nie może być jedynym miejscem tych kontroli, ponieważ zmodyfikowany klient może je pominąć. Ograniczenie odpowiedzi według zgłoszonej okolicy nie jest dowodem fizycznego pobytu ani pełną ochroną przed fałszowaniem GPS.
+
+Właściciel wybrał dodatkową usługę ograniczającą odczyt i priorytet darmowego limitu. Cloudflare był wyborem technicznym wykonawcy po tej decyzji, a nie wymaganiem Apple; wybór konkretnego dostawcy należało przedstawić wyraźniej. Aktualny plan na koncie to Workers Free. Hosting dodatkowego kodu oznacza osobną konfigurację i utrzymanie.
+
+Wykonywana teraz próba dotyczy tylko jednego syntetycznego rekordu EchoesGatewayProbeV1 w Development. Zwykły klient, profile, mapa i czat nie są podłączone do Cloudflare. W usłudze jest wciąż wyłącznie Hello World, bez sekretów. Publikacja przygotowanego kodu i przekazanie klucza nowemu odbiorcy wymagają jednoznacznej zgody po tym wyjaśnieniu. Kod ma pojedynczą rezerwację i aktywację maksymalnie 2 h; nie jest jeszcze backendem użytkowników.
+
 ## Sprawdzone limity
 
 | Element | Bezpłatny limit | Skutek dla projektu |
