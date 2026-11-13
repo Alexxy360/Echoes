@@ -1,0 +1,14 @@
+{
+  "recordedOn": "2026-11-13",
+  "service": "echoes-development-probe",
+  "publicURL": "https://echoes-development-probe.2rnd2bt6rd.workers.dev/",
+  "cloudflarePlan": "Workers Free",
+  "planObservedOn": "2026-11-13",
+  "deployedCode": "Cloudflare-generated Hello World template only",
+  "echoesPrototypeSourceUploaded": false,
+  "durableObjectNamespaceCreated": false,
+  "cloudKitCredentialsTransferred": false,
+  "cloudKitDatabaseAccessConfigured": false,
+  "cloudKitProductionModified": false,
+  "remoteCodeEditing": "awaits explicit approval after automatic review rejection"
+}

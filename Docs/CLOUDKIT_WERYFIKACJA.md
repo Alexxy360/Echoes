@@ -76,3 +76,7 @@ Przeszło 25 testów Node 22 (12 wcześniejszych, kontekst, 6 HTTP i 6 rezerwacj
 13 listopada 2026 skompilowano i podpisano Debug, zaktualizowano zatwierdzoną aplikację na ponownie podłączonym iPhonie 15 Pro bez odinstalowania/danych i uruchomiono osobną kontrolę konta. Wymagała odblokowania ekranu przez właściciela. [Raport rzeczywisty](evidence/cloudkit-identity-check-device.json) potwierdza dostępne konto zgodne z kontem twórcy klucza. Nie odczytano profilu ani rekordów aplikacji, GPS lub muzyki; wynik zawiera wyłącznie UUID/czas i booleany.
 
 Właściciel potwierdził, że obecnie dysponuje tylko tym kontem. Konta operatora nie używamy jako dowodu odmowy dla zwykłego użytkownika. Natywna próba A/B pozostaje otwarta; nie wylogowywano właściciela i nie zmieniano Apple ID. Odbiór przed publikacją nadal wymaga osobnego, nieuprzywilejowanego konta testowego.
+
+## CK-01h — stan Cloudflare przed publikacją prototypu
+
+Utworzono pustą usługę echoes-development-probe z domyślną odpowiedzią Hello World. Plan Free / Current plan / $0 potwierdzono ponownie w panelu 13 listopada. Brak sekretów, bindings i dostępu do CloudKit. [Zapis obserwacji](evidence/cloudflare-development-worker-bootstrap.json). Automatyczna kontrola zatrzymała dodanie pierwszego pliku do zdalnego edytora jako niezatwierdzoną modyfikację aktywnej usługi. Kod prototypu Echoes nadal nie jest wdrożony; oczekuje konkretna zgoda na zdalny kod, konfigurację próby i nowego odbiorcę klucza. Nie zmieniono CloudKit Production ani nie uruchomiono opłat.

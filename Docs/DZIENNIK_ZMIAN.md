@@ -236,3 +236,13 @@ Weryfikacja: 25 testów lokalnych przeszło na Node 22.23.5; składnia MJS popra
 - `Docs/CLOUDKIT_DIAGNOSTYKA.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: opis trybu, wynik urządzeniowy i wymaganie drugiego konta. Właściciel ma obecnie tylko jedno; A/B pozostaje niezaliczony i jest warunkiem publikacji.
 
 Weryfikacja: podpisana kompilacja Debug przeszła, instalacja zaktualizowała istniejącą wersję bez kasowania danych, po samodzielnym odblokowaniu ekranu przez właściciela aplikacja zwróciła świeży raport z nowym UUID. Nie dodawano testów odtwarzających porównanie SHA-256 i nie powtarzano niepowiązanych testów backendu. Obsługa konta nadal korzysta z istniejącego, testowanego modułu EchoesCloudKit. Nie zmieniono ról ani schematu i nie uruchomiono opłat.
+
+## CK-01h — 2026-11-13 — pusta usługa Workers i stan przed publikacją kodu
+
+- W panelu Cloudflare utworzono echoes-development-probe z domyślnym Hello World. Brak bindings, prywatnego klucza i innych sekretów. Kod aplikacji Echoes nie jest tam wdrożony, a usługa nie ma dostępu do CloudKit. Domyślna etykieta Production w Cloudflare nie zmienia środowiska Apple.
+- Ponownie odczytano Workers plans: Free / Current plan / $0. Nie wybierano Paid ani płatnych dodatków, nie podawano karty.
+- Automatyczna kontrola odrzuciła dodanie pliku cloudkit-request.mjs do zdalnego edytora jako trwałą modyfikację aktywnej usługi bez jednoznacznej zgody. Nie powstał plik i nie obchodzono blokady. Formularz tworzenia pliku anulowano, pozostaje tylko worker.js dostawcy. Klucz pozostaje lokalnie.
+- `Docs/evidence/cloudflare-development-worker-bootstrap.json`: zapis faktycznego stanu bez prywatnych danych konta Cloudflare i sekretów.
+- `Docs/WORKERS_DIAGNOSTYKA.md`, `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`: rozdzielono pustą usługę od niewdrożonego prototypu, opisano oczekującą zgodę na kod/konfigurację i nowego odbiorcę klucza.
+
+Weryfikacja: panel pokazał gotową usługę i Hello World w preview, kod zdalny zawiera tylko plik dostawcy, a plan jest Free. Nie jest to test S2S z Cloudflare, DO ani 10 ms CPU. Zmiany repozytorium dotyczą wyłącznie raportów; nie powtarzano testów kodu. Zastaną, niepowiązaną zmianę project.pbxproj zachowano poza tym commitem.

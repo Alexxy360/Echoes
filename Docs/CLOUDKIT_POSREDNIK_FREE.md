@@ -1,6 +1,6 @@
 # Pośrednik CloudKit z darmowym limitem — CK-01d
 
-Stan: 13 listopada 2026. Właściciel wybrał ograniczanie odczytu mapy/czatu przez dodatkową usługę i najpierw zbadanie darmowego limitu. Kandydat: **Cloudflare Workers Free**. Po samodzielnym logowaniu właściciela panel Workers plans potwierdził **Free / Current plan / $0**. Nie aktywowano Paid, nie dodawano karty i nie wdrożono jeszcze usługi sieciowej.
+Stan: 13 listopada 2026. Właściciel wybrał ograniczanie odczytu mapy/czatu przez dodatkową usługę i najpierw zbadanie darmowego limitu. Kandydat: **Cloudflare Workers Free**. Po samodzielnym logowaniu właściciela panel Workers plans potwierdził **Free / Current plan / $0**. Nie aktywowano Paid, nie dodawano karty i utworzono tylko pustą usługę Hello World, bez kodu Echoes i dostępu do CloudKit.
 
 ## Sprawdzone limity
 
@@ -60,3 +60,5 @@ Korekta po rzeczywistym teście: opis klucza jako automatycznie dającego dostę
 ## CK-01g — prototyp HTTP i rezerwacja pojedynczego przebiegu
 
 Przygotowano domyślnie wyłączony Worker, ograniczoną czasowo autoryzację techniczną i Durable Object SQLite do trwałej rezerwacji jednej próby. To nadal diagnostyka, nie logowanie Apple użytkowników ani obsługa mapy/czatu. [Dokładny kontrakt, konfiguracja i ograniczenia testów](WORKERS_DIAGNOSTYKA.md). Nie wdrożono kodu i nie przekazano klucza Cloudflare; test runtime pozostaje otwarty po błędach połączenia z oficjalnym npm.
+
+W CK-01h utworzono pustą usługę echoes-development-probe i ponownie potwierdzono Free w panelu 13 listopada. Kod prototypu nadal czeka na jednoznaczną zgodę na zmianę aktywnej usługi i przyznanie dostępu hostingowi. [Stan i zakres](WORKERS_DIAGNOSTYKA.md#ck-01h--pusta-usługa-cloudflare-i-zgoda-na-zdalny-kod).

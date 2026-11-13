@@ -1,6 +1,6 @@
 # Prototyp diagnostyczny Workers — CK-01g
 
-Stan: 13 listopada 2026. Kod jest przygotowany i sprawdzony lokalnie. Nie został wdrożony do Cloudflare, nie przekazano klucza i nie uruchomiono opłat. To techniczna próba jednego syntetycznego rekordu, a nie logowanie ani backend użytkowników Echoes.
+Stan: 13 listopada 2026. Kod prototypu jest przygotowany i sprawdzony lokalnie. W Cloudflare utworzono samą usługę z domyślnym Hello World; kod Echoes nie został jeszcze do niej dodany, nie przekazano klucza i nie uruchomiono opłat. To techniczna próba jednego syntetycznego rekordu, a nie logowanie ani backend użytkowników Echoes.
 
 ## Zakres
 
@@ -44,3 +44,13 @@ Awaria procesu pomiędzy operacjami sieciowymi może pozostawić rekord testowy.
 Testy używają wbudowanego SQLite Node oraz adaptera interfejsu sql.exec. Nie wykonują fetch do Apple/Cloudflare i nie czytają rzeczywistego klucza. Sprawdzenie składni plików MJS przeszło. Nie uruchomiono jeszcze klasy w workerd/Miniflare ani na hostingu i nie zmierzono 10 ms CPU.
 
 Próba pobrania metadanych Miniflare z registry.npmjs.org zakończyła się ECONNRESET; niezależny curl również zakończył się błędem połączenia TLS. Nie wyłączano kontroli certyfikatów ani nie instalowano pakietów z nieoficjalnego źródła. Zależności runtime modułu pozostają zerowe. Weryfikacja runtime Workers pozostaje przed przekazaniem sekretu i testem sieciowym.
+
+## CK-01h — pusta usługa Cloudflare i zgoda na zdalny kod
+
+W panelu utworzono `echoes-development-probe` na koncie Workers Free. Aktualny plan ponownie odczytano 13 listopada: Free / Current plan / $0. Adres: https://echoes-development-probe.2rnd2bt6rd.workers.dev/ . Jest tam wyłącznie domyślny Hello World dostawcy, bez sekretów i bindings; nie jest to prototyp Echoes ani backend aplikacji. [Zapis stanu](evidence/cloudflare-development-worker-bootstrap.json).
+
+Środowisko w panelu Cloudflare ma domyślną etykietę Production. Nie oznacza to przełączenia kontenera CloudKit: usługa nie ma żadnego połączenia z CloudKit, a przygotowany podpisujący kod dopuszcza tylko Development.
+
+Automatyczna kontrola odrzuciła utworzenie pierwszego pliku cloudkit-request.mjs w zdalnym edytorze jako trwałą zmianę wdrożonej usługi bez jednoznacznej zgody. Plik nie powstał, nie publikowano żadnego kodu Echoes, nie obchodzono blokady. Przygotowano do zatwierdzenia modyfikację/publikację istniejącego Workera, klasę SQLite dla pojedynczej próby, konfigurację/token i ewentualne przekazanie zatwierdzonego klucza Development jako sekretu wyłącznie tej usługi.
+
+To nowy odbiorca klucza: wcześniejsza zgoda dotyczyła pozostawienia go lokalnie. Dopóki nie ma konkretnego potwierdzenia, prywatny klucz pozostaje wyłącznie na Macu. Samo Hello World potwierdza utworzenie usługi, nie akceptację modułów Node, działanie DO, dostęp CloudKit ani pomiar CPU prototypu.
