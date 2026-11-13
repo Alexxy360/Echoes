@@ -1,14 +1,16 @@
 import { AppleIdentityError } from "./apple-identity.mjs";
 import { AuthenticationStateError } from "./authentication-state.mjs";
+import { appleSubjectHash } from "./refresh-credential-vault.mjs";
 
 /** No default code-exchange stub. A trusted real Apple adapter is mandatory before any HTTP wiring. */
 export class AppleLoginCoordinator {
-  #state; #verifier; #exchange;
-  constructor({ state, verifier, exchangeAuthorizationCode } = {}) {
-    if (!state || typeof verifier?.verify !== "function" || typeof exchangeAuthorizationCode !== "function") {
+  #state; #verifier; #exchange; #vault;
+  constructor({ state, verifier, exchangeAuthorizationCode, credentialVault } = {}) {
+    if (!state || typeof verifier?.verify !== "function" || typeof exchangeAuthorizationCode !== "function" ||
+        typeof credentialVault?.seal !== "function") {
       throw new AuthenticationStateError();
     }
-    this.#state = state; this.#verifier = verifier; this.#exchange = exchangeAuthorizationCode;
+    this.#state = state; this.#verifier = verifier; this.#exchange = exchangeAuthorizationCode; this.#vault = credentialVault;
   }
 
   async login({ challengeID, identityToken, authorizationCode } = {}) {
@@ -19,13 +21,17 @@ export class AppleLoginCoordinator {
       const challenge = await this.#state.beginVerification(challengeID);
       const identity = await this.#verifier.verify(identityToken, challenge);
       await this.#state.claimChallenge(challengeID, challenge.expectedNonce);
-      let exchangedToken;
+      let exchanged;
       try {
-        // The adapter must validate Apple's response and safely handle refresh/revocation credentials.
-        // No code, ID token or refresh token is stored by this coordinator.
-        exchangedToken = await this.#exchange({ authorizationCode, expectedNonce: challenge.expectedNonce });
+        exchanged = await this.#exchange({ authorizationCode });
       } catch { throw new AuthenticationStateError("EXCHANGE_UNAVAILABLE"); }
-      const exchangedIdentity = await this.#verifier.verify(exchangedToken, challenge);
+      const exchangedIdentity = await this.#verifier.verify(exchanged?.identityToken, challenge);
+      const sealedCredential = this.#vault.seal(exchanged.refreshToken, {
+        credentialID: challengeID, subjectHash: appleSubjectHash(exchangedIdentity.appleSubject),
+      });
+      await this.#state.stageRefreshCredential(challengeID, {
+        appleSubject: exchangedIdentity.appleSubject, sealedCredential,
+      });
       if (identity.appleSubject !== exchangedIdentity.appleSubject) throw new AuthenticationStateError("INVALID_IDENTITY");
       return await this.#state.completeLogin(challengeID, {
         appleSubject: identity.appleSubject,

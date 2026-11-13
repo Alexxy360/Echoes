@@ -34,3 +34,7 @@ Przeszło 13 nowych testów na syntetycznych RSA/tokenach bez sieci/danych użyt
 ## CK-02e — lokalne wyzwania i sesje
 
 Dodano oddzielny, niewdrożony magazyn SQLite i koordynator łączący verifier z jednorazowym wyzwaniem, wymaganym adapterem wymiany kodu oraz sesją. 17 nowych testów przeszło, cały gateway ma 57. Wylogowanie, generacje unieważnienia i blokady są trwałe w obrębie spójnego magazynu. Prawdziwy adapter Apple, refresh/revocation, routing i HTTP/iOS nadal oczekują. [Przepływ, limity i wyniki](SESJE_I_WYZWANIA_GATEWAY.md). Sam verifier nadal nie zużywa wyzwania; robi to dopiero koordynator/magazyn.
+
+## CK-02f — lokalny adapter OAuth i ochrona refresh
+
+Do koordynatora podłączono konkretny adapter protokołu Apple, osobny podpis ES256 oraz obowiązkowe szyfrowanie/pending credential przed sesją. Cała regresja ma 80 testów, w tym 23 nowe. Nie wykonano rzeczywistej wymiany ani konfiguracji Sign in with Apple; nie ma wdrożenia. Cykl refresh/odwołania, limity/retencja i pozostały odbiór są nadal otwarte. [Szczegóły](APPLE_OAUTH_I_TOKENY.md).

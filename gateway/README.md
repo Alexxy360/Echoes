@@ -10,7 +10,7 @@ Testy na Node 22 (bez instalowania zależności):
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 57 testów lokalnych (13 dotyczy verifiera Apple JWT, 17 wyzwań/sesji SQLite), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 80 testów lokalnych (13 dotyczy verifiera Apple JWT, 24 wyzwań/sesji SQLite, 10 OAuth, 6 szyfrowania credential), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -40,4 +40,10 @@ apple-identity.mjs oraz apple-public-keys.mjs weryfikują RS256 i publiczne kluc
 
 ## Lokalne wyzwania i sesje — CK-02e
 
-AuthenticationState i AppleLoginCoordinator dodają wyzwanie 5 min, atomową rezerwację przed wymianą kodu, sesję do 10 min, skróty tokenów, trwałe wylogowanie/generacje i blokadę konta. Wymagają spójnego magazynu z transactionSync/sync oraz jawnego adaptera wymiany kodu; brak pozornego domyślnego sukcesu. Nie są podłączone do HTTP/Workers ani iOS. Prawdziwa wymiana Apple i refresh/revocation nadal nie są zaimplementowane. [Kontrakt i ograniczenia](../Docs/SESJE_I_WYZWANIA_GATEWAY.md).
+AuthenticationState i AppleLoginCoordinator dodają wyzwanie 5 min, atomową rezerwację przed wymianą kodu, sesję do 10 min, skróty tokenów, trwałe wylogowanie/generacje i blokadę konta. Wymagają spójnego magazynu z transactionSync/sync oraz jawnego adaptera wymiany kodu; brak pozornego domyślnego sukcesu. Nie są podłączone do HTTP/Workers ani iOS. CK-02f dodaje lokalny adapter protokołu Apple i zaszyfrowane credential; prawdziwy przepływ i cykl refresh/revocation nadal oczekują odbioru. [Kontrakt i ograniczenia](../Docs/SESJE_I_WYZWANIA_GATEWAY.md).
+
+## Lokalny OAuth i zaszyfrowane credential — CK-02f
+
+AppleOAuthClient implementuje wymianę kodu, walidację refresh i odwołanie na stałych URL Apple, bez redirect/retry. AppleClientSecret podpisuje krótkie ES256 JWT osobnym kluczem Sign in with Apple. RefreshCredentialVault używa AES-256-GCM z wersją klucza i kontekstem konta/wyzwania. Koordynator wymaga ciphertext pending w SQLite przed atomowym powiązaniem z kontem i wydaniem sesji. Nie ma fallbacku bez refresh/vault. Tokeny i klucze nie należą do odpowiedzi HTTP/logów.
+
+Nie utworzono prawdziwych sekretów ani uprawnień, nie zmieniono Worker/bundlera/iOS. Transport refresh/revoke nie jest kompletnym przepływem odnowienia/usunięcia konta. Przed wdrożeniem wymagane są retencja i limity credential, rozwiązywanie pending, routing/limity oraz rzeczywiste Apple/Workers/native testy. [Kontrakt, obsługa awarii i dowody](../Docs/APPLE_OAUTH_I_TOKENY.md).

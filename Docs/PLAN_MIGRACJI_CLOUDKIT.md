@@ -55,6 +55,8 @@ Postęp CK-02d: lokalna serwerowa weryfikacja Apple identity tokenów RS256 i po
 
 Postęp CK-02e: lokalne jednorazowe wyzwania i sesje w SQLite, z claim przed wymianą kodu, potwierdzeniem trwałości, skrótami tokenów, generacją wylogowania wszystkich i blokadą konta. 17 nowych testów, cały gateway ma 57. Bez wdrożenia/HTTP/iOS. Wymagany adapter wymiany kodu jest zależnością bez domyślnego sukcesu; prawdziwy Apple exchange, refresh/revocation, routing/limity między instancjami i retencja nadal oczekują. [Kryteria](SESJE_I_WYZWANIA_GATEWAY.md).
 
+Postęp CK-02f: konkretny lokalny adapter wymiany kodu/refresh/revoke Apple, osobny ES256 client_secret oraz AES-256-GCM z wersjonowanym kluczem. Zaszyfrowany refresh jest trwale zapisany przed powiązaniem z kontem i wydaniem sesji; awarie nie ponawiają jednorazowego kodu. 23 nowe testy, cały gateway ma 80. Bez nowych uprawnień/sekretów, żądań Apple/Cloudflare i wdrożenia. Retencja/limity credential, cykl refresh/odwołania, konfiguracja Apple i natywny/Workers odbiór pozostają wymagane. [Kontrakt i granice](APPLE_OAUTH_I_TOKENY.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.

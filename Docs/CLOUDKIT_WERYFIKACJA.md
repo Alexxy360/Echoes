@@ -112,3 +112,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02e — wyzwania i sesje SQLite
 
 17 nowych testów przeszło; cały zestaw ma 57. Prawdziwy lokalny SQLite potwierdza jedną wymianę kodu i sesję przy równoległości, zachowanie claimed po ponownym otwarciu, limity i wygaśnięcie, trwałe wylogowanie/blokadę, rollback oraz brak tokenów/nonce/sub w tabelach. ID tokeny/RSA są syntetyczne; adapter wymiany kodu jest testowy, bez sieci. Bez wdrożenia/nowego zasobu i zmian iOS. [Dowody i ograniczenia](SESJE_I_WYZWANIA_GATEWAY.md).
+
+## CK-02f — OAuth i zaszyfrowane credential lokalnie
+
+80/80 testów gateway, w tym 23 nowe: 10 OAuth, 6 AES-256-GCM i 7 integracyjnych SQLite/logowania (24 razem w tej grupie). Niezależnie zweryfikowano podpis ES256 raw, ograniczenia transportu, szyfrowanie i kontekst, rotację klucza w pamięci, zapis pending/bound, awarie i odtworzenie. Odpowiedzi Apple są syntetyczne; brak rzeczywistego kodu/refresh/revoke i zmian chmury/iOS. To dowód lokalnej implementacji, nie zaliczenie prawdziwego logowania ani Workers CPU. [Raport](evidence/apple-oauth-vault-local-tests.json), [kontrakt i pozostały odbiór](APPLE_OAUTH_I_TOKENY.md).

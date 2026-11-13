@@ -76,3 +76,7 @@ W CK-01h utworzono pustą usługę echoes-development-probe i ponownie potwierdz
 ## CK-02e — lokalny stan logowania
 
 Jednorazowe wyzwania, sesje i unieważnianie mają implementację/testy SQLite. To nie jest jeszcze wdrożona ochrona HTTP: pozostają adapter Apple/refresh, spójny routing, limity sieciowe i harmonogram retencji. Nie tworzono zasobów ani sekretów w chmurze. [Zakres](SESJE_I_WYZWANIA_GATEWAY.md).
+
+## CK-02f — lokalny OAuth i szyfrowanie
+
+Adapter protokołu Apple i AES-256-GCM dla refresh są podłączone do lokalnego koordynatora; cały zestaw ma obecnie 80 testów. Bez nowych zasobów, opłat, nadania klucza czy wdrożenia. Cykl odnowienia/odwołania, limity/retencja credential, routing i rzeczywisty odbiór nadal wymagane. [Szczegóły](APPLE_OAUTH_I_TOKENY.md).

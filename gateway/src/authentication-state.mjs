@@ -1,4 +1,5 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
+import { appleSubjectHash } from "./refresh-credential-vault.mjs";
 
 const challengeLifetime = 5 * 60 * 1000;
 const sessionLifetime = 10 * 60 * 1000;
@@ -32,6 +33,10 @@ const schema = [
     expires_at INTEGER NOT NULL, challenge_id TEXT NOT NULL UNIQUE)`,
   `CREATE INDEX IF NOT EXISTS auth_session_expiry_v1 ON auth_sessions_v1(expires_at)`,
   `CREATE INDEX IF NOT EXISTS auth_session_account_v1 ON auth_sessions_v1(account_id,expires_at)`,
+  `CREATE TABLE IF NOT EXISTS auth_refresh_credentials_v1 (
+    credential_id TEXT PRIMARY KEY, subject_hash TEXT NOT NULL, sealed_credential TEXT NOT NULL,
+    state TEXT NOT NULL CHECK(state IN ('pending','bound')), account_id TEXT, created_at INTEGER NOT NULL)`,
+  `CREATE INDEX IF NOT EXISTS auth_credential_account_v1 ON auth_refresh_credentials_v1(account_id)`,
 ];
 
 /** Server-internal store. Requires synchronous transactions and explicit durability; no HTTP interface. */
@@ -119,7 +124,7 @@ export class AuthenticationState {
         !Number.isSafeInteger(identityExpiresAt * 1000)) throw new AuthenticationStateError("INVALID_IDENTITY");
     const expiresAt = Math.min(now + sessionLifetime, identityExpiresAt * 1000);
     const sessionToken = challengeID + "." + randomBytes(32).toString("base64url");
-    const tokenHash = this.#tokenHash(sessionToken), subjectHash = digest("echoes/apple-subject/v1\0" + appleSubject);
+    const tokenHash = this.#tokenHash(sessionToken), subjectHash = appleSubjectHash(appleSubject);
     const accountID = this.#transaction(() => {
       const row = this.#rows(`UPDATE auth_challenges_v1 SET state='consumed'
         WHERE challenge_id=? AND state='claimed' AND expires_at>? RETURNING challenge_id`, challengeID, now)[0];
@@ -131,12 +136,36 @@ export class AuthenticationState {
       const count = this.#rows(`SELECT count(*) AS count FROM auth_sessions_v1
         WHERE account_id=? AND generation=? AND expires_at>?`, account.account_id, account.generation, now)[0].count;
       if (count >= 5) throw new AuthenticationStateError("SESSION_LIMITED");
+      const bound = this.#rows(`UPDATE auth_refresh_credentials_v1 SET state='bound',account_id=?
+        WHERE credential_id=? AND subject_hash=? AND state='pending' RETURNING credential_id`,
+      account.account_id, challengeID, subjectHash);
+      if (bound.length !== 1) throw new AuthenticationStateError();
       this.#storage.sql.exec(`INSERT INTO auth_sessions_v1(token_hash,account_id,generation,expires_at,challenge_id)
         VALUES (?,?,?,?,?)`, tokenHash, account.account_id, account.generation, expiresAt, challengeID);
       return account.account_id;
     });
     await this.#durable();
     return Object.freeze({ sessionToken, accountID, expiresAt: Math.floor(expiresAt / 1000) });
+  }
+
+  /** Only a verified Apple exchange may supply this ciphertext. Never expose this method through RPC/HTTP. */
+  async stageRefreshCredential(challengeID, { appleSubject, sealedCredential } = {}) {
+    this.#challengeID(challengeID); const now = this.#now();
+    try {
+      if (typeof sealedCredential !== "string" || sealedCredential.length > 12000) throw new Error();
+      const envelope = JSON.parse(sealedCredential);
+      if (!envelope || envelope.v !== 1 || Object.keys(envelope).sort().join() !== "ciphertext,iv,keyID,tag,v") throw new Error();
+      const subjectHash = appleSubjectHash(appleSubject);
+      this.#transaction(() => {
+        const claimed = this.#rows("SELECT state FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+        if (claimed?.state !== "claimed") throw new AuthenticationStateError("INVALID_CHALLENGE");
+        this.#storage.sql.exec(`INSERT INTO auth_refresh_credentials_v1
+          (credential_id,subject_hash,sealed_credential,state,created_at) VALUES (?,?,?,'pending',?)`,
+        challengeID, subjectHash, sealedCredential, now);
+      });
+      // Pending rows are not discarded on error; no session is issued by this step.
+      await this.#durable();
+    } catch (error) { throw error instanceof AuthenticationStateError ? error : new AuthenticationStateError(); }
   }
 
   authorize(sessionToken) {
@@ -171,7 +200,8 @@ export class AuthenticationState {
     const now = this.#now();
     this.#transaction(() => {
       this.#storage.sql.exec(`DELETE FROM auth_challenges_v1 WHERE challenge_id IN
-        (SELECT challenge_id FROM auth_challenges_v1 WHERE expires_at<=? LIMIT 100)`, now);
+        (SELECT challenge_id FROM auth_challenges_v1 WHERE expires_at<=?
+          AND (state!='claimed' OR expires_at<=?) LIMIT 100)`, now, now - 86400000);
       this.#storage.sql.exec(`DELETE FROM auth_sessions_v1 WHERE token_hash IN
         (SELECT token_hash FROM auth_sessions_v1 WHERE expires_at<=? LIMIT 100)`, now);
       this.#storage.sql.exec(`DELETE FROM auth_issue_budget_v1 WHERE (budget_hash,window_start) IN

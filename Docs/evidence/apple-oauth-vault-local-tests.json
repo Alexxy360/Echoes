@@ -1,0 +1,22 @@
+{
+  "stage": "CK-02f",
+  "observedAtUTC": "2026-11-13T22:43:14Z",
+  "runtime": "Node.js 22.23.5",
+  "command": "node --test gateway/test/*.test.mjs",
+  "totalPassed": 80,
+  "failed": 0,
+  "oauthTransportTests": 10,
+  "credentialVaultTests": 6,
+  "authenticationStateAndLoginTests": 24,
+  "newTests": 23,
+  "providerTransport": "synthetic test responses only",
+  "cryptography": ["ES256 raw P1363 sign/independent verify", "RSA sign/WebCrypto verify", "AES-256-GCM authenticated envelope"],
+  "storage": "real local SQLite through synchronous test adapter",
+  "externalAppleRequests": 0,
+  "externalCloudflareRequests": 0,
+  "realUserTokensProcessed": false,
+  "cloudDeployment": false,
+  "appleCapabilityOrKeyChanged": false,
+  "newChargesOrServices": false,
+  "remainingAcceptance": ["credential lifecycle and retention", "real Apple code exchange", "native flow and Keychain", "HTTP routing and durable limits", "Workers runtime and CPU", "ordinary accounts A/B"]
+}
