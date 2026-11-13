@@ -198,3 +198,17 @@ Weryfikacja: 12 testów Node 22 przeszło; bez opt-in skrypt sieciowy zakończy�
 - `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `gateway/README.md`: odnotowano rzeczywistą konfigurację, ograniczenia uprawnienia i stan odbioru; 12 wcześniejszych testów lokalnych nie zastępuje tego wyniku sieciowego.
 
 Stan: klucz Development zarejestrowany; pełny test S2S nieprzyjęty. Nie wdrożono Worker, nie przekazano mu sekretu i nie uruchomiono płatności. Następna próba zależy od zgody na konkretny typ Development.
+
+## CK-01f — 2026-11-13 — schemat diagnostyczny, role i rzeczywisty test S2S
+
+- Po konkretnej zgodzie właściciela dodano wyłącznie Development: typ EchoesGatewayProbeV1, nonce String i schemaVersion Int64. Definicja pozostaje w schemacie po usunięciu rekordów. Bez indeksów i bez promocji Production.
+- Dla tego typu odebrano wszystkie prawa rolom _world, _icloud i _creator. Pozostałych typów i ich przypisań nie zmieniano. Odświeżone widoki portalu potwierdziły zapis.
+- Pierwsza próba po ograniczeniu ról zwróciła ACCESS_DENIED dla S2S; potwierdzono nieobecność jej UUID. Ten wynik skorygował błędne założenie, że klucz automatycznie omija ACL.
+- Utworzono EchoesGatewayProbeService z prawami Create/Read/Write wyłącznie dla EchoesGatewayProbeV1. Odczytano bieżącą tożsamość klucza i przypisano tę rolę tylko odpowiadającemu jej rekordowi Users. Zmieniono wyłącznie przypisanie roli, nie pola profilu ani definicję Users. Przed produkcją potrzebna jest odrębna tożsamość serwisowa; to samo konto operatora ma prawa także w natywnym kliencie.
+- Powtórny test rzeczywisty przeszedł: zapis, odczyt nonce/schematu i usunięcie rekordu. Oba nowe UUID nie pozostają w bazie. Nie czytano treści społecznościowych ani prywatnego profilu.
+- Klucz przeniesiono do trwałego lokalnego magazynu poza wszystkimi worktree Git, z folderem 0700 i plikami 0600. Nie przekazano go Cloudflare ani nie opublikowano w kodzie/logach.
+- `Docs/evidence/cloudkit-gateway-probe-schema-development.json`: zapis obserwowanej konfiguracji pól/ról i hasha tożsamości, bez raw userRecordName. To nie jest plik importu Apple ani dowód prób A/B.
+- `Docs/evidence/cloudkit-s2s-probe-development-denied.json`, `Docs/evidence/cloudkit-s2s-probe-development.json`: bezpieczne raporty odmowy i końcowego sukcesu.
+- `Docs/CLOUDKIT_WERYFIKACJA.md`, `Docs/CLOUDKIT_POSREDNIK_FREE.md`, `Docs/CLOUDKIT_ARCHITEKTURA.md`, `Docs/PLAN_MIGRACJI_CLOUDKIT.md`, `README.md`, `gateway/README.md`: aktualizacja wyników, korekta opisu uprawnień S2S i doprecyzowanie ograniczeń.
+
+Weryfikacja: rzeczywisty test S2S Development zakończył się poprawnym zapisem, odczytem i sprzątaniem. Zapis ról potwierdzono w konsoli. Kod aplikacji/gateway nie zmienił się; nie powtarzano niepowiązanych testów offline/iOS. Klucz nie został przekazany hostingowi. Pozostają test zwykłych kont A/B, odrębna tożsamość produkcyjna, uwierzytelnienie i pośrednik, pomiar Workers CPU, moderacja i retencja. Pełna migracja nie jest zakończona.

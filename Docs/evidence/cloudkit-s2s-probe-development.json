@@ -1,0 +1,10 @@
+{
+  "runIdentifier": "4899adac-afe0-45a4-92f3-d3b426733f7c",
+  "startedAt": "2026-11-13T08:58:09.014Z",
+  "environment": "Development",
+  "recordType": "EchoesGatewayProbeV1",
+  "syntheticRecordName": "gateway-probe-b1a93598-7ea5-4948-a32e-483f871d8f4d",
+  "writeSucceeded": true,
+  "readBackSucceeded": true,
+  "cleanupSucceeded": true
+}

@@ -1,6 +1,6 @@
 # Weryfikacja migracji CloudKit
 
-Stan: 12 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została przełączona na CloudKit.**
+Stan: 13 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została przełączona na CloudKit.**
 
 ## CK-01c — rzeczywista konfiguracja i próba prywatna
 
@@ -50,3 +50,19 @@ Po konkretnej zgodzie właściciela zapisano w Apple klucz publiczny „Echoes D
 [Pierwszy raport S2S](evidence/cloudkit-s2s-probe-development-initial.json): zapis niepotwierdzony, `NOT_FOUND`, odczyt niewykonany, nieobecność testowego UUID potwierdzona podczas sprzątania. Raport nie jest pozytywnym odbiorem S2S. Odczyt listy schematu potwierdził brak typu `EchoesGatewayProbeV1`; istnieją wyłącznie `EchoesAccessProbeV1` i `Users`. Nie poszerzano odczytu o dane użytkowników. Zgłoszenie zapisu do nieistniejącego typu nie utworzyło automatycznie definicji w tej ścieżce.
 
 Automatyczna kontrola odrzuciła próbę utworzenia trwałego typu Development jako nieobjętą wcześniejszą zgodą na klucz/rekord. Nie obchodzono blokady. Właściciel został poproszony o osobną zgodę na nowy typ, pola nonce String / schemaVersion Int64, wyłącznie serwerowy dostęp i ponowienie próby. Do czasu odpowiedzi schemat nie jest zmieniony; formularz jest jedynie przygotowany.
+
+## CK-01f — typ, ograniczone role i udany test S2S — 13 listopada 2026
+
+Po odrębnej zgodzie właściciela utworzono wyłącznie w Development `EchoesGatewayProbeV1`, pola `nonce: String` i `schemaVersion: Int64`. Nie dodawano indeksów do tej próby po nazwie rekordu, nie promowano schematu i nie zmieniano definicji wcześniejszych typów.
+
+Dla nowego typu wyłączono wszystkie prawa standardowych ról: `_world`, `_icloud`, `_creator`. Odświeżone widoki po zapisie potwierdziły brak tego typu w przypisaniach tych ról. [Udokumentowana konfiguracja](evidence/cloudkit-gateway-probe-schema-development.json) jest zapisem obserwacji, nie importowalnym schematem Apple ani automatycznym audytem całego kontenera.
+
+Próba po samym odebraniu praw klientom zwróciła **ACCESS_DENIED również dla S2S**, z potwierdzoną nieobecnością losowego rekordu: [raport odmowy](evidence/cloudkit-s2s-probe-development-denied.json). Skorygowano wcześniejsze założenie o automatycznym omijaniu ról. S2S dziedziczy prawa twórcy klucza, co potwierdza [przykład Apple](https://developer.apple.com/go/?id=cloudkit-catalog).
+
+Dodano rolę `EchoesGatewayProbeService`, prawa Create/Read/Write wyłącznie dla `EchoesGatewayProbeV1`. Z bieżącej tożsamości klucza (`users/caller`) odczytano tylko identyfikator potrzebny do przypisania. W konsoli pobrano wyłącznie odpowiadający mu rekord Users i przypisano tę rolę; nie zmieniono pól profilu, definicji Users ani ról innych użytkowników. W repozytorium znajduje się tylko hash identyfikatora, bez surowego userRecordName i danych osobowych.
+
+**Końcowy wynik: zapis, odczyt poprawnego nonce i schemaVersion oraz usunięcie — wszystkie poprawne.** [Raport rzeczywisty](evidence/cloudkit-s2s-probe-development.json): przebieg `4899adac-afe0-45a4-92f3-d3b426733f7c`, `2026-11-13T08:58:09.014Z`. Rekord został usunięty. Nie odczytywano mapy, czatu, GPS, muzyki ani prywatnego profilu.
+
+Przypisanie roli dotyczy konta, nie wyłącznie pliku klucza. Urządzenie zalogowane jako ten operator również ma jego prawa. Przed produkcją wymagana jest oddzielna tożsamość serwisowa i test natywnych, nieuprzywilejowanych kont A/B; nie deklarujemy jeszcze ich odbioru. Wcześniejszych domyślnych ról innych typów nie zmieniano.
+
+Klucz zachowano w trwałym lokalnym katalogu poza wszystkimi worktree Git (katalog 0700, pliki 0600), aby nie polegać wyłącznie na plikach tymczasowych. Nie przekazano go Cloudflare i nie uruchomiono płatności. Test lokalny nie jest jeszcze testem pośrednika sieciowego ani limitem CPU Workers.

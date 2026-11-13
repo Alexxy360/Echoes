@@ -1,0 +1,44 @@
+{
+  "kind": "observed-development-configuration-not-a-CloudKit-import-file",
+  "recordedOn": "2026-11-13",
+  "container": "iCloud.mpvEcho.Echo",
+  "environment": "Development",
+  "recordType": "EchoesGatewayProbeV1",
+  "fields": {
+    "nonce": "STRING",
+    "schemaVersion": "INT64"
+  },
+  "defaultRoles": {
+    "_world": {
+      "create": false,
+      "read": false,
+      "write": false
+    },
+    "_icloud": {
+      "create": false,
+      "read": false,
+      "write": false
+    },
+    "_creator": {
+      "create": false,
+      "read": false,
+      "write": false
+    }
+  },
+  "customRole": {
+    "name": "EchoesGatewayProbeService",
+    "recordTypePermissions": {
+      "EchoesGatewayProbeV1": {
+        "create": true,
+        "read": true,
+        "write": true
+      }
+    }
+  },
+  "assignment": {
+    "principal": "account that created the S2S key",
+    "userRecordNameSHA256": "5e9be85fb3d474fca50733d0d6c1dfa1bca4009c5d7e107a0c2b1ed0bccb3c85"
+  },
+  "nativeOrdinaryAccountDenialTestPerformed": false,
+  "productionModified": false
+}

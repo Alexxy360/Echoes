@@ -2,7 +2,7 @@
 
 Kandydat do hostingu: Cloudflare Workers Free, po sprawdzeniu limitów. [Projekt i kryteria odbioru](../Docs/CLOUDKIT_POSREDNIK_FREE.md).
 
-Obecny kod to wyłącznie **serwerowy konstruktor podpisanego żądania do CloudKit Development**, oraz ograniczona funkcja próbna, bez endpointu HTTP, logowania i wdrożenia. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów administratora.
+Obecny kod to wyłącznie **serwerowy konstruktor podpisanego żądania do CloudKit Development**, oraz ograniczona funkcja próbna, bez endpointu HTTP, logowania i wdrożenia. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów tożsamości serwerowej.
 
 Testy na Node 22 (bez instalowania zależności):
 
@@ -22,8 +22,8 @@ Rzeczywisty klucz powinien być PKCS#8 P-256, przechowywany w sekretach usługi.
 
 `node gateway/scripts/probe-development.mjs` bez osobnego opt-in **odmawia uruchomienia i nie czyta klucza ani sieci**. Po zgodzie na rejestrację S2S i tę konkretną próbę wymagane są ECHOES_ALLOW_SYNTHETIC_DEV_PROBE=1, ECHOES_CK_DEV_KEY_ID i ECHOES_CK_DEV_KEY_FILE (ścieżka lokalna, bez sekretu w argumencie). Skrypt jest przypisany do iCloud.mpvEcho.Echo/development; nie ma przełącznika Production. Raport drukuje tylko booleany, czas/UUID oraz bezpieczny kod błędu.
 
-Klucz S2S ma uprawnienia do całej bazy publicznej wskazanego kontenera i środowiska; kod ograniczonej próby nie zawęża kryptograficznego zakresu tego klucza. Przed rejestracją trzeba uzyskać konkretną zgodę. Ten etap nie przekazuje klucza do Cloudflare; to późniejszy, osobny odbiorca sekretu.
+Klucz S2S dziedziczy prawa konta, które go utworzyło. Nie omija ról CloudKit. Rzeczywista próba z odebranymi prawami standardowych ról zwróciła ACCESS_DENIED. Dopiero przypisanie temu kontu osobnej roli EchoesGatewayProbeService dla samego EchoesGatewayProbeV1 umożliwiło test. Konto operatorskie również ma te prawa poza S2S; produkcja wymaga odrębnej tożsamości serwisowej i testu zwykłych kont A/B. Kod ograniczonej próby nie zastępuje ACL. Przed rejestracją trzeba uzyskać konkretną zgodę. Ten etap nie przekazuje klucza do Cloudflare; to późniejszy, osobny odbiorca sekretu.
 
 ## Wynik pierwszej próby rzeczywistej
 
-Po osobnej zgodzie zarejestrowano publiczny klucz S2S wyłącznie dla Development; jego prywatna część pozostaje lokalnie i nie trafiła do Cloudflare. Pierwszy test zwrócił NOT_FOUND przy zapisie do brakującego typu EchoesGatewayProbeV1; sprzątanie potwierdziło nieobecność UUID. [Raport](../Docs/evidence/cloudkit-s2s-probe-development-initial.json) i [stan odbioru](../Docs/CLOUDKIT_WERYFIKACJA.md). Oczekuje osobna zgoda na trwałą definicję typu w Development; nie uznajemy testu S2S za zaliczony.
+Po osobnej zgodzie zarejestrowano publiczny klucz S2S wyłącznie dla Development; jego prywatna część pozostaje lokalnie i nie trafiła do Cloudflare. Pierwszy test zwrócił NOT_FOUND przy zapisie do brakującego typu EchoesGatewayProbeV1; sprzątanie potwierdziło nieobecność UUID. [Raport](../Docs/evidence/cloudkit-s2s-probe-development-initial.json) i [stan odbioru](../Docs/CLOUDKIT_WERYFIKACJA.md). Po osobnej zgodzie dodano typ/pola, odebrano standardowe prawa i przypisano ograniczoną rolę serwerowej tożsamości. [Końcowa próba S2S](../Docs/evidence/cloudkit-s2s-probe-development.json) przeszła: zapis, nonce/schemat i usunięcie. Próby zwykłych kont A/B i runtime Workers nadal oczekują.

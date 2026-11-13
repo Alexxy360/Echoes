@@ -1,0 +1,11 @@
+{
+  "runIdentifier": "67790f86-dfdc-49d5-98ad-ec09a47505f8",
+  "startedAt": "2026-11-13T08:51:18.932Z",
+  "environment": "Development",
+  "recordType": "EchoesGatewayProbeV1",
+  "syntheticRecordName": "gateway-probe-9fee4275-bf6b-4237-a183-502614a6c59e",
+  "writeSucceeded": false,
+  "readBackSucceeded": false,
+  "cleanupSucceeded": true,
+  "errorCode": "ACCESS_DENIED"
+}

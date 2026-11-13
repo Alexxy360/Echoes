@@ -1,6 +1,6 @@
 # Architektura migracji CloudKit — CK-01
 
-Status 12 listopada 2026: podpisany test prywatnego CloudKit Development jednego konta przeszedł. Odbiór uprawnień dwóch kont jeszcze niewykonany. Zwykła ścieżka aplikacji nadal używa poprzedniego adaptera Firebase. Brak zmiany dostępu do produkcyjnych danych.
+Status 13 listopada 2026: podpisany test prywatnego CloudKit jednego konta oraz lokalny test S2S Development przeszły. Odbiór uprawnień dwóch kont jeszcze niewykonany. Zwykła ścieżka aplikacji nadal używa poprzedniego adaptera Firebase. Brak zmiany dostępu do produkcyjnych danych.
 
 ## Ustalenia z konta i projektu
 
@@ -11,7 +11,7 @@ Status 12 listopada 2026: podpisany test prywatnego CloudKit Development jednego
 - Debug używa `Echo/Echo-Debug.entitlements`. Release zachowuje `Echo/Echo.entitlements` do etapu CK-06; nie został przełączony na CloudKit.
 - Na iPhonie 15 Pro przeszło utworzenie, odczyt i usunięcie jednego losowego rekordu w privateCloudDatabase oraz sprawdzenie metadanych twórcy. To nie jest odbiór publicznych ról ani izolacji dwóch kont. [Raport i granice weryfikacji](CLOUDKIT_WERYFIKACJA.md).
 - Oficjalny `cktool` jest dostępny; nie ma zapisanego tokenu zarządzania. Nie eksportowano ani nie generowano tokenu. Profile, certyfikaty i dane urządzenia nie trafiają do repozytorium.
-- Nie promowano schematu do Production i nie migrowano danych użytkowników. Jedyny nowy typ Development służy syntetycznej próbie; rekordy obu wykonanych prób zostały usunięte.
+- Nie promowano schematu do Production i nie migrowano danych użytkowników. Typy EchoesAccessProbeV1 i EchoesGatewayProbeV1 służą wyłącznie syntetycznym próbom Development; testowe rekordy zostały usunięte. Drugi typ ma osobną rolę przypisaną tożsamości klucza, bez praw dla standardowych ról klientów.
 
 ## Rozdział danych
 
@@ -45,7 +45,7 @@ CloudKit zapewnia role odczytu i zapisu rekordów; obecne Cloud Functions dodatk
 | A — zachowanie obecnych ograniczeń, rekomendowany punkt wyjścia | CloudKit przechowuje profile/zasoby; zaufana usługa pośredniczy w publikowaniu i pobieraniu chronionych treści, walidacji, zgłoszeniach i retencji. Dostęp bezpośredni klienta nie może omijać tej ścieżki. | Wymaga hostingu, projektu uwierzytelnienia i osobnej wyceny; nie uruchamiamy automatycznie dodatkowych opłat. |
 | B — wyłącznie bezpośredni CloudKit | Publiczne profile, obecność i lokalny czat są publicznymi danymi; okolica i blokady filtrują UI. Moderacja i kasowanie mają odrębny, dokładnie opisany proces operatorski. | Mniejsze wymagania infrastruktury, ale zmiana gwarancji dostępu oraz słabsze możliwości egzekwowania reguł treści i spamu. Wymaga świadomego przyjęcia tych skutków przez właściciela. |
 
-Właściciel wybrał kierunek A: dodatkową usługę ograniczającą odczyt, z uprzednim sprawdzeniem darmowych limitów. B nie jest zatwierdzony. Nie opublikowano rekordów społecznościowych; wykonano wyłącznie syntetyczną próbę prywatną. Konkretny pośrednik i jego uwierzytelnianie wymagają prototypu i odbioru przed CK-04/CK-05. Wariant A nie oznacza automatycznej zgody na płatny hosting. Kandydat Workers Free ma potwierdzony darmowy plan na koncie; [projekt pośrednika](CLOUDKIT_POSREDNIK_FREE.md) opisuje limity i proponowane odrębne logowanie Apple. Nie jest to jeszcze wdrożona usługa ani odbiór jej tożsamości. Żaden sekret operatora nie trafi do aplikacji.
+Właściciel wybrał kierunek A: dodatkową usługę ograniczającą odczyt, z uprzednim sprawdzeniem darmowych limitów. B nie jest zatwierdzony. Nie opublikowano rekordów społecznościowych; wykonano wyłącznie syntetyczne próby prywatne i S2S w Development. Dla typu diagnostycznego odebrano prawa standardowych ról i przypisano osobną rolę kontu operatora używanemu przez klucz. S2S podlega rolom tego konta; nie omija ich automatycznie. Konkretny pośrednik i jego uwierzytelnianie wymagają prototypu i odbioru przed CK-04/CK-05. Wariant A nie oznacza automatycznej zgody na płatny hosting. Kandydat Workers Free ma potwierdzony darmowy plan na koncie; [projekt pośrednika](CLOUDKIT_POSREDNIK_FREE.md) opisuje limity i proponowane odrębne logowanie Apple. Nie jest to jeszcze wdrożona usługa ani odbiór jej tożsamości. Żaden sekret operatora nie trafi do aplikacji.
 
 ## Niezależny postęp CK-02
 
