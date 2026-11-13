@@ -1,0 +1,18 @@
+{
+  "recordedOn": "2026-11-13",
+  "newSyntheticTestsPassed": 13,
+  "gatewaySuitePassed": 40,
+  "realUserTokensUsed": false,
+  "workerAuthModulesDeployed": false,
+  "httpAuthenticationRouteEnabled": false,
+  "oneTimeChallengeImplemented": false,
+  "serverSessionImplemented": false,
+  "appleConfigurationModified": false,
+  "publicProtocolSources": [
+    "https://appleid.apple.com/.well-known/openid-configuration",
+    "https://appleid.apple.com/auth/keys"
+  ],
+  "supportedTokenAlgorithm": "RS256",
+  "newAuthTestsUseNetwork": false,
+  "gatewayRedirectTestUsesLoopback": true
+}
