@@ -20,6 +20,7 @@ export const deletionSchema = [
     WHERE local_status='blocked'`,
   `CREATE INDEX IF NOT EXISTS auth_deletion_subject_v1 ON auth_account_deletions_v1(subject_hash,local_status)`,
   `CREATE INDEX IF NOT EXISTS auth_deletion_completed_v1 ON auth_account_deletions_v1(completed_at)`,
+  `CREATE INDEX IF NOT EXISTS auth_deletion_receipt_subject_v1 ON auth_account_deletions_v1(subject_hash,local_status,created_at DESC,deletion_id DESC)`,
   `CREATE TABLE IF NOT EXISTS auth_subject_fences_v1 (subject_hash TEXT PRIMARY KEY,not_before INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_deletion_revocations_v1 (
     credential_id TEXT PRIMARY KEY,deletion_id TEXT NOT NULL,state TEXT NOT NULL DEFAULT 'pending',

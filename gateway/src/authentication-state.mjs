@@ -13,7 +13,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const digest = value => createHash("sha256").update(value).digest("hex");
 const codes = new Set(["STATE_UNAVAILABLE", "INVALID_CHALLENGE", "ISSUE_LIMITED", "INVALID_SESSION",
   "ACCOUNT_DISABLED", "SESSION_LIMITED", "INVALID_IDENTITY", "KEYS_UNAVAILABLE", "EXCHANGE_UNAVAILABLE",
-  "REAUTH_REQUIRED", "RENEWAL_BUSY", "CREDENTIAL_LIMITED", "DELETION_UNAVAILABLE", "DELETION_IN_PROGRESS", "NO_ACCOUNT"]);
+  "REAUTH_REQUIRED", "RENEWAL_BUSY", "CREDENTIAL_LIMITED", "DELETION_UNAVAILABLE", "DELETION_IN_PROGRESS", "NO_ACCOUNT", "NO_DELETION"]);
 export class AuthenticationStateError extends Error {
   constructor(code = "STATE_UNAVAILABLE") {
     super("Authentication request could not be completed.");
@@ -89,6 +89,12 @@ export class AuthenticationState {
           SELECT subject_hash,0 FROM auth_accounts_v1 WHERE generation>0`);
         this.#storage.sql.exec("INSERT INTO auth_schema_migrations_v1(name,applied_at) VALUES ('challenge-order-v1',?)", this.#now());
       }
+      if (!this.#rows("SELECT name FROM auth_schema_migrations_v1 WHERE name='deletion-recovery-order-v1'").length) {
+        this.#storage.sql.exec("ALTER TABLE auth_account_deletions_v1 ADD COLUMN recovery_order INTEGER NOT NULL DEFAULT 0");
+        // Invalidate all already-issued recovery proofs when upgrading an existing job store.
+        this.#storage.sql.exec("UPDATE auth_account_deletions_v1 SET recovery_order=?", this.#nextOrder());
+        this.#storage.sql.exec("INSERT INTO auth_schema_migrations_v1(name,applied_at) VALUES ('deletion-recovery-order-v1',?)", this.#now());
+      }
       // Legacy operator blocks survive erasure; a deletion's temporary disable must never become a ban.
       this.#storage.sql.exec(`INSERT OR IGNORE INTO auth_subject_bans_v1(subject_hash,created_at)
         SELECT a.subject_hash,? FROM auth_accounts_v1 a WHERE a.disabled=1 AND NOT EXISTS
@@ -133,7 +139,7 @@ export class AuthenticationState {
     // The transport must derive this key from trusted context and route equal budgets to the same store.
     // Never accept the budget key from client JSON or an untrusted forwarding header.
     if (typeof serverBudgetHash !== "string" || !/^[a-f0-9]{64}$/.test(serverBudgetHash) ||
-        !["login", "account_deletion", "session_reset"].includes(purpose)) throw new AuthenticationStateError();
+        !["login", "account_deletion", "session_reset", "deletion_recovery"].includes(purpose)) throw new AuthenticationStateError();
     const now = this.#now(), windowStart = Math.floor(now / issueWindow) * issueWindow;
     const challengeID = randomUUID(), nonce = randomBytes(32).toString("base64url");
     const expiresAt = now + challengeLifetime;
@@ -151,7 +157,7 @@ export class AuthenticationState {
 
   async beginVerification(challengeID, { purpose = "login" } = {}) {
     this.#challengeID(challengeID); const now = this.#now();
-    if (!["login", "account_deletion", "session_reset"].includes(purpose)) throw new AuthenticationStateError();
+    if (!["login", "account_deletion", "session_reset", "deletion_recovery"].includes(purpose)) throw new AuthenticationStateError();
     const row = this.#transaction(() => this.#rows(`UPDATE auth_challenges_v1
       SET verification_attempts=verification_attempts+1
       WHERE challenge_id=? AND purpose=? AND state='pending' AND expires_at>? AND verification_attempts<5
@@ -164,7 +170,7 @@ export class AuthenticationState {
   async claimChallenge(challengeID, expectedNonce, { purpose = "login" } = {}) {
     this.#challengeID(challengeID); const now = this.#now();
     if (typeof expectedNonce !== "string" || !/^[a-f0-9]{64}$/.test(expectedNonce) ||
-        !["login", "account_deletion", "session_reset"].includes(purpose)) throw new AuthenticationStateError("INVALID_CHALLENGE");
+        !["login", "account_deletion", "session_reset", "deletion_recovery"].includes(purpose)) throw new AuthenticationStateError("INVALID_CHALLENGE");
     const claimed = this.#transaction(() => this.#rows(`UPDATE auth_challenges_v1 SET state='claimed'
       WHERE challenge_id=? AND nonce_hash=? AND purpose=? AND state='pending' AND expires_at>? AND verification_attempts BETWEEN 1 AND 5
       RETURNING challenge_id`, challengeID, expectedNonce, purpose, now).length === 1);
@@ -331,23 +337,56 @@ export class AuthenticationState {
       if (expectedAccountID !== undefined && (typeof expectedAccountID !== "string" || !deletionUUID.test(expectedAccountID))) throw new Error();
     } catch { throw new AuthenticationStateError("DELETION_UNAVAILABLE"); }
     this.#transaction(() => {
-      this.#requireFreshChallengeEpoch(challengeID, subjectHash);
       const challenge = this.#rows("SELECT state,expires_at,purpose FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
       if (challenge?.state !== "claimed" || challenge.purpose !== "account_deletion" || challenge.expires_at <= now) {
         throw new AuthenticationStateError("INVALID_CHALLENGE");
       }
+      if (this.#rows("SELECT deletion_id FROM auth_account_deletions_v1 WHERE subject_hash=? AND local_status='blocked'", subjectHash).length) {
+        throw new AuthenticationStateError("DELETION_IN_PROGRESS");
+      }
+      this.#requireFreshChallengeEpoch(challengeID, subjectHash);
       const account = this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE subject_hash=?", subjectHash)[0];
       if (!account) throw new AuthenticationStateError("NO_ACCOUNT");
       if (expectedAccountID !== undefined && expectedAccountID !== account.account_id) throw new AuthenticationStateError("INVALID_IDENTITY");
       this.#storage.sql.exec(`INSERT INTO auth_account_deletions_v1
-        (deletion_id,status_hash,account_id,subject_hash,created_at,settle_after) VALUES (?,?,?,?,?,?)`,
-      deletionID, statusHash, account.account_id, subjectHash, now, now + operationLifetime);
+        (deletion_id,status_hash,account_id,subject_hash,created_at,settle_after,recovery_order) VALUES (?,?,?,?,?,?,?)`,
+      deletionID, statusHash, account.account_id, subjectHash, now, now + operationLifetime, this.#nextOrder());
       this.#storage.sql.exec(`INSERT INTO auth_subject_fences_v1(subject_hash,not_before) VALUES (?,?)
         ON CONFLICT(subject_hash) DO UPDATE SET not_before=MAX(not_before,excluded.not_before)`, subjectHash, now);
       this.#storage.sql.exec("UPDATE auth_accounts_v1 SET disabled=1,generation=generation+1 WHERE account_id=?", account.account_id);
       this.#storage.sql.exec("UPDATE auth_challenges_v1 SET state='consumed' WHERE challenge_id=?", challengeID);
     });
     await this.#durable();
+  }
+
+  /** Fresh owner proof recovers an existing deletion only. It never creates/unblocks an account or changes job identity. */
+  async recoverVerifiedDeletion(challengeID, { appleSubject, identityExpiresAt, expectedAccountID } = {}) {
+    this.#challengeID(challengeID); const now = this.#now(); let subjectHash;
+    try { subjectHash = appleSubjectHash(appleSubject); } catch { throw new AuthenticationStateError("INVALID_IDENTITY"); }
+    if (!Number.isSafeInteger(identityExpiresAt) || !Number.isSafeInteger(identityExpiresAt * 1000) ||
+        identityExpiresAt * 1000 <= now || (expectedAccountID !== undefined &&
+          (typeof expectedAccountID !== "string" || !uuid.test(expectedAccountID)))) throw new AuthenticationStateError("INVALID_IDENTITY");
+    const ticket = this.#transaction(() => {
+      const challenge = this.#rows("SELECT purpose,state,expires_at,issue_order FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+      if (challenge?.purpose !== "deletion_recovery" || challenge.state !== "claimed" || challenge.expires_at <= now) {
+        throw new AuthenticationStateError("INVALID_CHALLENGE");
+      }
+      // Pending work wins over older completed receipts. expectedAccountID is only a check,
+      // never a selector that lets the caller choose a different job/account.
+      const job = this.#rows("SELECT * FROM auth_account_deletions_v1 WHERE subject_hash=? AND local_status='blocked' LIMIT 1", subjectHash)[0]
+        ?? this.#rows(`SELECT * FROM auth_account_deletions_v1 WHERE subject_hash=? AND local_status='removed'
+          AND completed_at>? ORDER BY created_at DESC,deletion_id DESC LIMIT 1`, subjectHash, now - 30 * 86400000)[0];
+      if (!job) throw new AuthenticationStateError("NO_DELETION");
+      if (expectedAccountID !== undefined && expectedAccountID !== job.account_id) throw new AuthenticationStateError("INVALID_IDENTITY");
+      if (challenge.issue_order <= job.recovery_order) throw new AuthenticationStateError("INVALID_CHALLENGE");
+      const statusToken = job.deletion_id + "." + randomBytes(32).toString("base64url");
+      this.#storage.sql.exec("UPDATE auth_account_deletions_v1 SET status_hash=?,recovery_order=? WHERE deletion_id=?",
+        deletionTicketHash(job.deletion_id, statusToken), this.#nextOrder(), job.deletion_id);
+      this.#storage.sql.exec("UPDATE auth_challenges_v1 SET state='consumed' WHERE challenge_id=?", challengeID);
+      return Object.freeze({ deletionID: job.deletion_id, statusToken });
+    });
+    // A lost response requires another fresh proof. Never return a capability before storage sync.
+    await this.#durable(); return ticket;
   }
 
   async revokeSession(sessionToken) {

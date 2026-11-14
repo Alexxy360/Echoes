@@ -69,11 +69,13 @@ Postęp CK-02k: host natywnego logowania Apple/credentialState/iCloud, natywny d
 
 Postęp CK-02l: świeży reset utraconych sesji po limicie, osobny purpose/HTTP, brak wymiany dodatkowego kodu przy znanym pełnym limicie i natywny przepływ z potwierdzeniem. Trwała kolejność wyzwań odcina stare logowania/reset po nowszym reset/logout-all także w tej samej milisekundzie; migracja obejmuje stare generacje, a finalne usuwanie kasuje własną barierę. 180/180 testów gateway (17 nowych) i 72/72 Swift (9 nowych), kompilacje iOS Simulator. Bez aktywacji SIWA/Workers lub prawdziwego logowania. Dalej: natywny bilet usunięcia/private cleanup, adapter danych i realny odbiór hostingu/provider/A-B; osobny limit credential/retencja pozostaje do odbioru. [Kontrakt i ograniczenia](ODZYSKIWANIE_SESJI_GATEWAY.md).
 
+Postęp CK-02m: odzyskiwanie istniejącego zadania świeżym purpose Apple, rotacja wąskiego biletu i autorytatywne accountID statusu. Kolejność chroni przed starymi/równoległymi dowodami; receipt nie zmienia nowego konta. Dodano natywny kontrakt HTTP/bilet i aktywację bez włączania usług. 196/196 Node (16 nowych), 98/98 Swift (8 nowych), kompilacje Debug/Release. Dalej CK-02n: trwały bilet Keychain/sterownik/arkusz oraz połączenie prywatnego cleanera i ACK; retencja guarda i realny odbiór nadal wymagane. [Zakres](ODZYSKIWANIE_USUWANIA_KONTA.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.
 
-Postęp CK-03b: przestrzeń prywatna zależy teraz od natywnego iCloud i zweryfikowanego UUID konta Echoes. Atomowy guard blokuje zapis po rozpoczęciu usuwania, a stronicowany cleaner obejmuje wszystkie typy we własnej strefie. Host wymaga świeżej autoryzacji zapisu. 90/90 testów Swift (18 nowych), kompilacje Debug/Release. To lokalna podstawa przed CK-02m (bilet w Keychain i private ACK), bez zmian usług i bez odbioru SDK. Retencja guarda, legacy, CKAsset, UI i A/B pozostają otwarte. [Kontrakt i dowody](PRYWATNE_DANE_KONTA.md).
+Postęp CK-03b: przestrzeń prywatna zależy teraz od natywnego iCloud i zweryfikowanego UUID konta Echoes. Atomowy guard blokuje zapis po rozpoczęciu usuwania, a stronicowany cleaner obejmuje wszystkie typy we własnej strefie. Host wymaga świeżej autoryzacji zapisu. 90/90 testów Swift (18 nowych), kompilacje Debug/Release. To lokalna podstawa przed obsługą biletu i private ACK (CK-02m/CK-02n), bez zmian usług i bez odbioru SDK. Retencja guarda, legacy, CKAsset, UI i A/B pozostają otwarte. [Kontrakt i dowody](PRYWATNE_DANE_KONTA.md).
 
 Projekt roboczy do potwierdzenia w CK-01:
 

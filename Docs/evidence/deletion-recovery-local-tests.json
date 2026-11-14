@@ -1,0 +1,73 @@
+{
+  "stage": "CK-02m",
+  "observedAt": "2026-11-14T20:49:19.785943+00:00",
+  "baselineCommit": "a8bbafd38611f104a6074d5fa5a4ace963ef5054",
+  "gatewayTests": {
+    "passed": 196,
+    "failed": 0,
+    "newTests": 16,
+    "newBreakdown": {
+      "deletionRecovery": 12,
+      "HTTP": 4
+    },
+    "node": "22.23.5",
+    "scope": "real local SQLite/RSA verification, synthetic Apple/provider; existing redirect tests bind loopback only"
+  },
+  "nativeTests": {
+    "passed": 98,
+    "failed": 0,
+    "newTests": 8,
+    "swift": "6.4",
+    "platform": "macOS arm64",
+    "scope": "ticket entropy/format/redaction, synthetic transport/status/account binding/activation; no Keychain ticket or native deletion controller yet"
+  },
+  "builds": {
+    "Debug": "succeeded iOS Simulator, signing disabled",
+    "Release": "succeeded iOS Simulator, signing disabled",
+    "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingProjectChangePreserved": true,
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "staticChecks": {
+    "MJSyntax": "all gateway MJS passed node --check",
+    "SwiftFormat": "changed Swift passed strict lint",
+    "noNewActivationOrEntitlements": true
+  },
+  "notPerformed": [
+    "provider Apple login/revocation or real CloudKit operations",
+    "Workers or SQLite migration deployment",
+    "new service/permission/secret or secret transfer",
+    "native ticket Keychain storage/controller/UI/private ACK flow",
+    "phone install or two-account acceptance",
+    "Production/TestFlight publication"
+  ],
+  "knownLimits": [
+    "ordinary app still uses Firebase; native deletion HTTP is not wired to account UI",
+    "private scope cleaner retains guard metadata; retention/final removal and legacy handling incomplete",
+    "private ACK remains a device claim, not a server proof; this device must still clear its own content/caches",
+    "recovery rotates old tickets on all devices; unknown outcome needs a fresh explicit proof, no automatic retry",
+    "completed receipt refers to its original account ID, never a newly created account",
+    "real public erasure adapter is mandatory and still absent, so live deletion cannot be enabled"
+  ],
+  "logSHA256": {
+    "node": "ca5a9bbfc6e5a29fa923aa9a7527158b8e7e6baf558771d171ec0caedd8a0863",
+    "swift": "98a8c932ec1b30e09cee1429af43cae6cb6c50b89c90c6871ae479300ce08001",
+    "Debug": "193dd5836d1e4da64444120795f450dcbaa6de153a84d580b203f9f76ddaa0db",
+    "Release": "4dfb8eb5e3dd7d884ab73be532b520582c350bfed2233d2a329d3566be75a78d"
+  },
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAccountDeletion.swift": "c0800196f6bd685e2a179c203ee72c4d67de7b9d4bd0919074c4fd6b90f581b5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAuthentication.swift": "7bd335bbc8b7ea44eed30d848aaec72f627257a80cd586251746e7405a7f1063",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDevelopmentActivation.swift": "2fac28905d932f5af6313bb1486cf951ceb48c8fea46388d7788bbeb61df19be",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayHTTPClient.swift": "770008d2596492cedbe57a447debfb5fe9f861e1849afc4dca5df90e851e6c51",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionTests.swift": "6a4ae7a191c7f5e5db8cdd42abeb5b731a2ca9cf478891cc3b9a633333c45858",
+    "gateway/src/account-deletion-state.mjs": "140841424b6099656fac40f7cbe863e4899643e4ab0e4309a1c59e22eac13c1d",
+    "gateway/src/account-deletion.mjs": "0f1da0576e2e5712b46309fbb3d4498a3a42db2d132cc0606f4cd07f8f97f7d1",
+    "gateway/src/authentication-state.mjs": "d2753e3a77899e827cb4ffb6d660cae0a5dbfb7c938117de19093edd37889368",
+    "gateway/src/deletion-schema.mjs": "afc465ff7c867fbe7d01de65e785be4bb73db463f77026862295e7cb2d2bf690",
+    "gateway/src/gateway-http.mjs": "fbdc5508efd4c8b0c78a519df6f9cad38c806effa7396f3e57c9b5783df0ad96",
+    "gateway/test/account-deletion.test.mjs": "7fe8485c321712d387082d8390be964f4993e05b722afb4828df8e0a4080c59b",
+    "gateway/test/deletion-recovery.test.mjs": "b5cbd0c5a05eca2ff5af1fb30369f218c3fa747d57bbaf441fa95ce3628fe5a7",
+    "gateway/test/gateway-http.test.mjs": "d3c62bfab32ddb7b97c36b842df0920d3349ae385bcc490fb8a8cad228e278db"
+  }
+}

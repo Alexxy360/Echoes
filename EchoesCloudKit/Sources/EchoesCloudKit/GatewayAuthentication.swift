@@ -32,6 +32,7 @@ public enum GatewayErrorCode: String, Codable, Sendable {
     case accountDisabled = "ACCOUNT_DISABLED"
     case deletionInProgress = "DELETION_IN_PROGRESS"
     case noAccount = "NO_ACCOUNT"
+    case noDeletion = "NO_DELETION"
     case sessionLimited = "SESSION_LIMITED"
     case renewalBusy = "RENEWAL_BUSY"
     case rateLimited = "RATE_LIMITED"
@@ -61,6 +62,7 @@ public enum GatewayFailure: Error, Equatable, Sendable, LocalizedError {
             "Osiągnięto limit sesji. Potwierdź przez Apple wylogowanie poprzednich sesji, aby odzyskać dostęp."
         case .server(.accountDisabled, _, _): "To konto zostało zablokowane."
         case .server(.deletionInProgress, _, _): "Trwa usuwanie konta."
+        case .server(.noDeletion, _, _): "Nie znaleziono rozpoczętego usuwania tego konta."
         case .server(.rateLimited, _, _), .server(.issueLimited, _, _):
             "Wykonano zbyt wiele prób. Odczekaj przed kolejną."
         case .server(.invalidSession, _, _), .server(.reauthenticationRequired, _, _):
@@ -74,6 +76,7 @@ public enum GatewayChallengePurpose: String, Codable, Sendable {
     case login
     case accountDeletion = "account_deletion"
     case sessionReset = "session_reset"
+    case deletionRecovery = "deletion_recovery"
 }
 
 public struct GatewayChallenge: Decodable, Sendable {

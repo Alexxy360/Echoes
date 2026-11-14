@@ -30,7 +30,7 @@ export class AccountDeletionState {
     return row;
   }
   #status(row) {
-    return Object.freeze({ deletionID: row.deletion_id, publicData: row.public_status,
+    return Object.freeze({ deletionID: row.deletion_id, accountID: row.account_id, publicData: row.public_status,
       privateData: row.private_ack ? "device-acknowledged" : "awaiting-device",
       appleAuthorization: row.apple_status, localAccount: row.local_status,
       attentionRequired: row.public_attempts >= 10 && row.public_status !== "deleted",

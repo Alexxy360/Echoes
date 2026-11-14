@@ -9,7 +9,7 @@ Stan: 14 listopada 2026. Połączono lokalnie rzeczywistą implementację verifi
 | Ścieżka | JSON body | Uwierzytelnienie / wynik |
 | --- | --- | --- |
 | GET /health | brak | Tylko status procesu; nie potwierdza Apple, CloudKit ani gotowości wydania. |
-| /v1/auth/challenge | purpose: login, account_deletion albo session_reset | Zaufany budżet wyznacza edge; wynik challengeID, nonce, expiresAt. Telefon przekazuje Apple SHA-256 nonce. |
+| /v1/auth/challenge | purpose: login, account_deletion, session_reset albo deletion_recovery | Zaufany budżet wyznacza edge; wynik challengeID, nonce, expiresAt. Telefon przekazuje Apple SHA-256 nonce. |
 | /v1/auth/login | challengeID, identityToken, authorizationCode | Świeży dowód Apple; wynik accountID, sessionToken/expiresAt, renewalToken/renewalExpiresAt. |
 | /v1/auth/renew | {} | Authorization: Bearer renewalToken; atomowa rotacja obu tokenów. |
 | /v1/auth/session | {} | Bearer sessionToken; własne accountID/expiresAt. |
@@ -17,12 +17,15 @@ Stan: 14 listopada 2026. Połączono lokalnie rzeczywistą implementację verifi
 | /v1/auth/logout-all | {} | Bearer sessionToken; generacja unieważnia także odnowienia innych urządzeń. |
 | /v1/auth/session-reset | challengeID, identityToken, opcjonalne expectedAccountID | Świeży dowód Apple z purpose=session_reset, bez bearer/code; trwałe 204, bez nowej sesji. |
 | /v1/account/deletion | deletionID, challengeID, identityToken, opcjonalne expectedAccountID | Bearer statusToken. Świeże, osobne wyzwanie usuwania; 202 ze statusem. Retry istniejącego zadania może wysłać samo deletionID. |
+| /v1/account/deletion/recover | challengeID, identityToken, opcjonalne expectedAccountID | Bez Bearer/kodu/deletionID; świeże purpose=deletion_recovery; 200, status i nowy statusToken tego samego zadania. |
 | /v1/account/deletion/status | deletionID | Bearer statusToken; wyłącznie stan własnego zadania. |
 | /v1/account/deletion/private-cleanup | deletionID | Bearer statusToken; zgłoszenie urządzenia, bez deklaracji serwerowego dowodu skasowania private CloudKit. |
 
-Limity body: 16 KiB dla login/renew/zlecenia usunięcia, 256 bajtów dla pozostałych tras, odczyt do 3 s. Nieznane pola są odrzucane. Tokeny pozostają nieprzezroczystymi sekretami klienta; nie należy odtwarzać ich formatu w UI. StatusToken/renewalToken nie dają zwykłego dostępu do profilu. Żaden sekret nie należy do URL lub logów.
+Limity body: 16 KiB dla login/renew/reset/zlecenia i odzyskiwania usunięcia, 256 bajtów dla pozostałych tras, odczyt do 3 s. Nieznane pola są odrzucane. Tokeny pozostają nieprzezroczystymi sekretami klienta; nie należy odtwarzać ich formatu w UI. StatusToken/renewalToken nie dają zwykłego dostępu do profilu. Żaden sekret nie należy do URL lub logów.
 
-Istotne statusy: 400 nieprawidłowe wejście, 401 nieważna sesja/tożsamość lub ponowna autoryzacja, 403 blokada/usuwanie, 409 zajęte odnowienie albo limit sesji, 429 limit żądań, 503 niedostępna konfiguracja/usługa/pojemność. Retry-After dotyczy oczekiwania, nie upoważnia do powtarzania nieznanego wyniku jednorazowego kodu lub rotacji. Klient nadal wymaga single-flight, atomowego Keychain i własnej obsługi zmiany konta.
+Statusy usuwania zawierają accountID zadania; token pojawia się wyłącznie przy recover. [Pełny kontrakt odzyskiwania](ODZYSKIWANIE_USUWANIA_KONTA.md).
+
+Istotne statusy: 404 NO_DELETION oznacza brak zadania dla zweryfikowanego właściciela; 400 nieprawidłowe wejście, 401 nieważna sesja/tożsamość lub ponowna autoryzacja, 403 blokada/usuwanie, 409 zajęte odnowienie albo limit sesji, 429 limit żądań, 503 niedostępna konfiguracja/usługa/pojemność. Retry-After dotyczy oczekiwania, nie upoważnia do powtarzania nieznanego wyniku jednorazowego kodu lub rotacji. Klient nadal wymaga single-flight, atomowego Keychain i własnej obsługi zmiany konta.
 
 ## Granica zaufania i routing
 

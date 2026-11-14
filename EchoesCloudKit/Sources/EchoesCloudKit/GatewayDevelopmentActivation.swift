@@ -88,3 +88,48 @@ public struct ActivatedGatewayAuthenticationAPI: GatewayAuthenticationAPI {
             challengeID: challengeID, identityToken: identityToken, expectedAccountID: expectedAccountID)
     }
 }
+
+/// Deletion uses a separate capability and remains bounded by the same trusted Development origin/window.
+public struct ActivatedGatewayAccountDeletionAPI: GatewayAccountDeletionAPI {
+    private let api: any GatewayAccountDeletionAPI
+    private let activation: GatewayDevelopmentActivation
+    private let now: @Sendable () -> Date
+    public var origin: String { api.origin }
+    public init(
+        api: any GatewayAccountDeletionAPI, activation: GatewayDevelopmentActivation,
+        now: @escaping @Sendable () -> Date = { Date() }
+    ) throws {
+        guard api.origin == activation.configuration.origin.absoluteString else {
+            throw GatewayFailure.configuration
+        }
+        self.api = api
+        self.activation = activation
+        self.now = now
+    }
+    private func validate() throws {
+        guard activation.isActive(at: now()) else { throw GatewayFailure.configuration }
+    }
+    public func deletionChallenge(recovering: Bool) async throws -> GatewayChallenge {
+        try validate()
+        return try await api.deletionChallenge(recovering: recovering)
+    }
+    public func requestDeletion(ticket: GatewayDeletionTicket, proof: GatewayDeletionProof?) async throws
+        -> GatewayDeletionStatus
+    {
+        try validate()
+        return try await api.requestDeletion(ticket: ticket, proof: proof)
+    }
+    public func recoverDeletion(proof: GatewayDeletionProof) async throws -> GatewayRecoveredDeletion {
+        try validate()
+        return try await api.recoverDeletion(proof: proof)
+    }
+    public func deletionStatus(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus {
+        try validate()
+        return try await api.deletionStatus(ticket: ticket)
+    }
+    public func acknowledgePrivateCleanup(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus
+    {
+        try validate()
+        return try await api.acknowledgePrivateCleanup(ticket: ticket)
+    }
+}

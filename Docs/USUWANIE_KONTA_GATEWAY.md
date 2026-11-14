@@ -51,3 +51,7 @@ Przed odbiorem pozostają rzeczywisty adapter CloudKit wraz z regułami własno�
 ## CK-02i — lokalny transport i kolejka
 
 Endpointy tworzenia/statusu/ack są zamknięte i wymagają właściwego biletu; nie wystawiono metod operatora. Włączenie usuwania bez rzeczywistego adaptera blokuje konfigurację, a nowy entry point nie podłącza jeszcze tego adaptera. Alarm ma trwały kursor oraz osobne kwalifikowanie przeterminowanych sekretów, więc oczekiwanie innego zadania nie blokuje ich cleanup. Czysto lokalna retencja nie wymaga już kluczy dostawcy. Cała regresja ma 163 testy; nadal brak prawdziwego CloudKit/private cleanup/runtime. [Kontrakt](BRAMKA_HTTP_DEVELOPMENT.md).
+
+## CK-02m — odzyskiwanie utraconego biletu i natywny HTTP
+
+Świeże purpose=deletion_recovery odzyskuje istniejące zadanie właściciela, rotując wyłącznie bilet i zachowując postępy/lease. Wszystkie statusy zawierają autorytatywne accountID; tylko recover zwraca nowy statusToken. Bariera kolejności odcina stare dowody także w tej samej milisekundzie. Dodano natywny klient HTTP i walidowany bilet, bez jego magazynu Keychain/sterownika/UI. 196/196 testów Node i 98/98 Swift; bez wdrożenia lub operacji na danych użytkowników. [Kontrakt i ograniczenia](ODZYSKIWANIE_USUWANIA_KONTA.md).

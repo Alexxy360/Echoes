@@ -29,4 +29,8 @@ GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i Gatewa
 
 GatewaySignInHost zarządza natywną tożsamością i UI, foreground/background, barierami i callbackiem czyszczenia domeny. NativeAppleGatewayAuthorizer (iOS) prezentuje arkusz z właściwego okna; NativeAppleGatewayIdentitySource sprawdza credentialState. GatewayDevelopmentActivation i ActivatedGatewayAuthenticationAPI odcinają wyłączoną/wygasłą konfigurację. Host jest przygotowany w osobnym ekranie Debug, obecnie unconfigured; zwykły CommunityClient nadal nie korzysta z niego. 63/63 testy pakietu na macOS, bez prawdziwego Apple login. [Cykl życia i wymagane podłączenie](../Docs/NATYWNY_HOST_LOGOWANIA.md).
 
-CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Po CK-03b aktualnie 90/90 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
+CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Po CK-02m aktualnie 98/98 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
+
+## Bilet usuwania i HTTP (CK-02m)
+
+GatewayDeletionTicket/GatewayAccountDeletionAPI oraz klient i aktywacja obsługują świeże odzyskiwanie tego samego zadania, status i private ACK. Sprawdzają konto/identyfikatory i stany; brak automatycznego retry. To kontrakt przed magazynem biletu w Keychain, sterownikiem i połączeniem cleanera/UI. Nie uruchamia usuwania samodzielnie i nie jest pełnym odbiorem. [Szczegóły](../Docs/ODZYSKIWANIE_USUWANIA_KONTA.md).

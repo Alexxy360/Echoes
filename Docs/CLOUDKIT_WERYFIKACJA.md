@@ -132,3 +132,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-03b — przestrzeń konta i bariera prywatnego usuwania
 
 90/90 testów pakietu Swift na macOS, w tym 18 nowych. Testowano syntetyczny transport z modelem atomowych wersji: izolacja kont i przestrzeni, świeża autoryzacja, wyścig zapisu/usunięcia, 206 rekordów, strony/kursory, restart, legacy oraz niepewne wyniki. Debug i Release skompilowane dla iOS Simulator z projektem z Git. Nie wykonano operacji SDK CloudKit ani nowej instalacji na telefonie; realna atomowość/CKAsset/zmiana iCloud i A/B niezaliczone. Guard pozostaje, retencja i bilet/ACK jeszcze niegotowe. [Pełny zakres](PRYWATNE_DANE_KONTA.md), [dowody](evidence/private-account-data-local-tests.json).
+
+## CK-02m — odzyskiwanie usuwania i natywny kontrakt
+
+196/196 Node (16 nowych), 98/98 Swift (8 nowych). Lokalna rotacja wąskiego biletu, właściwy cel dowodu, owner/account, równoległe wyzwania, utrata odpowiedzi, SQL/sync/reopen/migracja, receipt i zamknięty HTTP. Natywnie testowano token/format/redakcję, kontrakt, aktywację i sprzeczne statusy. Debug/Release skompilowane z projektem z Git. Bez prawdziwego Apple/Workers/CloudKit lub nowej instalacji. Keychain biletu, sterownik/cleaner/ACK/UI nadal niepołączone; nie jest to odbiór całego usuwania. [Zakres](ODZYSKIWANIE_USUWANIA_KONTA.md), [raport](evidence/deletion-recovery-local-tests.json).

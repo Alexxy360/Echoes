@@ -46,14 +46,14 @@ test("fresh purpose-bound proof blocks all own sessions immediately and returns 
   try {
     const a = await f.session(), b = await f.session(), other = await f.session("another.user");
     const input = await f.input("synthetic.user", a.accountID), status = await f.deleter.request(input);
-    assert.equal(status.completed, false); assert.equal(status.localAccount, "blocked");
+    assert.equal(status.completed, false); assert.equal(status.localAccount, "blocked"); assert.equal(status.accountID, a.accountID);
     for (const session of [a, b]) {
       assert.throws(() => f.state.authorize(session.sessionToken), codeIs("INVALID_SESSION"));
       await assert.rejects(() => f.renewal().renew(session.renewalToken), codeIs("INVALID_SESSION"));
     }
     f.state.authorize(other.sessionToken);
     const serialized = JSON.stringify(status);
-    for (const secret of [a.accountID, "synthetic.user", input.statusToken, syntheticRefresh, input.identityToken]) assert.equal(serialized.includes(secret), false);
+    for (const secret of [other.accountID, "synthetic.user", input.statusToken, syntheticRefresh, input.identityToken]) assert.equal(serialized.includes(secret), false);
     assert.equal(f.db.prepare("SELECT status_hash FROM auth_account_deletions_v1").get().status_hash.includes(input.statusToken), false);
   } finally { f.close(); }
 });
@@ -336,12 +336,12 @@ test("an existing pre-purpose SQLite store is migrated atomically and old challe
     await assert.rejects(() => f.state.beginVerification(challengeID, { purpose: "account_deletion" }), codeIs("INVALID_CHALLENGE"));
     assert.equal((await f.state.beginVerification(challengeID)).expectedNonce, hash("legacy-nonce"));
     assert.deepEqual(f.db.prepare("SELECT name FROM auth_schema_migrations_v1 ORDER BY name").all().map(row => row.name),
-      ["challenge-order-v1", "challenge-purpose-v1"]);
+      ["challenge-order-v1", "challenge-purpose-v1", "deletion-recovery-order-v1"]);
     assert.equal(f.db.prepare("SELECT issue_order FROM auth_challenges_v1 WHERE challenge_id=?").get(challengeID).issue_order, 0);
     await assert.rejects(() => f.session("legacy.blocked"), codeIs("ACCOUNT_DISABLED"));
     assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_subject_bans_v1").get().count, 1);
     f.close(); f = setup({ path });
-    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_schema_migrations_v1").get().count, 2);
+    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_schema_migrations_v1").get().count, 3);
   } finally { f.close(); rmSync(directory, { recursive: true, force: true }); }
 });
 

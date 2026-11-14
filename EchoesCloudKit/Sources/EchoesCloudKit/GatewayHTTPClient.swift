@@ -152,12 +152,12 @@ public struct GatewayHTTPClient: GatewayAuthenticationAPI {
     }
 
     private func post<T: Decodable>(
-        _ path: String, fields: [String: String] = [:], token: GatewaySecret? = nil
+        _ path: String, fields: [String: String] = [:], token: GatewaySecret? = nil, expectedStatus: Int = 200
     )
         async throws -> T
     {
         let response = try await request(path, fields: fields, token: token)
-        guard response.status == 200 else { throw try serverFailure(response) }
+        guard response.status == expectedStatus else { throw try serverFailure(response) }
         do { return try JSONDecoder().decode(T.self, from: response.body) } catch {
             throw GatewayFailure.invalidResponse
         }
@@ -213,5 +213,56 @@ public struct GatewayHTTPClient: GatewayAuthenticationAPI {
         return .server(
             GatewayErrorCode(rawValue: body.error) ?? .other, status: response.status,
             retryAfterSeconds: retry)
+    }
+}
+
+extension GatewayHTTPClient: GatewayAccountDeletionAPI {
+    public func deletionChallenge(recovering: Bool) async throws -> GatewayChallenge {
+        try await challenge(purpose: recovering ? .deletionRecovery : .accountDeletion)
+    }
+    public func requestDeletion(ticket: GatewayDeletionTicket, proof: GatewayDeletionProof?) async throws
+        -> GatewayDeletionStatus
+    {
+        var fields = proof?.fields ?? [:]
+        fields["deletionID"] = ticket.deletionID
+        let response: GatewayDeletionStatus = try await post(
+            "/v1/account/deletion", fields: fields, token: ticket.statusToken, expectedStatus: 202)
+        try response.validate(deletionID: ticket.deletionID, accountID: proof?.expectedAccountID)
+        return response
+    }
+    public func recoverDeletion(proof: GatewayDeletionProof) async throws -> GatewayRecoveredDeletion {
+        struct Recovered: Decodable {
+            let status: GatewayDeletionStatus
+            let statusToken: GatewaySecret
+            init(from decoder: any Decoder) throws {
+                status = try GatewayDeletionStatus(from: decoder)
+                let container = try decoder.container(keyedBy: CodingKeys.self)
+                statusToken = try container.decode(GatewaySecret.self, forKey: .statusToken)
+            }
+            enum CodingKeys: String, CodingKey { case statusToken }
+        }
+        let response: Recovered = try await post("/v1/account/deletion/recover", fields: proof.fields)
+        try response.status.validate(accountID: proof.expectedAccountID)
+        do {
+            return try .init(
+                ticket: .init(deletionID: response.status.deletionID, statusToken: response.statusToken),
+                status: response.status)
+        } catch { throw GatewayFailure.invalidResponse }
+    }
+    public func deletionStatus(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus {
+        let response: GatewayDeletionStatus = try await post(
+            "/v1/account/deletion/status", fields: ["deletionID": ticket.deletionID],
+            token: ticket.statusToken)
+        try response.validate(deletionID: ticket.deletionID)
+        return response
+    }
+    public func acknowledgePrivateCleanup(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus
+    {
+        let response: GatewayDeletionStatus = try await post(
+            "/v1/account/deletion/private-cleanup", fields: ["deletionID": ticket.deletionID],
+            token: ticket.statusToken)
+        try response.validate(deletionID: ticket.deletionID)
+        guard response.privateData == .deviceAcknowledged else { throw GatewayFailure.invalidResponse }
+        return response
     }
 }

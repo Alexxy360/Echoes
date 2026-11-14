@@ -210,7 +210,8 @@ test("deletion HTTP returns a recoverable ticket status and only the internal al
     const status = await f.call("/v1/account/deletion/status", { deletionID }, statusToken);
     assert.equal(status.body.completed, true); assert.equal(status.body.appleAuthorization, "retained-tokens-processed");
     assert.equal(f.counts().revokes, 1); assert.equal(f.erased.length, 2);
-    assert.equal(JSON.stringify(status.body).includes(login.body.accountID), false);
+    assert.equal(status.body.accountID, login.body.accountID);
+    assert.equal(Object.hasOwn(status.body, "statusToken"), false);
   } finally { f.close(); }
 });
 
@@ -292,4 +293,74 @@ test("health stays a shallow liveness response while the default target is disab
   const response = await forwardGatewayRequest(new Request("https://api.invalid/health"), {});
   assert.equal(response.status, 200); assert.deepEqual(await response.json(), { protocolVersion: 1, status: "ok", mode: "development-gateway" });
   assert.equal((await forwardGatewayRequest(new Request("https://api.invalid/v1/auth/challenge", { method: "POST" }), {})).status, 503);
+});
+
+test("deletion recovery HTTP issues a new narrow ticket for the same account/job without code exchange or public erasure", async () => {
+  const f = setup();
+  try {
+    const login = await f.login(), deletion = await f.call("/v1/auth/challenge", { purpose: "account_deletion" });
+    const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");
+    await f.call("/v1/account/deletion", { deletionID, challengeID: deletion.body.challengeID, identityToken: f.token(deletion.body) }, statusToken);
+    const challenge = await f.call("/v1/auth/challenge", { purpose: "deletion_recovery" }); assert.equal(challenge.status, 200);
+    const input = { challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body), expectedAccountID: login.body.accountID };
+    const result = await f.call("/v1/account/deletion/recover", input);
+    assert.equal(result.status, 200); assert.equal(result.headers.get("Cache-Control"), "no-store");
+    assert.equal(result.body.accountID, login.body.accountID); assert.equal(result.body.deletionID, deletionID);
+    assert.notEqual(result.body.statusToken, statusToken); assert.equal(f.counts().exchanges, 1);
+    assert.equal(f.counts().revokes, 0); assert.equal(f.erased.length, 0);
+    for (const name of ["sessionToken", "renewalToken", "appleSubject", "sealedCredential"]) assert.equal(Object.hasOwn(result.body, name), false);
+    assert.equal(f.db.prepare("SELECT heavy FROM gateway_daily_v1").get().heavy, 3);
+    assert.equal((await f.call("/v1/account/deletion/status", { deletionID }, statusToken)).status, 503);
+    const status = await f.call("/v1/account/deletion/status", { deletionID }, result.body.statusToken);
+    assert.equal(status.status, 200); assert.equal(status.body.accountID, login.body.accountID);
+    assert.equal(Object.hasOwn(status.body, "statusToken"), false);
+    assert.equal((await f.call("/v1/account/deletion/private-cleanup", { deletionID }, result.body.statusToken)).status, 200);
+    assert.equal((await f.call("/v1/account/deletion/recover", input)).status, 401);
+  } finally { f.close(); }
+});
+
+test("deletion recovery HTTP rejects bearer substitutes, unknown fields and every other challenge purpose", async () => {
+  const f = setup();
+  try {
+    await f.login(); const challenge = await f.call("/v1/auth/challenge", { purpose: "deletion_recovery" });
+    const proof = { challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body) };
+    for (const extra of [{ authorizationCode: syntheticCode }, { deletionID: randomUUID() }, { authorID: randomUUID() },
+      { expectedAccountID: "bad" }, { statusToken: "untrusted" }]) {
+      assert.equal((await f.call("/v1/account/deletion/recover", { ...proof, ...extra })).status, 400);
+    }
+    assert.equal((await f.call("/v1/account/deletion/recover", proof, "a-bearer-is-not-owner-proof")).status, 400);
+    for (const purpose of ["login", "session_reset", "account_deletion"]) {
+      const other = await f.call("/v1/auth/challenge", { purpose }, undefined, { budget: hash(randomUUID()) });
+      assert.equal((await f.call("/v1/account/deletion/recover", { challengeID: other.body.challengeID, identityToken: f.token(other.body) })).status, 401);
+    }
+    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_account_deletions_v1").get().count, 0);
+  } finally { f.close(); }
+});
+
+test("deletion recovery is feature-gated and no existing owned job produces a specific no-deletion result", async () => {
+  const f = setup(), disabled = setup({ deletionEnabled: false });
+  try {
+    const challenge = await f.call("/v1/auth/challenge", { purpose: "deletion_recovery" });
+    const result = await f.call("/v1/account/deletion/recover", { challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body) });
+    assert.equal(result.status, 404); assert.equal(result.body.error, "NO_DELETION");
+    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_accounts_v1").get().count, 0);
+    assert.equal((await disabled.call("/v1/auth/challenge", { purpose: "deletion_recovery" })).status, 503);
+    assert.equal((await disabled.call("/v1/account/deletion/recover", {})).status, 503);
+    assert.equal(disabled.counts().externalCalls, 0);
+  } finally { f.close(); disabled.close(); }
+});
+
+test("maintenance scheduling failure prevents capability rotation and keeps the old owner ticket usable", async () => {
+  const f = setup();
+  try {
+    await f.login(); const challenge = await f.call("/v1/auth/challenge", { purpose: "account_deletion" });
+    const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");
+    await f.call("/v1/account/deletion", { deletionID, challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body) }, statusToken);
+    const recovery = await f.call("/v1/auth/challenge", { purpose: "deletion_recovery" });
+    await f.storage.deleteAlarm(); f.failAlarm(true);
+    assert.equal((await f.call("/v1/account/deletion/recover", { challengeID: recovery.body.challengeID, identityToken: f.token(recovery.body) })).status, 503);
+    f.failAlarm(false);
+    assert.equal((await f.call("/v1/account/deletion/status", { deletionID }, statusToken)).status, 200);
+    assert.equal(f.db.prepare("SELECT state FROM auth_challenges_v1 WHERE challenge_id=?").get(recovery.body.challengeID).state, "pending");
+  } finally { f.close(); }
 });
