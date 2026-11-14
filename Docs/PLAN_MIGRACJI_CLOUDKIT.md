@@ -59,6 +59,8 @@ Postęp CK-02f: konkretny lokalny adapter wymiany kodu/refresh/revoke Apple, oso
 
 Postęp CK-02g: lokalne rotowane pary access/renewal z limitem bezwzględnym 30 dni, integralność HMAC i wykrywanie starej rotacji z unieważnieniem tej sesji. Kontrola Apple najwyżej raz na 24 h na konto; lease/revision, rezerwacja przestrzeni przed siecią i trwały staging nowego ciphertext przed sesją. Limity credential i cleanup w partiach mają kod/testy, ale brak alarmu. 36 nowych testów, cały gateway 116. Bez wdrożenia i prawdziwych tokenów; kolejka revoke/usunięcia danych, natywny przepływ/Keychain, HTTP i rzeczywiste próby nadal wymagane. [Kontrakt i granice](ODNAWIANIE_SESJI_GATEWAY.md).
 
+Postęp CK-02h: lokalny proces usuwania ze świeżym purpose/nonce Apple, blokadą/generacją i znacznikiem odcinającym stare logowania, wąskim biletem odzyskiwania statusu, etapami public/private/Apple i ponowieniami. Migracja magazynu i osobny znacznik blokady operatora chronią przed pomyleniem celów wyzwania oraz obejściem bana przez usunięcie. 23 nowe testy, cały gateway 139. Rzeczywisty adapter kasowania CloudKit pozostaje obowiązkową, jeszcze niewdrożoną zależnością; private cleanup/Keychain i alarm także wymagają podłączenia. Nie wykonano żadnego usunięcia danych użytkowników ani zmian usług. [Kontrakt i granice](USUWANIE_KONTA_GATEWAY.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.
@@ -101,6 +103,8 @@ Odbiór: późny GPS, zmiana okolicy, zmiana muzyki bez ruchu, tło/powrót, utr
 - Zaprojektować usunięcie danych aplikacji bez usuwania konta Apple. Obsłużyć częściowo wykonaną operację oraz ponowienie.
 
 Odbiór: więcej niż 100 lokalnych wiadomości, odległe rekordy, cofnięcie widoczności, zmiana konta, próby zapisu cudzego rekordu, blokady i usuwanie. Produkcja wymaga działającego procesu moderacji oraz kontaktu wsparcia (właściciel poda go później).
+
+Powiązany postęp CK-02h: przygotowano lokalny sterownik usunięcia konta, bez pozornego sukcesu brakującego adaptera danych. Nie jest to odbiór CK-05 ani usunięcie starego konta Firebase. Kryteria publicznego/prywatnego CloudKit, operacji w toku i natywnego wznowienia nadal obowiązują.
 
 ### CK-06 — odłączenie Firebase
 

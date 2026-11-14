@@ -1,10 +1,10 @@
-# Jednorazowe wyzwania i sesje — CK-02e/CK-02f/CK-02g
+# Jednorazowe wyzwania i sesje — CK-02e–CK-02h
 
 Stan: 14 listopada 2026. Lokalna implementacja i testy SQLite/Node; brak wdrożenia, endpointu HTTP i nowych zasobów Cloudflare. Nie zmieniono App ID, iOS ani kluczy Apple. Dotychczasowy Worker diagnostyczny pozostaje wyłączony. To kolejny komponent planowanego logowania, nie zaliczenie pełnego przepływu Apple.
 
 ## Przepływ i granice zaufania
 
-1. `AuthenticationState.issueChallenge(serverBudgetHash)` tworzy losowy UUID i 32-bajtowy nonce. Telefon dostaje nonce, a baza przechowuje tylko jego SHA-256 i termin 5 min. Natywne żądanie Apple ma użyć tego SHA-256 jako nonce.
+1. `AuthenticationState.issueChallenge(serverBudgetHash, {purpose})` tworzy losowy UUID i 32-bajtowy nonce. Telefon dostaje nonce, a baza przechowuje tylko jego SHA-256 i termin 5 min. Natywne żądanie Apple ma użyć tego SHA-256 jako nonce. Cel jest zamknięty: login lub account_deletion; weryfikacja/claim sprawdza ten sam cel. Stare wyzwania migrują wyłącznie do login.
 2. `AppleLoginCoordinator` pobiera oczekiwany nonce z magazynu i weryfikuje identity token przez istniejący verifier. Nie przepisuje expectedNonce ani appleSubject z JSON klienta.
 3. Po poprawnym tokenie warunkowe UPDATE zmienia wyzwanie pending → claimed. Wymagane jest potwierdzenie trwałości przed wysłaniem jednorazowego authorization code. Równoległe żądania nie mogą drugi raz uzyskać tego prawa. CK-02g rezerwuje również miejsce na credential przed żądaniem Apple.
 4. Wymiana kodu jest wymaganą, zaufaną zależnością. Nie ma domyślnego pozornego sukcesu. CK-02f dodaje konkretny adapter protokołu Apple, ponowną weryfikację ID tokenu oraz trwały zapis refresh tokenu zaszyfrowanego AES-256-GCM jako pending. Następnie koordynator porównuje obie tożsamości. Adapter nie został sprawdzony z prawdziwym kodem Apple.
@@ -33,3 +33,7 @@ Testy nie są próbą workerd/Miniflare, nie dowodzą routingu pomiędzy aktoram
 ## CK-02g — aktualny stan odnawiania
 
 AuthenticationState wymaga teraz również RenewalProofs z oddzielnym kluczem HMAC. Wynik logowania ma dodatkowe renewalToken/renewalExpiresAt. Weryfikacja starej autentycznej rotacji unieważnia całą tę sesję; klient wymaga single-flight i atomowego Keychain bez ponowienia po nieznanym wyniku. Rewizja/lease chronią przed spóźnionym odnowieniem po blokadzie, logout i nowym logowaniu. Przed siecią obowiązują limity i rezerwacja miejsca. Stan/logowanie ma teraz 53 testy, cały gateway 116. Powyższe wyniki CK-02e/f pozostają historią tych etapów. [Aktualny kontrakt, retencja i pozostały odbiór](ODNAWIANIE_SESJI_GATEWAY.md).
+
+## CK-02h — odrębne uwierzytelnienie usuwania
+
+Świeże wyzwanie z purpose account_deletion umożliwia zlecenie usunięcia także zablokowanemu właścicielowi i bez dostępnego refresh. Nie przyznaje normalnej sesji. Zadanie unieważnia generację i blokuje starsze logowania; status/ack mają wąski osobny bilet. Blokada operatora ma odrębny skrót sub, który nie jest kasowany razem z profilem i nie powstaje z tymczasowego disable zadania. Migracja SQLite jest zapisana w metadanych, a nie zakłada świeżej bazy. Cały zestaw ma 139 testów. Publiczny adapter CloudKit, natywne private cleanup i alarm pozostają przed odbiorem. [Pełny kontrakt](USUWANIE_KONTA_GATEWAY.md).

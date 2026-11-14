@@ -1,5 +1,6 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { appleSubjectHash } from "./refresh-credential-vault.mjs";
+import { deletionSchema, deletionTicketHash, deletionUUID } from "./deletion-schema.mjs";
 
 const challengeLifetime = 5 * 60 * 1000;
 const sessionLifetime = 10 * 60 * 1000;
@@ -11,7 +12,7 @@ const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 const digest = value => createHash("sha256").update(value).digest("hex");
 const codes = new Set(["STATE_UNAVAILABLE", "INVALID_CHALLENGE", "ISSUE_LIMITED", "INVALID_SESSION",
   "ACCOUNT_DISABLED", "SESSION_LIMITED", "INVALID_IDENTITY", "KEYS_UNAVAILABLE", "EXCHANGE_UNAVAILABLE",
-  "REAUTH_REQUIRED", "RENEWAL_BUSY", "CREDENTIAL_LIMITED"]);
+  "REAUTH_REQUIRED", "RENEWAL_BUSY", "CREDENTIAL_LIMITED", "DELETION_UNAVAILABLE", "DELETION_IN_PROGRESS", "NO_ACCOUNT"]);
 export class AuthenticationStateError extends Error {
   constructor(code = "STATE_UNAVAILABLE") {
     super("Authentication request could not be completed.");
@@ -24,6 +25,7 @@ const schema = [
     challenge_id TEXT PRIMARY KEY, nonce_hash TEXT NOT NULL, expires_at INTEGER NOT NULL,
     state TEXT NOT NULL CHECK(state IN ('pending','claimed','consumed')),
     verification_attempts INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS auth_schema_migrations_v1(name TEXT PRIMARY KEY,applied_at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS auth_challenge_expiry_v1 ON auth_challenges_v1(expires_at)`,
   `CREATE TABLE IF NOT EXISTS auth_issue_budget_v1 (
     budget_hash TEXT NOT NULL, window_start INTEGER NOT NULL, count INTEGER NOT NULL,
@@ -32,6 +34,7 @@ const schema = [
   `CREATE TABLE IF NOT EXISTS auth_accounts_v1 (
     account_id TEXT PRIMARY KEY, subject_hash TEXT NOT NULL UNIQUE,
     generation INTEGER NOT NULL DEFAULT 0, disabled INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE TABLE IF NOT EXISTS auth_subject_bans_v1 (subject_hash TEXT PRIMARY KEY,created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_sessions_v1 (
     token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL, generation INTEGER NOT NULL,
     expires_at INTEGER NOT NULL, challenge_id TEXT NOT NULL UNIQUE)`,
@@ -57,6 +60,7 @@ const schema = [
     account_id TEXT PRIMARY KEY, credential_id TEXT NOT NULL, verified_at INTEGER NOT NULL,
     revision INTEGER NOT NULL, check_lease_id TEXT, check_started_at INTEGER,
     reauth_required INTEGER NOT NULL DEFAULT 0)`,
+  ...deletionSchema,
 ];
 
 /** Server-internal store. Requires synchronous transactions and explicit durability; no HTTP interface. */
@@ -67,7 +71,18 @@ export class AuthenticationState {
         typeof storage.sync !== "function" || typeof clock !== "function" ||
         typeof renewalProofs?.create !== "function" || typeof renewalProofs.verify !== "function") throw new AuthenticationStateError();
     this.#storage = storage; this.#clock = clock; this.#renewalProofs = renewalProofs;
-    this.#transaction(() => { for (const statement of schema) this.#storage.sql.exec(statement); });
+    this.#transaction(() => {
+      for (const statement of schema) this.#storage.sql.exec(statement);
+      // Keep the original challenge CREATE stable. This migration also upgrades an existing CK-02g store.
+      if (!this.#rows("SELECT name FROM auth_schema_migrations_v1 WHERE name='challenge-purpose-v1'").length) {
+        this.#storage.sql.exec("ALTER TABLE auth_challenges_v1 ADD COLUMN purpose TEXT NOT NULL DEFAULT 'login'");
+        this.#storage.sql.exec("INSERT INTO auth_schema_migrations_v1(name,applied_at) VALUES ('challenge-purpose-v1',?)", this.#now());
+      }
+      // Legacy operator blocks survive erasure; a deletion's temporary disable must never become a ban.
+      this.#storage.sql.exec(`INSERT OR IGNORE INTO auth_subject_bans_v1(subject_hash,created_at)
+        SELECT a.subject_hash,? FROM auth_accounts_v1 a WHERE a.disabled=1 AND NOT EXISTS
+          (SELECT 1 FROM auth_account_deletions_v1 d WHERE d.account_id=a.account_id AND d.local_status='blocked')`, this.#now());
+    });
   }
   #now() {
     const now = this.#clock();
@@ -98,10 +113,11 @@ export class AuthenticationState {
     return Object.freeze({ accountID: row.account_id, expiresAt: Math.floor(row.expires_at / 1000) });
   }
 
-  async issueChallenge(serverBudgetHash) {
+  async issueChallenge(serverBudgetHash, { purpose = "login" } = {}) {
     // The transport must derive this key from trusted context and route equal budgets to the same store.
     // Never accept the budget key from client JSON or an untrusted forwarding header.
-    if (typeof serverBudgetHash !== "string" || !/^[a-f0-9]{64}$/.test(serverBudgetHash)) throw new AuthenticationStateError();
+    if (typeof serverBudgetHash !== "string" || !/^[a-f0-9]{64}$/.test(serverBudgetHash) ||
+        !["login", "account_deletion"].includes(purpose)) throw new AuthenticationStateError();
     const now = this.#now(), windowStart = Math.floor(now / issueWindow) * issueWindow;
     const challengeID = randomUUID(), nonce = randomBytes(32).toString("base64url");
     const expiresAt = now + challengeLifetime;
@@ -109,30 +125,32 @@ export class AuthenticationState {
       const allowed = this.#rows(`INSERT INTO auth_issue_budget_v1(budget_hash,window_start,count) VALUES (?,?,1)
         ON CONFLICT(budget_hash,window_start) DO UPDATE SET count=count+1 WHERE count<5 RETURNING count`, serverBudgetHash, windowStart);
       if (!allowed.length) throw new AuthenticationStateError("ISSUE_LIMITED");
-      this.#storage.sql.exec(`INSERT INTO auth_challenges_v1(challenge_id,nonce_hash,expires_at,state)
-        VALUES (?,?,?,'pending')`, challengeID, digest(nonce), expiresAt);
+      this.#storage.sql.exec(`INSERT INTO auth_challenges_v1(challenge_id,nonce_hash,expires_at,state,purpose)
+        VALUES (?,?,?,'pending',?)`, challengeID, digest(nonce), expiresAt, purpose);
     });
     await this.#durable();
     return Object.freeze({ challengeID, nonce, expiresAt: Math.floor(expiresAt / 1000) });
   }
 
-  async beginVerification(challengeID) {
+  async beginVerification(challengeID, { purpose = "login" } = {}) {
     this.#challengeID(challengeID); const now = this.#now();
+    if (!["login", "account_deletion"].includes(purpose)) throw new AuthenticationStateError();
     const row = this.#transaction(() => this.#rows(`UPDATE auth_challenges_v1
       SET verification_attempts=verification_attempts+1
-      WHERE challenge_id=? AND state='pending' AND expires_at>? AND verification_attempts<5
-      RETURNING nonce_hash`, challengeID, now)[0]);
+      WHERE challenge_id=? AND purpose=? AND state='pending' AND expires_at>? AND verification_attempts<5
+      RETURNING nonce_hash`, challengeID, purpose, now)[0]);
     if (!row) throw new AuthenticationStateError("INVALID_CHALLENGE");
     await this.#durable();
     return Object.freeze({ expectedNonce: row.nonce_hash });
   }
 
-  async claimChallenge(challengeID, expectedNonce) {
+  async claimChallenge(challengeID, expectedNonce, { purpose = "login" } = {}) {
     this.#challengeID(challengeID); const now = this.#now();
-    if (typeof expectedNonce !== "string" || !/^[a-f0-9]{64}$/.test(expectedNonce)) throw new AuthenticationStateError("INVALID_CHALLENGE");
+    if (typeof expectedNonce !== "string" || !/^[a-f0-9]{64}$/.test(expectedNonce) ||
+        !["login", "account_deletion"].includes(purpose)) throw new AuthenticationStateError("INVALID_CHALLENGE");
     const claimed = this.#transaction(() => this.#rows(`UPDATE auth_challenges_v1 SET state='claimed'
-      WHERE challenge_id=? AND nonce_hash=? AND state='pending' AND expires_at>? AND verification_attempts BETWEEN 1 AND 5
-      RETURNING challenge_id`, challengeID, expectedNonce, now).length === 1);
+      WHERE challenge_id=? AND nonce_hash=? AND purpose=? AND state='pending' AND expires_at>? AND verification_attempts BETWEEN 1 AND 5
+      RETURNING challenge_id`, challengeID, expectedNonce, purpose, now).length === 1);
     if (!claimed) throw new AuthenticationStateError("INVALID_CHALLENGE");
     // Must finish before a one-use authorization code is sent to Apple's token endpoint.
     await this.#durable();
@@ -150,8 +168,12 @@ export class AuthenticationState {
     const renewalExpiresAt = now + renewalLifetime;
     const tokenHash = this.#tokenHash(sessionToken), subjectHash = appleSubjectHash(appleSubject);
     const accountID = this.#transaction(() => {
+      this.#requireFreshChallengeEpoch(challengeID, subjectHash);
+      if (this.#rows("SELECT subject_hash FROM auth_subject_bans_v1 WHERE subject_hash=?", subjectHash).length) {
+        throw new AuthenticationStateError("ACCOUNT_DISABLED");
+      }
       const row = this.#rows(`UPDATE auth_challenges_v1 SET state='consumed'
-        WHERE challenge_id=? AND state='claimed' AND expires_at>? RETURNING challenge_id`, challengeID, now)[0];
+        WHERE challenge_id=? AND purpose='login' AND state='claimed' AND expires_at>? RETURNING challenge_id`, challengeID, now)[0];
       if (!row) throw new AuthenticationStateError("INVALID_CHALLENGE");
       this.#storage.sql.exec(`INSERT INTO auth_accounts_v1(account_id,subject_hash) VALUES (?,?)
         ON CONFLICT(subject_hash) DO NOTHING`, randomUUID(), subjectHash);
@@ -194,12 +216,38 @@ export class AuthenticationState {
   }
 
   async reserveLoginCredential(challengeID, appleSubject) {
+    return this.#reserveLoginCredential(challengeID, appleSubject);
+  }
+
+  #requireFreshChallengeEpoch(challengeID, subjectHash) {
+    const challenge = this.#rows("SELECT expires_at FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+    const fence = this.#rows("SELECT not_before FROM auth_subject_fences_v1 WHERE subject_hash=?", subjectHash)[0];
+    if (!challenge || (fence && challenge.expires_at - challengeLifetime <= fence.not_before)) {
+      throw new AuthenticationStateError("REAUTH_REQUIRED");
+    }
+  }
+
+  #rejectLateCredentialAfterDeletion(subjectHash) {
+    if (this.#rows("SELECT subject_hash FROM auth_subject_fences_v1 WHERE subject_hash=?", subjectHash).length &&
+        !this.#rows("SELECT deletion_id FROM auth_account_deletions_v1 WHERE subject_hash=? AND local_status='blocked'", subjectHash).length) {
+      throw new AuthenticationStateError("REAUTH_REQUIRED");
+    }
+  }
+
+  async #reserveLoginCredential(challengeID, appleSubject) {
     this.#challengeID(challengeID); const now = this.#now();
     let subjectHash;
     try { subjectHash = appleSubjectHash(appleSubject); } catch { throw new AuthenticationStateError("INVALID_IDENTITY"); }
     this.#transaction(() => {
-      const row = this.#rows("SELECT state,expires_at FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
-      if (row?.state !== "claimed" || row.expires_at <= now) throw new AuthenticationStateError("INVALID_CHALLENGE");
+      const row = this.#rows("SELECT state,expires_at,purpose FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+      if (row?.state !== "claimed" || row.purpose !== "login" || row.expires_at <= now) throw new AuthenticationStateError("INVALID_CHALLENGE");
+      this.#requireFreshChallengeEpoch(challengeID, subjectHash);
+      if (this.#rows("SELECT deletion_id FROM auth_account_deletions_v1 WHERE subject_hash=? AND local_status='blocked'", subjectHash).length) {
+        throw new AuthenticationStateError("DELETION_IN_PROGRESS");
+      }
+      if (this.#rows("SELECT subject_hash FROM auth_subject_bans_v1 WHERE subject_hash=?", subjectHash).length) {
+        throw new AuthenticationStateError("ACCOUNT_DISABLED");
+      }
       const account = this.#rows("SELECT disabled FROM auth_accounts_v1 WHERE subject_hash=?", subjectHash)[0];
       if (account?.disabled) throw new AuthenticationStateError("ACCOUNT_DISABLED");
       this.#reserveCredential(challengeID, subjectHash, now);
@@ -216,6 +264,11 @@ export class AuthenticationState {
       if (!envelope || envelope.v !== 1 || Object.keys(envelope).sort().join() !== "ciphertext,iv,keyID,tag,v") throw new Error();
       const subjectHash = appleSubjectHash(appleSubject);
       this.#transaction(() => {
+        const challenge = this.#rows("SELECT expires_at FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+        const fence = this.#rows("SELECT not_before FROM auth_subject_fences_v1 WHERE subject_hash=?", subjectHash)[0];
+        if (fence && challenge && challenge.expires_at - challengeLifetime <= fence.not_before) {
+          this.#rejectLateCredentialAfterDeletion(subjectHash);
+        }
         const claimed = this.#rows("SELECT state FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
         if (claimed?.state !== "claimed") throw new AuthenticationStateError("INVALID_CHALLENGE");
         if (!this.#rows("SELECT reservation_id FROM auth_credential_reservations_v1 WHERE reservation_id=? AND expires_at>?",
@@ -241,6 +294,35 @@ export class AuthenticationState {
     return this.#transaction(() => this.#activeSession(hash, now));
   }
 
+  /** Only the fresh, verified Apple deletion flow may call this, including for a blocked account. */
+  async startVerifiedDeletion(challengeID, { appleSubject, identityExpiresAt, deletionID, statusToken, expectedAccountID } = {}) {
+    this.#challengeID(challengeID); const now = this.#now(); let statusHash, subjectHash;
+    if (!Number.isSafeInteger(identityExpiresAt) || !Number.isSafeInteger(identityExpiresAt * 1000) ||
+        identityExpiresAt * 1000 <= now) throw new AuthenticationStateError("INVALID_IDENTITY");
+    try {
+      statusHash = deletionTicketHash(deletionID, statusToken); subjectHash = appleSubjectHash(appleSubject);
+      if (expectedAccountID !== undefined && (typeof expectedAccountID !== "string" || !deletionUUID.test(expectedAccountID))) throw new Error();
+    } catch { throw new AuthenticationStateError("DELETION_UNAVAILABLE"); }
+    this.#transaction(() => {
+      this.#requireFreshChallengeEpoch(challengeID, subjectHash);
+      const challenge = this.#rows("SELECT state,expires_at,purpose FROM auth_challenges_v1 WHERE challenge_id=?", challengeID)[0];
+      if (challenge?.state !== "claimed" || challenge.purpose !== "account_deletion" || challenge.expires_at <= now) {
+        throw new AuthenticationStateError("INVALID_CHALLENGE");
+      }
+      const account = this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE subject_hash=?", subjectHash)[0];
+      if (!account) throw new AuthenticationStateError("NO_ACCOUNT");
+      if (expectedAccountID !== undefined && expectedAccountID !== account.account_id) throw new AuthenticationStateError("INVALID_IDENTITY");
+      this.#storage.sql.exec(`INSERT INTO auth_account_deletions_v1
+        (deletion_id,status_hash,account_id,subject_hash,created_at,settle_after) VALUES (?,?,?,?,?,?)`,
+      deletionID, statusHash, account.account_id, subjectHash, now, now + operationLifetime);
+      this.#storage.sql.exec(`INSERT INTO auth_subject_fences_v1(subject_hash,not_before) VALUES (?,?)
+        ON CONFLICT(subject_hash) DO UPDATE SET not_before=MAX(not_before,excluded.not_before)`, subjectHash, now);
+      this.#storage.sql.exec("UPDATE auth_accounts_v1 SET disabled=1,generation=generation+1 WHERE account_id=?", account.account_id);
+      this.#storage.sql.exec("UPDATE auth_challenges_v1 SET state='consumed' WHERE challenge_id=?", challengeID);
+    });
+    await this.#durable();
+  }
+
   async revokeSession(sessionToken) {
     const hash = this.#tokenHash(sessionToken);
     this.#transaction(() => {
@@ -263,8 +345,12 @@ export class AuthenticationState {
   /** Trusted operator only. Disabling prevents both existing sessions and new session issuance. */
   async disableAccount(accountID) {
     if (typeof accountID !== "string" || !uuid.test(accountID)) throw new AuthenticationStateError();
-    this.#transaction(() => this.#storage.sql.exec(`UPDATE auth_accounts_v1 SET disabled=1,generation=generation+1
-      WHERE account_id=?`, accountID));
+    const now = this.#now();
+    this.#transaction(() => {
+      const account = this.#rows("SELECT subject_hash FROM auth_accounts_v1 WHERE account_id=?", accountID)[0];
+      if (account) this.#storage.sql.exec("INSERT OR IGNORE INTO auth_subject_bans_v1(subject_hash,created_at) VALUES (?,?)", account.subject_hash, now);
+      this.#storage.sql.exec("UPDATE auth_accounts_v1 SET disabled=1,generation=generation+1 WHERE account_id=?", accountID);
+    });
     await this.#durable();
   }
 
@@ -336,6 +422,8 @@ export class AuthenticationState {
         WHERE reservation_id=? AND expires_at>?`, leaseID, now)[0];
       if (!reservation || !uuid.test(reservation.credential_id ?? "") || appleSubjectHash(appleSubject) !== reservation.subject_hash ||
           typeof sealedCredential !== "string" || sealedCredential.length > 12000) throw new AuthenticationStateError();
+      const fence = this.#rows("SELECT not_before FROM auth_subject_fences_v1 WHERE subject_hash=?", reservation.subject_hash)[0];
+      if (fence && reservation.expires_at - 86400000 <= fence.not_before) this.#rejectLateCredentialAfterDeletion(reservation.subject_hash);
       const envelope = JSON.parse(sealedCredential);
       if (!envelope || envelope.v !== 1 || Object.keys(envelope).sort().join() !== "ciphertext,iv,keyID,tag,v") throw new AuthenticationStateError();
       this.#storage.sql.exec(`INSERT INTO auth_refresh_credentials_v1
@@ -439,6 +527,7 @@ export class AuthenticationState {
       // Retention is local erasure, not a claim that Apple's authorization was revoked.
       this.#storage.sql.exec(`DELETE FROM auth_refresh_credentials_v1 WHERE credential_id IN
         (SELECT c.credential_id FROM auth_refresh_credentials_v1 c WHERE c.created_at<=? AND
+          NOT EXISTS (SELECT 1 FROM auth_account_deletions_v1 d WHERE d.subject_hash=c.subject_hash AND d.apple_status='pending') AND
           (NOT EXISTS (SELECT 1 FROM auth_apple_state_v1 p WHERE p.credential_id=c.credential_id) OR
            NOT EXISTS (SELECT 1 FROM auth_renewal_grants_v1 g JOIN auth_accounts_v1 a ON a.account_id=g.account_id
              WHERE g.account_id=c.account_id AND g.generation=a.generation AND a.disabled=0 AND g.expires_at>?)) LIMIT 100)`,

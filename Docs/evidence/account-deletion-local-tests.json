@@ -1,0 +1,21 @@
+{
+  "stage": "CK-02h",
+  "observedAtUTC": "2026-11-14T12:02:31Z",
+  "localDate": "2026-11-14 Europe/Warsaw",
+  "runtime": "Node.js 22.23.5",
+  "command": "node --test gateway/test/*.test.mjs",
+  "passed": 139,
+  "failed": 0,
+  "newDeletionTests": 23,
+  "groups": { "deletion": 23, "authenticationStateLoginRenewal": 53, "appleIdentityAndJWKS": 16, "renewalIntegrity": 4, "oauth": 10, "vault": 6, "previousDiagnostics": 27 },
+  "storage": "real local SQLite, including legacy challenge schema migration and file reopen",
+  "publicDataAdapter": "explicit in-memory synthetic owner-scoped records; no real CloudKit erasure adapter yet",
+  "maximumSyntheticRecordsInBatchTest": 205,
+  "appleTransport": "synthetic, including real OAuth adapter receiving a mocked empty 200",
+  "privateData": "device acknowledgement contract only; not server proof or native implementation",
+  "realUserDataDeleted": false,
+  "externalAppleOrCloudflareRequests": 0,
+  "cloudDeployment": false,
+  "newServicesSecretsOrCharges": false,
+  "remainingAcceptance": ["real CloudKit public erasure and in-flight write ledger", "native private cleanup and persisted job ticket", "real Apple revoke", "HTTP/alarm/rate limits", "moderation operations and retention policy", "ordinary accounts A/B"]
+}

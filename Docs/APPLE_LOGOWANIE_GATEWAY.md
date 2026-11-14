@@ -42,3 +42,7 @@ Do koordynatora podłączono konkretny adapter protokołu Apple, osobny podpis E
 ## CK-02g — weryfikacja odpowiedzi refresh
 
 verifyRefresh współdzieli sprawdzanie podpisu/czasu/issuer/native audience, ale wiąże sub ze skrótem zaufanego magazynu zamiast wymyślania nonce nowego logowania. Pierwotne verify nadal wymaga nonce. To metoda wewnętrzna wyłącznie dla odpowiedzi serwerowego adaptera, nie alternatywny endpoint klienta. 3 nowe testy dają 16 verifiera/JWKS; cały gateway ma 116. Osobny koordynator obejmuje dobową kontrolę, rotację i unieważnianie replay. Bez prawdziwych tokenów i wdrożenia. [Szczegóły](ODNAWIANIE_SESJI_GATEWAY.md).
+
+## CK-02h — cel wyzwania przy usuwaniu
+
+ID token sprawdzany przez ten sam verifier może uwierzytelnić świeże żądanie usunięcia, ale wyłącznie z nonce wyzwania account_deletion. Wyzwaniem login nie da się zlecić tej operacji. Podpisany sub wybiera konto; expectedAccountID jest wyłącznie ochroną przed zmianą konta w UI. Sprawdzono wygaśnięcie również przed zapisem. Nie wymieniamy nowego kodu tylko po to, by uzyskać kolejne tokeny podczas erasure. Brak zachowanych tokenów kieruje do ręcznego odwołania Apple, a nie do odmowy kasowania danych. [Kontrakt](USUWANIE_KONTA_GATEWAY.md).

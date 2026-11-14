@@ -120,3 +120,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02g — odnowienie i retencja lokalnie
 
 116/116 testów gateway, w tym 36 nowych: 29 integracyjnych, 3 verifiera refresh, 4 HMAC. Testy odtwarzają replay po wielu rotacjach, współbieżność/dwa granty, dobową kontrolę, późny sukces/błąd po logout/blokadzie/relogin, SQL/sync i zachowanie pending ciphertext, reopen z oddzielnymi kluczami, limity i bounded cleanup. Transport Apple syntetyczny, SQLite rzeczywiste lokalne. Nie jest to dowód A/B, prawdziwego Apple/Keychain ani Workers CPU. Bez zmian usług, sekretów, iOS i kosztów. [Raport](evidence/session-renewal-local-tests.json), [kontrakt i pozostały odbiór](ODNAWIANIE_SESJI_GATEWAY.md).
+
+## CK-02h — lokalne zlecenie usunięcia
+
+139/139 testów gateway, w tym 23 nowych usuwania. Rzeczywisty lokalny SQLite/verifier i syntetyczne tokeny; publiczny magazyn danych jest jawnie testowy w pamięci. 205 rekordów sprawdza sterowanie partiami i izolację, nie API CloudKit. Sprawdzono purpose, świeży dowód, quota/ban, ticket recovery, SQL/sync, drain, prywatny ack, retry i manual Apple, timeout, lease, późne logowanie, migrację starego magazynu, reopen i metadane blokad. Brak rzeczywistych danych użytkowników, sieci Apple/Cloudflare, kosztów i wdrożenia. [Raport](evidence/account-deletion-local-tests.json), [granice](USUWANIE_KONTA_GATEWAY.md).

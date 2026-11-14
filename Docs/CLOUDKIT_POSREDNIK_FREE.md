@@ -84,3 +84,7 @@ Adapter protokołu Apple i AES-256-GCM dla refresh są podłączone do lokalnego
 ## CK-02g — lokalne odnowienie i limity credential
 
 Dodano access/renewal, wykrywanie replay, wspólną kontrolę Apple najwyżej raz na 24 h, limity credential przed siecią i retencję w partiach. Cały gateway ma 116 testów. Limity (5000 ciphertextów/rezerwacji w magazynie, 64/sub) blokują wzrost zamiast uruchamiać opłaty; nie są gwarancją liczby użytkowników. Harmonogram, HTTP i pomiar Workers CPU nadal wymagane. Bez nowych usług/sekretów i wdrożenia. [Kontrakt](ODNAWIANIE_SESJI_GATEWAY.md).
+
+## CK-02h — lokalny sterownik usuwania
+
+Dodano odrębne wyzwanie i zadanie erasure z bounded krokami, statusem za biletem, retry i końcowym sprzątaniem auth. Usunięcie danych nie wymaga nowego miejsca na refresh ani odblokowania normalnej sesji zbanowanego konta. Limity/backoff nie są jeszcze alarmem, limitem HTTP ani pomiarem Workers CPU. 139 testów lokalnych; brak nowego zasobu, sekretu, płatności i wdrożenia. Rzeczywisty adapter publicznych danych i prywatny klient pozostają przed odbiorem. [Kontrakt](USUWANIE_KONTA_GATEWAY.md).

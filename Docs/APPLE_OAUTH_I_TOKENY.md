@@ -46,3 +46,7 @@ Przed aktywacją nadal wymagane: konfiguracja Sign in with Apple i świadome nad
 ## CK-02g — bieżąca integracja
 
 Odnowienie ma osobny koordynator i proof HMAC; wymaga innego klucza niż vault. Kontrola Apple co najmniej po 24 h, globalnie na konto; odnowiona tożsamość jest weryfikowana do oczekiwanego sub. Nowy refresh przechodzi osobny trwały staging przed sesją, także gdy logout lub nowsze logowanie uniemożliwia jej wydanie. Cała regresja ma obecnie 116 testów. Nadal bez prawdziwej wymiany Apple, nowych sekretów i wdrożenia. [Zasady replay/awarii, retencja i pozostały odbiór](ODNAWIANIE_SESJI_GATEWAY.md).
+
+## CK-02h — kontrolowane odwołanie przy usuwaniu
+
+Lokalny proces usuwania używa revoke wyłącznie zachowanych własnych credential, z trwałą rezerwacją, ograniczonym retry/backoff i osobnym statusem manual-required. Nie tworzy nowego refresh do autoryzacji usunięcia. Brak tokenu/decryption nie jest potwierdzeniem revoke i nie blokuje kasowania danych aplikacji. Tokeny joba są chronione przed zwykłym purge do rozstrzygnięcia; później ciphertext znika. Pozostają prawdziwy Apple revoke, adapter CloudKit i iOS. [Kontrakt i dowody](USUWANIE_KONTA_GATEWAY.md).
