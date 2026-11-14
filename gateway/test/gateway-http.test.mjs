@@ -92,6 +92,57 @@ test("replaying an older renewal through HTTP unambiguously requires reauthentic
   } finally { f.close(); }
 });
 
+test("fresh recovery HTTP bypasses the full grant count without a code exchange or implicit session", async () => {
+  const f = setup({ deletionEnabled: false });
+  try {
+    const sessions = [];
+    for (let i = 0; i < 5; i++) sessions.push(await f.session());
+    const limited = await f.login(); assert.equal(limited.status, 409); assert.equal(limited.body.error, "SESSION_LIMITED");
+    assert.equal(f.counts().exchanges, 0);
+    const challenge = await f.call("/v1/auth/challenge", { purpose: "session_reset" }); assert.equal(challenge.status, 200);
+    const result = await f.call("/v1/auth/session-reset", { challengeID: challenge.body.challengeID,
+      identityToken: f.token(challenge.body), expectedAccountID: sessions[0].accountID });
+    assert.equal(result.status, 204); assert.equal(result.body, null);
+    assert.equal(result.headers.get("Cache-Control"), "no-store"); assert.equal(f.counts().exchanges, 0);
+    assert.equal((await f.call("/v1/auth/session", {}, sessions[0].sessionToken)).status, 401);
+    const fresh = await f.login(); assert.equal(fresh.status, 200); assert.equal(fresh.body.accountID, sessions[0].accountID);
+    assert.equal(f.counts().exchanges, 1);
+  } finally { f.close(); }
+});
+
+test("reset HTTP accepts only fresh proof fields and cannot use login/deletion nonce purposes", async () => {
+  const f = setup();
+  try {
+    const session = await f.login();
+    for (const purpose of ["login", "account_deletion"]) {
+      const challenge = await f.call("/v1/auth/challenge", { purpose });
+      assert.equal((await f.call("/v1/auth/session-reset", { challengeID: challenge.body.challengeID,
+        identityToken: f.token(challenge.body) })).status, 401);
+    }
+    const challenge = await f.call("/v1/auth/challenge", { purpose: "session_reset" });
+    const input = { challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body) };
+    for (const fields of [{ ...input, authorizationCode: syntheticCode }, { ...input, authorID: randomUUID() },
+      { ...input, expectedAccountID: "bad" }, { challengeID: input.challengeID }]) {
+      assert.equal((await f.call("/v1/auth/session-reset", fields)).status, 400);
+    }
+    assert.equal((await f.call("/v1/auth/session", {}, session.body.sessionToken)).status, 200);
+    assert.equal(f.counts().exchanges, 1);
+  } finally { f.close(); }
+});
+
+test("reset is counted as a heavy route and scheduling precedes its mutation", async () => {
+  const f = setup({ deletionEnabled: false });
+  try {
+    await f.login(); const challenge = await f.call("/v1/auth/challenge", { purpose: "session_reset" });
+    const input = { challengeID: challenge.body.challengeID, identityToken: f.token(challenge.body) };
+    await f.storage.deleteAlarm();
+    f.failAlarm(true);
+    assert.equal((await f.call("/v1/auth/session-reset", input)).status, 503);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM auth_session_reset_fences_v1").get().n, 0);
+    assert.equal(f.db.prepare("SELECT heavy FROM gateway_daily_v1").get().heavy, 2);
+  } finally { f.close(); }
+});
+
 test("the native route list rejects generic RPC, methods, queries, browser origin and unexpected identity fields", async () => {
   const f = setup();
   try {
@@ -127,6 +178,7 @@ test("JSON input has byte/UTF8/shape/content encoding limits before authenticati
 test("stalled request bodies time out without invoking any state mutation", async () => {
   let invoked = 0;
   const handle = createGatewayHTTPHandler({ authentication: { issueChallenge() { invoked++; } }, login: { login() {} }, renewal: { renew() {} },
+    sessionReset: { reset() {} },
     limits: { async consume() {} }, scheduleMaintenance: async () => {}, isEnabled: () => true, inputTimeoutMilliseconds: 15 });
   const request = new Request("https://api.invalid/v1/auth/challenge", { method: "POST", headers: { "Content-Type": "application/json" },
     body: new ReadableStream({ start() {} }), duplex: "half" });

@@ -2,7 +2,7 @@ import { AuthenticationStateError } from "./authentication-state.mjs";
 import { GatewayLimitError } from "./gateway-limits.mjs";
 
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
-  "/v1/auth/logout", "/v1/auth/logout-all", "/v1/account/deletion", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
+  "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -100,9 +100,10 @@ function deletionResponse(value, status = 200) {
 }
 
 /** Closed native API. serverBudgetHash is supplied by the trusted edge/authority, never taken from JSON. */
-export function createGatewayHTTPHandler({ authentication, login, renewal, deletions, deletionCoordinator,
+export function createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
   deletionEnabled = false, limits, scheduleMaintenance, isEnabled, inputTimeoutMilliseconds = 3000 } = {}) {
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
+      typeof sessionReset?.reset !== "function" ||
       typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" ||
       typeof deletionEnabled !== "boolean" || !Number.isInteger(inputTimeoutMilliseconds) || inputTimeoutMilliseconds < 1 || inputTimeoutMilliseconds > 3000 ||
       (deletionEnabled && (typeof deletions?.status !== "function" || typeof deletionCoordinator?.request !== "function"))) throw new Error("Gateway dependencies are unavailable.");
@@ -111,13 +112,13 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, delet
       const { path } = inspectGatewayRequest(request);
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
-      const heavy = ["/v1/auth/login", "/v1/auth/renew", "/v1/account/deletion"].includes(path);
+      const heavy = ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion"].includes(path);
       await limits.consume(serverBudgetHash, { heavy });
       const body = await objectBody(request, heavy ? 16384 : 256, inputTimeoutMilliseconds);
       if (path.startsWith("/v1/account/") && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
       if (path === "/v1/auth/challenge") {
         fields(body, ["purpose"]);
-        if (!["login", "account_deletion"].includes(body.purpose)) throw new GatewayHTTPError();
+        if (!["login", "account_deletion", "session_reset"].includes(body.purpose)) throw new GatewayHTTPError();
         if (body.purpose === "account_deletion" && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
         await scheduleMaintenance();
         const value = await authentication.issueChallenge(serverBudgetHash, { purpose: body.purpose });
@@ -133,6 +134,13 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, delet
       if (path === "/v1/auth/renew") {
         fields(body, []); const token = bearer(request, 120);
         await scheduleMaintenance(); return sessionResponse(await renewal.renew(token));
+      }
+      if (path === "/v1/auth/session-reset") {
+        fields(body, ["challengeID", "identityToken"], ["expectedAccountID"]); uuidField(body.challengeID);
+        opaqueField(body.identityToken, 12288);
+        if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
+        await scheduleMaintenance(); await sessionReset.reset(body);
+        return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
       }
       if (path === "/v1/auth/session") {
         fields(body, []); const value = authentication.authorize(bearer(request, 80));

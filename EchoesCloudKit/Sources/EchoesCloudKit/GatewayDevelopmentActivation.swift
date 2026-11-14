@@ -80,4 +80,11 @@ public struct ActivatedGatewayAuthenticationAPI: GatewayAuthenticationAPI {
         try validate()
         try await api.logoutAll(token: token)
     }
+    public func resetSessions(challengeID: String, identityToken: GatewaySecret, expectedAccountID: String?)
+        async throws
+    {
+        try validate()
+        try await api.resetSessions(
+            challengeID: challengeID, identityToken: identityToken, expectedAccountID: expectedAccountID)
+    }
 }

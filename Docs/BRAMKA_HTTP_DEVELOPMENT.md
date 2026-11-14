@@ -4,17 +4,18 @@ Stan: 14 listopada 2026. Połączono lokalnie rzeczywistą implementację verifi
 
 ## Kontrakt dla klienta iOS
 
-Ścieżki są zamknięte, bez query string, arbitralnego URL, typu rekordu, nazw metod lub ról. Wszystkie poza health używają POST, JSON UTF-8 i HTTPS. Każda odpowiedź JSON ma protocolVersion=1; logout zwraca puste 204. Cache-Control: no-store, bez cookies i CORS. Błędy mają stały kod, a nie treść wyjątku lub odpowiedź Apple.
+Ścieżki są zamknięte, bez query string, arbitralnego URL, typu rekordu, nazw metod lub ról. Wszystkie poza health używają POST, JSON UTF-8 i HTTPS. Każda odpowiedź JSON ma protocolVersion=1; logout/reset zwraca puste 204. Cache-Control: no-store, bez cookies i CORS. Błędy mają stały kod, a nie treść wyjątku lub odpowiedź Apple.
 
 | Ścieżka | JSON body | Uwierzytelnienie / wynik |
 | --- | --- | --- |
 | GET /health | brak | Tylko status procesu; nie potwierdza Apple, CloudKit ani gotowości wydania. |
-| /v1/auth/challenge | purpose: login albo account_deletion | Zaufany budżet wyznacza edge; wynik challengeID, nonce, expiresAt. Telefon przekazuje Apple SHA-256 nonce. |
+| /v1/auth/challenge | purpose: login, account_deletion albo session_reset | Zaufany budżet wyznacza edge; wynik challengeID, nonce, expiresAt. Telefon przekazuje Apple SHA-256 nonce. |
 | /v1/auth/login | challengeID, identityToken, authorizationCode | Świeży dowód Apple; wynik accountID, sessionToken/expiresAt, renewalToken/renewalExpiresAt. |
 | /v1/auth/renew | {} | Authorization: Bearer renewalToken; atomowa rotacja obu tokenów. |
 | /v1/auth/session | {} | Bearer sessionToken; własne accountID/expiresAt. |
 | /v1/auth/logout | {} | Bearer renewalToken; idempotentne usunięcie tej sesji, także po wygaśnięciu krótkiego dostępu. |
 | /v1/auth/logout-all | {} | Bearer sessionToken; generacja unieważnia także odnowienia innych urządzeń. |
+| /v1/auth/session-reset | challengeID, identityToken, opcjonalne expectedAccountID | Świeży dowód Apple z purpose=session_reset, bez bearer/code; trwałe 204, bez nowej sesji. |
 | /v1/account/deletion | deletionID, challengeID, identityToken, opcjonalne expectedAccountID | Bearer statusToken. Świeże, osobne wyzwanie usuwania; 202 ze statusem. Retry istniejącego zadania może wysłać samo deletionID. |
 | /v1/account/deletion/status | deletionID | Bearer statusToken; wyłącznie stan własnego zadania. |
 | /v1/account/deletion/private-cleanup | deletionID | Bearer statusToken; zgłoszenie urządzenia, bez deklaracji serwerowego dowodu skasowania private CloudKit. |
@@ -67,3 +68,5 @@ Alarm jest planowany przed przyjęciem mutacji. Każde wywołanie zapisuje nast�
 To nie jest próba workerd/Cloudflare: import cloudflare:workers, prawdziwy request.cf, uruchamianie alarmów i CPU/wiersze wymagają osobnego testu Development. Nie wykonano prawdziwego logowania/revoke, kasowania CloudKit ani zmian iOS. Dalej: natywny klient i Keychain, rzeczywisty adapter danych, konfiguracja Sign in with Apple i kontrolowany test po osobnej zgodzie, role/A-B oraz pomiar obciążenia. Mapa/czat/moderacja i pełne odłączenie Firebase pozostają w planie.
 
 CK-02j: przygotowano natywny klient auth/Keychain i helper Apple, 44 testy pakietu oraz lokalną kontrolę systemowego storage w aplikacji Debug. Nie prezentuje jeszcze logowania ani nie łączy się z nowym wdrożeniem. [Weryfikacja i pozostałe warunki](NATYWNA_SESJA_GATEWAY.md).
+
+CK-02l: dodano świeży reset po limicie sesji, barierę kolejności/migrację oraz natywny przepływ potwierdzenia. Reset jest cięższą trasą z body do 16 KiB. Aktualnie 180 testów gateway i 72 Swift; bez wdrożenia lub prawdziwego Apple login. [Protokół resetu i granice](ODZYSKIWANIE_SESJI_GATEWAY.md).

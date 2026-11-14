@@ -39,6 +39,20 @@ private final class HostClock: @unchecked Sendable {
 private actor HostAPI: GatewayAuthenticationAPI {
     nonisolated let origin = "https://host.example.invalid"
     var challenges = 0, logins = 0, statuses = 0, renewals = 0
+    var purposes: [GatewayChallengePurpose] = []
+    var resets: [String] = []
+    var loginLimited = false
+    var resetFailure: GatewayFailure?
+    var holdNextReset = false
+    var resetWaiter: CheckedContinuation<Void, Never>?
+    func setLoginLimited(_ limited: Bool = true) { loginLimited = limited }
+    func setResetFailure(_ failure: GatewayFailure?) { resetFailure = failure }
+    func holdReset() { holdNextReset = true }
+    func waitingForReset() -> Bool { resetWaiter != nil }
+    func resumeReset() {
+        resetWaiter?.resume()
+        resetWaiter = nil
+    }
     var loggedOut: [GatewaySecret] = []
     var holdNextLogin = false
     var holdNextLogout = false
@@ -58,6 +72,7 @@ private actor HostAPI: GatewayAuthenticationAPI {
     }
     func challenge(purpose: GatewayChallengePurpose) async throws -> GatewayChallenge {
         challenges += 1
+        purposes.append(purpose)
         return .init(
             protocolVersion: 1, challengeID: UUID().uuidString.lowercased(),
             nonce: try GatewaySecret(String(repeating: "b", count: 43)),
@@ -67,6 +82,7 @@ private actor HostAPI: GatewayAuthenticationAPI {
         async throws -> GatewaySessionPair
     {
         logins += 1
+        if loginLimited { throw GatewayFailure.server(.sessionLimited, status: 409, retryAfterSeconds: nil) }
         let pair = try hostPair(String(logins))
         if holdNextLogin {
             holdNextLogin = false
@@ -91,6 +107,17 @@ private actor HostAPI: GatewayAuthenticationAPI {
         }
     }
     func logoutAll(token: GatewaySecret) async throws { loggedOut.append(token) }
+    func resetSessions(challengeID: String, identityToken: GatewaySecret, expectedAccountID: String?)
+        async throws
+    {
+        resets.append(challengeID)
+        if let resetFailure { throw resetFailure }
+        loginLimited = false
+        if holdNextReset {
+            holdNextReset = false
+            await withCheckedContinuation { resetWaiter = $0 }
+        }
+    }
 }
 @MainActor private final class HostCloud: CloudKitAccountSource {
     var status: CloudKitAccountAvailability = .available
@@ -114,11 +141,12 @@ private actor HostAPI: GatewayAuthenticationAPI {
 }
 @MainActor private final class HostAuthorizer: AppleGatewayAuthorizer {
     var requests = 0, cancellations = 0
+    var userID = "apple-A"
     var hold = false
     var waiter: CheckedContinuation<AppleGatewayProof, any Error>?
     func proof() throws -> AppleGatewayProof {
         .init(
-            appleUserID: "apple-A", identityToken: try GatewaySecret("synthetic-identity"),
+            appleUserID: userID, identityToken: try GatewaySecret("synthetic-identity"),
             authorizationCode: try GatewaySecret("synthetic-code"))
     }
     func authorize(challenge: GatewayChallenge) async throws -> AppleGatewayProof {
@@ -413,6 +441,134 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
     ]
 }
 
+@Test @MainActor func sessionLimitOffersExplicitFreshProofRecoveryWithoutAutomaticLogin() async throws {
+    let f = HostFixture()
+    await f.api.setLoginLimited()
+    await f.signIn()
+    #expect(f.host.canResetSessions)
+    #expect(f.host.phase == .unavailable)
+    #expect(await f.api.resets.isEmpty)
+    #expect(f.authorizer.requests == 1)
+    await f.host.resetSessions()
+    #expect(f.host.resetCompleted)
+    #expect(!f.host.canResetSessions)
+    #expect(f.host.phase == .signedOut)
+    #expect(try f.storage.savedState() == .signedOut)
+    #expect(await f.api.purposes == [.login, .sessionReset])
+    #expect(await f.api.logins == 1)  // Reset cannot silently log in with its unused Apple code.
+    await f.host.signIn()
+    #expect(f.host.phase == .ready)
+    #expect(await f.api.purposes == [.login, .sessionReset, .login])
+    f.host.stop()
+}
+
+@Test @MainActor func resetCannotTargetADifferentAppleAccountOrCloudKitBinding() async {
+    for switchApple in [true, false] {
+        let f = HostFixture()
+        await f.api.setLoginLimited()
+        await f.signIn()
+        if switchApple { f.authorizer.userID = "apple-B" } else { f.cloud.name = "cloud-B" }
+        await f.host.resetSessions()
+        #expect(await f.api.resets.isEmpty)
+        #expect(!f.host.canResetSessions)
+        #expect(!f.host.resetCompleted)
+        #expect(f.host.phase == .signedOut)
+        f.host.stop()
+    }
+}
+
+@Test @MainActor func identityNotificationRemovesAnotherAccountsRecoveryIntent() async {
+    let f = HostFixture()
+    await f.api.setLoginLimited()
+    await f.signIn()
+    f.center.post(name: .CKAccountChanged, object: nil)
+    #expect(!f.host.canResetSessions)
+    await f.host.resetSessions()
+    #expect(await f.api.resets.isEmpty)
+    f.host.stop()
+}
+
+@Test @MainActor func uncertainResetNeverRetriesAutomaticallyAndRequiresANewChallenge() async {
+    let f = HostFixture()
+    await f.api.setLoginLimited()
+    await f.signIn()
+    await f.api.setResetFailure(.transport)
+    await f.host.resetSessions()
+    #expect(!f.host.resetCompleted)
+    #expect(f.host.canResetSessions)
+    #expect(await f.api.resets.count == 1)
+    await f.host.activate()
+    #expect(await f.api.resets.count == 1)
+    await f.api.setResetFailure(nil)
+    await f.host.resetSessions()
+    let attempts = await f.api.resets
+    #expect(attempts.count == 2)
+    #expect(Set(attempts).count == 2)
+    #expect(f.host.resetCompleted)
+    f.host.stop()
+}
+
+@Test @MainActor func foregroundDoesNotCancelResetSheetAndBackgroundFencesItsLateProof() async throws {
+    let f = HostFixture()
+    await f.api.setLoginLimited()
+    await f.signIn()
+    f.authorizer.hold = true
+    let reset = Task { await f.host.resetSessions() }
+    try await waitForHost { f.authorizer.waiter != nil }
+    await f.host.activate()
+    #expect(f.host.phase == .resettingSessions)
+    f.host.suspend()
+    try f.authorizer.resume()
+    await reset.value
+    #expect(await f.api.resets.isEmpty)
+    #expect(!f.host.resetCompleted)
+    #expect(f.host.phase == .suspended)
+    f.host.stop()
+}
+
+@Test @MainActor func lateResetAcknowledgementCannotReplaceANewLogin() async throws {
+    let f = HostFixture()
+    await f.api.setLoginLimited()
+    await f.signIn()
+    await f.api.holdReset()
+    let reset = Task { await f.host.resetSessions() }
+    try await waitForHost { await f.api.waitingForReset() }
+    f.host.suspend()
+    await f.host.activate()
+    await f.host.signIn()
+    #expect(f.host.phase == .ready)
+    await f.api.resumeReset()
+    await reset.value
+    #expect(f.host.phase == .ready)
+    #expect(!f.host.resetCompleted)
+    #expect(try await f.host.accessToken() == hostPair("2").sessionToken)
+    f.host.stop()
+}
+
+@Test @MainActor func recoveryCannotBeInvokedWithoutTheFailedLoginContext() async {
+    let f = HostFixture()
+    await f.host.activate()
+    await f.host.resetSessions()
+    #expect(f.authorizer.requests == 0)
+    #expect(await f.api.resets.isEmpty)
+    f.host.stop()
+}
+
+@Test @MainActor func recoveryStopsOfferingResetWhenServerReportsBanDeletionOrNoAccount() async {
+    for code in [GatewayErrorCode.accountDisabled, .deletionInProgress, .noAccount] {
+        let f = HostFixture()
+        await f.api.setLoginLimited()
+        await f.signIn()
+        await f.api.setResetFailure(
+            .server(code, status: code == .noAccount ? 404 : 403, retryAfterSeconds: nil))
+        await f.host.resetSessions()
+        #expect(!f.host.canResetSessions)
+        #expect(!f.host.resetCompleted)
+        #expect(f.host.accountID == nil)
+        f.host.stop()
+    }
+}
+
 @Test func bundledActivationRejectsMissingExpiredForeignAndLongLivedConfiguration() throws {
     #expect(throws: GatewayFailure.configuration) {
         try GatewayDevelopmentActivation(infoDictionary: [:], bundleIdentifier: "mpvEcho.Echo", now: hostNow)
@@ -445,6 +601,11 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
     await #expect(throws: GatewayFailure.configuration) { try await gated.challenge(purpose: .login) }
     await #expect(throws: GatewayFailure.configuration) {
         try await gated.logout(token: GatewaySecret("synthetic-token"))
+    }
+    await #expect(throws: GatewayFailure.configuration) {
+        try await gated.resetSessions(
+            challengeID: UUID().uuidString.lowercased(), identityToken: GatewaySecret("synthetic-token"),
+            expectedAccountID: nil)
     }
     #expect(await api.challenges == 1)
     #expect(await api.loggedOut.isEmpty)

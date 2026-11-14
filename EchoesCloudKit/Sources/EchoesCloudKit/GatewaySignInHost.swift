@@ -22,12 +22,15 @@ private final class GatewayIdentityObservers: @unchecked Sendable {
 @MainActor @Observable
 public final class GatewaySignInHost {
     public enum Phase: Equatable {
-        case suspended, checking, signedOut, signingIn, signingOut, ready, unavailable
+        case suspended, checking, signedOut, signingIn, signingOut, resettingSessions, ready, unavailable
     }
     public private(set) var phase: Phase = .suspended
     public private(set) var errorMessage: String?
     public private(set) var accountID: String?
     public private(set) var logoutUnconfirmed = false
+    public private(set) var canResetSessions = false
+    public private(set) var resetCompleted = false
+    public var isBusy: Bool { [.checking, .signingIn, .signingOut, .resettingSessions].contains(phase) }
     public let cloudKitAccount: CloudKitAccountSession
     @ObservationIgnored private let api: any GatewayAuthenticationAPI
     @ObservationIgnored private let session: GatewaySessionController
@@ -39,6 +42,7 @@ public final class GatewaySignInHost {
     @ObservationIgnored private let notificationCenter: NotificationCenter
     @ObservationIgnored private var observers: GatewayIdentityObservers?
     @ObservationIgnored private var barrier: Task<Void, any Error>?
+    @ObservationIgnored private var resetCandidate: GatewayIdentityBinding?
     private var generation = UUID()
     private var foreground = false
     private var authorizedRevision: UInt64?
@@ -66,7 +70,7 @@ public final class GatewaySignInHost {
         foreground = true
         startMonitoring()
         // Apple sheets may make a scene inactive and active again. Do not cancel the user's own sheet.
-        guard phase != .signingIn, phase != .signingOut, phase != .checking else { return }
+        guard !isBusy else { return }
         let operation = fence(to: .checking, erase: false)
         errorMessage = nil
         do {
@@ -95,8 +99,11 @@ public final class GatewaySignInHost {
     public func signIn() async {
         guard foreground, [.signedOut, .unavailable].contains(phase) else { return }
         let operation = fence(to: .signingIn, erase: false)
+        clearResetRecovery()
+        resetCompleted = false
         errorMessage = nil
         logoutUnconfirmed = false
+        var attemptedBinding: GatewayIdentityBinding?
         do {
             try await waitForBarrier(operation)
             let originalCloudName = try await cloudIdentity(operation)
@@ -112,6 +119,7 @@ public final class GatewaySignInHost {
             let currentRevision = cloudKitAccount.identityRevision
             let binding = try GatewayIdentityBinding(
                 appleUserID: proof.appleUserID, cloudKitRecordName: currentCloudName)
+            attemptedBinding = binding
             try await session.signIn(
                 challenge: challenge, identityToken: proof.identityToken,
                 authorizationCode: proof.authorizationCode, verifiedBinding: binding)
@@ -120,6 +128,53 @@ public final class GatewaySignInHost {
                 throw GatewayFailure.signInRequired
             }
             grantUI(identifier: identifier, cloudRevision: currentRevision)
+        } catch {
+            if operation == generation, case .server(.sessionLimited, _, _) = error as? GatewayFailure,
+                let attemptedBinding
+            {
+                resetCandidate = attemptedBinding
+                canResetSessions = true
+            }
+            await fail(error, operation: operation)
+        }
+    }
+
+    /// The UI must obtain explicit confirmation before this destructive-to-sessions action. A
+    /// separate Apple sheet/purpose is required; a failed login proof is never reused for reset.
+    public func resetSessions() async {
+        guard foreground, [.signedOut, .unavailable].contains(phase), canResetSessions,
+            let candidate = resetCandidate
+        else { return }
+        let operation = fence(to: .resettingSessions, erase: true)
+        errorMessage = nil
+        resetCompleted = false
+        do {
+            try await waitForBarrier(operation)
+            let originalCloudName = try await cloudIdentity(operation)
+            guard
+                try GatewayIdentityBinding(
+                    appleUserID: candidate.appleUserID, cloudKitRecordName: originalCloudName) == candidate
+            else {
+                throw GatewayFailure.accountMismatch
+            }
+            let revision = cloudKitAccount.identityRevision
+            let challenge = try await api.challenge(purpose: .sessionReset)
+            try check(operation, cloudRevision: revision)
+            let proof = try await authorizer.authorize(challenge: challenge)
+            try check(operation, cloudRevision: revision)
+            guard proof.appleUserID == candidate.appleUserID else { throw GatewayFailure.accountMismatch }
+            try await checkApple(proof.appleUserID, operation: operation)
+            let currentCloudName = try await cloudIdentity(operation)
+            guard currentCloudName == originalCloudName else { throw GatewayFailure.accountMismatch }
+            let currentRevision = cloudKitAccount.identityRevision
+            try await api.resetSessions(
+                challengeID: challenge.challengeID, identityToken: proof.identityToken, expectedAccountID: nil
+            )
+            try check(operation, cloudRevision: currentRevision)
+            clearResetRecovery()
+            resetCompleted = true
+            phase = .signedOut
+            // A new login must obtain a NEW login-purpose challenge/code; reset never grants access.
         } catch { await fail(error, operation: operation) }
     }
 
@@ -152,6 +207,8 @@ public final class GatewaySignInHost {
     }
 
     public func signOut(allDevices: Bool = false) async {
+        clearResetRecovery()
+        resetCompleted = false
         let operation = resetUI(to: .signingOut)
         let previous = barrier
         let session = self.session
@@ -172,6 +229,8 @@ public final class GatewaySignInHost {
     }
 
     private func grantUI(identifier: String, cloudRevision: UInt64) {
+        clearResetRecovery()
+        resetCompleted = false
         accountID = identifier
         authorizedRevision = cloudRevision
         validatedAt = now()
@@ -228,7 +287,13 @@ public final class GatewaySignInHost {
     private func fail(_ error: any Error, operation: UUID) async {
         guard operation == generation else { return }
         let failure = error as? GatewayFailure
+        if case .server(let code, _, _) = failure,
+            [.accountDisabled, .deletionInProgress, .noAccount].contains(code)
+        {
+            clearResetRecovery()
+        }
         let erase = failure == .signInRequired || failure == .accountMismatch
+        if erase { clearResetRecovery() }
         let next: Phase = erase || failure == .cancelled ? .signedOut : .unavailable
         let newOperation = fence(to: next, erase: erase)
         errorMessage = failure?.localizedDescription ?? CloudKitFailure.classify(error).localizedDescription
@@ -239,6 +304,8 @@ public final class GatewaySignInHost {
         }
     }
     private func identityChanged() {
+        clearResetRecovery()
+        resetCompleted = false
         let operation = fence(to: foreground ? .signedOut : .suspended, erase: true)
         let pending = barrier
         errorMessage = GatewayFailure.signInRequired.localizedDescription
@@ -249,6 +316,10 @@ public final class GatewaySignInHost {
                 self.errorMessage = GatewayFailure.storageUnavailable.localizedDescription
             }
         }
+    }
+    private func clearResetRecovery() {
+        resetCandidate = nil
+        canResetSessions = false
     }
     private func startMonitoring() {
         guard observers == nil else { return }

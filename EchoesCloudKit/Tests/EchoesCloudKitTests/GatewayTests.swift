@@ -93,6 +93,11 @@ private actor AuthenticationFake: GatewayAuthenticationAPI {
         if failLogout { throw GatewayFailure.transport }
     }
     func logoutAll(token: GatewaySecret) async throws { try await logout(token: token) }
+    func resetSessions(challengeID: String, identityToken: GatewaySecret, expectedAccountID: String?)
+        async throws
+    {
+        throw GatewayFailure.configuration  // This fixture never simulates a successful recovery.
+    }
     func resumeLogin() {
         loginWaiter?.resume(returning: initial)
         loginWaiter = nil
@@ -373,6 +378,19 @@ private func makeClient(_ fake: HTTPFake) throws -> GatewayHTTPClient {
     try .init(
         configuration: GatewayConfiguration(origin: URL(string: "https://gateway.example.invalid")!),
         transport: fake, now: { testNow })
+}
+
+@Test func httpResetUsesFreshIdentityWithoutAnAccessTokenOrAuthorizationCode() async throws {
+    let fake = HTTPFake(status: 204, contentType: nil, body: Data())
+    try await makeClient(fake).resetSessions(
+        challengeID: challengeID, identityToken: GatewaySecret("synthetic-reset-identity"),
+        expectedAccountID: nil)
+    let request = try #require(await fake.requests.first)
+    #expect(request.url?.absoluteString == "https://gateway.example.invalid/v1/auth/session-reset")
+    #expect(request.value(forHTTPHeaderField: "Authorization") == nil)
+    let fields = try JSONDecoder().decode([String: String].self, from: #require(request.httpBody))
+    #expect(Set(fields.keys) == ["challengeID", "identityToken"])
+    #expect(fields["identityToken"] == "synthetic-reset-identity")
 }
 
 @Test func gatewayOriginRejectsCredentialsQueriesPortsAndNonHTTPS() throws {

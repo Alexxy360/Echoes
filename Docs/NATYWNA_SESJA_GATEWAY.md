@@ -36,7 +36,7 @@ Powtarzalna kontrola lokalna: zbudować Debug, uruchomić w symulatorze z `ECHOE
 ## Pozostałe warunki odbioru
 
 1. Host logowania Apple: prezentacja arkusza, natywny credentialState/revocation, konto CloudKit, cykl pierwszego planu oraz wyczyszczenie widoków/cache. Sign in with Apple App ID/klucz i rzeczywisty URL bramki wymagają osobnego przygotowanego zakresu konfiguracji; nie tworzono ich tutaj.
-2. Odzyskanie dostępu po pięciu utraconych grantach: backend obecnie zwraca SESSION_LIMITED. Potrzebny jest świadomy reset poprzednich sesji ze świeżym dowodem Apple. Klient nie obchodzi tego limitu i nie wylogowuje innych urządzeń bez wyboru użytkownika.
+2. Odzyskanie dostępu po pięciu utraconych grantach zaimplementowano lokalnie w CK-02l: osobny reset i potwierdzenie nowym dowodem Apple, bez automatycznego wylogowania innych urządzeń. Rzeczywisty odbiór nadal wymagany. [Zakres](ODZYSKIWANIE_SESJI_GATEWAY.md).
 3. Klient biletu usuwania i prywatny cleanup CloudKit, prawdziwy adapter publicznych danych, profile/avatar, mapa/czat i moderacja nadal wymagają implementacji. Ta warstwa auth nie udaje CommunityClient.
 4. Kontrolowane próby Apple/Workers/urządzenia, limitów/awarii oraz dwóch zwykłych kont i oddzielnej tożsamości serwera pozostają obowiązkowe. Nie zastępuje ich test operatora lub dane syntetyczne.
 

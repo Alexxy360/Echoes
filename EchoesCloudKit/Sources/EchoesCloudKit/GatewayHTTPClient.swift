@@ -140,6 +140,16 @@ public struct GatewayHTTPClient: GatewayAuthenticationAPI {
     public func logoutAll(token: GatewaySecret) async throws {
         try await emptyPost("/v1/auth/logout-all", token: token)
     }
+    public func resetSessions(challengeID: String, identityToken: GatewaySecret, expectedAccountID: String?)
+        async throws
+    {
+        guard gatewayUUID(challengeID), identityToken.value.utf8.count <= 12_288,
+            expectedAccountID == nil || gatewayUUID(expectedAccountID!)
+        else { throw GatewayFailure.invalidInput }
+        var fields = ["challengeID": challengeID, "identityToken": identityToken.value]
+        if let expectedAccountID { fields["expectedAccountID"] = expectedAccountID }
+        try await emptyPost("/v1/auth/session-reset", fields: fields)
+    }
 
     private func post<T: Decodable>(
         _ path: String, fields: [String: String] = [:], token: GatewaySecret? = nil
@@ -152,8 +162,10 @@ public struct GatewayHTTPClient: GatewayAuthenticationAPI {
             throw GatewayFailure.invalidResponse
         }
     }
-    private func emptyPost(_ path: String, token: GatewaySecret) async throws {
-        let response = try await request(path, fields: [:], token: token)
+    private func emptyPost(_ path: String, fields: [String: String] = [:], token: GatewaySecret? = nil)
+        async throws
+    {
+        let response = try await request(path, fields: fields, token: token)
         guard response.status == 204, response.body.isEmpty else {
             if response.status >= 400 { throw try serverFailure(response) }
             throw GatewayFailure.invalidResponse

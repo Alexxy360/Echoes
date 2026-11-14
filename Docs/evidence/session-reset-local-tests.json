@@ -1,0 +1,73 @@
+{
+  "stage": "CK-02l",
+  "observedAt": "2026-11-14T19:41:32.919766+00:00",
+  "baselineCommit": "bb97dbbc814606c514329d30393987e2afa9a74c",
+  "gatewayTests": {
+    "passed": 180,
+    "failed": 0,
+    "newTests": 17,
+    "newBreakdown": {
+      "sessionReset": 13,
+      "HTTP": 3,
+      "accountDeletion": 1
+    },
+    "node": "22.23.5",
+    "command": "node --test gateway/test/*.test.mjs",
+    "scope": "real local SQLite/RSA verification; synthetic Apple transport; existing redirect regression uses loopback only"
+  },
+  "nativeTests": {
+    "passed": 72,
+    "failed": 0,
+    "newTests": 9,
+    "swift": "6.4",
+    "platform": "macOS arm64",
+    "command": "swift test --package-path EchoesCloudKit --scratch-path /private/tmp/echoes-session-reset-swift-build",
+    "scope": "synthetic Apple/iCloud/API; real URLSession in-process transport tests inherited"
+  },
+  "builds": {
+    "Debug": "succeeded iOS Simulator; final source and committed project",
+    "Release": "succeeded iOS Simulator; final source and committed project",
+    "cleanDerivedData": true,
+    "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingProjectChangePreserved": true,
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "staticChecks": {
+    "noBundledGatewayActivation": true,
+    "ReleaseDebugAuthAndResetMarkersAbsent": true
+  },
+  "notPerformed": [
+    "real Apple sheet/login/refresh/revoke",
+    "real Workers or SQLite migration deployment",
+    "CloudKit record operations",
+    "physical phone install",
+    "new provider permissions or secret transfer",
+    "two-account access acceptance",
+    "Production or TestFlight publication",
+    "visual acceptance of reset dialog"
+  ],
+  "knownLimits": [
+    "reset affects application sessions, not Apple authorization or profile data",
+    "64-per-subject/5000-total credential cap and retention remain separate",
+    "unknown remote outcome is not reported as success; manual retry requires a new proof",
+    "ordinary app still uses Firebase; native deletion ticket and social adapter remain incomplete"
+  ],
+  "sourceSHA256": {
+    "Echo/Views/GatewayAuthCheckView.swift": "061928451f84e2c76d49b6946ad16442916dab411b8dfc9dea2f92171eee5560",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAuthentication.swift": "8fbdab3cc6906e30271a3e76df261ad0eb4aefa62a806d02796c3514be71ac0f",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDevelopmentActivation.swift": "553cc06d852493fe4ec2e27f1ec11a8c2388db2b8c5a0ca70c9209e2a39e23a6",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayHTTPClient.swift": "d22cb79e7e41ae3441e42ae26c0e5fefa608c7dc5deb9d613bd9f91a7c04c595",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "d469459746de8f664ab7625e09d33db6f91e6b6452a49540a8e732e7529c08f1",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "84d0ae35d9f7c17bd228a7467fdd022fa29dbd314fddbec07ea00b3b8c37c985",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayTests.swift": "77ceb3ad2d2eecba561568be5fb004f5c973ca123048e80e72b0bf92fff9d142",
+    "gateway/src/account-deletion-state.mjs": "f5d25eae9eac9ce02a2183b13125656021a95d2c2b7760a93617908a25e1dd49",
+    "gateway/src/authentication-state.mjs": "aea692da23d53c2aa4d579004dea11d054a262ef7c70ba2dff7f37ca6b635575",
+    "gateway/src/gateway-http.mjs": "ec2830767edd2ea7ddef3525956430e06ab4f184655df9017624e101426f27d5",
+    "gateway/src/gateway-runtime.mjs": "06b30962ece8c08c5c01f9ae0ab0ae1971f5fceb4f76d2fa32bf1765b7d32c07",
+    "gateway/src/session-reset-schema.mjs": "985fd542191a46e712b426e96737a43788f30761b0fbdae594b0546a8d4318ff",
+    "gateway/src/session-reset.mjs": "8a78b61026866ef8db6971d0f44977f35bdf2e55575b13f8780d07807b862bbb",
+    "gateway/test/account-deletion.test.mjs": "252e460d6277f53d068206147c7365a030b1ca5557e665bfcf3c8894042d3618",
+    "gateway/test/gateway-http.test.mjs": "36a9f6140801896b06e2a4017c9ce39a181c7f83df2933e8e2c9a02d012ba7aa",
+    "gateway/test/session-reset.test.mjs": "c60d7d67be88dc1f9fb4037edbc6fc8b507ee5f338dea20b016053ef06f607ef"
+  }
+}

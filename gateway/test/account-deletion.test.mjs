@@ -335,11 +335,13 @@ test("an existing pre-purpose SQLite store is migrated atomically and old challe
   try {
     await assert.rejects(() => f.state.beginVerification(challengeID, { purpose: "account_deletion" }), codeIs("INVALID_CHALLENGE"));
     assert.equal((await f.state.beginVerification(challengeID)).expectedNonce, hash("legacy-nonce"));
-    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_schema_migrations_v1").get().count, 1);
+    assert.deepEqual(f.db.prepare("SELECT name FROM auth_schema_migrations_v1 ORDER BY name").all().map(row => row.name),
+      ["challenge-order-v1", "challenge-purpose-v1"]);
+    assert.equal(f.db.prepare("SELECT issue_order FROM auth_challenges_v1 WHERE challenge_id=?").get(challengeID).issue_order, 0);
     await assert.rejects(() => f.session("legacy.blocked"), codeIs("ACCOUNT_DISABLED"));
     assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_subject_bans_v1").get().count, 1);
     f.close(); f = setup({ path });
-    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_schema_migrations_v1").get().count, 1);
+    assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_schema_migrations_v1").get().count, 2);
   } finally { f.close(); rmSync(directory, { recursive: true, force: true }); }
 });
 
@@ -352,6 +354,19 @@ test("a proof that expires during verification cannot commit a deletion", async 
       verifier: { async verify(...args) { const identity = await f.verifier.verify(...args); f.advance(2000); return identity; } } });
     await assert.rejects(() => deleter.request(input), codeIs("INVALID_IDENTITY"));
     f.state.authorize(session.sessionToken); assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_account_deletions_v1").get().count, 0);
+  } finally { f.close(); }
+});
+
+test("final account erasure removes its session reset fence while preserving other account fences", async () => {
+  const f = setup();
+  try {
+    const a = await f.session(), b = await f.session("other.user");
+    await f.state.revokeAllSessions(a.sessionToken); await f.state.revokeAllSessions(b.sessionToken);
+    const input = await f.input(); await f.deleter.request(input);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM auth_session_reset_fences_v1").get().n, 2);
+    assert.equal((await f.finish(input, f.processor())).completed, true);
+    assert.equal(f.db.prepare("SELECT count(*) AS n FROM auth_session_reset_fences_v1").get().n, 1);
+    assert.equal(f.db.prepare("SELECT subject_hash FROM auth_session_reset_fences_v1").get().subject_hash, appleSubjectHash("other.user"));
   } finally { f.close(); }
 });
 

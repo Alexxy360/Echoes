@@ -6,6 +6,7 @@ import { AppleLoginCoordinator } from "./apple-login.mjs";
 import { RefreshCredentialVault } from "./refresh-credential-vault.mjs";
 import { RenewalProofs } from "./renewal-proofs.mjs";
 import { SessionRenewalCoordinator } from "./session-renewal.mjs";
+import { SessionResetCoordinator } from "./session-reset.mjs";
 import { AccountDeletionState } from "./account-deletion-state.mjs";
 import { AccountDeletionCoordinator, AccountDeletionProcessor } from "./account-deletion.mjs";
 import { GatewayLimits, edgeBudgetHash } from "./gateway-limits.mjs";
@@ -56,10 +57,11 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const login = new AppleLoginCoordinator({ state: authentication, verifier, credentialVault,
       exchangeAuthorizationCode: input => apple.exchangeAuthorizationCode(input) });
     const renewal = new SessionRenewalCoordinator({ state: authentication, verifier, credentialVault, appleClient: apple });
+    const sessionReset = new SessionResetCoordinator({ state: authentication, verifier });
     const deletionCoordinator = new AccountDeletionCoordinator({ authenticationState: authentication, deletionState: deletions, verifier });
     const processor = config.deletionEnabled ? new AccountDeletionProcessor({ deletionState: deletions, credentialVault,
       appleClient: apple, erasePublicDataBatch }) : undefined;
-    const handle = createGatewayHTTPHandler({ authentication, login, renewal, deletions, deletionCoordinator,
+    const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(),
       isEnabled: () => activeGatewayConfiguration(env, clock()) !== null });
     return Object.freeze({ handle, maintenance, processor });

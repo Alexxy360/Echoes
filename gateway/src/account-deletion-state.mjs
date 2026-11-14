@@ -2,6 +2,7 @@ import { randomUUID, timingSafeEqual } from "node:crypto";
 import { Buffer } from "node:buffer";
 import { AuthenticationStateError } from "./authentication-state.mjs";
 import { deletionSchema, deletionTicketHash, deletionUUID } from "./deletion-schema.mjs";
+import { sessionResetSchema } from "./session-reset-schema.mjs";
 
 const leaseLifetime = 60000, revocationDeadline = 7 * 86400000, receiptLifetime = 30 * 86400000;
 const unavailable = () => new AuthenticationStateError("DELETION_UNAVAILABLE");
@@ -13,7 +14,7 @@ export class AccountDeletionState {
     if (typeof storage?.sql?.exec !== "function" || typeof storage.transactionSync !== "function" ||
         typeof storage.sync !== "function" || typeof clock !== "function") throw unavailable();
     this.#storage = storage; this.#clock = clock;
-    this.#tx(() => { for (const statement of deletionSchema) storage.sql.exec(statement); });
+    this.#tx(() => { for (const statement of [...deletionSchema, ...sessionResetSchema]) storage.sql.exec(statement); });
   }
   #tx(action) { try { return this.#storage.transactionSync(action); } catch { throw unavailable(); } }
   #rows(sql, ...values) { return this.#storage.sql.exec(sql, ...values).toArray(); }
@@ -189,6 +190,7 @@ export class AccountDeletionState {
       }
       this.#storage.sql.exec("DELETE FROM auth_refresh_credentials_v1 WHERE subject_hash=?", job.subject_hash);
       this.#storage.sql.exec("DELETE FROM auth_credential_reservations_v1 WHERE subject_hash=?", job.subject_hash);
+      this.#storage.sql.exec("DELETE FROM auth_session_reset_fences_v1 WHERE subject_hash=?", job.subject_hash);
       this.#storage.sql.exec("DELETE FROM auth_accounts_v1 WHERE account_id=? AND subject_hash=?", job.account_id, job.subject_hash);
       this.#storage.sql.exec("DELETE FROM auth_deletion_revocations_v1 WHERE deletion_id=?", deletionID);
       this.#storage.sql.exec("UPDATE auth_account_deletions_v1 SET local_status='removed',completed_at=? WHERE deletion_id=?", now, deletionID);

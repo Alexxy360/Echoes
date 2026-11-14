@@ -57,7 +57,8 @@ public enum GatewayFailure: Error, Equatable, Sendable, LocalizedError {
         case .operationInProgress: "Poczekaj na zakończenie bieżącej operacji."
         case .superseded, .accountMismatch: "Konto lub stan logowania zmieniły się. Zaloguj się ponownie."
         case .cancelled: "Logowanie anulowane."
-        case .server(.sessionLimited, _, _): "Osiągnięto limit aktywnych sesji. Wyloguj inne urządzenie."
+        case .server(.sessionLimited, _, _):
+            "Osiągnięto limit sesji. Potwierdź przez Apple wylogowanie poprzednich sesji, aby odzyskać dostęp."
         case .server(.accountDisabled, _, _): "To konto zostało zablokowane."
         case .server(.deletionInProgress, _, _): "Trwa usuwanie konta."
         case .server(.rateLimited, _, _), .server(.issueLimited, _, _):
@@ -72,6 +73,7 @@ public enum GatewayFailure: Error, Equatable, Sendable, LocalizedError {
 public enum GatewayChallengePurpose: String, Codable, Sendable {
     case login
     case accountDeletion = "account_deletion"
+    case sessionReset = "session_reset"
 }
 
 public struct GatewayChallenge: Decodable, Sendable {
@@ -145,6 +147,8 @@ public protocol GatewayAuthenticationAPI: Sendable {
     func session(token: GatewaySecret) async throws -> GatewaySessionStatus
     func logout(token: GatewaySecret) async throws
     func logoutAll(token: GatewaySecret) async throws
+    func resetSessions(challengeID: String, identityToken: GatewaySecret, expectedAccountID: String?)
+        async throws
 }
 
 func gatewayUUID(_ value: String) -> Bool {

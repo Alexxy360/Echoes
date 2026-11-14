@@ -10,7 +10,7 @@
         @State private var host: GatewaySignInHost?
         @State private var anchor = GatewayPresentationWindow()
         @State private var configurationFailed = false
-        @State private var confirmLogoutAll = false
+        @State private var confirmation: SessionConfirmation?
 
         var body: some View {
             NavigationStack {
@@ -29,7 +29,9 @@
                                         .accessibilityIdentifier("gateway.auth.ready")
                                     Button("Wyloguj to urządzenie") { Task { await host.signOut() } }
                                     Button("Wyloguj wszystkie urządzenia", role: .destructive) {
-                                        confirmLogoutAll = true
+                                        if let accountID = host.accountID {
+                                            confirmation = .logoutAll(accountID)
+                                        }
                                     }
                                 } else {
                                     GatewayAppleSignInControl(
@@ -39,15 +41,18 @@
                                         Task { await host.signIn() }
                                     }
                                     .frame(height: 50).accessibilityIdentifier("gateway.auth.signIn")
-                                    if host.phase == .checking || host.phase == .signingIn
-                                        || host.phase == .signingOut
-                                    {
+                                    if host.isBusy {
                                         ProgressView("Sprawdzanie konta…")
                                     }
                                     Button("Sprawdź ponownie") { Task { await host.activate() } }
-                                        .disabled(
-                                            host.phase == .checking || host.phase == .signingIn
-                                                || host.phase == .signingOut)
+                                        .disabled(host.isBusy)
+                                    if host.canResetSessions {
+                                        Button("Wyloguj poprzednie sesje", role: .destructive) {
+                                            confirmation = .reset
+                                        }
+                                        .disabled(host.isBusy).accessibilityIdentifier(
+                                            "gateway.auth.resetSessions")
+                                    }
                                 }
                             }
                             if let error = host.errorMessage {
@@ -58,14 +63,38 @@
                                     Text("Wylogowano lokalnie. Serwer nie potwierdził unieważnienia sesji.")
                                 }
                             }
+                            if host.resetCompleted {
+                                Section {
+                                    Text("Poprzednie sesje wylogowane. Zaloguj się ponownie.")
+                                        .accessibilityIdentifier("gateway.auth.resetCompleted")
+                                }
+                            }
                         }
                         .confirmationDialog(
-                            "Wylogować wszystkie urządzenia?", isPresented: $confirmLogoutAll,
-                            titleVisibility: .visible
-                        ) {
-                            Button("Wyloguj wszystkie", role: .destructive) {
-                                Task { await host.signOut(allDevices: true) }
+                            confirmation?.title ?? "",
+                            isPresented: Binding(
+                                get: { confirmation != nil },
+                                set: { if !$0 { confirmation = nil } }), titleVisibility: .visible,
+                            presenting: confirmation
+                        ) { action in
+                            Button(action.button, role: .destructive) {
+                                Task {
+                                    switch action {
+                                    case .logoutAll(let expectedAccountID):
+                                        guard host.accountID == expectedAccountID, host.phase == .ready else {
+                                            return
+                                        }
+                                        await host.signOut(allDevices: true)
+                                    case .reset: await host.resetSessions()
+                                    }
+                                }
                             }
+                        } message: { action in
+                            Text(action.message)
+                        }
+                        .onChange(of: host.accountID) { _, _ in confirmation = nil }
+                        .onChange(of: host.canResetSessions) { _, canReset in
+                            if !canReset, confirmation == .reset { confirmation = nil }
                         }
                     } else {
                         ProgressView("Przygotowanie…")
@@ -87,6 +116,20 @@
                 }
             }
             .onDisappear { host?.stop() }
+        }
+
+        private enum SessionConfirmation: Equatable {
+            case logoutAll(String)
+            case reset
+            var title: String {
+                self == .reset ? "Wylogować poprzednie sesje Echoes?" : "Wylogować wszystkie urządzenia?"
+            }
+            var button: String { self == .reset ? "Potwierdź przez Apple" : "Wyloguj wszystkie" }
+            var message: String {
+                self == .reset
+                    ? "Wyloguje wszystkie sesje tego konta w Echoes. Potwierdzisz tożsamość przez Apple, a następnie zalogujesz się ponownie."
+                    : "Na wszystkich urządzeniach będzie potrzebne ponowne logowanie."
+            }
         }
 
         private func prepare() async {

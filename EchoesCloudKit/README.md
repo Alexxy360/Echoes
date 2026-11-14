@@ -28,3 +28,5 @@ GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i Gatewa
 ## Host Apple/iCloud (CK-02k)
 
 GatewaySignInHost zarządza natywną tożsamością i UI, foreground/background, barierami i callbackiem czyszczenia domeny. NativeAppleGatewayAuthorizer (iOS) prezentuje arkusz z właściwego okna; NativeAppleGatewayIdentitySource sprawdza credentialState. GatewayDevelopmentActivation i ActivatedGatewayAuthenticationAPI odcinają wyłączoną/wygasłą konfigurację. Host jest przygotowany w osobnym ekranie Debug, obecnie unconfigured; zwykły CommunityClient nadal nie korzysta z niego. 63/63 testy pakietu na macOS, bez prawdziwego Apple login. [Cykl życia i wymagane podłączenie](../Docs/NATYWNY_HOST_LOGOWANIA.md).
+
+CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Aktualnie 72/72 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
