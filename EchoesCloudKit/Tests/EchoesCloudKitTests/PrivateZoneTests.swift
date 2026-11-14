@@ -6,14 +6,14 @@ import Testing
 
 private let privateAccountID = "50000000-0000-4000-8000-000000000001"
 private let privateDeletionID = "60000000-0000-4000-8000-000000000001"
-@MainActor private final class ZoneOwner: CloudKitAccountSource {
+@MainActor final class ZoneOwner: CloudKitAccountSource {
     var name = "owner-A"
     func availability() async throws -> CloudKitAccountAvailability { .available }
     func userRecordName() async throws -> String { name }
 }
 
 /// An explicit model of atomic CAS, not CloudKit. testVersion models the server's change tag.
-@MainActor private final class ZoneModel: PrivateZoneTransport {
+@MainActor final class ZoneModel: PrivateZoneTransport {
     let owner: ZoneOwner
     var records: [CKRecord.ID: CKRecord] = [:]
     var pages: [String: [CKRecord.ID]] = [:]

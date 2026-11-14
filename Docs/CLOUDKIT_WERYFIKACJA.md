@@ -136,3 +136,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02m — odzyskiwanie usuwania i natywny kontrakt
 
 196/196 Node (16 nowych), 98/98 Swift (8 nowych). Lokalna rotacja wąskiego biletu, właściwy cel dowodu, owner/account, równoległe wyzwania, utrata odpowiedzi, SQL/sync/reopen/migracja, receipt i zamknięty HTTP. Natywnie testowano token/format/redakcję, kontrakt, aktywację i sprzeczne statusy. Debug/Release skompilowane z projektem z Git. Bez prawdziwego Apple/Workers/CloudKit lub nowej instalacji. Keychain biletu, sterownik/cleaner/ACK/UI nadal niepołączone; nie jest to odbiór całego usuwania. [Zakres](ODZYSKIWANIE_USUWANIA_KONTA.md), [raport](evidence/deletion-recovery-local-tests.json).
+
+## CK-02n — trwałe kroki natywnego usuwania
+
+125/125 Swift (27 nowych), model API/strefy i połączenie sterownika z NativePrivateProfileDatabase. Obejmuje restart, utracone odpowiedzi/zapisy, checkpointy i wyścigi odzyskiwania; nie zastępuje SDK CloudKit. Debug/Release skompilowane z projektem z Git; syntetyczny Keychain zaliczony w podpisanym ad-hoc hoście Debug symulatora po odrzuceniu wersji bez entitlement (-34018), bez konta/HTTP i bez deklaracji odbioru wizualnego. Natywny host/arkusz/UI, realne callbacki plików, retencja i provider/A-B nadal wymagane. [Kontrakt](TRWALY_BILET_USUWANIA.md), [raport](evidence/deletion-flow-local-tests.json).

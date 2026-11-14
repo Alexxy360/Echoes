@@ -1,0 +1,92 @@
+{
+  "stage": "CK-02n",
+  "observedAt": "2026-11-14T21:25:20.436511+00:00",
+  "baselineCommit": "889a5692e47027ffc7aa629766b82ad6e55094d5",
+  "nativeTests": {
+    "passed": 125,
+    "failed": 0,
+    "newTests": 27,
+    "swift": "6.4",
+    "platform": "macOS arm64",
+    "scope": "real coordinator, codecs and scoped private database over explicit model transports; no provider operations"
+  },
+  "negativeControl": {
+    "result": "expected failure detected",
+    "test": "aLateRecoveryResponseCannotOverwriteANewerTicketFromAnotherCoordinator",
+    "isolatedCopy": "/private/tmp/echoes-deletion-flow-negative-control",
+    "mutation": "only response attemptID comparison disabled",
+    "testsFailed": 1,
+    "issues": 3,
+    "originalSourceUnchanged": true
+  },
+  "keychainHost": {
+    "result": "passed",
+    "platform": "iPhone 17 Pro / iOS Simulator 26.1",
+    "mode": "ECHOES_GATEWAY_STORAGE_CHECK=1",
+    "signedBuild": "local ad-hoc, existing project settings, CODE_SIGN_IDENTITY=-, no provisioning updates",
+    "verified": [
+      "random canonical ticket round-trip",
+      "atomic replacement and 32768-byte value",
+      "session tombstone preserves deletion value",
+      "65537-byte write refused without overwriting existing value",
+      "WhenUnlockedThisDeviceOnly; synchronizable not true",
+      "two exact-record deletions succeed and subsequent reads return item-not-found"
+    ],
+    "deleteStatuses": [
+      0,
+      0
+    ],
+    "afterDeleteStatuses": [
+      -25300,
+      -25300
+    ],
+    "priorAttempt": "unsigned host returned -34018 errSecMissingEntitlement on initial read; no writes succeeded; did not weaken protection",
+    "visualAcceptance": false,
+    "finalCompletionStateFix": "final computed progress.completed condition does not modify the tested Keychain implementation",
+    "storageImplementationSHA256": "ffee015f2fb522b68334098d435cafae75dafa3bdee46629b5dafbd05aa1e087"
+  },
+  "builds": {
+    "Debug": "succeeded final source, local ad-hoc simulator signing, no provisioning updates",
+    "Release": "succeeded final source, signing disabled; Debug diagnostic marker absent",
+    "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingProjectChangePreserved": true,
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "backend": "unchanged, CK-02m checkpoint 196/196 not repeated",
+  "knownLimits": [
+    "native Apple deletion host/sheet/lifecycle and ordinary UI not connected",
+    "real access closure/cache/files callback in AppServices still to implement",
+    "local receipt journal cap 8/64 KiB and private guard retention/final removal need release policy",
+    "legacy data and real CloudKit atomic/change tokens/assets/two ordinary accounts not accepted",
+    "server private ACK is a device claim; completed requires own checkpoints but cannot prove provider erasure on other devices"
+  ],
+  "notPerformed": [
+    "real Apple login/revocation or CloudKit record access",
+    "new Apple capability/profile/server key or secret transfer",
+    "Workers deployment/public erasure adapter execution",
+    "physical device Keychain lock/reboot/backup/restore",
+    "two-account acceptance",
+    "Production or TestFlight publication"
+  ],
+  "staticChecks": {
+    "SwiftFormat": "changed Swift strict lint passed",
+    "ReleaseDebugStorageMarkersAbsent": true,
+    "noBundledActivationOrEntitlementsChanged": true
+  },
+  "logSHA256": {
+    "swift": "0108694205a236f5ee02f40809f529dabca2a7c4a6b106f0ea1a145febfc20a3",
+    "negativeControl": "6a829cd53df28d7b8d7e44a95ef23923d307cef1b38f205001e1e5b3f9e8a19c",
+    "DebugSigned": "835e95dbfcd93c54d92e8bf613285851ff95becbfe49f21ad8ec58e543c6fdca",
+    "Release": "bb4479cb883ac6e5426e5282af2359a737a83d0063b0c4e7da58130a14725e8a",
+    "keychainSigned": "ce95824127d07c9a516123e8ee8abed251a78a3705858bd7f2e3df400ec0d9c8",
+    "keychainUnsignedFailure": "b9bd4e582a667b259e5beb1544a853c335996d1278518ec3179d6fc3d9e4227b"
+  },
+  "sourceSHA256": {
+    "Echo/Services/GatewayStorageCheck.swift": "fa71e45c7caaa59a1017ce603307185237ee9b1424349751d517afbb20425b4c",
+    "Echo/Views/GatewayStorageCheckView.swift": "2ba9449d63825c0e0b5108280770209113c61a10a50e2458fcffdbd10ee084be",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionController.swift": "72388102683bd9040dccfd3a64e76e7a54b7886574542a807c39c71ffcafd568",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionStorage.swift": "8ff927d27d3050a6baf2e0d083cbb0505b26f14b7868ef0a0d1e869027e278a3",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionFlowTests.swift": "beb5bf118a444a601211790fc50a16e8edc99966c0aef910a09b2ef0db11ace4",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateZoneTests.swift": "eb2993bb8bc20f5aef8bdb2361d2b0849495f6b1c1292a2d6ebdaa064db890b6"
+  }
+}

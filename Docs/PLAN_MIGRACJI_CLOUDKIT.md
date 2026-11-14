@@ -71,6 +71,8 @@ Postęp CK-02l: świeży reset utraconych sesji po limicie, osobny purpose/HTTP,
 
 Postęp CK-02m: odzyskiwanie istniejącego zadania świeżym purpose Apple, rotacja wąskiego biletu i autorytatywne accountID statusu. Kolejność chroni przed starymi/równoległymi dowodami; receipt nie zmienia nowego konta. Dodano natywny kontrakt HTTP/bilet i aktywację bez włączania usług. 196/196 Node (16 nowych), 98/98 Swift (8 nowych), kompilacje Debug/Release. Dalej CK-02n: trwały bilet Keychain/sterownik/arkusz oraz połączenie prywatnego cleanera i ACK; retencja guarda i realny odbiór nadal wymagane. [Zakres](ODZYSKIWANIE_USUWANIA_KONTA.md).
 
+Postęp CK-02n: oddzielny trwały dziennik Keychain, zapis przed dispatch, natywny sterownik bounded private cleanup i własnego ACK. Przestrzeń właściciela, checkpointy po restarcie i attemptID odcinają spóźnione wyniki/rotacje; NativePrivateProfileDatabase jest rzeczywistą zależnością cleanera, bez fake fallback. 125/125 testy Swift (27 nowych), kontrola Keychain w hoście Debug symulatora i kompilacje Debug/Release. Nadal trzeba podłączyć natywny host/arkusz/usuwanie w UI oraz realne callbacki AppServices, retencję lokalnych receipts/prywatnego guarda i legacy; odbiór provider/A-B pozostaje otwarty. [Kontrakt i dowody](TRWALY_BILET_USUWANIA.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.

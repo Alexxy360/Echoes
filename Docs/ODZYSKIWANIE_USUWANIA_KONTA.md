@@ -35,3 +35,7 @@ device-acknowledged jest oświadczeniem urządzenia, nie dowodem CloudKit. Statu
 98/98 testów pakietu Swift, w tym 8 nowych: losowy/redagowany bilet, kanoniczne odkodowanie, dokładny kontrakt HTTP, zgodność konta/zadania, sprzeczne stany, brak retry i aktywacja. Debug/Release kompilowane bez podpisywania z project.pbxproj z Git; zastaną zmianę oryginalnego projektu zachowano. [Raport](evidence/deletion-recovery-local-tests.json).
 
 Następnie: oddzielny trwały wpis Keychain, zapis przed wysłaniem i wznowienie po restarcie, blokady współbieżności/zmiany konta, natywny arkusz usuwania/odzyskiwania, autoryzacja zaakceptowanego biletu dla dokładnej przestrzeni iCloud, prywatne strony/kursor i cache przed ACK, uczciwe stany UI oraz końcowa retencja. Nadal wymagane są prawdziwe Apple/Workers/CloudKit i dwa zwykłe konta. To nie jest pełny odbiór usuwania ani gotowość TestFlight.
+
+## CK-02n — aktualizacja implementacji natywnej
+
+Dodano oddzielny dziennik Keychain i sterownik wznawiający prywatne strony oraz lokalne czyszczenie przed własnym ACK. Trwały attemptID zabezpiecza również nowsze odzyskiwanie przed starą odpowiedzią. Host/arkusz i callbacki AppServices pozostają do podłączenia. [Dokładny zakres](TRWALY_BILET_USUWANIA.md).

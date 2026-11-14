@@ -6,9 +6,9 @@
         var body: some View {
             NavigationStack {
                 Form {
-                    Section("Lokalna kontrola sesji") {
+                    Section("Lokalna kontrola Keychain") {
                         Text(
-                            "Sprawdza zapis, zastąpienie i odczyt syntetycznych danych w Keychain oraz ich usunięcie."
+                            "Sprawdza oddzielny zapis sesji i biletu usuwania, odczyt po zastąpieniu oraz usunięcie syntetycznych wpisów."
                         )
                         Text("Bez połączenia z serwerem i bez danych konta.")
                             .font(.caption).foregroundStyle(.secondary)
