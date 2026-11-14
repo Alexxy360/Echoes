@@ -163,6 +163,16 @@ public actor GatewaySessionController {
     /// Call before replacing/clearing account-scoped UI and caches. Never awaits network.
     public func invalidateForAccountChange() throws { try clear(to: .signInRequired) }
 
+    /// Lock/background: fence in-flight work and forget in-memory access without erasing a ready
+    /// durable session. A pending rotation remains marked uncertain and cannot be replayed on resume.
+    public func suspendAccess() {
+        revision = UUID()
+        pair = nil
+        binding = nil
+        renewalTask = nil
+        state = .signedOut
+    }
+
     private func rotatedPair() async throws -> GatewaySessionPair {
         if let renewalTask { return try await renewalTask.value }
         guard let previous = pair, let currentBinding = binding,

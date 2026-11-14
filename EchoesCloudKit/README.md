@@ -24,3 +24,7 @@ Zależność od lokalnego EchoesCore zapewnia tę samą walidację pseudonimu co
 GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i GatewaySessionController obsługują protokół auth, single-flight i trwały stan nieznanego wyniku rotacji. AppleGatewayAuthorizationAttempt przygotowuje nonce/state i sprawdza odpowiedź. Host musi jeszcze przedstawić arkusz Apple, zweryfikować credentialState/konto CloudKit i podłączyć cykl życia oraz UI. Nie jest to adapter CommunityClient i nie ma domyślnego adresu usługi.
 
 44/44 lokalne testy Swift oraz osobna udana kontrola Keychain w aplikacji Debug na symulatorze. Bez prawdziwego Apple login lub nowego wdrożenia. [Dokładny kontrakt, granice i dalszy odbiór](../Docs/NATYWNA_SESJA_GATEWAY.md).
+
+## Host Apple/iCloud (CK-02k)
+
+GatewaySignInHost zarządza natywną tożsamością i UI, foreground/background, barierami i callbackiem czyszczenia domeny. NativeAppleGatewayAuthorizer (iOS) prezentuje arkusz z właściwego okna; NativeAppleGatewayIdentitySource sprawdza credentialState. GatewayDevelopmentActivation i ActivatedGatewayAuthenticationAPI odcinają wyłączoną/wygasłą konfigurację. Host jest przygotowany w osobnym ekranie Debug, obecnie unconfigured; zwykły CommunityClient nadal nie korzysta z niego. 63/63 testy pakietu na macOS, bez prawdziwego Apple login. [Cykl życia i wymagane podłączenie](../Docs/NATYWNY_HOST_LOGOWANIA.md).

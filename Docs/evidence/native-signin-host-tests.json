@@ -1,0 +1,51 @@
+{
+  "stage": "CK-02k",
+  "observedAt": "2026-11-14T15:42:01.117125+00:00",
+  "baselineCommit": "dd3e2f496e2f8e0e5db700ee611755a53e340eb5",
+  "packageTests": {
+    "platform": "macOS arm64; Swift 6.4",
+    "passed": 63,
+    "failed": 0,
+    "newTests": 19,
+    "command": "swift test --package-path EchoesCloudKit --scratch-path /private/tmp/echoes-native-host-swift-build",
+    "identityAndAPISources": "explicit synthetic Apple/CloudKit/API fixtures; no real identity or provider traffic"
+  },
+  "builds": {
+    "Debug": "succeeded for iPhone 17 Pro Simulator",
+    "Release": "succeeded for generic iOS Simulator",
+    "newSourceWarnings": "none; Xcode informational AppIntents extraction warning remains"
+  },
+  "simulatorRun": {
+    "device": "iPhone 17 Pro, iOS 26.1",
+    "mode": "ECHOES_GATEWAY_AUTH_CHECK=1",
+    "consoleOutcome": "ECHOES_GATEWAY_AUTH_CHECK state=unconfigured",
+    "visualReview": "not performed",
+    "nativeCloudOrAppleSources": "not initialized: bundled activation is absent",
+    "AppleSheetOrTokens": "not requested; not a real login acceptance"
+  },
+  "staticChecks": {
+    "DebugAndReleaseHaveNoBundledActivation": true,
+    "ReleaseAuthDebugMarkersAbsent": true
+  },
+  "notPerformed": [
+    "SIWA App ID capability/key configuration",
+    "real Apple sheet/callback/login/refresh/revoke",
+    "new cloud resources or secret transfer",
+    "physical phone install/provisioning",
+    "CloudKit records and user data operations",
+    "two-account access acceptance",
+    "production or TestFlight publishing"
+  ],
+  "ordinaryBackend": "Firebase; domain adapter and private profile not connected to the host yet",
+  "sourceSHA256": {
+    "Echo/EchoApp.swift": "938f3125e24d8f00221a76be51acffc428daa3fb4f8433325c5ee734a93bb9e2",
+    "Echo/Views/GatewayAuthCheckView.swift": "e5a74fc7ea3d1fe3c330eb4f185918b9c936a03d1d7cece6e59f461b97cefd54",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySessionController.swift": "320f1bb83e3b0324a748d29a2948a257ab5c5723c2a203b742e0d28d6327beb5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "7be8aa94b37b2b1d2ddcc91c3fde85bc76e0479d48b0945b4c82ab73c1e7cd77",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDevelopmentActivation.swift": "ba99ee3073fe8f3be3d28e477421bef213af1118286baf9d0532c32e0094dcce",
+    "EchoesCloudKit/Sources/EchoesCloudKit/AppleGatewayIdentity.swift": "7886ad02d3de56f07beaac7c918f14d9a083f5f352706ea525432b021df82d31",
+    "EchoesCloudKit/Sources/EchoesCloudKit/NativeAppleGatewayAuthorizer.swift": "5e79b3f80ea0d8465a0d4424f95ff4dfa10702424ad15fca81598555484fc864",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "c52ac37b3b9fd45e23d552a780054bf30dafccd26793f5f561da4f9ecc561354"
+  },
+  "domainCacheContract": "mandatory constructor callback; no implicit empty fallback"
+}

@@ -65,6 +65,8 @@ Postęp CK-02i: lokalnie połączono komponenty w zamknięty protokół HTTP, tr
 
 Postęp CK-02j: natywny klient auth HTTP, atomowy zapis pary w Keychain, single-flight rotacji, trwały znacznik nieznanego wyniku oraz odcięcie spóźnionych odpowiedzi. Helper Apple wiąże nonce/state bez zakresów profilu. 44/44 testy pakietu na macOS i udana lokalna kontrola Keychain w hoście Debug na symulatorze; Debug/Release kompilują się. Zwykły interfejs nadal nie używa nowej bramki. Następne prace: host logowania/credentialState/konto CloudKit, odzyskiwanie po limicie sesji oraz bilet usunięcia. Nie aktywowano SIWA/Workers ani nowych kluczy. [Zakres, dowody i granice](NATYWNA_SESJA_GATEWAY.md).
 
+Postęp CK-02k: host natywnego logowania Apple/credentialState/iCloud, natywny delegat i systemowy przycisk w kontrolnym ekranie Debug. Foreground, powiadomienia, background/lock, cache callback i bariery wylogowania odcinają stare wyniki; transient nie kasuje poprawnej pary. Aktywacja wymaga zaufanej konfiguracji w bundlu i terminu; obecnie brak aktywnej konfiguracji, SIWA i wdrożenia. 63/63 testy pakietu (19 nowych). Rzeczywisty Apple login nie jest zaliczony. Dalej: odzyskiwanie limitu grantów, bilet usunięcia i adapter danych/hostingu przed konkretną zgodą na konfigurację i kontrolowaną próbę. [Zakres](NATYWNY_HOST_LOGOWANIA.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.

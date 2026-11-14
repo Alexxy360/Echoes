@@ -1,0 +1,32 @@
+# Host logowania Apple — CK-02k
+
+Stan: 14 listopada 2026. Przygotowano natywny przepływ i ekran kontrolny Debug, z domyślnie wyłączoną aktywacją. **Nie uruchomiono prawdziwego logowania, nie włączono capability Sign in with Apple i nie utworzono/przekazano nowego klucza.** Zwykły interfejs pozostaje przy Firebase do pełnego odbioru migracji.
+
+## Implementacja
+
+- `NativeAppleGatewayAuthorizer` prezentuje ASAuthorizationController z requestem nonce/state z CK-02j. Używa okna, które faktycznie zawiera przycisk; nie wybiera losowej sceny ani zastępczego UIWindow. Przechowuje delegata/continuation na czas próby, rozpoznaje anulowanie, odcina późne callbacki i kończy próbę po terminie wyzwania. Anulowanie jest związane z UUID konkretnej próby, więc opóźnione anulowanie starej operacji nie anuluje nowego logowania. Kod natywny iOS skompilowano; rzeczywisty arkusz/callback Apple nadal wymaga testu.
+- `NativeAppleGatewayIdentitySource` sprawdza natywny credentialState. Authorized pozwala kontynuować; revoked/notFound/transferred wymagają ponownego logowania, a błąd źródła blokuje UI bez kasowania możliwej do odzyskania sesji. Nie uznajemy powiadomienia za jedyne źródło stanu. [Apple: sprawdzenie stanu przy uruchomieniu](https://developer.apple.com/documentation/authenticationservices/implementing-user-authentication-with-sign-in-with-apple), [zdarzenia konta, w tym brak niektórych powiadomień natywnych](https://developer.apple.com/documentation/signinwithapple/processing-changes-for-sign-in-with-apple-accounts).
+- `GatewaySignInHost` łączy Keychain/aktora sesji z Apple oraz CloudKitAccountSession. Przywracanie nie otwiera arkusza. Interaktywne logowanie następuje tylko po akcji użytkownika; konto iCloud jest sprawdzane przed i po arkuszu, przed wymianą kodu. Spóźnione wyniki nie udostępniają dostępu nowemu kontekstowi.
+- Host obserwuje CKAccountChanged, credentialRevokedNotification i niedostępność protected data na iOS. Zamyka granicę dostępu, czyści tożsamość/UI i wywołuje callback czyszczenia danych domenowych **synchronicznie na MainActor**, przed czekaniem na aktora i sieć. Błąd trwałego czyszczenia jest zgłaszany; nie jest przedstawiany jako skuteczne wylogowanie.
+- Powrót na pierwszy plan ponownie sprawdza Apple/iCloud oraz sesję. Po 60 s, przed wydaniem tokenu klientowi domenowemu, kontrola jest odświeżana; cofnięcie zegara także wymusza kontrolę. To ograniczone okno sprawdzenia, nie gwarancja natychmiastowej serwerowej revocation. Inactive podczas własnego arkusza Apple nie anuluje logowania. Background i blokada urządzenia zamykają dostęp; `suspendAccess()` usuwa pamięć i odcina odpowiedzi bez kasowania gotowej pary z Keychain. Pending renewal zachowuje swój stan nieznanego wyniku.
+- Kolejka barier porządkuje lokalne zamknięcie, wylogowanie i nowe logowanie. Stare wylogowanie nie może wymazać następnej zapisanej pary. Wynik localOnly pozostaje wyraźnie odróżniony od potwierdzenia serwera; UI wymaga osobnego wyboru przed logout-all.
+
+Host jest właścicielem monitorowania swojej CloudKitAccountSession; nie należy dodatkowo uruchamiać jej wewnętrznego monitora dla tej samej instancji. Przyszły adapter społecznościowy ma uzyskiwać token przez hosta i przekazać obowiązkowy callback czyszczenia własnych list/cache. Konstruktor nie dostarcza pustego domyślnego fallbacku; izolowany ekran bez danych domenowych przekazuje pustą operację jawnie. Bez tego samo istnienie klasy nie zabezpiecza dowolnego nowego klienta. Ekran kontrolny nie wczytuje obecnie profilu ani danych społecznościowych.
+
+## Aktywacja i ekran
+
+Flaga uruchomienia `ECHOES_GATEWAY_AUTH_CHECK=1` wybiera wyłącznie ekran Debug i pomija konfigurację Firebase. **Nie wybiera adresu serwera i nie włącza logowania.** Brak ustawień w pakiecie kończy się `unconfigured` przed utworzeniem natywnych źródeł Apple/iCloud i klienta sieci.
+
+`GatewayDevelopmentActivation` wymaga zaufanego słownika `EchoesGatewayDevelopment` z bundlowanego Info.plist: dokładnie enabled (Bool true), origin (jawny HTTPS origin), expiresAt (ścisłe UTC do 7 dni od inicjalizacji) i container (`iCloud.mpvEcho.Echo`). Weryfikuje Bundle ID mpvEcho.Echo i Development. Nie dopisano takiego aktywnego słownika do aplikacji. Links, HTTP i zmienne uruchomienia nie mogą zastępować go ani wybrać odbiorcy identity token/code.
+
+`ActivatedGatewayAuthenticationAPI` dodatkowo sprawdza termin przed każdym wywołaniem, także cleanup starej próby. Termin w kliencie jest ochroną próby, a nie zastępstwem serwerowej kontroli. Już rozpoczęta operacja może dojść do swojego timeoutu. Wygaśnięcie okna nie jest dowodem unieważnienia istniejącego grantu u Apple.
+
+`GatewayAuthCheckView` używa systemowego ASAuthorizationAppleIDButton, pokazuje busy/error/local-only i potwierdzenie wylogowania wszystkich. Zasłania treść, gdy scena nie jest aktywna. Cały ekran, flaga i previews są wycięte z Release; pakiet nadal się kompiluje. Nie publikujemy implementacyjnego ekranu w zwykłym onboarding.
+
+## Dowody i granice
+
+**63/63 testy pakietu Swift na macOS**, w tym 19 nowych względem CK-02j. Nowe próby używają jawnych syntetycznych źródeł Apple/CloudKit i API; sprawdzają przywrócenie bez arkusza, foreground/background, brak iCloud, stany credential, chwilowe błędy, konta zmienione w czasie arkusza, powiadomienia/cache, spóźniony stary login, logout barrier, termin aktywacji i zgłoszenie błędu trwałego czyszczenia.
+
+Kompilacje Debug/Release przeszły. Lokalny start ekranu w symulatorze iPhone 17 Pro/iOS 26.1 potwierdził w konsoli stan unconfigured; nie zaliczono przeglądu wyglądu ani prawdziwego arkusza. Pliki Info.plist nie zawierają aktywacji, a binarny Release nie zawiera znaczników kontrolnego ekranu. Są to osobne dowody. Nie uznano stubów ani stanu unconfigured za udane logowanie Apple, próbę sieci, provisioning, odbiór dwóch kont czy test prywatności CloudKit. Nie wykonano instalacji na telefonie, nowych uprawnień/sekretów, wdrożenia lub zmian Production. [Raport](evidence/native-signin-host-tests.json).
+
+Następne warunki: odzyskiwanie po limicie utraconych grantów i natywny bilet usuwania, rzeczywisty adapter publicznych danych, przygotowanie bundla hostingu i dokładnego zakresu SIWA/Free Development, poprawne podpisanie/provisioning, prawdziwy Apple login/refresh/revoke, osobna tożsamość serwera i dwa zwykłe konta. Przed TestFlight trzeba też podłączyć domenę/cache/profil do nowego hosta oraz usunąć Firebase po pełnym odbiorze. CK-02 pozostaje otwarty.

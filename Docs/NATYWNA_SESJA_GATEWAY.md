@@ -39,3 +39,5 @@ Powtarzalna kontrola lokalna: zbudować Debug, uruchomić w symulatorze z `ECHOE
 2. Odzyskanie dostępu po pięciu utraconych grantach: backend obecnie zwraca SESSION_LIMITED. Potrzebny jest świadomy reset poprzednich sesji ze świeżym dowodem Apple. Klient nie obchodzi tego limitu i nie wylogowuje innych urządzeń bez wyboru użytkownika.
 3. Klient biletu usuwania i prywatny cleanup CloudKit, prawdziwy adapter publicznych danych, profile/avatar, mapa/czat i moderacja nadal wymagają implementacji. Ta warstwa auth nie udaje CommunityClient.
 4. Kontrolowane próby Apple/Workers/urządzenia, limitów/awarii oraz dwóch zwykłych kont i oddzielnej tożsamości serwera pozostają obowiązkowe. Nie zastępuje ich test operatora lub dane syntetyczne.
+
+Dalszy etap CK-02k przygotował host credentialState/iCloud i kontrolny ekran Debug, nadal bez aktywnej konfiguracji/prawdziwego logowania. [Aktualny postęp](NATYWNY_HOST_LOGOWANIA.md).
