@@ -1,6 +1,6 @@
 # Bramka HTTP Development — CK-02i
 
-Stan: 14 listopada 2026. Połączono lokalnie rzeczywistą implementację verifiera/OAuth, sesji, odnowienia, zlecenia usuwania, limitów i harmonogramu. **Nie wdrożono nowej usługi ani namespace, nie utworzono sekretów i nie podłączono iOS.** Zwykła aplikacja nadal używa Firebase. Nowy target nie obsługuje jeszcze mapy/czatu/profili i nie jest gotową wersją TestFlight.
+Stan: 14 listopada 2026. Połączono lokalnie rzeczywistą implementację verifiera/OAuth, sesji, odnowienia, zlecenia usuwania, limitów i harmonogramu. **Nie wdrożono nowej usługi ani namespace, nie utworzono sekretów i nie podłączono zwykłego przepływu iOS.** Zwykła aplikacja nadal używa Firebase. Nowy target nie obsługuje jeszcze mapy/czatu/profili i nie jest gotową wersją TestFlight.
 
 ## Kontrakt dla klienta iOS
 
@@ -65,3 +65,5 @@ Alarm jest planowany przed przyjęciem mutacji. Każde wywołanie zapisuje nast�
 **163/163 testów Node 22.23.5**, w tym 24 nowe: 13 HTTP/runtime i 11 limitów/alarmu. Testy wykorzystują realne koordynatory/verifier/SQLite i jawnie podstawiony transport Apple, platformę edge oraz API alarmu. Obejmują cały protokół do odnowienia/logout/usuwania, odrzucanie wejść, podmienione nagłówki, spójny objectID, expiry/klucze, limity/reopen, równe wybieranie zadań i sprzątanie bez sekretów. [Raport](evidence/gateway-http-local-tests.json).
 
 To nie jest próba workerd/Cloudflare: import cloudflare:workers, prawdziwy request.cf, uruchamianie alarmów i CPU/wiersze wymagają osobnego testu Development. Nie wykonano prawdziwego logowania/revoke, kasowania CloudKit ani zmian iOS. Dalej: natywny klient i Keychain, rzeczywisty adapter danych, konfiguracja Sign in with Apple i kontrolowany test po osobnej zgodzie, role/A-B oraz pomiar obciążenia. Mapa/czat/moderacja i pełne odłączenie Firebase pozostają w planie.
+
+CK-02j: przygotowano natywny klient auth/Keychain i helper Apple, 44 testy pakietu oraz lokalną kontrolę systemowego storage w aplikacji Debug. Nie prezentuje jeszcze logowania ani nie łączy się z nowym wdrożeniem. [Weryfikacja i pozostałe warunki](NATYWNA_SESJA_GATEWAY.md).

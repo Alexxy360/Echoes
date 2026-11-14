@@ -13,6 +13,7 @@ struct EchoApp: App {
             if ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_IDENTITY_CHECK"] == "1"
+                || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_STORAGE_CHECK"] == "1"
             {
                 _services = State(initialValue: AppServices.preview())
                 return
@@ -25,7 +26,9 @@ struct EchoApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-                if ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_IDENTITY_CHECK"] == "1" {
+                if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_STORAGE_CHECK"] == "1" {
+                    GatewayStorageCheckView()
+                } else if ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_IDENTITY_CHECK"] == "1" {
                     CloudKitIdentityCheckView()
                 } else if ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1" {
                     CloudKitProbeView()

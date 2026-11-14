@@ -18,3 +18,9 @@ Testy offline: `swift test --package-path EchoesCloudKit`. Źródło natywne nie
 `AvatarPreparer.prepare(_:)` działa lokalnie: przyjmuje pojedyncze zdjęcie JPEG/PNG/HEIC/HEIF do 8 MB i 40 mln pikseli (maksymalny bok 12000), normalizuje orientację i tworzy JPEG o boku do 512 px oraz miniaturę do 128 px. Limit wyniku: 256 KB i 32 KB. Reenkodowanie usuwa źródłowe GPS/EXIF i dane aparatu. Przezroczystość spłaszczana jest na białe tło. Przetwarzanie wywoływać poza aktorem UI. Ten kod nie uploaduje plików ani nie tworzy jeszcze CKAsset.
 
 Zależność od lokalnego EchoesCore zapewnia tę samą walidację pseudonimu co pozostała aplikacja. Testy są offline; potwierdzenie dostępu dwóch rzeczywistych kont pozostaje częścią odbioru.
+
+## Natywna sesja bramki (CK-02j)
+
+GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i GatewaySessionController obsługują protokół auth, single-flight i trwały stan nieznanego wyniku rotacji. AppleGatewayAuthorizationAttempt przygotowuje nonce/state i sprawdza odpowiedź. Host musi jeszcze przedstawić arkusz Apple, zweryfikować credentialState/konto CloudKit i podłączyć cykl życia oraz UI. Nie jest to adapter CommunityClient i nie ma domyślnego adresu usługi.
+
+44/44 lokalne testy Swift oraz osobna udana kontrola Keychain w aplikacji Debug na symulatorze. Bez prawdziwego Apple login lub nowego wdrożenia. [Dokładny kontrakt, granice i dalszy odbiór](../Docs/NATYWNA_SESJA_GATEWAY.md).

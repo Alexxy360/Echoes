@@ -1,0 +1,65 @@
+{
+  "stage": "CK-02j",
+  "observedAt": "2026-11-14T14:39:25.628176+00:00",
+  "baselineCommit": "fec54d5536b971dff651cedccfe79c3d58357349",
+  "nativePackage": {
+    "platform": "macOS arm64",
+    "swift": "6.4",
+    "testsPassed": 44,
+    "testsFailed": 0,
+    "newTests": 23,
+    "command": "swift test --package-path EchoesCloudKit --scratch-path /private/tmp/echoes-native-swift-build",
+    "data": "synthetic; no Apple authentication or CloudKit calls",
+    "transportTests": "Real URLSession with in-process URLProtocol; redirect refusal and bounded announced/unannounced stream; not live TLS"
+  },
+  "keychainHost": {
+    "result": "passed",
+    "platform": "iOS Simulator 26.1, iPhone 17 Pro",
+    "mode": "ECHOES_GATEWAY_STORAGE_CHECK=1 in Echoes Debug",
+    "record": "fresh UUID-derived origin; synthetic values only; exact-record cleanup checked",
+    "verified": [
+      "read after atomic replacement",
+      "WhenUnlockedThisDeviceOnly attribute",
+      "synchronizable is not true",
+      "SecItemDelete succeeds"
+    ],
+    "consoleOutcome": "ECHOES_GATEWAY_STORAGE_CHECK result=passed",
+    "physicalDeviceLockedRebootBackup": "not tested"
+  },
+  "priorAttempt": {
+    "host": "standalone iOS Swift Package test runner",
+    "outcome": "Keychain test storageUnavailable; other 41 tests passed at that source revision; runner did not terminate and was stopped",
+    "resolution": "Moved system Keychain check into application Debug host; no weakening of Keychain settings; not counted as a passed package test"
+  },
+  "builds": {
+    "debug": "succeeded; final source",
+    "release": "succeeded; final source; Debug storage diagnostic markers absent from executable"
+  },
+  "notPerformed": [
+    "real Sign in with Apple login/refresh/revoke",
+    "new Apple capability or key grant",
+    "new gateway deployment or secret transfer",
+    "physical phone installation",
+    "CloudKit access or user data operations",
+    "two-account acceptance",
+    "TestFlight upload"
+  ],
+  "ordinaryAppBackend": "Firebase; native gateway host and social adapter not connected",
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/AppleGatewayAuthorization.swift": "96ba7af1147f42577f11d95472d7b5b2efdc61e1e85c4c0e9a7014073b8c2c01",
+    "EchoesCloudKit/Sources/EchoesCloudKit/AvatarPreparer.swift": "9f0c7756d899669c40f735c075103b8385a137a9d7effd2e7b2e3b4b81ab2d4b",
+    "EchoesCloudKit/Sources/EchoesCloudKit/CloudKitAccountSession.swift": "3e1cbdccd9da5abc228c490115be59ad674c06cb77316f30ccc33d0d7ed2aa24",
+    "EchoesCloudKit/Sources/EchoesCloudKit/CloudKitConfiguration.swift": "c6bc890adaf16a334cd5621abd62c8c5b7e24d340893ed3291944fc2741bca3a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/CloudKitFailure.swift": "32c1f7f21d06e61ed8d259108a93f818035b26e566b8c81cc6ef55ffc9b5b603",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAuthentication.swift": "f587eef0fe76cb28d0b126f56c8266938144bd578be8cb4b9487c96627c9a7ee",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayHTTPClient.swift": "9fbbd8660a9a62b74af84f349a238f280a99c59a7f0a1766c57ce103ceef9e93",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySessionController.swift": "7605ae846c7e15c0df9d766c101dcd658ea80bf5c346e197d56c9a3d556b9ba2",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySessionStorage.swift": "57588ad6f5550936520bc564343ea1da0b8d3fcf2fd2c5f2e7608975db9aa80a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileStore.swift": "bbfb7fd9f9c5627c3afcbf0e6f1a783d6532ef6bb9000bd9122665d3648c0e68",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/AvatarTests.swift": "7e8e9dd1cca08e680340510e02cf8dfab15d2a12b795b9c8e651f1463408eaf3",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/CloudKitTests.swift": "6bb5e5387905f9ac8225121313039632ae612db36a27302e0cb9dd4372144a9b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayTests.swift": "2a6b469cee208ad608dbb1c5417260e19faa36b39209cdc140408073d59bfbf5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayTransportTests.swift": "832fea78c8ee300160bba3c3b53cf7d7ba094b79e16a3dac10d758f1ffeb83c2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateProfileTests.swift": "adc8797883b075f86da22c83b61c2b6f0a5d6c5eccc06d966623eae96e75a17a"
+  }
+}
