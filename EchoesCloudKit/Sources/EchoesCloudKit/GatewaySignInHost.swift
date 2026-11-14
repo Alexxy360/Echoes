@@ -196,6 +196,45 @@ public final class GatewaySignInHost {
         }
     }
 
+    /// A scope is not itself proof of authorization. The private database must also call
+    /// authorizePrivateWrite before dispatching a mutation.
+    public func privateDataScope(configuration: CloudKitConfiguration) -> PrivateAccountScope? {
+        guard foreground, phase == .ready, isEnabled(), let accountID, let revision = authorizedRevision,
+            cloudKitAccount.state == .ready, revision == cloudKitAccount.identityRevision,
+            let name = cloudKitAccount.userRecordName
+        else { return nil }
+        return try? .init(configuration: configuration, accountID: accountID, cloudKitRecordName: name)
+    }
+    public func authorizePrivateWrite(_ scope: PrivateAccountScope) async throws {
+        guard privateDataScope(configuration: scope.configuration) == scope, let revision = authorizedRevision
+        else {
+            throw GatewayFailure.accountMismatch
+        }
+        let operation = generation
+        do {
+            try check(operation, cloudRevision: revision)
+            guard let binding = try await session.storedIdentity(),
+                binding.cloudKitAccountHash == scope.cloudKitAccountHash
+            else {
+                throw GatewayFailure.accountMismatch
+            }
+            try await checkApple(binding.appleUserID, operation: operation)
+            let token = try await session.accessToken()
+            try check(operation, cloudRevision: revision)
+            let status = try await api.session(token: token)
+            try check(operation, cloudRevision: revision)
+            guard status.protocolVersion == 1, Double(status.expiresAt) > now().timeIntervalSince1970,
+                status.accountID == scope.accountID,
+                privateDataScope(configuration: scope.configuration) == scope
+            else {
+                throw GatewayFailure.accountMismatch
+            }
+        } catch {
+            await fail(error, operation: operation)
+            throw error
+        }
+    }
+
     public func suspend() {
         foreground = false
         _ = fence(to: .suspended, erase: false)

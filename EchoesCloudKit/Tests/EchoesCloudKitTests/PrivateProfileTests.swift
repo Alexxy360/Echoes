@@ -20,26 +20,46 @@ import Testing
     var pendingFetch: CheckedContinuation<CKRecord?, Never>?
     var suspendSave = false
     var pendingSave: CheckedContinuation<CKRecord, Never>?
-    func fetchProfile() async throws -> CKRecord? {
+    func fetchProfile(scope: PrivateAccountScope) async throws -> CKRecord? {
         if let fetchError { throw fetchError }
         if suspendFetch { return await withCheckedContinuation { pendingFetch = $0 } }
         return stored
     }
-    func saveProfile(_ record: CKRecord) async throws -> CKRecord {
+    func saveProfile(_ record: CKRecord, scope: PrivateAccountScope) async throws -> CKRecord {
         saveCount += 1
         if let saveError { throw saveError }
         if suspendSave { return await withCheckedContinuation { pendingSave = $0 } }
         stored = record
         return record
     }
-    func deleteProfile() async throws {
+    func deleteProfile(scope: PrivateAccountScope) async throws {
         if let deleteError { throw deleteError }
         stored = nil
     }
 }
 
+@MainActor private func profileScope(
+    _ name: String, accountID: String = "40000000-0000-4000-8000-000000000001"
+) throws -> PrivateAccountScope {
+    try .init(
+        configuration: CloudKitConfiguration(
+            containerIdentifier: "iCloud.example.test", environment: .development),
+        accountID: accountID, cloudKitRecordName: name)
+}
+@MainActor private func makeStore(account: CloudKitAccountSession, database: ProfileDatabase)
+    -> PrivateProfileStore
+{
+    .init(
+        account: account,
+        scope: {
+            guard let name = account.userRecordName else { return nil }
+            return try? profileScope(name)
+        }, database: database)
+}
+
 @MainActor private func record(_ name: String) throws -> CKRecord {
-    try PrivateProfileRecordCodec.encode(.init(displayName: name), updating: nil)
+    try PrivateProfileRecordCodec.encode(
+        .init(displayName: name), updating: nil, scope: try profileScope("A"))
 }
 
 @Test @MainActor func newProfileRequiresLoadAndExplicitSave() async throws {
@@ -47,7 +67,7 @@ import Testing
     let database = ProfileDatabase()
     let account = CloudKitAccountSession(source: source)
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     #expect(await store.save(displayName: "Anna") == false)
     #expect(database.saveCount == 0)
     await store.load()
@@ -62,7 +82,7 @@ import Testing
     database.stored = try record("Anna")
     let account = CloudKitAccountSession(source: ProfileAccount())
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     database.saveError = CKError(.serverRecordChanged)
     #expect(await store.save(displayName: "Nowa nazwa") == false)
@@ -78,7 +98,7 @@ import Testing
     let database = ProfileDatabase()
     database.stored = try record("Anna")
     database.stored?["schemaVersion"] = 2 as NSNumber
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     #expect(!store.didLoad && store.profile == nil)
     #expect(await store.save(displayName: "Nadpisanie") == false)
@@ -91,7 +111,7 @@ import Testing
     await account.refresh()
     let database = ProfileDatabase()
     database.fetchError = CKError(.networkUnavailable)
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     #expect(!store.didLoad)
     #expect(await store.save(displayName: "Anna") == false)
@@ -104,7 +124,7 @@ import Testing
     database.stored?["futureField"] = "preserve" as NSString
     let account = CloudKitAccountSession(source: ProfileAccount())
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     #expect(await store.save(displayName: "Nowa nazwa"))
     #expect(database.stored?["futureField"] as? String == "preserve")
@@ -116,7 +136,7 @@ import Testing
     database.stored = try record("Prywatna Anna")
     let account = CloudKitAccountSession(source: source)
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     source.name = "B"
     await account.refresh()
@@ -133,7 +153,7 @@ import Testing
     let database = ProfileDatabase()
     let account = CloudKitAccountSession(source: source)
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     database.suspendFetch = true
     let request = Task { await store.load() }
     while database.pendingFetch == nil { await Task.yield() }
@@ -149,7 +169,7 @@ import Testing
     let database = ProfileDatabase()
     let account = CloudKitAccountSession(source: source)
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     database.suspendSave = true
     let request = Task { await store.save(displayName: "Anna") }
@@ -166,9 +186,55 @@ import Testing
     database.stored = try record("Anna")
     let account = CloudKitAccountSession(source: ProfileAccount())
     await account.refresh()
-    let store = PrivateProfileStore(account: account, database: database)
+    let store = makeStore(account: account, database: database)
     await store.load()
     #expect(await store.delete())
     #expect(database.stored == nil && store.profile == nil && store.didLoad)
     #expect(account.userRecordName == "A" && account.state == .ready)
+}
+
+@MainActor private final class ProfileScopeSelection {
+    var accountID = "40000000-0000-4000-8000-000000000001"
+}
+
+@Test @MainActor func switchingEchoesAccountWithinTheSameICloudHidesThePreviousProfileImmediately()
+    async throws
+{
+    let account = CloudKitAccountSession(source: ProfileAccount())
+    await account.refresh()
+    let database = ProfileDatabase()
+    database.stored = try record("Konto pierwsze")
+    let selection = ProfileScopeSelection()
+    let store = PrivateProfileStore(
+        account: account,
+        scope: {
+            guard let name = account.userRecordName else { return nil }
+            return try? profileScope(name, accountID: selection.accountID)
+        }, database: database)
+    await store.load()
+    #expect(store.profile?.displayName == "Konto pierwsze")
+    let revision = account.identityRevision
+    selection.accountID = "40000000-0000-4000-8000-000000000002"
+    #expect(store.profile == nil && !store.didLoad)
+    #expect(await store.save(displayName: "Konto drugie") == false)
+    database.stored = nil
+    await store.load()
+    #expect(await store.save(displayName: "Konto drugie"))
+    #expect(database.stored?.recordID == (try profileScope("A", accountID: selection.accountID)).profileID)
+    #expect(account.identityRevision == revision)
+}
+
+@Test @MainActor func detectedTransportOwnerMismatchClearsPrivateCacheAndInvalidatesTheAccountSnapshot()
+    async throws
+{
+    let account = CloudKitAccountSession(source: ProfileAccount())
+    await account.refresh()
+    let database = ProfileDatabase()
+    database.stored = try record("Prywatne dane")
+    let store = makeStore(account: account, database: database)
+    await store.load()
+    database.saveError = PrivateDataFailure.invalidScope
+    #expect(await store.save(displayName: "Zapis") == false)
+    #expect(store.profile == nil && !store.didLoad)
+    #expect(account.state == .idle && account.userRecordName == nil)
 }

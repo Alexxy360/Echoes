@@ -1,0 +1,57 @@
+{
+  "stage": "CK-03b",
+  "observedAt": "2026-11-14T20:34:14.694479+00:00",
+  "baselineCommit": "21df7d81b25d34c8965dc1654af06457820991fa",
+  "nativeTests": {
+    "passed": 90,
+    "failed": 0,
+    "newTests": 18,
+    "newBreakdown": {
+      "privateZoneModel": 14,
+      "privateProfileStore": 2,
+      "gatewayHost": 2
+    },
+    "platform": "macOS arm64",
+    "swift": "6.4",
+    "command": "swift test --package-path EchoesCloudKit --scratch-path /private/tmp/echoes-private-data-swift-build",
+    "scope": "synthetic private CloudKit transport; CAS modeled by testVersion, not real SDK/server change tags"
+  },
+  "builds": {
+    "Debug": "succeeded iOS Simulator, signing disabled",
+    "Release": "succeeded iOS Simulator, signing disabled",
+    "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingProjectChangePreserved": true,
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "backend": "unchanged; prior CK-02l checkpoint 180/180 not repeated in this milestone",
+  "notPerformed": [
+    "CloudKit SDK record operations or schema changes",
+    "native account switch or two ordinary iCloud accounts",
+    "CKAsset upload/physical deletion verification",
+    "new Apple login or Workers deployment",
+    "native deletion ticket or HTTP private-cleanup acknowledgement",
+    "phone installation or Production/TestFlight publication"
+  ],
+  "knownLimits": [
+    "ordinary app still uses Firebase; components are not connected to normal profile UI",
+    "private content cleanup retains a minimal deleted guard; retention/final removal remains to implement",
+    "legacy default-zone profile detection blocks completion without automatic migration/deletion",
+    "cleanup authorization callback must validate accepted deletion ticket for the exact account; no default success",
+    "SDK account checks do not replace real two-account/provider acceptance"
+  ],
+  "logSHA256": {
+    "swift": "13d5aa660577a44f9c3b848aef6cdcaa9671977f6f40221c996670d307a12233",
+    "Debug": "e5267ea7e12cae25cfa78202b59ab439ba15360479dacc52b2debfa8bb347c85",
+    "Release": "353a7e6d026319aeeebfae7dd4f6744977e3e9290d2e0d3aa874317003bc1ecb"
+  },
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "ed2e564d407f932c08b0014c25f3346e8c5141184387975444228a50963dcea0",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateAccountScope.swift": "c36b8e3d881935fa42f95686163a32e5c3fa0986eafce46aa03de48454d5cdca",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileStore.swift": "1cf35489760603262ef36768cbd3f9490d54932ce76126a3c1dea4e499c51deb",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateZoneTransport.swift": "62b037c034a5fd3e5ee3fda9dd0dc51e51e841a4bafcdac36687387bde677098",
+    "EchoesCloudKit/Sources/EchoesCloudKit/ScopedPrivateProfileDatabase.swift": "efe6d03ddf9c80edc7370d1e8202fda6871042389f86c73a3259f9b523e4d9f5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "34a5f261790dfaa2ab2fee845fa34fa3d8e2921b2bd3ad7de832b116f0ddcf9e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateProfileTests.swift": "34ed603a932335b33447ebe961d04f9a95f33cf616bedfa6a16da561162104af",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateZoneTests.swift": "8b9110d3090f242019ce0321f0e0d52dc21fb101cbfeceed8c28aa3d88e7a61a"
+  }
+}

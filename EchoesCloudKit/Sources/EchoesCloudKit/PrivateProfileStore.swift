@@ -24,10 +24,10 @@ public enum PrivateProfileFailure: Error, Equatable, LocalizedError {
 @MainActor
 public enum PrivateProfileRecordCodec {
     public static let recordType = "EchoesPrivateProfileV1"
-    public static var recordID: CKRecord.ID { .init(recordName: "private-profile.v1") }
+    public static func recordID(scope: PrivateAccountScope) -> CKRecord.ID { scope.profileID }
 
-    public static func decode(_ record: CKRecord) throws -> PrivateProfile {
-        guard record.recordType == recordType, record.recordID == recordID else {
+    public static func decode(_ record: CKRecord, scope: PrivateAccountScope) throws -> PrivateProfile {
+        guard record.recordType == recordType, record.recordID == scope.profileID else {
             throw PrivateProfileFailure.malformedRecord
         }
         guard let version = record["schemaVersion"] as? NSNumber else {
@@ -41,14 +41,16 @@ public enum PrivateProfileRecordCodec {
     }
 
     /// Copies the fetched record to preserve change tags and unknown fields without mutating cache on failure.
-    public static func encode(_ profile: PrivateProfile, updating record: CKRecord?) throws -> CKRecord {
+    public static func encode(
+        _ profile: PrivateProfile, updating record: CKRecord?, scope: PrivateAccountScope
+    ) throws -> CKRecord {
         let result: CKRecord
         if let record {
-            _ = try decode(record)
+            _ = try decode(record, scope: scope)
             guard let copy = record.copy() as? CKRecord else { throw PrivateProfileFailure.malformedRecord }
             result = copy
         } else {
-            result = CKRecord(recordType: recordType, recordID: recordID)
+            result = CKRecord(recordType: recordType, recordID: scope.profileID)
         }
         result["schemaVersion"] = 1 as NSNumber
         result["displayName"] = profile.displayName as NSString
@@ -58,40 +60,9 @@ public enum PrivateProfileRecordCodec {
 
 @MainActor
 public protocol PrivateProfileDatabase {
-    func fetchProfile() async throws -> CKRecord?
-    func saveProfile(_ record: CKRecord) async throws -> CKRecord
-    func deleteProfile() async throws
-}
-
-/// The private database is fixed here; callers cannot redirect a private profile into the public database.
-@MainActor
-public final class NativePrivateProfileDatabase: PrivateProfileDatabase {
-    private let database: CKDatabase
-
-    /// Requires a verified container and signed host, just like NativeCloudKitAccountSource.
-    public init(configuration: CloudKitConfiguration) {
-        database = CKContainer(identifier: configuration.containerIdentifier).privateCloudDatabase
-    }
-
-    public func fetchProfile() async throws -> CKRecord? {
-        do { return try await database.record(for: PrivateProfileRecordCodec.recordID) } catch let error
-            as CKError where error.code == .unknownItem
-        { return nil }
-    }
-
-    public func saveProfile(_ record: CKRecord) async throws -> CKRecord {
-        _ = try PrivateProfileRecordCodec.decode(record)
-        let result = try await database.modifyRecords(
-            saving: [record], deleting: [], savePolicy: .ifServerRecordUnchanged, atomically: false)
-        guard let saved = result.saveResults[record.recordID] else { throw CloudKitFailure.partialFailure }
-        return try saved.get()
-    }
-
-    public func deleteProfile() async throws {
-        do { _ = try await database.deleteRecord(withID: PrivateProfileRecordCodec.recordID) } catch let error
-            as CKError where error.code == .unknownItem
-        { return }
-    }
+    func fetchProfile(scope: PrivateAccountScope) async throws -> CKRecord?
+    func saveProfile(_ record: CKRecord, scope: PrivateAccountScope) async throws -> CKRecord
+    func deleteProfile(scope: PrivateAccountScope) async throws
 }
 
 @MainActor
@@ -99,9 +70,10 @@ public final class NativePrivateProfileDatabase: PrivateProfileDatabase {
 public final class PrivateProfileStore {
     private struct Scope: Equatable {
         let revision: UInt64
-        let name: String
+        let domain: PrivateAccountScope
     }
     private let account: CloudKitAccountSession
+    @ObservationIgnored private let scopeProvider: @MainActor () -> PrivateAccountScope?
     @ObservationIgnored private let database: any PrivateProfileDatabase
     private var cachedProfile: PrivateProfile?
     @ObservationIgnored private var cachedRecord: CKRecord?
@@ -110,14 +82,20 @@ public final class PrivateProfileStore {
     private var cacheScope: Scope?
     private var busyScope: Scope?
 
-    public init(account: CloudKitAccountSession, database: any PrivateProfileDatabase) {
+    public init(
+        account: CloudKitAccountSession, scope: @escaping @MainActor () -> PrivateAccountScope?,
+        database: any PrivateProfileDatabase
+    ) {
         self.account = account
+        scopeProvider = scope
         self.database = database
     }
 
     private var currentScope: Scope? {
-        guard account.state == .ready, let name = account.userRecordName else { return nil }
-        return .init(revision: account.identityRevision, name: name)
+        guard account.state == .ready, let name = account.userRecordName, let domain = scopeProvider(),
+            domain.matchesCloudKitRecordName(name)
+        else { return nil }
+        return .init(revision: account.identityRevision, domain: domain)
     }
     public var profile: PrivateProfile? { cacheScope == currentScope ? cachedProfile : nil }
     public var errorMessage: String? { cacheScope == currentScope ? cachedError : nil }
@@ -139,9 +117,9 @@ public final class PrivateProfileStore {
         busyScope = scope
         defer { if busyScope == scope { busyScope = nil } }
         do {
-            let record = try await database.fetchProfile()
+            let record = try await database.fetchProfile(scope: scope.domain)
             guard scope == currentScope, !Task.isCancelled else { return }
-            cachedProfile = try record.map(PrivateProfileRecordCodec.decode)
+            cachedProfile = try record.map { try PrivateProfileRecordCodec.decode($0, scope: scope.domain) }
             cachedRecord = record
             loaded = true
         } catch { recordFailure(error, scope: scope) }
@@ -160,10 +138,11 @@ public final class PrivateProfileStore {
         defer { if busyScope == scope { busyScope = nil } }
         do {
             let draft = try PrivateProfile(displayName: displayName)
-            let record = try PrivateProfileRecordCodec.encode(draft, updating: cachedRecord)
-            let saved = try await database.saveProfile(record)
+            let record = try PrivateProfileRecordCodec.encode(
+                draft, updating: cachedRecord, scope: scope.domain)
+            let saved = try await database.saveProfile(record, scope: scope.domain)
             guard scope == currentScope, !Task.isCancelled else { return false }
-            cachedProfile = try PrivateProfileRecordCodec.decode(saved)
+            cachedProfile = try PrivateProfileRecordCodec.decode(saved, scope: scope.domain)
             cachedRecord = saved
             return true
         } catch {
@@ -179,7 +158,7 @@ public final class PrivateProfileStore {
         busyScope = scope
         defer { if busyScope == scope { busyScope = nil } }
         do {
-            try await database.deleteProfile()
+            try await database.deleteProfile(scope: scope.domain)
             guard scope == currentScope, !Task.isCancelled else { return false }
             clearCache()
             cacheScope = scope
@@ -193,8 +172,15 @@ public final class PrivateProfileStore {
 
     private func recordFailure(_ error: any Error, scope: Scope) {
         guard scope == currentScope, !Task.isCancelled else { return }
+        if error as? PrivateDataFailure == .invalidScope {
+            account.invalidate()
+            clearCache()
+            return
+        }
         prepareCache(for: scope)
-        if let error = error as? PrivateProfileFailure {
+        if let error = error as? PrivateDataFailure {
+            cachedError = error.localizedDescription
+        } else if let error = error as? PrivateProfileFailure {
             cachedError = error.localizedDescription
         } else if let error = error as? ValidationError {
             cachedError = error.localizedDescription

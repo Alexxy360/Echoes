@@ -128,3 +128,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02i — lokalne HTTP, limity i alarm
 
 163/163 testów, 24 nowe (13 HTTP/runtime, 11 limitów/alarmu). Użyto realnych klas OAuth/JWT/SQLite i jawnych test doubles platformy, Apple oraz public erasure. Zweryfikowano route/schema/body/bearer, utrzymanie jednej authority, spoofing nagłówków, kod konfiguracji i expiry, cały przepływ sesji/usuwania, trwałe limity, fair cursor/reopen i cleanup bez kluczy. Nie jest to workerd, rzeczywisty alarm/request.cf ani pomiar CPU/SQL. Nie utworzono namespace/usługi/sekretów, nie wdrożono iOS ani zmian CloudKit. [Raport](evidence/gateway-http-local-tests.json), [kontrakt i dalszy odbiór](BRAMKA_HTTP_DEVELOPMENT.md).
+
+## CK-03b — przestrzeń konta i bariera prywatnego usuwania
+
+90/90 testów pakietu Swift na macOS, w tym 18 nowych. Testowano syntetyczny transport z modelem atomowych wersji: izolacja kont i przestrzeni, świeża autoryzacja, wyścig zapisu/usunięcia, 206 rekordów, strony/kursory, restart, legacy oraz niepewne wyniki. Debug i Release skompilowane dla iOS Simulator z projektem z Git. Nie wykonano operacji SDK CloudKit ani nowej instalacji na telefonie; realna atomowość/CKAsset/zmiana iCloud i A/B niezaliczone. Guard pozostaje, retencja i bilet/ACK jeszcze niegotowe. [Pełny zakres](PRYWATNE_DANE_KONTA.md), [dowody](evidence/private-account-data-local-tests.json).

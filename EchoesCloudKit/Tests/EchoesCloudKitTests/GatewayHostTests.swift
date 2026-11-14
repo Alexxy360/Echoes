@@ -43,6 +43,8 @@ private actor HostAPI: GatewayAuthenticationAPI {
     var resets: [String] = []
     var loginLimited = false
     var resetFailure: GatewayFailure?
+    var statusFailure: GatewayFailure?
+    func setStatusFailure(_ failure: GatewayFailure) { statusFailure = failure }
     var holdNextReset = false
     var resetWaiter: CheckedContinuation<Void, Never>?
     func setLoginLimited(_ limited: Bool = true) { loginLimited = limited }
@@ -96,6 +98,7 @@ private actor HostAPI: GatewayAuthenticationAPI {
     }
     func session(token: GatewaySecret) async throws -> GatewaySessionStatus {
         statuses += 1
+        if let statusFailure { throw statusFailure }
         return .init(
             protocolVersion: 1, accountID: hostAccountID, expiresAt: Int(hostNow.timeIntervalSince1970) + 600)
     }
@@ -551,6 +554,38 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
     await f.host.resetSessions()
     #expect(f.authorizer.requests == 0)
     #expect(await f.api.resets.isEmpty)
+    f.host.stop()
+}
+
+@Test @MainActor func privateWritesRequireFreshNativeAndServerAuthorizationRatherThanOnlyTheCachedHostState()
+    async throws
+{
+    let f = HostFixture()
+    await f.signIn()
+    let config = try CloudKitConfiguration(
+        containerIdentifier: "iCloud.example.private", environment: .development)
+    let scope = try #require(f.host.privateDataScope(configuration: config))
+    try await f.host.authorizePrivateWrite(scope)
+    #expect(await f.api.statuses == 1)
+    #expect(f.apple.requests == 2)
+    await f.api.setStatusFailure(.server(.accountDisabled, status: 403, retryAfterSeconds: nil))
+    await #expect(throws: GatewayFailure.self) { try await f.host.authorizePrivateWrite(scope) }
+    #expect(f.host.privateDataScope(configuration: config) == nil)
+    #expect(f.host.accountID == nil)
+    f.host.stop()
+}
+
+@Test @MainActor func privateWriteCannotSelectAnotherGatewayAccountInTheSameICloudDatabase() async throws {
+    let f = HostFixture()
+    await f.signIn()
+    let config = try CloudKitConfiguration(
+        containerIdentifier: "iCloud.example.private", environment: .development)
+    let wrong = try PrivateAccountScope(
+        configuration: config, accountID: "50000000-0000-4000-8000-000000000099",
+        cloudKitRecordName: f.cloud.name)
+    await #expect(throws: GatewayFailure.accountMismatch) { try await f.host.authorizePrivateWrite(wrong) }
+    #expect(await f.api.statuses == 0)
+    #expect(f.host.phase == .ready)
     f.host.stop()
 }
 

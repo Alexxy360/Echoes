@@ -73,6 +73,8 @@ Postęp CK-02l: świeży reset utraconych sesji po limicie, osobny purpose/HTTP,
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.
 
+Postęp CK-03b: przestrzeń prywatna zależy teraz od natywnego iCloud i zweryfikowanego UUID konta Echoes. Atomowy guard blokuje zapis po rozpoczęciu usuwania, a stronicowany cleaner obejmuje wszystkie typy we własnej strefie. Host wymaga świeżej autoryzacji zapisu. 90/90 testów Swift (18 nowych), kompilacje Debug/Release. To lokalna podstawa przed CK-02m (bilet w Keychain i private ACK), bez zmian usług i bez odbioru SDK. Retencja guarda, legacy, CKAsset, UI i A/B pozostają otwarte. [Kontrakt i dowody](PRYWATNE_DANE_KONTA.md).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

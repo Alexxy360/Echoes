@@ -9,11 +9,11 @@ Niezależna warstwa przygotowywanej migracji. Jest lokalną zależnością głó
 
 Testy offline: `swift test --package-path EchoesCloudKit`. Źródło natywne nie jest wywoływane przez testy stubów. Nie zastępują one testów dwóch rzeczywistych kont w CloudKit Development.
 
-## Prywatny profil i przygotowanie avatara (CK-03a)
+## Prywatny profil i przygotowanie avatara (CK-03a/CK-03b)
 
 `PrivateProfileStore` zapisuje obecnie wyłącznie pseudonim w prywatnej bazie użytkownika. To przygotowana warstwa danych, jeszcze bez ekranu edycji w głównej aplikacji. Nie publikuje profilu. Po połączeniu `CloudKitAccountSession` trzeba wykonać `load()`, a następnie świadome `save(displayName:)`. Nie migrujemy nazwy z UserDefaults bez wyboru użytkownika. Obsłużono brak rekordu, konflikt wersji, nowszy schemat, częściowe błędy i zmianę konta. `delete()` usuwa wyłącznie rekord profilu, a nie konto Apple ani inne dane. Interfejs użytkownika wywołujący usuwanie musi najpierw uzyskać odpowiednie potwierdzenie.
 
-`NativePrivateProfileDatabase` zawsze używa privateCloudDatabase. Rekord `EchoesPrivateProfileV1/private-profile.v1` ma schemaVersion=1 i displayName; zachowuje nieznane pola podczas edycji. Zapis używa ifServerRecordUnchanged, bez cichego nadpisywania i ponawiania konfliktów.
+`NativePrivateProfileDatabase` zawsze używa privateCloudDatabase. `PrivateAccountScope` wiąże strefę z kontenerem, środowiskiem, natywnym iCloud i zweryfikowanym kontem Echoes. Rekord `EchoesPrivateProfileV1/profile.v1` ma schemaVersion=1 i displayName; zachowuje nieznane pola. Wymagany callback `authorizePrivateWrite` sprawdza świeży stan Apple i bramki. Zapis profilu oraz guarda konta jest atomowy z ifServerRecordUnchanged. `eraseAccountContentStep` ma osobną autoryzację i czyści strefę stronami; pozostawiony guard blokuje stare zapisy. To podstawa dla biletu usunięcia, jeszcze bez jego implementacji lub prawdziwego testu SDK. [Kontrakt i ograniczenia](../Docs/PRYWATNE_DANE_KONTA.md).
 
 `AvatarPreparer.prepare(_:)` działa lokalnie: przyjmuje pojedyncze zdjęcie JPEG/PNG/HEIC/HEIF do 8 MB i 40 mln pikseli (maksymalny bok 12000), normalizuje orientację i tworzy JPEG o boku do 512 px oraz miniaturę do 128 px. Limit wyniku: 256 KB i 32 KB. Reenkodowanie usuwa źródłowe GPS/EXIF i dane aparatu. Przezroczystość spłaszczana jest na białe tło. Przetwarzanie wywoływać poza aktorem UI. Ten kod nie uploaduje plików ani nie tworzy jeszcze CKAsset.
 
@@ -29,4 +29,4 @@ GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i Gatewa
 
 GatewaySignInHost zarządza natywną tożsamością i UI, foreground/background, barierami i callbackiem czyszczenia domeny. NativeAppleGatewayAuthorizer (iOS) prezentuje arkusz z właściwego okna; NativeAppleGatewayIdentitySource sprawdza credentialState. GatewayDevelopmentActivation i ActivatedGatewayAuthenticationAPI odcinają wyłączoną/wygasłą konfigurację. Host jest przygotowany w osobnym ekranie Debug, obecnie unconfigured; zwykły CommunityClient nadal nie korzysta z niego. 63/63 testy pakietu na macOS, bez prawdziwego Apple login. [Cykl życia i wymagane podłączenie](../Docs/NATYWNY_HOST_LOGOWANIA.md).
 
-CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Aktualnie 72/72 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
+CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Po CK-03b aktualnie 90/90 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
