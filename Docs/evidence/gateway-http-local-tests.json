@@ -1,0 +1,31 @@
+{
+  "stage": "CK-02i",
+  "observedAtUTC": "2026-11-14T13:33:13Z",
+  "localDate": "2026-11-14 Europe/Warsaw",
+  "runtime": "Node.js 22.23.5",
+  "command": "node --test gateway/test/*.test.mjs",
+  "passed": 163,
+  "failed": 0,
+  "newTests": 24,
+  "newGroups": {
+    "httpAndRuntime": 13,
+    "limitsAndMaintenance": 11
+  },
+  "storage": "real local SQLite",
+  "appleTransport": "synthetic responses, concrete OAuth client and JWT verifier",
+  "edgeAndAlarm": "explicit local platform test doubles",
+  "requestCeilingPerUTCDay": 2000,
+  "heavyRequestCeilingPerUTCDay": 300,
+  "cloudDeployment": false,
+  "newNamespaceOrServiceCreated": false,
+  "newSecretsOrCharges": false,
+  "iosChanged": false,
+  "remainingAcceptance": [
+    "native client and Keychain",
+    "real public CloudKit adapter and erasure",
+    "Sign in with Apple configuration and real tokens",
+    "Cloudflare request/alarm/runtime/CPU/SQL usage",
+    "ordinary accounts A/B",
+    "full social migration"
+  ]
+}

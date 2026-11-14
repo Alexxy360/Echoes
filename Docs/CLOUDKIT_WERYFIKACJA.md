@@ -124,3 +124,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02h — lokalne zlecenie usunięcia
 
 139/139 testów gateway, w tym 23 nowych usuwania. Rzeczywisty lokalny SQLite/verifier i syntetyczne tokeny; publiczny magazyn danych jest jawnie testowy w pamięci. 205 rekordów sprawdza sterowanie partiami i izolację, nie API CloudKit. Sprawdzono purpose, świeży dowód, quota/ban, ticket recovery, SQL/sync, drain, prywatny ack, retry i manual Apple, timeout, lease, późne logowanie, migrację starego magazynu, reopen i metadane blokad. Brak rzeczywistych danych użytkowników, sieci Apple/Cloudflare, kosztów i wdrożenia. [Raport](evidence/account-deletion-local-tests.json), [granice](USUWANIE_KONTA_GATEWAY.md).
+
+## CK-02i — lokalne HTTP, limity i alarm
+
+163/163 testów, 24 nowe (13 HTTP/runtime, 11 limitów/alarmu). Użyto realnych klas OAuth/JWT/SQLite i jawnych test doubles platformy, Apple oraz public erasure. Zweryfikowano route/schema/body/bearer, utrzymanie jednej authority, spoofing nagłówków, kod konfiguracji i expiry, cały przepływ sesji/usuwania, trwałe limity, fair cursor/reopen i cleanup bez kluczy. Nie jest to workerd, rzeczywisty alarm/request.cf ani pomiar CPU/SQL. Nie utworzono namespace/usługi/sekretów, nie wdrożono iOS ani zmian CloudKit. [Raport](evidence/gateway-http-local-tests.json), [kontrakt i dalszy odbiór](BRAMKA_HTTP_DEVELOPMENT.md).

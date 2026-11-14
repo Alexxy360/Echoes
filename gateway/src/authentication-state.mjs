@@ -34,6 +34,7 @@ const schema = [
   `CREATE TABLE IF NOT EXISTS auth_accounts_v1 (
     account_id TEXT PRIMARY KEY, subject_hash TEXT NOT NULL UNIQUE,
     generation INTEGER NOT NULL DEFAULT 0, disabled INTEGER NOT NULL DEFAULT 0)`,
+  `CREATE INDEX IF NOT EXISTS auth_account_disabled_v1 ON auth_accounts_v1(disabled)`,
   `CREATE TABLE IF NOT EXISTS auth_subject_bans_v1 (subject_hash TEXT PRIMARY KEY,created_at INTEGER NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS auth_sessions_v1 (
     token_hash TEXT PRIMARY KEY, account_id TEXT NOT NULL, generation INTEGER NOT NULL,
@@ -509,33 +510,41 @@ export class AuthenticationState {
     await this.#durable();
   }
 
-  async purgeExpired() {
-    const now = this.#now();
-    this.#transaction(() => {
-      this.#storage.sql.exec(`DELETE FROM auth_challenges_v1 WHERE challenge_id IN
+  async purgeExpired() { return purgeAuthenticationStorage(this.#storage, this.#clock); }
+}
+
+
+/** Local retention does not require provider keys or renewal secrets. */
+export async function purgeAuthenticationStorage(storage, clock = Date.now) {
+  const now = clock();
+  if (!Number.isSafeInteger(now) || now < 0 || typeof storage?.transactionSync !== "function" ||
+      typeof storage.sql?.exec !== "function" || typeof storage.sync !== "function") throw new AuthenticationStateError();
+  try {
+    storage.transactionSync(() => {
+      storage.sql.exec(`DELETE FROM auth_challenges_v1 WHERE challenge_id IN
         (SELECT challenge_id FROM auth_challenges_v1 WHERE expires_at<=?
           AND (state!='claimed' OR expires_at<=?) LIMIT 100)`, now, now - 86400000);
-      this.#storage.sql.exec(`DELETE FROM auth_sessions_v1 WHERE token_hash IN
+      storage.sql.exec(`DELETE FROM auth_sessions_v1 WHERE token_hash IN
         (SELECT token_hash FROM auth_sessions_v1 WHERE expires_at<=? LIMIT 100)`, now);
-      this.#storage.sql.exec(`DELETE FROM auth_issue_budget_v1 WHERE (budget_hash,window_start) IN
+      storage.sql.exec(`DELETE FROM auth_issue_budget_v1 WHERE (budget_hash,window_start) IN
         (SELECT budget_hash,window_start FROM auth_issue_budget_v1 WHERE window_start<=? LIMIT 100)`, now - issueWindow);
-      this.#storage.sql.exec(`DELETE FROM auth_renewal_grants_v1 WHERE grant_id IN
+      storage.sql.exec(`DELETE FROM auth_renewal_grants_v1 WHERE grant_id IN
         (SELECT grant_id FROM auth_renewal_grants_v1 g WHERE expires_at<=? OR NOT EXISTS
           (SELECT 1 FROM auth_accounts_v1 a WHERE a.account_id=g.account_id AND a.generation=g.generation AND a.disabled=0) LIMIT 100)`, now);
-      this.#storage.sql.exec(`DELETE FROM auth_credential_reservations_v1 WHERE reservation_id IN
+      storage.sql.exec(`DELETE FROM auth_credential_reservations_v1 WHERE reservation_id IN
         (SELECT reservation_id FROM auth_credential_reservations_v1 WHERE expires_at<=? LIMIT 100)`, now);
       // Retention is local erasure, not a claim that Apple's authorization was revoked.
-      this.#storage.sql.exec(`DELETE FROM auth_refresh_credentials_v1 WHERE credential_id IN
+      storage.sql.exec(`DELETE FROM auth_refresh_credentials_v1 WHERE credential_id IN
         (SELECT c.credential_id FROM auth_refresh_credentials_v1 c WHERE c.created_at<=? AND
           NOT EXISTS (SELECT 1 FROM auth_account_deletions_v1 d WHERE d.subject_hash=c.subject_hash AND d.apple_status='pending') AND
           (NOT EXISTS (SELECT 1 FROM auth_apple_state_v1 p WHERE p.credential_id=c.credential_id) OR
            NOT EXISTS (SELECT 1 FROM auth_renewal_grants_v1 g JOIN auth_accounts_v1 a ON a.account_id=g.account_id
              WHERE g.account_id=c.account_id AND g.generation=a.generation AND a.disabled=0 AND g.expires_at>?)) LIMIT 100)`,
       now - renewalLifetime, now);
-      this.#storage.sql.exec(`DELETE FROM auth_apple_state_v1 WHERE account_id IN
+      storage.sql.exec(`DELETE FROM auth_apple_state_v1 WHERE account_id IN
         (SELECT p.account_id FROM auth_apple_state_v1 p WHERE NOT EXISTS
           (SELECT 1 FROM auth_refresh_credentials_v1 c WHERE c.credential_id=p.credential_id) LIMIT 100)`);
     });
-    await this.#durable();
-  }
+    await storage.sync();
+  } catch { throw new AuthenticationStateError(); }
 }

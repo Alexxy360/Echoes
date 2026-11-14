@@ -1,0 +1,23 @@
+{
+  "name": "echoes-community-development",
+  "main": "src/community-worker.mjs",
+  "compatibility_date": "2026-11-14",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "preview_urls": false,
+  "observability": { "enabled": false },
+  "vars": {
+    "GATEWAY_ENABLED": "0",
+    "GATEWAY_ENVIRONMENT": "development",
+    "GATEWAY_EXPIRES_AT": "",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "CLOUDKIT_CONTAINER": "iCloud.mpvEcho.Echo",
+    "CLOUDKIT_ENVIRONMENT": "development",
+    "REFRESH_ACTIVE_KEY_ID": "v1",
+    "RENEWAL_ACTIVE_KEY_ID": "v1"
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "COMMUNITY_AUTHORITY", "class_name": "CommunityAuthority" }]
+  },
+  "migrations": [{ "tag": "community-v1", "new_sqlite_classes": ["CommunityAuthority"] }]
+}

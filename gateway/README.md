@@ -10,7 +10,7 @@ Testy na Node 22 (bez instalowania zależności):
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 139 testów lokalnych (23 usuwania, 16 verifiera/JWKS, 53 stanu/logowania/odnowienia SQLite, 4 integralności renewal, 10 OAuth, 6 szyfrowania credential), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 163 testy lokalne (24 HTTP/limitów/alarmu, 23 usuwania, 16 verifiera/JWKS, 53 stanu/logowania/odnowienia SQLite, 4 integralności renewal, 10 OAuth, 6 szyfrowania credential), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -61,3 +61,11 @@ AccountDeletionCoordinator wymaga świeżego Apple ID tokenu z osobnym purpose/n
 AccountDeletionProcessor wymaga jawnego rzeczywistego adaptera kasowania danych publicznych, bez domyślnego sukcesu; takiego adaptera CloudKit jeszcze nie podłączono. Lease/timeout, ponowny skan po oknie, idempotentny revoke/backoff oraz prywatne potwierdzenie urządzenia są rozdzielone. Brak tokenu lub błędy oznaczają manual-required dla Apple, bez blokowania kasowania danych. Tymczasowa blokada usuwania nie jest banem; blokada operatora ma osobny minimalny znacznik i nie znika z kontem. Migracja starego magazynu przypisuje stare wyzwania wyłącznie do login.
 
 139 testów przeszło, w tym 23 nowe. Brak wdrożenia, alarmu, prawdziwego usuwania CloudKit, native cleanup i nowych sekretów. [Kontrakt, metadane bezpieczeństwa i ograniczenia](../Docs/USUWANIE_KONTA_GATEWAY.md).
+
+## Zamknięte HTTP i alarm — CK-02i
+
+community-worker.mjs i wrangler.community.jsonc to osobny, domyślnie wyłączony target Development, jeszcze bez wdrożenia. gateway-runtime.mjs tworzy prawdziwe zależności auth/OAuth/sesji, weryfikuje odrębne sekrety i okno aktywacji. Edge hashuje platformowy adres sieci, usuwa podrabiane nagłówki i wybiera jeden prywatny authority. gateway-http.mjs ma stałą listę tras i ścisłe body/timeout/błędy, bez proxy CloudKit lub RPC operatora.
+
+GatewayLimits trwale ogranicza własne żądania/operacje próby. GatewayMaintenance planuje alarm przed mutacją, rescheduluje przed pracą i sprząta także bez kluczy dostawcy. Trwały kursor obraca zadania; kwalifikowanie starych sekretów działa niezależnie. Nie potwierdzono jeszcze runtime, platformowego IP/alarms ani budżetu CPU/SQL. Diagnostic bundle pozostaje bez zmian.
+
+163 testy przeszły; brak nowych zasobów, sekretów, opłat i zmian iOS. Usuwanie nie włączy się bez rzeczywistego adaptera erasure, którego entry point jeszcze nie podłącza. [Kontrakt dla iOS, konfiguracja i ograniczenia](../Docs/BRAMKA_HTTP_DEVELOPMENT.md).

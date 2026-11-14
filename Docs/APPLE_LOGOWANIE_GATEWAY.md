@@ -46,3 +46,7 @@ verifyRefresh współdzieli sprawdzanie podpisu/czasu/issuer/native audience, al
 ## CK-02h — cel wyzwania przy usuwaniu
 
 ID token sprawdzany przez ten sam verifier może uwierzytelnić świeże żądanie usunięcia, ale wyłącznie z nonce wyzwania account_deletion. Wyzwaniem login nie da się zlecić tej operacji. Podpisany sub wybiera konto; expectedAccountID jest wyłącznie ochroną przed zmianą konta w UI. Sprawdzono wygaśnięcie również przed zapisem. Nie wymieniamy nowego kodu tylko po to, by uzyskać kolejne tokeny podczas erasure. Brak zachowanych tokenów kieruje do ręcznego odwołania Apple, a nie do odmowy kasowania danych. [Kontrakt](USUWANIE_KONTA_GATEWAY.md).
+
+## CK-02i — kompozycja HTTP
+
+Verifier i adapter OAuth są obecnie połączone z lokalnymi endpointami. Runtime używa stałych klas i zachowuje timeout JWKS; fetch/klucze nie pochodzą z JSON klienta. Dodatkowe pola issuer/expectedNonce/keyURL/author są odrzucane przez schema HTTP. 163 testy całego gateway, w tym przepływ od HTTP challenge do code exchange na syntetycznym transporcie. Nadal bez konfiguracji Sign in with Apple, prawdziwych tokenów i wdrożenia. [Kontrakt](BRAMKA_HTTP_DEVELOPMENT.md).

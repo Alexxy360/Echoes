@@ -37,3 +37,7 @@ AuthenticationState wymaga teraz również RenewalProofs z oddzielnym kluczem HM
 ## CK-02h — odrębne uwierzytelnienie usuwania
 
 Świeże wyzwanie z purpose account_deletion umożliwia zlecenie usunięcia także zablokowanemu właścicielowi i bez dostępnego refresh. Nie przyznaje normalnej sesji. Zadanie unieważnia generację i blokuje starsze logowania; status/ack mają wąski osobny bilet. Blokada operatora ma odrębny skrót sub, który nie jest kasowany razem z profilem i nie powstaje z tymczasowego disable zadania. Migracja SQLite jest zapisana w metadanych, a nie zakłada świeżej bazy. Cały zestaw ma 139 testów. Publiczny adapter CloudKit, natywne private cleanup i alarm pozostają przed odbiorem. [Pełny kontrakt](USUWANIE_KONTA_GATEWAY.md).
+
+## CK-02i — lokalne endpointy
+
+Sesje mają już zamknięty transport HTTP i prawdziwą kompozycję klas, bez testowego exchange w domyślnej konfiguracji. Budżet pochodzi wyłącznie z trusted edge, wszystkie konta korzystają z jednego authority, a utrata alarmu uniemożliwia przyjęcie nowej mutacji. Retencję wydzielono do funkcji niewymagającej kluczy; 163 testy lokalne. Bez wdrożenia iOS/hostingu/prawdziwego Apple. [Kontrakt i granice](BRAMKA_HTTP_DEVELOPMENT.md).

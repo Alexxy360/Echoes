@@ -46,13 +46,27 @@ export class AccountDeletionState {
   }
 
   /** Internal alarm/operator queue only, never a dispatch accepting arbitrary HTTP method names. */
-  dueDeletionIDs() {
+  dueDeletionIDs({ afterID = "" } = {}) {
+    if (afterID !== "") this.#id(afterID);
     const now = this.#now();
-    return this.#tx(() => this.#rows(`SELECT deletion_id FROM auth_account_deletions_v1 WHERE local_status='blocked'
+    const query = `SELECT deletion_id FROM auth_account_deletions_v1 WHERE local_status='blocked'
       AND ((public_status!='deleted' AND public_attempts<10 AND public_next_at<=?
         AND (public_lease_id IS NULL OR public_lease_at<=?)) OR apple_status='pending'
-        OR (public_status='deleted' AND private_ack=1)) ORDER BY created_at LIMIT 10`, now, now - leaseLifetime)
-      .map(row => row.deletion_id));
+        OR (public_status='deleted' AND private_ack=1))`;
+    return this.#tx(() => {
+      let rows = this.#rows(query + " AND deletion_id>? ORDER BY deletion_id LIMIT 10", now, now - leaseLifetime, afterID);
+      if (!rows.length && afterID) rows = this.#rows(query + " AND deletion_id<=? ORDER BY deletion_id LIMIT 10", now, now - leaseLifetime, afterID);
+      return rows.map(row => row.deletion_id);
+    });
+  }
+  async expireRevocationSecrets() {
+    const now = this.#now();
+    this.#tx(() => {
+      const jobs = this.#rows(`SELECT * FROM auth_account_deletions_v1 WHERE local_status='blocked'
+        AND apple_status='pending' AND created_at<=? ORDER BY created_at LIMIT 100`, now - revocationDeadline);
+      for (const job of jobs) this.#reconcileApple(job, now);
+    });
+    await this.#durable();
   }
   async claimPublicBatch(deletionID) {
     const now = this.#now(), leaseID = randomUUID();

@@ -1,6 +1,6 @@
 # Usuwanie konta i odwołanie dostępu — CK-02h
 
-Stan: 14 listopada 2026. Lokalny sterownik procesu i testy SQLite; bez endpointu, alarmu, wdrożenia i prawdziwych danych użytkowników. Zwykła aplikacja nadal używa Firebase. **Nie zaimplementowano jeszcze rzeczywistego adaptera kasowania publicznych rekordów CloudKit ani natywnej ścieżki usunięcia prywatnej bazy.** Ich brak nie daje domyślnego sukcesu.
+Stan: 14 listopada 2026. Lokalny sterownik procesu i testy SQLite; CK-02i dodaje lokalne endpointy/alarm, bez wdrożenia i prawdziwych danych użytkowników. Zwykła aplikacja nadal używa Firebase. **Nie zaimplementowano jeszcze rzeczywistego adaptera kasowania publicznych rekordów CloudKit ani natywnej ścieżki usunięcia prywatnej bazy.** Ich brak nie daje domyślnego sukcesu.
 
 ## Własność i autoryzacja żądania
 
@@ -40,10 +40,14 @@ Przez 30 dni od zakończenia pozostaje bilet/status i znacznik odcinający stare
 
 Blokada operatora ma osobny skrót sub/czas w auth_subject_bans_v1. Usunięcie profilu i tożsamości nie kasuje tego znacznika i nie obchodzi moderacji przez ponowną rejestrację. Tymczasowe wyłączenie konta na czas erasure nie staje się banem, także po ponownym otwarciu bazy. Polityka retencji, przeglądu i odwołania blokad oraz informacja w UI/prywatności wymagają dopracowania przed publikacją; nie ma jeszcze panelu moderatora. Nie przechowujemy tu nazwy, e-maila, GPS, treści ani surowego sub Apple.
 
-Metody job runnera, wznowienia operatora i finalizacji są wewnętrzne. Nie wystawiać dowolnego RPC z nazwą metody z JSON. Harmonogram, monitoring/obsługa przypadków attentionRequired i kontakt wsparcia nadal wymagają wdrożenia.
+Metody job runnera, wznowienia operatora i finalizacji są wewnętrzne. Nie wystawiać dowolnego RPC z nazwą metody z JSON. Kod alarmu przygotowano w CK-02i; jego wykonanie, monitoring/obsługa attentionRequired i kontakt wsparcia nadal wymagają odbioru.
 
 ## Dowody i pozostały odbiór
 
 **139/139 testów gateway**, w tym 23 nowe usuwania. Rzeczywiste SQLite, istniejący verifier RS256, syntetyczne klucze/JWT/odpowiedzi Apple oraz jawny testowy magazyn publicznych rekordów. Test 205 rekordów dowodzi sterowania partiami i izolacji właściciela w tym modelu, **nie działania CloudKit**. Testy obejmują utratę odpowiedzi, migrację starego magazynu, purpose/nonce, ban, warunki ukończenia części, timeout, SQL/sync, reopen, retry/backoff, późne lease/credential i brak odtworzenia starego konta. [Raport](evidence/account-deletion-local-tests.json).
 
 Przed odbiorem pozostają rzeczywisty adapter CloudKit wraz z regułami własności/rejestrem zapisów, iOS/private cleanup/Keychain/zmiana konta, Apple revoke, zamknięte HTTP/alarm/limity, obsługa operatora i dwie zwykłe tożsamości. Aktualny Worker/bundler nie importuje nowych modułów; jego kod diagnostyczny i konfiguracja nie zmieniły się.
+
+## CK-02i — lokalny transport i kolejka
+
+Endpointy tworzenia/statusu/ack są zamknięte i wymagają właściwego biletu; nie wystawiono metod operatora. Włączenie usuwania bez rzeczywistego adaptera blokuje konfigurację, a nowy entry point nie podłącza jeszcze tego adaptera. Alarm ma trwały kursor oraz osobne kwalifikowanie przeterminowanych sekretów, więc oczekiwanie innego zadania nie blokuje ich cleanup. Czysto lokalna retencja nie wymaga już kluczy dostawcy. Cała regresja ma 163 testy; nadal brak prawdziwego CloudKit/private cleanup/runtime. [Kontrakt](BRAMKA_HTTP_DEVELOPMENT.md).

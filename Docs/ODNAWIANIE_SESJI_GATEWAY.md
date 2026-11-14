@@ -46,3 +46,7 @@ Sprawdzono dwa granty, równoległość, logout/blokadę/relogin podczas wywoła
 ## CK-02h — integracja ze zleceniem usunięcia
 
 Zadanie natychmiast blokuje konto i generację, więc spóźnione odnowienie nie wydaje sesji. Późny znany credential pozostaje do odwołania; żywe rezerwacje zatrzymują finalizację. Zwykła retencja nie usuwa tokenów objętych oczekującym odwołaniem. Blokada operatora ma osobny znacznik, aby usunięcie wiersza konta jej nie obchodziło. Sterownik usunięcia ma 23 testy, pełna regresja 139. Rzeczywisty publiczny adapter CloudKit i native private cleanup nadal wymagane. [Szczegóły](USUWANIE_KONTA_GATEWAY.md).
+
+## CK-02i — transport i retencja w alarmie
+
+Renewal jest przyjmowany wyłącznie w osobnej trasie, nie jako dostęp lub parametr URL; logout ma idempotentny status 204. JSON/timeout/stałe błędy mają kod i testy. Alarm oraz retencja bez kluczy są przygotowane lokalnie, z reschedule przed pracą i trwałym kursorem zadań. Pomiary runtime i natywny single-flight/Keychain nadal pozostają wymagane. [Aktualny kontrakt](BRAMKA_HTTP_DEVELOPMENT.md).

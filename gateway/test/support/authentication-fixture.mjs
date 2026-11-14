@@ -33,7 +33,7 @@ export function fixture({ path = ":memory:", syncHook = async () => {}, sqlHook 
   const keys = new ApplePublicKeySource({ clock, fetchImplementation: async () => Response.json({ keys: [publicKey] }) });
   const verifier = new AppleIdentityTokenVerifier({ keySource: keys, clock });
   const vault = credentialVault ?? new RefreshCredentialVault({ activeKeyID: "test-v1", keys: { "test-v1": randomBytes(32).toString("base64url") } });
-  const result = { db, state, storage, clock, verifier, vault, proofs, advance(ms) { now += ms; }, close() { db.close(); },
+  const result = { db, state, storage, clock, verifier, vault, proofs, publicJWK: publicKey, advance(ms) { now += ms; }, close() { db.close(); },
     token(challenge, subject = "synthetic.user", lifetime = 3600) {
       const header = Buffer.from(JSON.stringify({ kid: publicKey.kid, alg: "RS256" })).toString("base64url");
       const body = Buffer.from(JSON.stringify({ iss: "https://appleid.apple.com", aud: "mpvEcho.Echo",
