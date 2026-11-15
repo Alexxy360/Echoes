@@ -18,7 +18,13 @@ private final class HostStorage: GatewaySessionStorage, @unchecked Sendable {
     private let lock = NSLock()
     private var value: Data?
     private var rejectWrites = false
-    func read() throws -> Data? { lock.withLock { value } }
+    private var rejectReads = false
+    func read() throws -> Data? {
+        try lock.withLock {
+            if rejectReads { throw GatewayFailure.storageUnavailable }
+            return value
+        }
+    }
     func write(_ data: Data) throws {
         try lock.withLock {
             if rejectWrites { throw GatewayFailure.storageUnavailable }
@@ -26,6 +32,8 @@ private final class HostStorage: GatewaySessionStorage, @unchecked Sendable {
         }
     }
     func failWrites() { lock.withLock { rejectWrites = true } }
+    func allowWrites() { lock.withLock { rejectWrites = false } }
+    func failReads() { lock.withLock { rejectReads = true } }
     func savedState() throws -> StoredGatewaySession.State? {
         try read().map { try JSONDecoder().decode(StoredGatewaySession.self, from: $0).state }
     }
@@ -644,4 +652,58 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
     }
     #expect(await api.challenges == 1)
     #expect(await api.loggedOut.isEmpty)
+}
+
+@Test @MainActor func nativeDeletionFencePreservesAnotherAccountAndClosesOnlyItsMatchingLocalContext()
+    async throws
+{
+    let f = HostFixture()
+    await f.signIn()
+    let identity = try #require(f.host.authenticatedIdentity)
+    try await f.host.prepareForAccountDeletion(
+        binding: identity.binding, accountID: UUID().uuidString.lowercased())
+    #expect(f.host.authenticatedIdentity == identity)
+    let foreign = try GatewayIdentityBinding(
+        appleUserID: "another-native-user", cloudKitRecordName: "cloud-A")
+    try await f.host.prepareForAccountDeletion(binding: foreign, accountID: identity.accountID)
+    #expect(f.host.authenticatedIdentity == identity)
+    try await f.host.prepareForAccountDeletion(binding: identity.binding, accountID: identity.accountID)
+    #expect(f.host.phase == .signedOut && f.host.authenticatedIdentity == nil)
+    #expect(try f.storage.savedState() == .signedOut)
+    #expect(await f.api.loggedOut.isEmpty)
+    f.host.stop()
+}
+
+@Test @MainActor func aFailedDeletionFenceCanRetryStorageAfterUnlockWithoutAPermanentlyPoisonedBarrier()
+    async throws
+{
+    let f = HostFixture()
+    await f.signIn()
+    let identity = try #require(f.host.authenticatedIdentity)
+    f.storage.failWrites()
+    await #expect(throws: GatewayFailure.storageUnavailable) {
+        try await f.host.prepareForAccountDeletion(binding: identity.binding, accountID: identity.accountID)
+    }
+    #expect(f.host.phase == .unavailable && f.host.authenticatedIdentity == nil)
+    f.storage.allowWrites()
+    try await f.host.prepareForAccountDeletion(binding: identity.binding, accountID: identity.accountID)
+    #expect(try f.storage.savedState() == .signedOut)
+    #expect(f.host.phase == .signedOut)
+    f.host.stop()
+}
+
+@Test @MainActor func keychainReadFailureDuringAForeignDeletionStillClosesTheUnverifiableCurrentUI()
+    async throws
+{
+    let f = HostFixture()
+    await f.signIn()
+    f.storage.failReads()
+    let foreign = try GatewayIdentityBinding(
+        appleUserID: "another-native-user", cloudKitRecordName: "cloud-A")
+    await #expect(throws: GatewayFailure.storageUnavailable) {
+        try await f.host.prepareForAccountDeletion(
+            binding: foreign, accountID: UUID().uuidString.lowercased())
+    }
+    #expect(f.host.phase == .unavailable && f.host.authenticatedIdentity == nil)
+    f.host.stop()
 }

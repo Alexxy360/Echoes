@@ -4,9 +4,9 @@ import Testing
 
 @testable import EchoesCloudKit
 
-private let flowAccountID = "60000000-0000-4000-8000-000000000006"
-private let flowNow = Date(timeIntervalSince1970: 1_800_000_000)
-private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
+let flowAccountID = "60000000-0000-4000-8000-000000000006"
+let flowNow = Date(timeIntervalSince1970: 1_800_000_000)
+final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
     private let lock = NSLock()
     private var value: Data?
     private var writes = 0
@@ -33,7 +33,7 @@ private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Se
         set(try JSONEncoder().encode(journal))
     }
 }
-@MainActor private final class DeletionFlowAPI: GatewayAccountDeletionAPI {
+@MainActor final class DeletionFlowAPI: GatewayAccountDeletionAPI {
     nonisolated let origin = "https://gateway.example.invalid"
     var accountID = flowAccountID
     var activeTicket: GatewayDeletionTicket?
@@ -45,6 +45,7 @@ private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Se
         beforeACK: (() throws -> Void)?
     var holdRequest = false, pendingRequest: CheckedContinuation<Void, Never>?
     var failStatus = false
+    var challengePurposes: [Bool] = []
     var holdNextRecovery = false
     var pendingRecovery: CheckedContinuation<Void, Never>?
     func status(_ ticket: GatewayDeletionTicket) throws -> GatewayDeletionStatus {
@@ -59,7 +60,10 @@ private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Se
             localAccount: serverCompleted ? .removed : .blocked, attentionRequired: false,
             completed: serverCompleted)
     }
-    func deletionChallenge(recovering: Bool) async throws -> GatewayChallenge { flowChallenge() }
+    func deletionChallenge(recovering: Bool) async throws -> GatewayChallenge {
+        challengePurposes.append(recovering)
+        return flowChallenge()
+    }
     func requestDeletion(ticket: GatewayDeletionTicket, proof: GatewayDeletionProof?) async throws
         -> GatewayDeletionStatus
     {
@@ -124,18 +128,18 @@ private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Se
         holdRequest = false
     }
 }
-@MainActor private func flowChallenge() -> GatewayChallenge {
+@MainActor func flowChallenge() -> GatewayChallenge {
     .init(
         protocolVersion: 1, challengeID: UUID().uuidString.lowercased(),
         nonce: try! .init(String(repeating: "A", count: 43)),
         expiresAt: Int(flowNow.timeIntervalSince1970) + 300)
 }
-@MainActor private func flowProof(_ user: String = "native-apple-A") throws -> AppleGatewayProof {
+@MainActor func flowProof(_ user: String = "native-apple-A") throws -> AppleGatewayProof {
     try .init(
         appleUserID: user, identityToken: .init("SYNTHETIC-PRIVATE-DELETION-IDENTITY"),
         authorizationCode: .init("SYNTHETIC-UNUSED-APPLE-CODE"))
 }
-@MainActor private final class DeletionCleanupModel: GatewayPrivateAccountCleanup {
+@MainActor final class DeletionCleanupModel: GatewayPrivateAccountCleanup {
     var calls = 0
     var complete = false
     var cursors: [PrivateCleanupCursor?] = []
@@ -158,7 +162,7 @@ private final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Se
             contentDeleted: complete, deletedRecords: complete ? 0 : 100)
     }
 }
-@MainActor private final class DeletionFlowFixture {
+@MainActor final class DeletionFlowFixture {
     let owner = ZoneOwner()
     let account: CloudKitAccountSession
     let api = DeletionFlowAPI()

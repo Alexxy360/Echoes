@@ -1,0 +1,110 @@
+{
+  "stage": "CK-02o",
+  "observedAt": "2026-11-15T11:50:10.639092+01:00",
+  "baselineCommit": "8beb716edf07ab1a130c6c22725ac2cb66d0b156",
+  "nativeTests": {
+    "passed": 151,
+    "failed": 0,
+    "newTests": 26,
+    "hostTests": 15,
+    "fileTests": 5,
+    "sessionAndSignInHostTests": 6,
+    "platform": "macOS arm64",
+    "providers": "synthetic Apple/API/zone; real own temporary filesystem only"
+  },
+  "uiTests": {
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "newTests": 5,
+    "existingDemo": 4,
+    "runtimeWarnings": [],
+    "platform": "iPhone 17 Pro / iOS Simulator 26.1",
+    "resultBundle": "/private/tmp/echoes-deletion-host-ui-run4.xcresult",
+    "mode": "explicit in-memory fixture or native unconfigured; not provider acceptance",
+    "visualInspection": "four representative screenshots reviewed 2026-11-15; scrollable Accessibility XXXL"
+  },
+  "builds": {
+    "Debug": "succeeded in final UI run, local ad-hoc signing, no provisioning updates",
+    "Release": "succeeded, signing disabled",
+    "postBuildChange": "only comments in GatewayDevelopmentRuntime.swift and GatewayDeletionPreviewView.swift reformatted; tests not repeated after comment-only edit",
+    "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "backend": "unchanged; CK-02m 196/196 result not repeated",
+  "keychain": "actual Keychain implementation unchanged; CK-02n signed-host acceptance not repeated",
+  "priorUIFailures": [
+    "product banner/title overlap and inactive initial scene fixed",
+    "alert dismissal before async reservation fixed and regression tested",
+    "Cancel/AX and read-only text visibility helper corrected; buttons remain hittable; Dynamic Type not capped",
+    "one staging-only partial edit corrected atomically before final passing run"
+  ],
+  "staticChecks": {
+    "changedSwiftStrictLint": "passed (20 files)",
+    "release": {
+      "executable": "/private/tmp/echoes-deletion-host-app-build/Build/Products/Release-iphonesimulator/Echoes.app/Echoes",
+      "sha256": "7ee1a9351fdfa79b881b6f83f0d9761bacf2743790a4393dc3179ca73d8d82bb",
+      "debugMarkersAbsent": true,
+      "markerChecks": {
+        "ECHOES_GATEWAY_DELETION_UI_PREVIEW": true,
+        "Podgląd UI": true,
+        "echoes-community-development": true,
+        "ECHOES_GATEWAY_AUTH_CHECK": true,
+        "ECHOES_GATEWAY_STORAGE_CHECK": true
+      },
+      "activationKeyAbsent": true,
+      "packageActivationFiles": []
+    },
+    "entitlementsAndProjectChanges": false
+  },
+  "knownLimits": [
+    "ordinary AppServices still Firebase; isolated host has no profile memory cache",
+    "no active Development configuration or live SIWA",
+    "real public erasure adapter, profile/photo integrations and lease lifecycle not finished",
+    "local receipt cap 8/64 KiB, private guard retention and legacy still require implementation/release policy",
+    "private ACK is a device claim, not proof about other devices"
+  ],
+  "notPerformed": [
+    "real Apple login/revoke, CloudKit records/assets or Cloudflare runtime",
+    "new capability/profile/key/secret transfer, deployment or paid plan",
+    "physical-device install or Keychain lock/reboot/backup",
+    "two ordinary iCloud accounts",
+    "Production or TestFlight publication",
+    "old Firebase data deletion"
+  ],
+  "sourceSHA256": {
+    "Echo/EchoApp.swift": "1aee8cd1bbea8c2b6b61e4599fab644b97f20ef3cd0cab8254db9e46e2104608",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "e4a7b095f71aba85cd4cbc21b9c4a3f0a9fd26c62cea61dc900e6d5cd1a9466e",
+    "Echo/Views/GatewayAccountDeletionView.swift": "de8731787d40da24d8b15af54072aed647d0f320050a73fdde5a359a3648f0b0",
+    "Echo/Views/GatewayAuthCheckView.swift": "d373c7cf66eda863d6feb347d0e88d99b663f537edbd99b435b9154b258b70b9",
+    "Echo/Views/GatewayDeletionPreviewView.swift": "86b15a25ad4565cab7f7b9fd500fb6605c8629bf3fd31e33ca45c5b138579517",
+    "Echo/Views/GatewayPresentationWindow.swift": "add88cda71706c8e02a8f84805897c75f801846f7b074ee8913097d8f9ee76ae",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAuthentication.swift": "4c664b6634f806a63b1d1795e7efba8884eebce5515b56f59bb3ddda251ab9a9",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionController.swift": "26024b33db6a458a28ce4e0812724b19f8cbedeec5ef27e440912839ed8ebe3f",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionHost.swift": "0a560db68111edd2714bcf6a94c0efaa0de336ae4c73c5dcdeaa98e558b784be",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionStorage.swift": "628f8ebb51975d7bc229d1847486fb49e674d84a7303d5d407b721ac8f41d495",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayLocalAccountData.swift": "1a491a1552518ec6be739dfa22324f1cb95489b404cd62c64700dabb5e7b5ce5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySessionController.swift": "3b8ec52991a8b2af63c527e3f0f54d0d49872f8c60381878f5b8294b5b8f41a1",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySessionStorage.swift": "946f5ebc32f59d2fadb1fcb37f30f6f7d63e2b70a099de68ddc7ef521301ccae",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "2aa333326850ccba1a103eb2f1176dfcdf398825ec899bd16e6f748a184e3471",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionFlowTests.swift": "43eacbae7a3bdf218bfa1ec378c9b5f69a6b2d512d9eeac1f0fa9696cb238b32",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionHostTests.swift": "521e98d44898ccf50f2a5aaf7551231636d1c081b2124790db34daccd36df657",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "421af7323826231cfb3e9f908ef24315ec5b8b16b38df0536159221acd0b4924",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayLocalDataTests.swift": "812b9a9a0cd6bfed36c625b7c14b774b6427fa724101c0a5b23d3100ea0e7fc1",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayTests.swift": "c7b2d470d04f2ac0daca381381a8137604dcddf8c279b5ec046fc833937241fb",
+    "EchoesUITests/GatewayDeletionUITests.swift": "2edec0a2d1e1ad3a0121894d8b4f47c1813ff4a4d5cf4f87e3043cfa742037e5"
+  },
+  "screenshotsSHA256": {
+    "Docs/evidence/deletion-ui-pending.png": "e9bf2b7f3cf573bc892b9059b099358b2fc9911df3749d29f0abd826ea9f663f",
+    "Docs/evidence/deletion-ui-recovery-confirmation.png": "f820b72df70f71b17805ed7fd51ca3fbc9cc022345a9df94082cd2293f0f9ba1",
+    "Docs/evidence/deletion-ui-completed-manual.png": "7fba04ae3e0fe41272108d51d204743cc4a4a01fb056deff35a629235a6ff7b2",
+    "Docs/evidence/deletion-ui-large-text.png": "760d70d17167bf374234d114d14135b0d753e1e03646d58bdc7c0e91769502b0"
+  },
+  "logSHA256": {
+    "swift": "40d34995eb30fceba4a2186094fcf72c7dd1f17be6e8e98b3ab5ba32f18ace6f",
+    "DebugAndUI": "b2d631550465e6bfb10bd11efd1b2df0ec7687e424d77dedb2e5f97419708d04",
+    "UIResultSummary": "24bb73518dd2211fc3d22ccac3e29bc2e2bbb8bd90cbdeeaf32534a6a2e68252",
+    "Release": "0d627ace2c57070c5742b92d2a2671a3d21b70137616a15f6457cddb9e45a81c",
+    "SwiftFormat": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

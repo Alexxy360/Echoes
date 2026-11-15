@@ -141,6 +141,12 @@ public struct GatewayIdentityBinding: Codable, Equatable, Sendable {
     }
 }
 
+/// A snapshot from the native host, used to pin a confirmation. Never a server access credential.
+public struct GatewayAuthenticatedIdentity: Equatable, Sendable {
+    public let accountID: String
+    public let binding: GatewayIdentityBinding
+}
+
 public protocol GatewayAuthenticationAPI: Sendable {
     var origin: String { get }
     func challenge(purpose: GatewayChallengePurpose) async throws -> GatewayChallenge

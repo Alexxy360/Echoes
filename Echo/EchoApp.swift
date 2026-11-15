@@ -10,7 +10,8 @@ struct EchoApp: App {
 
     init() {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
+            if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] != nil
+                || ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_IDENTITY_CHECK"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_STORAGE_CHECK"] == "1"
@@ -27,7 +28,9 @@ struct EchoApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-                if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_AUTH_CHECK"] == "1" {
+                if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] {
+                    GatewayDeletionPreviewView(mode: mode)
+                } else if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_AUTH_CHECK"] == "1" {
                     GatewayAuthCheckView()
                 } else if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_STORAGE_CHECK"] == "1" {
                     GatewayStorageCheckView()

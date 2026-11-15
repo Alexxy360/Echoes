@@ -57,4 +57,5 @@ struct StoredGatewaySession: Codable {
     let binding: GatewayIdentityBinding?
     let state: State
     let pair: GatewaySessionPair?
+    var pendingAccountID: String? = nil
 }

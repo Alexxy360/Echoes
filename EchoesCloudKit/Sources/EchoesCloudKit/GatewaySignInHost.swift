@@ -46,6 +46,7 @@ public final class GatewaySignInHost {
     private var generation = UUID()
     private var foreground = false
     private var authorizedRevision: UInt64?
+    private var authorizedBinding: GatewayIdentityBinding?
     private var validatedAt: Date?
 
     public init(
@@ -88,7 +89,7 @@ public final class GatewaySignInHost {
             try await session.restore(verifiedBinding: binding)
             try check(operation, cloudRevision: revision)
             if case .ready(let identifier) = await session.state {
-                grantUI(identifier: identifier, cloudRevision: revision)
+                grantUI(identifier: identifier, cloudRevision: revision, binding: binding)
             } else {
                 phase = .signedOut
             }
@@ -127,7 +128,7 @@ public final class GatewaySignInHost {
             guard case .ready(let identifier) = await session.state else {
                 throw GatewayFailure.signInRequired
             }
-            grantUI(identifier: identifier, cloudRevision: currentRevision)
+            grantUI(identifier: identifier, cloudRevision: currentRevision, binding: binding)
         } catch {
             if operation == generation, case .server(.sessionLimited, _, _) = error as? GatewayFailure,
                 let attemptedBinding
@@ -192,6 +193,48 @@ public final class GatewaySignInHost {
             return token
         } catch {
             await fail(error, operation: operation)
+            throw error
+        }
+    }
+
+    public var authenticatedIdentity: GatewayAuthenticatedIdentity? {
+        guard foreground, phase == .ready, isEnabled(), let accountID, let binding = authorizedBinding,
+            authorizedRevision == cloudKitAccount.identityRevision, cloudKitAccount.state == .ready,
+            let name = cloudKitAccount.userRecordName,
+            (try? GatewayIdentityBinding(appleUserID: binding.appleUserID, cloudKitRecordName: name))
+                == binding
+        else { return nil }
+        return .init(accountID: accountID, binding: binding)
+    }
+
+    /// The deletion flow owns a DIFFERENT CloudKitAccountSession. This closes only its matching
+    /// login context; an older receipt must never clear a newer account's local grant or domain UI.
+    public func prepareForAccountDeletion(binding: GatewayIdentityBinding, accountID expectedID: String?)
+        async throws
+    {
+        guard !isBusy else { throw GatewayFailure.operationInProgress }
+        let current = authenticatedIdentity
+        let matchesUI = current?.binding == binding && (expectedID == nil || current?.accountID == expectedID)
+        let operation = matchesUI ? fence(to: .signedOut, erase: false) : generation
+        let previous = barrier
+        let session = self.session
+        let closing = Task {
+            _ = try? await previous?.value
+            return try await session.prepareForAccountDeletion(binding: binding, accountID: expectedID)
+        }
+        barrier = Task { _ = try await closing.value }
+        do {
+            let changed = try await closing.value
+            guard generation == operation else { throw GatewayFailure.superseded }
+            if changed, !matchesUI { _ = resetUI(to: foreground ? .signedOut : .suspended) }
+        } catch {
+            if generation == operation,
+                matchesUI || (error as? GatewayFailure) == .storageUnavailable
+            {
+                if !matchesUI { _ = fence(to: .unavailable, erase: false) }
+                phase = .unavailable
+                errorMessage = GatewayFailure.storageUnavailable.errorDescription
+            }
             throw error
         }
     }
@@ -267,11 +310,12 @@ public final class GatewaySignInHost {
         } catch { await fail(error, operation: operation) }
     }
 
-    private func grantUI(identifier: String, cloudRevision: UInt64) {
+    private func grantUI(identifier: String, cloudRevision: UInt64, binding: GatewayIdentityBinding) {
         clearResetRecovery()
         resetCompleted = false
         accountID = identifier
         authorizedRevision = cloudRevision
+        authorizedBinding = binding
         validatedAt = now()
         phase = .ready
     }
@@ -307,6 +351,7 @@ public final class GatewaySignInHost {
         self.phase = phase
         accountID = nil
         authorizedRevision = nil
+        authorizedBinding = nil
         validatedAt = nil
         authorizer.cancel()
         cloudKitAccount.invalidate()

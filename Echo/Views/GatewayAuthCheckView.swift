@@ -7,17 +7,19 @@
     /// Controlled Development host. The environment selects this screen, never the recipient of tokens.
     struct GatewayAuthCheckView: View {
         @Environment(\.scenePhase) private var scenePhase
-        @State private var host: GatewaySignInHost?
+        @State private var runtime: GatewayDevelopmentRuntime?
+        @State private var path: [Destination] = []
         @State private var anchor = GatewayPresentationWindow()
         @State private var configurationFailed = false
         @State private var confirmation: SessionConfirmation?
 
         var body: some View {
-            NavigationStack {
+            NavigationStack(path: $path) {
                 Group {
                     if configurationFailed {
                         GatewayAuthUnavailableView()
-                    } else if let host {
+                    } else if let runtime {
+                        let host = runtime.authentication
                         Form {
                             Section("Logowanie Apple") {
                                 Text(
@@ -54,6 +56,10 @@
                                             "gateway.auth.resetSessions")
                                     }
                                 }
+                            }
+                            Section("Konto") {
+                                NavigationLink("Usuwanie konta", value: Destination.deletion)
+                                    .disabled(host.isBusy).accessibilityIdentifier("gateway.auth.deletion")
                             }
                             if let error = host.errorMessage {
                                 Section { Text(error).accessibilityIdentifier("gateway.auth.error") }
@@ -92,7 +98,10 @@
                         } message: { action in
                             Text(action.message)
                         }
-                        .onChange(of: host.accountID) { _, _ in confirmation = nil }
+                        .onChange(of: host.authenticatedIdentity) { _, _ in
+                            confirmation = nil
+                            runtime.deletion.authenticationChanged()
+                        }
                         .onChange(of: host.canResetSessions) { _, canReset in
                             if !canReset, confirmation == .reset { confirmation = nil }
                         }
@@ -101,7 +110,11 @@
                     }
                 }
                 .navigationTitle("Logowanie — Development")
+                .navigationDestination(for: Destination.self) { _ in
+                    if let runtime { GatewayAccountDeletionView(host: runtime.deletion) }
+                }
             }
+            .background(GatewayWindowReader(anchor: anchor).frame(width: 0, height: 0))
             .overlay {
                 if scenePhase != .active {
                     Color(.systemBackground).overlay { Text("Echoes").font(.title.bold()) }.ignoresSafeArea()
@@ -110,12 +123,21 @@
             .task { await prepare() }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
-                    host?.suspend()
+                    runtime?.authentication.suspend()
+                    runtime?.deletion.suspend()
                 } else if phase == .active {
-                    Task { await host?.activate() }
+                    Task {
+                        if path.isEmpty { await runtime?.authentication.activate() }
+                    }
                 }
             }
-            .onDisappear { host?.stop() }
+            .onChange(of: path) { _, current in
+                if current.isEmpty { Task { await runtime?.authentication.activate() } }
+            }
+            .onDisappear {
+                runtime?.authentication.stop()
+                runtime?.deletion.stop()
+            }
         }
 
         private enum SessionConfirmation: Equatable {
@@ -132,27 +154,13 @@
             }
         }
 
+        private enum Destination: Hashable { case deletion }
         private func prepare() async {
-            guard host == nil, !configurationFailed else { return }
+            guard runtime == nil, !configurationFailed else { return }
             do {
-                let activation = try GatewayDevelopmentActivation(
-                    infoDictionary: Bundle.main.infoDictionary ?? [:],
-                    bundleIdentifier: Bundle.main.bundleIdentifier)
-                let api = try ActivatedGatewayAuthenticationAPI(
-                    api: GatewayHTTPClient(configuration: activation.configuration), activation: activation)
-                let session = GatewaySessionController(
-                    api: api,
-                    storage: KeychainGatewaySessionStorage(configuration: activation.configuration))
-                let authorizer = NativeAppleGatewayAuthorizer(anchor: { [weak anchor] in anchor?.window })
-                let model = GatewaySignInHost(
-                    api: api, session: session,
-                    cloudKitAccount: .init(
-                        source: NativeCloudKitAccountSource(configuration: activation.cloudKit)),
-                    apple: NativeAppleGatewayIdentitySource(), authorizer: authorizer,
-                    isEnabled: { activation.isActive() },
-                    clearDomainState: {})  // This isolated screen has no domain/profile cache.
-                host = model
-                if scenePhase == .active { await model.activate() }
+                let current = try GatewayDevelopmentRuntime(anchor: { [weak anchor] in anchor?.window })
+                runtime = current
+                if scenePhase == .active { await current.authentication.activate() }
             } catch {
                 configurationFailed = true
                 FileHandle.standardOutput.write(Data("ECHOES_GATEWAY_AUTH_CHECK state=unconfigured\n".utf8))
@@ -172,15 +180,13 @@
         }
     }
 
-    @MainActor private final class GatewayPresentationWindow { weak var window: UIWindow? }
-
     private struct GatewayAppleSignInControl: UIViewRepresentable {
         let anchor: GatewayPresentationWindow
         let enabled: Bool
         let action: @MainActor @Sendable () -> Void
         func makeCoordinator() -> Coordinator { Coordinator(parent: self) }
         func makeUIView(context: Context) -> WindowTrackingAppleControl {
-            let view = WindowTrackingAppleControl(anchor: anchor)
+            let view = WindowTrackingAppleControl()
             view.button.addTarget(
                 context.coordinator, action: #selector(Coordinator.handleSignInPress), for: .touchUpInside)
             return view
@@ -198,9 +204,7 @@
 
     private final class WindowTrackingAppleControl: UIView {
         let button = ASAuthorizationAppleIDButton(type: .signIn, style: .black)
-        private let anchor: GatewayPresentationWindow
-        init(anchor: GatewayPresentationWindow) {
-            self.anchor = anchor
+        init() {
             super.init(frame: .zero)
             button.translatesAutoresizingMaskIntoConstraints = false
             addSubview(button)
@@ -212,10 +216,6 @@
             ])
         }
         required init?(coder: NSCoder) { nil }
-        override func didMoveToWindow() {
-            super.didMoveToWindow()
-            anchor.window = window
-        }
     }
 
     #Preview("Nieaktywna konfiguracja") { GatewayAuthUnavailableView() }

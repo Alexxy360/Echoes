@@ -1,6 +1,6 @@
 # Weryfikacja migracji CloudKit
 
-Stan: 13 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została przełączona na CloudKit.**
+Stan: 15 listopada 2026. **Migracja nie jest odebrana i aplikacja nie została przełączona na CloudKit.**
 
 ## CK-01c — rzeczywista konfiguracja i próba prywatna
 
@@ -140,3 +140,7 @@ Próbę wyłączono, sekrety usunięto z aktywnej wersji, potwierdzono 503 bez t
 ## CK-02n — trwałe kroki natywnego usuwania
 
 125/125 Swift (27 nowych), model API/strefy i połączenie sterownika z NativePrivateProfileDatabase. Obejmuje restart, utracone odpowiedzi/zapisy, checkpointy i wyścigi odzyskiwania; nie zastępuje SDK CloudKit. Debug/Release skompilowane z projektem z Git; syntetyczny Keychain zaliczony w podpisanym ad-hoc hoście Debug symulatora po odrzuceniu wersji bez entitlement (-34018), bez konta/HTTP i bez deklaracji odbioru wizualnego. Natywny host/arkusz/UI, realne callbacki plików, retencja i provider/A-B nadal wymagane. [Kontrakt](TRWALY_BILET_USUWANIA.md), [raport](evidence/deletion-flow-local-tests.json).
+
+## CK-02o — host usuwania, lokalne pliki i kontrolny UI
+
+151/151 Swift (26 nowych), 9/9 XCTest UI (5 nowych i 4 demo) na iPhone 17 Pro/iOS Simulator 26.1. Natywna tożsamość, API i strefy są jawnie modelowane; test plików korzysta z własnych losowych katalogów tymczasowych. Testowano selektywny fence, późne logowanie/odnowienie, potwierdzenia, zdarzenia konta, wznowienie i błędy storage; UI obejmuje anulowanie/wykonanie alertu, własne checkpointy, unconfigured i Accessibility XXXL. Finalne zrzuty obejrzano. Debug ad-hoc i Release bez podpisywania skompilowane z projektem z Git; po nich zmieniono tylko komentarze w dwóch plikach i zaliczono strict lint. Release bez markerów kontrolnych/aktywacji. Nie ponawiano realnej próby Keychain CK-02n; bez prawdziwego Apple/CloudKit/Workers/A-B, danych użytkowników lub publikacji. Zwykły adapter nadal Firebase. [Kontrakt i nieudane wcześniejsze przebiegi](NATYWNE_USUWANIE_UI.md), [raport](evidence/deletion-host-local-tests.json).

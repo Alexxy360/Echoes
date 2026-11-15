@@ -477,3 +477,50 @@ private func makeClient(_ fake: HTTPFake) throws -> GatewayHTTPClient {
         try await makeClient(malformed).logout(token: GatewaySecret("synthetic-renew"))
     }
 }
+
+@Test func deletingAnOlderAccountCannotClearANewerOrDifferentNativeSession() async throws {
+    let f = try Fixture()
+    try await f.signIn()
+    let otherNative = try binding("B")
+    #expect(
+        try await f.controller.prepareForAccountDeletion(binding: otherNative, accountID: testAccount)
+            == false)
+    #expect(
+        try await f.controller.prepareForAccountDeletion(
+            binding: binding(), accountID: UUID().uuidString.lowercased()) == false)
+    #expect(try await f.controller.accessToken() == sessionPair().sessionToken)
+    #expect(await f.api.logoutTokens.isEmpty)
+    #expect(try await f.controller.prepareForAccountDeletion(binding: binding(), accountID: testAccount))
+    #expect(try f.storage.saved()?.state == .signedOut)
+    await #expect(throws: GatewayFailure.signInRequired) { try await f.controller.accessToken() }
+    #expect(await f.api.logoutTokens.isEmpty)
+}
+
+@Test func pendingRenewalRetainsItsAccountForSelectiveDeletionAndLateResultCannotReopenIt() async throws {
+    let f = try Fixture()
+    try await f.signIn()
+    f.clock.advance(50)
+    await f.api.setHoldRenewal()
+    let renewal = Task { try await f.controller.accessToken() }
+    try await waitUntil { await f.api.waitingForRenewal() }
+    #expect(try f.storage.saved()?.pendingAccountID == testAccount)
+    #expect(
+        try await f.controller.prepareForAccountDeletion(
+            binding: binding(), accountID: UUID().uuidString.lowercased()) == false)
+    #expect(try await f.controller.prepareForAccountDeletion(binding: binding(), accountID: testAccount))
+    await f.api.resumeRenewal()
+    await #expect(throws: GatewayFailure.superseded) { try await renewal.value }
+    #expect(try f.storage.saved()?.state == .signedOut)
+}
+
+@Test func deletionCanFenceAMatchingInFlightLoginBeforeItsPairIsIssuedLocally() async throws {
+    let f = try Fixture()
+    await f.api.setHoldLogin()
+    let login = Task { try await f.signIn() }
+    try await waitUntil { await f.api.waitingForLogin() }
+    #expect(try await f.controller.prepareForAccountDeletion(binding: binding(), accountID: nil))
+    await f.api.resumeLogin()
+    await #expect(throws: GatewayFailure.superseded) { try await login.value }
+    #expect(try f.storage.saved()?.state == .signedOut)
+    #expect(await f.api.logoutTokens.count == 1)
+}

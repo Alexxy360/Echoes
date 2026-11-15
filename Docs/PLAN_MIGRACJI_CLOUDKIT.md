@@ -1,6 +1,6 @@
 # Plan migracji Echoes do CloudKit
 
-Aktualizacja: 14 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01/CK-02 w realizacji; zarejestrowano App ID i kontener, skonfigurowano podpisany Debug oraz wykonano rzeczywisty test prywatnej bazy jednego konta. Zwykły klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu Production ani migracji danych użytkowników.
+Aktualizacja: 15 listopada 2026. Kierunek wybrany przez właściciela: CloudKit. Status: CK-01/CK-02 w realizacji; zarejestrowano App ID i kontener, skonfigurowano podpisany Debug oraz wykonano rzeczywisty test prywatnej bazy jednego konta. Zwykły klient nadal korzysta z adaptera Firebase. Nie wdrożono schematu Production ani migracji danych użytkowników.
 
 ## Cel i zakres
 
@@ -72,6 +72,8 @@ Postęp CK-02l: świeży reset utraconych sesji po limicie, osobny purpose/HTTP,
 Postęp CK-02m: odzyskiwanie istniejącego zadania świeżym purpose Apple, rotacja wąskiego biletu i autorytatywne accountID statusu. Kolejność chroni przed starymi/równoległymi dowodami; receipt nie zmienia nowego konta. Dodano natywny kontrakt HTTP/bilet i aktywację bez włączania usług. 196/196 Node (16 nowych), 98/98 Swift (8 nowych), kompilacje Debug/Release. Dalej CK-02n: trwały bilet Keychain/sterownik/arkusz oraz połączenie prywatnego cleanera i ACK; retencja guarda i realny odbiór nadal wymagane. [Zakres](ODZYSKIWANIE_USUWANIA_KONTA.md).
 
 Postęp CK-02n: oddzielny trwały dziennik Keychain, zapis przed dispatch, natywny sterownik bounded private cleanup i własnego ACK. Przestrzeń właściciela, checkpointy po restarcie i attemptID odcinają spóźnione wyniki/rotacje; NativePrivateProfileDatabase jest rzeczywistą zależnością cleanera, bez fake fallback. 125/125 testy Swift (27 nowych), kontrola Keychain w hoście Debug symulatora i kompilacje Debug/Release. Nadal trzeba podłączyć natywny host/arkusz/usuwanie w UI oraz realne callbacki AppServices, retencję lokalnych receipts/prywatnego guarda i legacy; odbiór provider/A-B pozostaje otwarty. [Kontrakt i dowody](TRWALY_BILET_USUWANIA.md).
+
+Postęp CK-02o: natywny host usuwania i kontrolny ekran Debug, świeże potwierdzenie Apple oraz wznowienie ważnym biletem. Selektywny trwały fence zachowuje inne/nowsze konto; rzeczywisty scoped cache ma ograniczone pliki, lease i bezpieczne czyszczenie. Brak aktywacji nie uruchamia podglądu. 151/151 Swift (26 nowych), 9/9 UI (5 nowych), Debug/Release i przegląd zrzutów. Pełne AppServices/profil/serwerowy adapter oraz retencja i provider/A-B nadal wymagane; zwykła aplikacja pozostaje na Firebase. Następnie: usunąć pozostałe luki retencji/prywatnych danych i zintegrować profile/zdjęcia oraz adapter społecznościowy, przed przygotowaną konfiguracją i rzeczywistą próbą. [Zakres i granice](NATYWNE_USUWANIE_UI.md).
 
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 

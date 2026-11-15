@@ -92,6 +92,7 @@ public struct GatewayDeletionProgress: Equatable, Sendable {
     public let accountID: String?
     public let status: GatewayDeletionStatus?
     public let needsFreshProof: Bool
+    public let canRetryInitialRequest: Bool
     public let privateContentDeleted: Bool
     public let localDataDeleted: Bool
     public let ownAcknowledgement: Bool
@@ -115,5 +116,90 @@ extension NativePrivateProfileDatabase: GatewayPrivateAccountCleanup {
     ) async throws -> PrivateCleanupStep {
         try await eraseAccountContentStep(
             scope: scope, deletionID: deletionID, cursor: cursor, authorizeDeletion: authorizeDeletion)
+    }
+}
+
+struct GatewayDeletionJournalCodec {
+    let origin: String
+    let configuration: CloudKitConfiguration
+    let storage: any GatewayDeletionStorage
+    func read() throws -> StoredGatewayDeletionJournal {
+        do {
+            guard let bytes = try storage.read() else {
+                return .init(
+                    version: 1, origin: origin, container: configuration.containerIdentifier,
+                    environment: configuration.environment.rawValue, requests: [])
+            }
+            guard bytes.count <= 65_536 else { throw GatewayFailure.storageUnavailable }
+            let journal = try JSONDecoder().decode(StoredGatewayDeletionJournal.self, from: bytes)
+            try validate(journal)
+            return journal
+        } catch { throw GatewayFailure.storageUnavailable }
+    }
+    func write(_ journal: StoredGatewayDeletionJournal) throws {
+        do {
+            try validate(journal)
+            let bytes = try JSONEncoder().encode(journal)
+            guard bytes.count <= 65_536 else { throw GatewayFailure.storageUnavailable }
+            try storage.write(bytes)
+        } catch let error as GatewayDeletionFailure { throw error } catch {
+            throw GatewayFailure.storageUnavailable
+        }
+    }
+    func validate(_ journal: StoredGatewayDeletionJournal) throws {
+        guard journal.version == 1, journal.origin == origin,
+            journal.container == configuration.containerIdentifier,
+            journal.environment == configuration.environment.rawValue, journal.requests.count <= 8,
+            Set(journal.requests.map(\.journalID)).count == journal.requests.count
+        else { throw GatewayFailure.storageUnavailable }
+        for entry in journal.requests {
+            guard gatewayUUID(entry.journalID), gatewayUUID(entry.attemptID),
+                !entry.binding.appleUserID.isEmpty,
+                entry.binding.appleUserID.utf8.count <= 512,
+                entry.binding.cloudKitAccountHash.count == 64,
+                entry.binding.cloudKitAccountHash.utf8.allSatisfy({
+                    (48...57).contains($0) || (97...102).contains($0)
+                }),
+                entry.accountID == nil || gatewayUUID(entry.accountID!),
+                entry.phase != .requestPending || (entry.ticket != nil && entry.status == nil),
+                entry.phase != .accepted
+                    || (entry.ticket != nil && entry.status != nil && entry.accountID != nil),
+                entry.status == nil || (entry.ticket != nil && entry.accountID != nil),
+                !entry.contentDeleted || (entry.status != nil && entry.cursor == nil),
+                !entry.localDataDeleted || entry.contentDeleted,
+                !entry.ownAcknowledgement
+                    || (entry.localDataDeleted && entry.status?.privateData == .deviceAcknowledged)
+            else { throw GatewayFailure.storageUnavailable }
+            if let status = entry.status {
+                try status.validate(deletionID: entry.ticket?.deletionID, accountID: entry.accountID)
+            }
+            if let cursor = entry.cursor {
+                guard entry.status != nil, cursor.deletionID == entry.ticket?.deletionID,
+                    cursor.scopeDigest.count == 64,
+                    cursor.scopeDigest.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
+                    !cursor.token.isEmpty, cursor.token.count <= 16_384
+                else { throw GatewayFailure.storageUnavailable }
+            }
+        }
+    }
+}
+
+extension GatewayDeletionController {
+    /// Protected local hints only. The native host still checks iCloud, and each operation needs
+    /// the original server ticket or fresh Apple proof. Never display/log the raw Apple user ID.
+    public static func resumeBindings(
+        configuration: CloudKitConfiguration, origin: String,
+        storage: any GatewayDeletionStorage, cloudKitRecordName: String
+    ) throws -> [GatewayIdentityBinding] {
+        let hash = try GatewayIdentityBinding(
+            appleUserID: "local-resume-hint", cloudKitRecordName: cloudKitRecordName
+        ).cloudKitAccountHash
+        let journal = try GatewayDeletionJournalCodec(
+            origin: origin, configuration: configuration, storage: storage
+        ).read()
+        return journal.requests.filter { $0.binding.cloudKitAccountHash == hash }.reduce(into: []) {
+            result, entry in
+            if !result.contains(entry.binding) { result.append(entry.binding) }
+        }
     }
 }

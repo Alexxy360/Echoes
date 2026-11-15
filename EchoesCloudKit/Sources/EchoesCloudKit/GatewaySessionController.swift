@@ -92,6 +92,7 @@ public actor GatewaySessionController {
         try challenge.validate(now: now())
         try clear(to: .signingIn)
         let operation = revision
+        binding = verifiedBinding
         do {
             let result = try await api.login(
                 challengeID: challenge.challengeID,
@@ -160,6 +161,20 @@ public actor GatewaySessionController {
         }
     }
 
+    /// Durable LOCAL fence for deletion. No remote logout and no erasure of a newer account's pair.
+    /// A legacy uncertain renewal has no reusable pair; fencing its matching native binding is safe.
+    public func prepareForAccountDeletion(
+        binding expectedBinding: GatewayIdentityBinding, accountID expectedID: String?
+    ) throws -> Bool {
+        if let expectedID, !gatewayUUID(expectedID) { throw GatewayFailure.invalidInput }
+        let saved = try read()
+        guard (binding ?? saved?.binding) == expectedBinding else { return false }
+        let currentID = pair?.accountID ?? saved?.pair?.accountID ?? saved?.pendingAccountID
+        if let expectedID, let currentID, expectedID != currentID { return false }
+        try clear(to: .signedOut)
+        return true
+    }
+
     /// Call before replacing/clearing account-scoped UI and caches. Never awaits network.
     public func invalidateForAccountChange() throws { try clear(to: .signInRequired) }
 
@@ -184,7 +199,8 @@ public actor GatewaySessionController {
         let operation = revision
         // The old proof is removed from durable storage BEFORE dispatch. A process crash or lost
         // response can never cause restore to send it a second time.
-        try persist(state: .renewalPending, binding: currentBinding, pair: nil)
+        try persist(
+            state: .renewalPending, binding: currentBinding, pair: nil, pendingAccountID: previous.accountID)
         state = .renewing(accountID: previous.accountID)
         let task = Task {
             try await self.finishRotation(previous: previous, binding: currentBinding, operation: operation)
@@ -242,7 +258,10 @@ public actor GatewaySessionController {
             guard let bytes = try storage.read() else { return nil }
             guard bytes.count <= 8_192 else { throw GatewayFailure.storageUnavailable }
             let saved = try JSONDecoder().decode(StoredGatewaySession.self, from: bytes)
-            guard saved.version == 1, saved.origin == api.origin else {
+            guard saved.version == 1, saved.origin == api.origin,
+                saved.pendingAccountID == nil
+                    || (saved.state == .renewalPending && gatewayUUID(saved.pendingAccountID!))
+            else {
                 throw GatewayFailure.storageUnavailable
             }
             return saved
@@ -252,13 +271,14 @@ public actor GatewaySessionController {
         }
     }
     private func persist(
-        state: StoredGatewaySession.State, binding: GatewayIdentityBinding?, pair: GatewaySessionPair?
+        state: StoredGatewaySession.State, binding: GatewayIdentityBinding?, pair: GatewaySessionPair?,
+        pendingAccountID: String? = nil
     ) throws {
         do {
             let bytes = try JSONEncoder().encode(
                 StoredGatewaySession(
                     version: 1, origin: api.origin,
-                    binding: binding, state: state, pair: pair))
+                    binding: binding, state: state, pair: pair, pendingAccountID: pendingAccountID))
             try storage.write(bytes)
         } catch {
             self.state = .storageBlocked

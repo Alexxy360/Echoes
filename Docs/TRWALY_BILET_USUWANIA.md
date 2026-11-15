@@ -2,6 +2,8 @@
 
 Stan z 14 listopada 2026: lokalna implementacja sterownika, dziennika Keychain i połączenia z cleanerem CK-03b. Nie podłączono jeszcze arkusza usuwania ani zwykłego UI. Nie uruchomiono usług i nie usuwano danych użytkowników. Zwykła aplikacja nadal korzysta z Firebase.
 
+Aktualizacja CK-02o: dodano host, potwierdzenie, selektywne zamknięcie sesji i kontrolny ekran Debug z konkretnym cleanerem cache. Historyczny opis poniżej zachowuje stan odbioru CK-02n. Zwykły interfejs nadal Firebase; [aktualny zakres i testy](NATYWNE_USUWANIE_UI.md).
+
 ## Trwałość i przestrzeń
 
 `KeychainGatewayDeletionStorage` jest oddzielny od magazynu sesji. Wylogowanie/tombstone sesji nie kasuje biletu. Wpis jest ograniczony do origin, kontenera i środowiska; używa Data Protection Keychain, WhenUnlockedThisDeviceOnly, synchronizable=false, bez zapasu w UserDefaults/pliku. Przy utracie urządzenia bilet wymaga świeżego odzyskania przez Apple; nie przenosi się przez synchronizację iCloud.

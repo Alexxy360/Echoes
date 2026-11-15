@@ -71,7 +71,10 @@ import Observation
         }
     }
     /// Reuses the same unconfirmed ticket after a lost initial response; persists BEFORE dispatch.
-    public func request(challenge: GatewayChallenge, proof: AppleGatewayProof, expectedAccountID: String?)
+    public func request(
+        challenge: GatewayChallenge, proof: AppleGatewayProof, expectedAccountID: String?,
+        journalID: String? = nil
+    )
         async throws -> GatewayDeletionProgress
     {
         try await work { operation in
@@ -80,9 +83,18 @@ import Observation
             let pending = journal.requests.filter {
                 $0.binding == self.binding && !self.summary($0).completed
             }
-            guard pending.count <= 1 else { throw GatewayFailure.operationInProgress }
             let id: String
-            if let previous = pending.first {
+            if let journalID {
+                let previous = try self.entry(journalID)
+                guard previous.ticket != nil, previous.status == nil, previous.accountID == expectedAccountID
+                else { throw GatewayDeletionFailure.freshProofRequired }
+                id = journalID
+                let index = journal.requests.firstIndex(where: { $0.journalID == id })!
+                journal.requests[index].phase = .requestPending
+                journal.requests[index].attemptID = UUID().uuidString.lowercased()
+                try self.write(journal)
+            } else if let previous = pending.first {
+                guard pending.count == 1 else { throw GatewayFailure.operationInProgress }
                 guard previous.phase == .requestPending, previous.accountID == expectedAccountID else {
                     throw GatewayDeletionFailure.freshProofRequired
                 }
@@ -143,7 +155,7 @@ import Observation
             }
             try self.write(journal)
             let attemptID = journal.requests.first(where: { $0.journalID == id })!.attemptID
-            try await self.fence(operation, accountID: expectedAccountID)
+            if let expectedAccountID { try await self.fence(operation, accountID: expectedAccountID) }
             let response = try await self.api.recoverDeletion(proof: verified)
             try self.check(operation)
             try response.status.validate(deletionID: response.ticket.deletionID, accountID: expectedAccountID)
@@ -166,6 +178,7 @@ import Observation
                 journal.requests.removeAll { $0.journalID == id || $0.journalID == old.journalID }
                 journal.requests.append(merged)
                 try self.write(journal)
+                try await self.fence(operation, accountID: response.status.accountID)
                 return try self.publish(old.journalID)
             }
             let old = journal.requests[index]
@@ -179,6 +192,7 @@ import Observation
             journal.requests[index].accountID = response.status.accountID
             journal.requests[index].status = response.status
             try self.write(journal)
+            try await self.fence(operation, accountID: response.status.accountID)
             return try self.publish(id)
         }
     }
@@ -398,6 +412,7 @@ import Observation
         .init(
             journalID: entry.journalID, accountID: entry.accountID, status: entry.status,
             needsFreshProof: entry.phase == .recoveryPending,
+            canRetryInitialRequest: entry.ticket != nil && entry.status == nil,
             privateContentDeleted: entry.contentDeleted, localDataDeleted: entry.localDataDeleted,
             ownAcknowledgement: entry.ownAcknowledgement)
     }
@@ -448,63 +463,10 @@ import Observation
             throw GatewayDeletionFailure.freshProofRequired
         }
     }
-    private func read() throws -> StoredGatewayDeletionJournal {
-        do {
-            guard let bytes = try storage.read() else {
-                return .init(
-                    version: 1, origin: api.origin, container: configuration.containerIdentifier,
-                    environment: configuration.environment.rawValue, requests: [])
-            }
-            guard bytes.count <= 65_536 else { throw GatewayFailure.storageUnavailable }
-            let journal = try JSONDecoder().decode(StoredGatewayDeletionJournal.self, from: bytes)
-            try validate(journal)
-            return journal
-        } catch { throw GatewayFailure.storageUnavailable }
+    private var journalCodec: GatewayDeletionJournalCodec {
+        .init(origin: api.origin, configuration: configuration, storage: storage)
     }
-    private func write(_ journal: StoredGatewayDeletionJournal) throws {
-        do {
-            try validate(journal)
-            let bytes = try JSONEncoder().encode(journal)
-            guard bytes.count <= 65_536 else { throw GatewayFailure.storageUnavailable }
-            try storage.write(bytes)
-        } catch let error as GatewayDeletionFailure { throw error } catch {
-            throw GatewayFailure.storageUnavailable
-        }
-    }
-    private func validate(_ journal: StoredGatewayDeletionJournal) throws {
-        guard journal.version == 1, journal.origin == api.origin,
-            journal.container == configuration.containerIdentifier,
-            journal.environment == configuration.environment.rawValue, journal.requests.count <= 8,
-            Set(journal.requests.map(\.journalID)).count == journal.requests.count
-        else { throw GatewayFailure.storageUnavailable }
-        for entry in journal.requests {
-            guard gatewayUUID(entry.journalID), gatewayUUID(entry.attemptID),
-                !entry.binding.appleUserID.isEmpty,
-                entry.binding.appleUserID.utf8.count <= 512,
-                entry.binding.cloudKitAccountHash.count == 64,
-                entry.binding.cloudKitAccountHash.utf8.allSatisfy({
-                    (48...57).contains($0) || (97...102).contains($0)
-                }),
-                entry.accountID == nil || gatewayUUID(entry.accountID!),
-                entry.phase != .requestPending || (entry.ticket != nil && entry.status == nil),
-                entry.phase != .accepted
-                    || (entry.ticket != nil && entry.status != nil && entry.accountID != nil),
-                entry.status == nil || (entry.ticket != nil && entry.accountID != nil),
-                !entry.contentDeleted || (entry.status != nil && entry.cursor == nil),
-                !entry.localDataDeleted || entry.contentDeleted,
-                !entry.ownAcknowledgement
-                    || (entry.localDataDeleted && entry.status?.privateData == .deviceAcknowledged)
-            else { throw GatewayFailure.storageUnavailable }
-            if let status = entry.status {
-                try status.validate(deletionID: entry.ticket?.deletionID, accountID: entry.accountID)
-            }
-            if let cursor = entry.cursor {
-                guard entry.status != nil, cursor.deletionID == entry.ticket?.deletionID,
-                    cursor.scopeDigest.count == 64,
-                    cursor.scopeDigest.utf8.allSatisfy({ (48...57).contains($0) || (97...102).contains($0) }),
-                    !cursor.token.isEmpty, cursor.token.count <= 16_384
-                else { throw GatewayFailure.storageUnavailable }
-            }
-        }
-    }
+    private func read() throws -> StoredGatewayDeletionJournal { try journalCodec.read() }
+    private func write(_ value: StoredGatewayDeletionJournal) throws { try journalCodec.write(value) }
+
 }
