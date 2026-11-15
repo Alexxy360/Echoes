@@ -73,3 +73,7 @@ To nie jest próba workerd/Cloudflare: import cloudflare:workers, prawdziwy requ
 CK-02j: przygotowano natywny klient auth/Keychain i helper Apple, 44 testy pakietu oraz lokalną kontrolę systemowego storage w aplikacji Debug. Nie prezentuje jeszcze logowania ani nie łączy się z nowym wdrożeniem. [Weryfikacja i pozostałe warunki](NATYWNA_SESJA_GATEWAY.md).
 
 CK-02l: dodano świeży reset po limicie sesji, barierę kolejności/migrację oraz natywny przepływ potwierdzenia. Reset jest cięższą trasą z body do 16 KiB. Aktualnie 180 testów gateway i 72 Swift; bez wdrożenia lub prawdziwego Apple login. [Protokół resetu i granice](ODZYSKIWANIE_SESJI_GATEWAY.md).
+
+## CK-04a — repozytorium rekordów i rzeczywisty transport
+
+Przy PUBLIC_RECORDS_ENABLED=1 runtime tworzy CloudKitPublicClient/PublicRecordRegistry/CloudKitPublicRepository i używa go jako erasure adaptera zamiast wstrzykniętego modelu. Oddzielny klucz CloudKit, włączone usuwanie i aktualna aktywacja są obowiązkowe; brak/reużycie klucza zamyka konfigurację, także przy innym formatowaniu PEM. Domyślne flagi pozostają 0 i brak nowych endpointów danych. 217/217 Node 22/24. Odtworzenie rejestru, retencja, koordynator HTTP/obszar/moderacja i rzeczywisty runtime nadal przed odbiorem. [Zakres](SERWEROWY_ADAPTER_DANYCH.md).

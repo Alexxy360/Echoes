@@ -1,5 +1,6 @@
 import { AppleClientSecret, AppleOAuthClient } from "./apple-oauth.mjs";
 import { ApplePublicKeySource, base64URLBytes } from "./apple-public-keys.mjs";
+import { createPublicKey } from "node:crypto";
 import { AppleIdentityTokenVerifier } from "./apple-identity.mjs";
 import { AuthenticationState } from "./authentication-state.mjs";
 import { AppleLoginCoordinator } from "./apple-login.mjs";
@@ -12,18 +13,24 @@ import { AccountDeletionCoordinator, AccountDeletionProcessor } from "./account-
 import { GatewayLimits, edgeBudgetHash } from "./gateway-limits.mjs";
 import { GatewayMaintenance } from "./gateway-maintenance.mjs";
 import { createGatewayHTTPHandler, inspectGatewayRequest, gatewayFailure, gatewayJSON } from "./gateway-http.mjs";
+import { CloudKitPublicClient } from "./cloudkit-public-client.mjs";
+import { PublicRecordRegistry } from "./public-record-registry.mjs";
+import { CloudKitPublicRepository } from "./public-record-repository.mjs";
 
 export const authorityName = "echoes-auth-authority-development-v1";
 export function activeGatewayConfiguration(env, now = Date.now()) {
   if (!Number.isSafeInteger(now) || now < 0 || env.GATEWAY_ENABLED !== "1" || env.GATEWAY_ENVIRONMENT !== "development" ||
       env.CLOUDKIT_CONTAINER !== "iCloud.mpvEcho.Echo" || env.CLOUDKIT_ENVIRONMENT !== "development" ||
       !["0", "1"].includes(env.ACCOUNT_DELETION_ENABLED) ||
+      !["0", "1"].includes(env.PUBLIC_RECORDS_ENABLED ?? "0") ||
+      env.PUBLIC_RECORDS_ENABLED === "1" && env.ACCOUNT_DELETION_ENABLED !== "1" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(env.GATEWAY_EXPIRES_AT ?? "")) return null;
   const deadline = Date.parse(env.GATEWAY_EXPIRES_AT);
   if (!Number.isSafeInteger(deadline) || deadline <= now || deadline > now + 7 * 86400000) return null;
   const canonical = new Date(deadline).toISOString();
   if (env.GATEWAY_EXPIRES_AT !== canonical && env.GATEWAY_EXPIRES_AT !== canonical.replace(".000Z", "Z")) return null;
-  return Object.freeze({ deadline, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1" });
+  return Object.freeze({ deadline, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
+    publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1" });
 }
 function keyMap(json) {
   if (typeof json !== "string" || json.length > 2048) throw new Error();
@@ -36,7 +43,9 @@ function keyMap(json) {
 export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImplementation = (request, options) => fetch(request, options), erasePublicDataBatch } = {}) {
   try {
     const config = activeGatewayConfiguration(env, clock());
-    if (!config || (config.deletionEnabled && typeof erasePublicDataBatch !== "function")) throw new Error();
+    if (!config || (config.deletionEnabled && !config.publicRecordsEnabled && typeof erasePublicDataBatch !== "function")) throw new Error();
+    if (config.publicRecordsEnabled && createPublicKey(env.CLOUDKIT_PRIVATE_KEY).export({ type: "spki", format: "der" })
+      .equals(createPublicKey(env.APPLE_SIGNIN_PRIVATE_KEY).export({ type: "spki", format: "der" }))) throw new Error();
     const refreshKeys = keyMap(env.REFRESH_KEYS_JSON), renewalKeys = keyMap(env.RENEWAL_KEYS_JSON);
     const allSecrets = [...Object.values(refreshKeys), ...Object.values(renewalKeys), env.REQUEST_BUDGET_KEY];
     if (new Set(allSecrets).size !== allSecrets.length || allSecrets.some(value => base64URLBytes(value, 32).length !== 32) ||
@@ -51,6 +60,11 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: guardedFetch });
     const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: guardedFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
+    const publicRecords = config.publicRecordsEnabled ? new CloudKitPublicRepository({
+      authentication, clock, registry: new PublicRecordRegistry(storage, { clock }),
+      client: new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
+        keyID: env.CLOUDKIT_KEY_ID, privateKeyPEM: env.CLOUDKIT_PRIVATE_KEY, clock, fetchImplementation: guardedFetch,
+        isEnabled: () => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true }) }) : undefined;
     const limits = new GatewayLimits(storage, { clock });
     const deletions = new AccountDeletionState(storage, { clock });
     const maintenance = new GatewayMaintenance(storage, { clock, limits, deletions });
@@ -60,11 +74,12 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const sessionReset = new SessionResetCoordinator({ state: authentication, verifier });
     const deletionCoordinator = new AccountDeletionCoordinator({ authenticationState: authentication, deletionState: deletions, verifier });
     const processor = config.deletionEnabled ? new AccountDeletionProcessor({ deletionState: deletions, credentialVault,
-      appleClient: apple, erasePublicDataBatch }) : undefined;
+      appleClient: apple, erasePublicDataBatch: publicRecords
+        ? context => publicRecords.erasePublicDataBatch(context) : erasePublicDataBatch }) : undefined;
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(),
       isEnabled: () => activeGatewayConfiguration(env, clock()) !== null });
-    return Object.freeze({ handle, maintenance, processor });
+    return Object.freeze({ handle, maintenance, processor, publicRecords });
   } catch { throw new Error("Gateway configuration is unavailable."); }
 }
 

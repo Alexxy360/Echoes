@@ -7,6 +7,7 @@ import { createGatewayRuntime, createGatewayLocalMaintenance, activeGatewayConfi
   forwardGatewayRequest, handleAuthorityRequest } from "../src/gateway-runtime.mjs";
 import { createGatewayHTTPHandler } from "../src/gateway-http.mjs";
 import { fixture, hash, start, syntheticCode } from "./support/authentication-fixture.mjs";
+import { PublicCloudKitModel, syntheticPublicKeyConfiguration, profileInput } from "./support/public-record-fixture.mjs";
 
 function setup({ deletionEnabled = true, ...options } = {}) {
   const refresh = randomBytes(32).toString("base64url"), renewal = randomBytes(32).toString("base64url");
@@ -224,6 +225,38 @@ test("deletion cannot be enabled without the real erasure dependency and disable
     f.env.ACCOUNT_DELETION_ENABLED = "1";
     assert.throws(() => createGatewayRuntime(f.storage, f.env, { clock: f.clock }), /Gateway configuration is unavailable/);
     assert.equal(f.db.prepare("SELECT count(*) AS count FROM auth_account_deletions_v1").get().count, 0);
+  } finally { f.close(); }
+});
+
+test("public repository is composed only by explicit activation, with its own key and the real erasure processor", async () => {
+  const f = setup();
+  try {
+    assert.equal(f.runtime.publicRecords, undefined);
+    for (const changes of [{ PUBLIC_RECORDS_ENABLED: "yes" }, { PUBLIC_RECORDS_ENABLED: "1", ACCOUNT_DELETION_ENABLED: "0" },
+      { PUBLIC_RECORDS_ENABLED: "1" }, { PUBLIC_RECORDS_ENABLED: "1", CLOUDKIT_KEY_ID: "test", CLOUDKIT_PRIVATE_KEY: f.env.APPLE_SIGNIN_PRIVATE_KEY },
+      { PUBLIC_RECORDS_ENABLED: "1", CLOUDKIT_KEY_ID: "test", CLOUDKIT_PRIVATE_KEY: f.env.APPLE_SIGNIN_PRIVATE_KEY + "\n" }]) {
+      assert.throws(() => createGatewayRuntime(f.storage, { ...f.env, ...changes }, f.dependencies), /Gateway configuration is unavailable/);
+    }
+    const model = new PublicCloudKitModel();
+    const env = { ...f.env, PUBLIC_RECORDS_ENABLED: "1", ...syntheticPublicKeyConfiguration() };
+    const fetchImplementation = (request, options) => request.url.startsWith("https://api.apple-cloudkit.com/")
+      ? model.fetch(request, options) : f.dependencies.fetchImplementation(request, options);
+    const runtime = createGatewayRuntime(f.storage, env, { clock: f.clock, fetchImplementation });
+    const session = await f.session();
+    const saved = await runtime.publicRecords.write(profileInput(session));
+    const challenge = await f.state.issueChallenge(hash(randomUUID()), { purpose: "account_deletion" });
+    const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");
+    const response = await runtime.handle(f.request("/v1/account/deletion", { challengeID: challenge.challengeID,
+      identityToken: f.token(challenge), deletionID, expectedAccountID: session.accountID }, statusToken), hash("test-public-budget"));
+    assert.equal(response.status, 202);
+    await runtime.processor.step(deletionID);
+    assert.equal(model.records.get(saved.recordName).fields.erased.value, 1);
+    assert.equal(model.records.get(saved.recordName).fields.name, undefined);
+    assert.equal(f.erased.length, 0); // The old injected fixture eraser was not used.
+    const other = await f.session("another.user"), calls = model.requests.length;
+    env.PUBLIC_RECORDS_ENABLED = "0";
+    await assert.rejects(() => runtime.publicRecords.write(profileInput(other)));
+    assert.equal(model.requests.length, calls);
   } finally { f.close(); }
 });
 

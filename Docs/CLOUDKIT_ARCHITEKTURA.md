@@ -59,3 +59,7 @@ Przygotowano `EchoesCloudKit` jako oddzielny pakiet i połączono go z podpisany
 - [Konto iCloud i kontener](https://developer.apple.com/documentation/cloudkit/ckcontainer)
 - [Typy pól i metadane rekordów](https://developer.apple.com/documentation/cloudkit/ckrecord)
 - [Obsługa throttlingu](https://developer.apple.com/documentation/technotes/tn3162-understanding-cloudkit-throttles)
+
+## CK-04a — lokalna implementacja zaufanego magazynu
+
+CloudKitPublicRepository i rejestr jednej authority obejmują EchoesPublicProfileV1, EchoesPresenceV1, EchoesLocalMessageV1, EchoesBlockV1 i EchoesReportV1. Public database wymaga dla tych typów wyłącznie praw tożsamości serwisowej, zwłaszcza dla blokad/zgłoszeń; ról jeszcze nie wdrożono. Zapisy są związane z serwerowym UUID sesji, rejestrowane przed dispatch i warunkowe. Czyszczenie bazuje na dokładnych ID oraz zachowanych minimalnych barierach, bez polegania na pustym indeksie. PUBLIC_RECORDS_ENABLED=0. Nie jest to jeszcze klient społecznościowy ani dowód kompletności po odtworzeniu SQLite; checkpoint/epoka, retencja i realny odbiór są obowiązkowe przed aktywacją. [Protokół, dowody i dalsze wymagania](SERWEROWY_ADAPTER_DANYCH.md).

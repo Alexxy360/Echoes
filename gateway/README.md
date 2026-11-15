@@ -2,7 +2,7 @@
 
 Kandydat do hostingu: Cloudflare Workers Free, po sprawdzeniu limitów. [Projekt i kryteria odbioru](../Docs/CLOUDKIT_POSREDNIK_FREE.md).
 
-Obecny kod zawiera serwerowe podpisywanie i ograniczoną próbę CloudKit Development oraz domyślnie wyłączony prototyp HTTP Workers z rezerwacją SQLite. Kod diagnostyczny i SQLite wdrożono w Workers Free po wyraźnej zgodzie. Kontrole HTTP i rzeczywista syntetyczna próba S2S z hostingu przeszły po poprawkach redirect i formatu klucza (CK-01j/CK-01k). Nie ma jeszcze logowania użytkowników. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów tożsamości serwerowej.
+Obecny kod zawiera serwerowe podpisywanie i ograniczoną próbę CloudKit Development oraz domyślnie wyłączony prototyp HTTP Workers z rezerwacją SQLite. Kod diagnostyczny i SQLite wdrożono w Workers Free po wyraźnej zgodzie. Kontrole HTTP i rzeczywista syntetyczna próba S2S z hostingu przeszły po poprawkach redirect i formatu klucza (CK-01j/CK-01k). Nie wdrożono jeszcze logowania użytkowników. Nie jest jeszcze zamiennikiem backendu aplikacji. Nie należy wystawiać funkcji request() jako proxy ani udostępniać klientowi podpisów tożsamości serwerowej.
 
 Testy na Node 22 (bez instalowania zależności):
 
@@ -10,7 +10,7 @@ Testy na Node 22 (bez instalowania zależności):
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 196 testów lokalnych (27 diagnostyki, 31 HTTP/limitów/alarmu, 24 usuwania, 12 odzyskiwania usuwania, 13 resetu sesji, 16 verifiera/JWKS, 53 stanu/logowania/odnowienia SQLite, 4 integralności renewal, 10 OAuth, 6 szyfrowania credential), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska, nie rejestrują klucza w Apple i nie łączą się z usługami Apple/Cloudflare. Regresja przekierowań używa wyłącznie serwerów na 127.0.0.1. Pakiet ma obecnie 217 testów lokalnych (27 diagnostyki, 32 HTTP/limitów/alarmu, 24 usuwania, 12 odzyskiwania usuwania, 13 resetu sesji, 16 verifiera/JWKS, 53 stanu/logowania/odnowienia SQLite, 4 integralności renewal, 10 OAuth, 6 szyfrowania credential, 20 rejestru/transportu danych publicznych), w tym kontrole HTTP i rezerwacji SQLite. Nie potwierdzają runtime ani 10 ms CPU Cloudflare; osobna próba lokalnego S2S została przyjęta przez Apple.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -73,3 +73,7 @@ GatewayLimits trwale ogranicza własne żądania/operacje próby. GatewayMainten
 CK-02l: SessionResetCoordinator, nowy purpose i /v1/auth/session-reset pozwalają świeżo potwierdzonemu właścicielowi wylogować utracone granty bez tworzenia sesji. Trwała kolejność/fence obejmuje też logout-all i starszy magazyn; known-full limit jest odrzucany przed code exchange. [Kontrakt, testy i ograniczenia](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
 
 CK-02m: osobne purpose i /v1/account/deletion/recover odzyskują to samo zadanie po utracie biletu bez wydawania sesji. Transakcyjna rotacja/recovery_order, migracja i accountID w statusie; brak zmian usług. [Kontrakt i testy](../Docs/ODZYSKIWANIE_USUWANIA_KONTA.md).
+
+## Serwerowe rekordy społecznościowe (CK-04a)
+
+Wersjonowany transport CloudKit Development/public, metadata-only rejestr z trwałymi licznikami, create/replace z tagiem, odzyskanie nieznanego wyniku oraz erasure przez dokładne ID/barierę. PUBLIC_RECORDS_ENABLED jest osobnym, wyłączonym domyślnie przełącznikiem i wymaga własnego klucza oraz włączonego usuwania. Brak endpointów danych oraz zmian chmury. 217/217 Node 22.23.5 i 24.22.1. Przed aktywacją trzeba dodać ochronę cofnięcia/utraty rejestru i retencję oraz odebrać role/Workers/A-B. [Kontrakt i kolejne kroki](../Docs/SERWEROWY_ADAPTER_DANYCH.md).

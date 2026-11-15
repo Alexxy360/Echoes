@@ -1,0 +1,131 @@
+{
+  "stage": "CK-04a",
+  "observedAt": "2026-11-15T13:01:28.869398+01:00",
+  "baselineCommit": "df04e9440dd8a0d95ac5522fa43100a08356458e",
+  "tests": {
+    "Node22.23.5": {
+      "passed": 217,
+      "failed": 0
+    },
+    "Node24.22.1": {
+      "passed": 217,
+      "failed": 0
+    },
+    "newTests": 21,
+    "newPublicRecordTests": 20,
+    "newRuntimeHTTPTests": 1,
+    "scope": "actual local SQLite and crypto/independent signature verify; synthetic CloudKit and Apple; existing loopback"
+  },
+  "node22Provenance": {
+    "archive": "https://nodejs.org/dist/v22.23.5/node-v22.23.5-darwin-arm64.tar.gz",
+    "manifest": "https://nodejs.org/dist/v22.23.5/SHASUMS256.txt",
+    "archiveSHA256": "e7131995759b61a0170b646010d2ad35a5d37b4cb0d471f3e8317eac6f742f3d",
+    "manifestSHA256": "658770bd465343e4bf441d22e89e7d944244b37041695f3f2a85b53d1a84b53f",
+    "verifiedBeforeExecution": true,
+    "temporaryOnly": true,
+    "systemInstallationChanged": false
+  },
+  "configuration": {
+    "gatewayEnabled": false,
+    "deletionEnabled": false,
+    "publicRecordsEnabled": false,
+    "workersDev": false,
+    "previewURLs": false,
+    "newServiceOrSecretsCreated": false,
+    "diagnosticSourcesUnchanged": true
+  },
+  "staticChecks": {
+    "node": "22.23.5",
+    "syntaxMJS": [
+      "gateway/scripts/bundle-dashboard.mjs",
+      "gateway/scripts/prepare-development-upload.mjs",
+      "gateway/scripts/probe-development.mjs",
+      "gateway/src/account-deletion-state.mjs",
+      "gateway/src/account-deletion.mjs",
+      "gateway/src/apple-identity.mjs",
+      "gateway/src/apple-login.mjs",
+      "gateway/src/apple-oauth.mjs",
+      "gateway/src/apple-public-keys.mjs",
+      "gateway/src/authentication-state.mjs",
+      "gateway/src/cloudkit-probe.mjs",
+      "gateway/src/cloudkit-public-client.mjs",
+      "gateway/src/cloudkit-request.mjs",
+      "gateway/src/community-worker.mjs",
+      "gateway/src/deletion-schema.mjs",
+      "gateway/src/gateway-http.mjs",
+      "gateway/src/gateway-limits.mjs",
+      "gateway/src/gateway-maintenance.mjs",
+      "gateway/src/gateway-runtime.mjs",
+      "gateway/src/probe-gate.mjs",
+      "gateway/src/probe-http.mjs",
+      "gateway/src/public-record-registry.mjs",
+      "gateway/src/public-record-repository.mjs",
+      "gateway/src/public-record-schema.mjs",
+      "gateway/src/refresh-credential-vault.mjs",
+      "gateway/src/renewal-proofs.mjs",
+      "gateway/src/runtime-check.mjs",
+      "gateway/src/session-renewal.mjs",
+      "gateway/src/session-reset-schema.mjs",
+      "gateway/src/session-reset.mjs",
+      "gateway/src/worker.mjs",
+      "gateway/test/account-deletion.test.mjs",
+      "gateway/test/apple-identity.test.mjs",
+      "gateway/test/apple-oauth.test.mjs",
+      "gateway/test/authentication-state.test.mjs",
+      "gateway/test/cloudkit-probe.test.mjs",
+      "gateway/test/cloudkit-request.test.mjs",
+      "gateway/test/deletion-recovery.test.mjs",
+      "gateway/test/gateway-http.test.mjs",
+      "gateway/test/gateway-maintenance.test.mjs",
+      "gateway/test/probe-gate.test.mjs",
+      "gateway/test/probe-http.test.mjs",
+      "gateway/test/public-records.test.mjs",
+      "gateway/test/redirect-safety.test.mjs",
+      "gateway/test/refresh-credential-vault.test.mjs",
+      "gateway/test/renewal-proofs.test.mjs",
+      "gateway/test/session-reset.test.mjs",
+      "gateway/test/support/authentication-fixture.mjs",
+      "gateway/test/support/public-record-fixture.mjs"
+    ],
+    "communityConfigurationJSON": "passed"
+  },
+  "iOS": "Swift/UI/project unchanged from df04e94; existing 162 Swift/10 UI and Debug/Release evidence not repeated; staging uses committed project",
+  "project": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "knownLimits": [
+    "remote epoch/checkpoint and SQLite loss/rollback acceptance REQUIRED before real user-data activation; registry currently assumes uninterrupted authoritative storage",
+    "initial namespace inventory and five CloudKit types/roles not accepted",
+    "minimal fences/SQL metadata retained and quotas not reclaimed; release retention unfinished",
+    "no social HTTP admission/3 km/block/report authorization coordinator or iOS CommunityClient switch",
+    "no public CKAsset, expiry worker, operator workflow or actual Workers CPU/SQL measurement",
+    "two ordinary iCloud accounts not accepted"
+  ],
+  "notPerformed": [
+    "real CloudKit records/schema/index/role operations",
+    "real Apple login/revoke or new capabilities/provisioning",
+    "Cloudflare deploy/bindings/secrets or paid-plan changes",
+    "physical device installation or new Swift/UI build/test",
+    "Firebase data deletion/migration",
+    "Production or TestFlight publication"
+  ],
+  "sourceSHA256": {
+    "gateway/src/cloudkit-public-client.mjs": "9b3b03ae0979fd755b23310927c96f7f8deedc49e2de30642c9a038d30ecd7bb",
+    "gateway/src/public-record-schema.mjs": "088a99d6a8e2752d6396b2a887b61892e077be6000f6c3382fdcd526e9c24299",
+    "gateway/src/public-record-registry.mjs": "46cc515fa108d4b1d5affd7e68cf57702e9ceb024c37c24b74e01ec0a3b5d176",
+    "gateway/src/public-record-repository.mjs": "54d596091c7ffdeb9f106024833e0b34155e427cc357b78e69ec1d3681632289",
+    "gateway/src/gateway-runtime.mjs": "2fbfe58195d0975565a675712c3d5e5f141db46a02a03481f2a4eaf2ff3dc76e",
+    "gateway/src/community-worker.mjs": "184c9376d7b763ad2b7d67b5a29c4589d34ec3b7f7c8bfec75312753fcf2ef41",
+    "gateway/wrangler.community.jsonc": "60149fc2ae3d091d3c1bda10ba89c66a14b598ead61d863855790644f623b604",
+    "gateway/test/public-records.test.mjs": "59a32a5c6445030ec5849bb5ef46146dbd7bb70f8e50ff80946d47cee9604f52",
+    "gateway/test/support/public-record-fixture.mjs": "67a513db5f3caaffe197281078565aea47ed14c1306086e4b7d9f606306c46ed",
+    "gateway/test/gateway-http.test.mjs": "133ef1fe4cc8985ec1bacc669808dd271e053c400f5010c14ef921bcc6b2f06b"
+  },
+  "logSHA256": {
+    "Node22Final": "fd5303003ae120b014f5b52e68a8776729a2d795715881adaa3e9467f4f7c639",
+    "Node24Final": "b7bc6761930d3eb345d1f583dd64fa4cb7ad28f66607a2e3a5831a794990c39e"
+  },
+  "staticCheckSHA256": "794423c404ba00e197da12bf0ec40be077348f001178ca471bd1321ba6095a05",
+  "metadataMinimization": "Confirmed erasure clears logical key, request ID, payload hash, old expected tag, old activity timestamps and account generation; only minimal fence identification/version metadata remains."
+}

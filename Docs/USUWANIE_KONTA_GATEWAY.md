@@ -2,6 +2,8 @@
 
 Stan: 14 listopada 2026. Lokalny sterownik procesu i testy SQLite; CK-02i dodaje lokalne endpointy/alarm, bez wdrożenia i prawdziwych danych użytkowników. Zwykła aplikacja nadal używa Firebase. **Nie zaimplementowano jeszcze rzeczywistego adaptera kasowania publicznych rekordów CloudKit ani natywnej ścieżki usunięcia prywatnej bazy.** Ich brak nie daje domyślnego sukcesu.
 
+Aktualizacja CK-04a: [lokalnie podłączono rzeczywisty transport publicznego czyszczenia](SERWEROWY_ADAPTER_DANYCH.md) z rejestrem i barierami; natywny sterownik/ekran opisuje CK-02o/CK-02p. Poniższy historyczny zakres CK-02h nie jest aktualnym stanem całej implementacji. Nowa usługa i typy pozostają niewdrożone; ochrona odtworzenia rejestru/retencja i rzeczywiste próby nadal otwarte.
+
 ## Własność i autoryzacja żądania
 
 Usunięcie wymaga świeżego ID tokenu Apple z podpisem/czasem/issuer/native audience i nonce z jednorazowego wyzwania przeznaczonego wyłącznie dla `account_deletion`. Wyzwanie logowania nie działa w tym przepływie i odwrotnie. Serwer wybiera właściciela ze zweryfikowanego sub; optional expectedAccountID służy wyłącznie wykryciu zmiany konta w UI. Nie pozwala wybrać innej osoby do skasowania. Termin tożsamości jest ponownie sprawdzany przed zapisem.

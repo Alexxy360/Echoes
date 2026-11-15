@@ -11,6 +11,7 @@
     "GATEWAY_ENVIRONMENT": "development",
     "GATEWAY_EXPIRES_AT": "",
     "ACCOUNT_DELETION_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
     "CLOUDKIT_CONTAINER": "iCloud.mpvEcho.Echo",
     "CLOUDKIT_ENVIRONMENT": "development",
     "REFRESH_ACTIVE_KEY_ID": "v1",

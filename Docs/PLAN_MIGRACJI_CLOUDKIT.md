@@ -104,6 +104,8 @@ Odbiór: izolacja prywatnych danych dwóch kont, trwałość po ponownym uruchom
 
 ### CK-04 — mapa, GPS i muzyka
 
+Postęp CK-04a: serwerowy adapter Web Services i trwały rejestr wszystkich zapisów pięciu typów, idempotencja/CAS oraz dokładne owner-scoped czyszczenie z barierami spóźnionych create/replace. Runtime podłącza realny adapter wyłącznie po osobnym PUBLIC_RECORDS_ENABLED; domyślnie 0, bez zmian chmury. 217/217 lokalnych testów Node 22/24 (21 nowych). Przed aktywacją obowiązkowe CK-04b: zdalny checkpoint/epoka i kontrola cofnięcia/utraty rejestru, początkowy inwentarz, polityka retencji barier. Dalej koordynator HTTP/admission/blokady/moderacja/obszar, adapter iOS, profil i zdjęcia oraz realny odbiór schematu/ról/Workers/A-B. [Kontrakt i ograniczenia](SERWEROWY_ADAPTER_DANYCH.md).
+
 - Zastąpić wywołania Firebase operacjami adaptera; zachować domyślnie ukryty profil i osobną zgodę na muzykę.
 - Zachować wyłącznie foreground GPS, kontrolę wieku/dokładności i przybliżenie pozycji przed publicznym zapisem.
 - Zmierzyć geograficzne zapytania CloudKit dla okolicy około 3 km, przy granicach obszarów i większej liczbie rekordów; nie zakładać identycznej semantyki indeksów jak w Firestore.

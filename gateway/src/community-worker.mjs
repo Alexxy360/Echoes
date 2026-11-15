@@ -11,7 +11,7 @@ export class CommunityAuthority extends DurableObject {
     ctx.blockConcurrencyWhile(async () => {
       if (!activeGatewayConfiguration(env)) return;
       try {
-        // Deletion stays unavailable until the real owner-scoped CloudKit adapter is wired here.
+        // Public storage requires its separate flag and key; missing configuration fails closed.
         this.#runtime = createGatewayRuntime(ctx.storage, env);
         await this.#runtime.maintenance.schedule();
       } catch { this.#runtime = undefined; }
