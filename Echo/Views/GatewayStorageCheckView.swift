@@ -8,7 +8,7 @@
                 Form {
                     Section("Lokalna kontrola Keychain") {
                         Text(
-                            "Sprawdza oddzielny zapis sesji i biletu usuwania, odczyt po zastąpieniu oraz usunięcie syntetycznych wpisów."
+                            "Sprawdza zapis sesji, biletu usuwania i żądań społecznościowych, wznowienie oraz usunięcie syntetycznych wpisów."
                         )
                         Text("Bez połączenia z serwerem i bez danych konta.")
                             .font(.caption).foregroundStyle(.secondary)
@@ -26,7 +26,7 @@
                     }
                 }
                 .navigationTitle("Keychain — Debug")
-                .task { if report == nil { report = GatewayStorageCheck.run() } }
+                .task { if report == nil { report = await GatewayStorageCheck.run() } }
             }
         }
     }

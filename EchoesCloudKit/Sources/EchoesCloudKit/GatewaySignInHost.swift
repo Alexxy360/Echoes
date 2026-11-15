@@ -20,7 +20,7 @@ private final class GatewayIdentityObservers: @unchecked Sendable {
 /// Owns the UI authentication boundary. Domain clients must obtain access through this host, so a
 /// background/identity event closes the boundary synchronously, before the session actor is reached.
 @MainActor @Observable
-public final class GatewaySignInHost {
+public final class GatewaySignInHost: GatewayCommunityAuthorizationSource {
     public enum Phase: Equatable {
         case suspended, checking, signedOut, signingIn, signingOut, resettingSessions, ready, unavailable
     }
@@ -205,6 +205,36 @@ public final class GatewaySignInHost {
                 == binding
         else { return nil }
         return .init(accountID: accountID, binding: binding)
+    }
+
+    public var communityAuthorization: GatewayCommunityAuthorization? {
+        guard let identity = authenticatedIdentity else { return nil }
+        return try? .init(accountID: identity.accountID, binding: identity.binding, revision: generation)
+    }
+    /// Public data requests use their own server authorization. Check the native Apple state on
+    /// every dispatch without resetting the whole domain UI for the 60-second login refresh.
+    public func communityAccessToken(for authorization: GatewayCommunityAuthorization) async throws
+        -> GatewaySecret
+    {
+        guard communityAuthorization == authorization, let revision = authorizedRevision else {
+            throw GatewayFailure.superseded
+        }
+        let operation = generation
+        do {
+            try check(operation, cloudRevision: revision)
+            try await checkApple(authorization.identity.binding.appleUserID, operation: operation)
+            let token = try await session.accessToken()
+            try check(operation, cloudRevision: revision)
+            guard communityAuthorization == authorization else { throw GatewayFailure.superseded }
+            return token
+        } catch {
+            await fail(error, operation: operation)
+            throw error
+        }
+    }
+    public func rejectCommunityAccess(for authorization: GatewayCommunityAuthorization) async {
+        guard communityAuthorization == authorization else { return }
+        await fail(GatewayFailure.signInRequired, operation: generation)
     }
 
     /// The deletion flow owns a DIFFERENT CloudKitAccountSession. This closes only its matching

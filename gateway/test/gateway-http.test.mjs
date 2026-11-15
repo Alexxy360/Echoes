@@ -353,7 +353,7 @@ test("community composes real HTTP/policy/repository and owner cleanup survives 
     assert.equal(sent.status, 200);
     assert.equal((await active.call("/v1/community/messages", { coordinate: { latitude: 0, longitude: 0 } }, b.sessionToken)).body.messages.length, 1);
     assert.equal((await active.call("/v1/community/config", {}, b.sessionToken)).body.supportURL, null);
-    const block = await active.call("/v1/community/block", { requestID: randomUUID(), accountID: a.accountID, blocked: true }, b.sessionToken);
+    const block = await active.call("/v1/community/block", { requestID: randomUUID(), accountID: a.accountID, blocked: true, generation: 0 }, b.sessionToken);
     assert.equal(block.status, 200);
     const challenge = await f.state.issueChallenge(hash(randomUUID()), { purpose: "account_deletion" });
     const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");

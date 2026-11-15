@@ -597,6 +597,41 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
     f.host.stop()
 }
 
+@Test @MainActor func communityDispatchChecksNativeCredentialsWithoutClearingTheDomainEveryMinute()
+    async throws
+{
+    let f = HostFixture()
+    await f.signIn()
+    let authorization = try #require(f.host.communityAuthorization)
+    let invalidations = f.policy.invalidations
+    f.clock.advance(61)
+    _ = try await f.host.communityAccessToken(for: authorization)
+    #expect(f.host.communityAuthorization == authorization && f.policy.invalidations == invalidations)
+    #expect(f.apple.requests == 2 && f.host.phase == .ready)
+    f.apple.state = .revoked
+    await #expect(throws: GatewayFailure.signInRequired) {
+        try await f.host.communityAccessToken(for: authorization)
+    }
+    #expect(f.host.communityAuthorization == nil && f.policy.invalidations > invalidations)
+    f.host.stop()
+}
+
+@Test @MainActor func communityServerRejectionCannotCloseANewerNativeAuthorization() async throws {
+    let f = HostFixture()
+    await f.signIn()
+    let old = try #require(f.host.communityAuthorization)
+    await f.host.signOut()
+    await f.host.signIn()
+    let current = try #require(f.host.communityAuthorization)
+    #expect(current != old)
+    await f.host.rejectCommunityAccess(for: old)
+    #expect(f.host.communityAuthorization == current)
+    await f.host.rejectCommunityAccess(for: current)
+    #expect(f.host.communityAuthorization == nil)
+    #expect(try f.storage.savedState() == .signedOut)
+    f.host.stop()
+}
+
 @Test @MainActor func recoveryStopsOfferingResetWhenServerReportsBanDeletionOrNoAccount() async {
     for code in [GatewayErrorCode.accountDisabled, .deletionInProgress, .noAccount] {
         let f = HostFixture()

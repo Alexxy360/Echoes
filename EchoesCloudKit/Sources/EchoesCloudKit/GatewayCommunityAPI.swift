@@ -32,7 +32,8 @@ public enum GatewayCommunityOperation: Codable, Equatable, Sendable {
     case nearby(coordinate: Coordinate)
     case messages(coordinate: Coordinate, cursor: String?, knownIDs: [String])
     case send(requestID: String, name: String, text: String, coordinate: Coordinate)
-    case block(requestID: String, accountID: String, blocked: Bool)
+    case block(requestID: String, accountID: String, blocked: Bool, generation: Int)
+    case blockState(accountID: String)
     case report(requestID: String, messageID: String, reason: String, coordinate: Coordinate)
     case saveProfile(requestID: String, name: String, revision: String?)
 
@@ -49,6 +50,7 @@ public enum GatewayCommunityOperation: Codable, Equatable, Sendable {
         case .messages: action = "messages"
         case .send: action = "send"
         case .block: action = "block"
+        case .blockState: action = "block/state"
         case .report: action = "report"
         case .saveProfile: action = "profile/save"
         }
@@ -114,10 +116,12 @@ public enum GatewayCommunityOperation: Codable, Equatable, Sendable {
                 "requestID": try identifier(id), "name": try name(displayName), "text": try text(content),
                 "coordinate": try coordinate(position),
             ]
-        case .block(let id, let target, let blocked):
+        case .block(let id, let target, let blocked, let version):
             fields = [
                 "requestID": try identifier(id), "accountID": try identifier(target), "blocked": blocked,
+                "generation": try generation(version),
             ]
+        case .blockState(let target): fields = ["accountID": try identifier(target)]
         case .report(let id, let target, let reason, let position):
             guard communityRecordName(target, kind: "message") else {
                 throw GatewayCommunityFailure.invalidInput
@@ -156,6 +160,7 @@ public enum GatewayCommunityValue: Sendable {
     case sent(ChatMessage)
     case blocked([String])
     case receipt(String)
+    case blockState(generation: Int, blocked: Bool)
     case accepted
     case profile(GatewayPublicProfile?)
     case savedProfile(GatewayPublicProfile)
@@ -317,7 +322,7 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
         let protocolVersion: Int, serverTime: Double
         let radiusMeters: Int?, presenceLifetimeSeconds: Int?, messageLifetimeSeconds: Int?,
             messagePageSize: Int?, supportURL: String?
-        let generation: Int?, visible: Bool?, id: String?, accepted: Bool?, cursor: String?,
+        let generation: Int?, visible: Bool?, blocked: Bool?, id: String?, accepted: Bool?, cursor: String?,
             removedIDs: [String]?, accountIDs: [String]?
         let users: [Person]?, messages: [Message]?, message: Message?, profile: Profile?, name: String?,
             revision: String?
@@ -409,12 +414,18 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
                 message.text == expectedText
             else { throw GatewayCommunityFailure.invalidResponse }
             value = .sent(try message.validated(serverTime: body.serverTime, allowExpired: true))
-        case .block:
-            try fields(["id"])
-            guard let id = body.id, communityRecordName(id, kind: "block") else {
+        case .block(_, _, let expected, let previous):
+            try fields(["id", "generation", "blocked"])
+            guard let id = body.id, communityRecordName(id, kind: "block"), body.blocked == expected,
+                try generation() == previous + 1
+            else {
                 throw GatewayCommunityFailure.invalidResponse
             }
             value = .receipt(id)
+        case .blockState:
+            try fields(["generation", "blocked"])
+            guard let blocked = body.blocked else { throw GatewayCommunityFailure.invalidResponse }
+            value = .blockState(generation: try generation(), blocked: blocked)
         case .blocked:
             try fields(["accountIDs"])
             guard let identifiers = body.accountIDs, identifiers.count <= 200,

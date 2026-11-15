@@ -2,6 +2,7 @@ import Foundation
 
 public enum CommunityPolicy {
     public static let radiusMeters = 3_000.0
+    public static let areaRefreshDistanceMeters = 250.0
     public static let presenceLifetime = 600.0
     public static let messageLifetime = 7_200.0
     public static let maximumLocationAge = 60.0
@@ -151,6 +152,11 @@ public struct MessagePage: Codable, Sendable {
         self.nextCursor = nextCursor
         self.removedIDs = removedIDs
     }
+}
+
+public enum CommunityPageFailure: Error, Equatable, Sendable, LocalizedError {
+    case cursorExpired
+    public var errorDescription: String? { "Odśwież rozmowę, aby pobrać aktualne wiadomości." }
 }
 
 public enum MessageTimeline {

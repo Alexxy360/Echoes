@@ -117,14 +117,14 @@ test("bidirectional blocks apply before provider acknowledgement and invalidate 
     const a = await f.session(), b = await f.session("reader"); const sent = await f.call(a, "send", f.sendBody());
     const pendingRead = await f.prepare(b, "messages", { coordinate: center, knownIDs: [sent.id] });
     f.model.before = call => { if (call.operation === "modify" && call.body.operations[0].record.recordType === "EchoesBlockV1") throw new Error("lost"); };
-    await assert.rejects(() => f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: true }), publicCode("PUBLIC_UNAVAILABLE"));
+    await assert.rejects(() => f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: true, generation: 0 }), publicCode("PUBLIC_UNAVAILABLE"));
     const read = pendingRead(); assert.equal(read.messages.length, 0); assert.deepEqual(read.removedIDs, [sent.id]);
     assert.deepEqual((await f.call(a, "blocked")).accountIDs, [b.accountID]);
     f.model.before = undefined; f.advance(1000);
-    await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: false });
+    await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: false, generation: 1 });
     assert.equal((await f.call(b, "messages", { coordinate: center })).messages.length, 1);
     await f.call(b, "send", f.sendBody("Wiadomość czytelnika"));
-    f.advance(1000); await f.call(b, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true });
+    f.advance(1000); await f.call(b, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true, generation: 0 });
     assert.deepEqual((await f.call(a, "messages", { coordinate: center })).messages.map(row => row.id), [sent.id]);
   } finally { f.close(); }
 });
@@ -203,7 +203,7 @@ test("rates, message idempotency, immutable payloads, moderation and profile CAS
     const changed = await f.call(a, "profile/save", { requestID: randomUUID(), name: "Nowa nazwa", revision: created.revision });
     await assert.rejects(() => f.call(a, "profile/save", { requestID: randomUUID(), name: "Stara edycja", revision: created.revision }), publicCode("PUBLIC_CONFLICT"));
     assert.equal((await f.call(a, "profile")).profile.revision, changed.revision);
-    await assert.rejects(() => f.call(a, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true }), code("COMMUNITY_INPUT"));
+    await assert.rejects(() => f.call(a, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true, generation: 0 }), code("COMMUNITY_INPUT"));
   } finally { f.close(); }
 });
 
@@ -260,7 +260,7 @@ test("closed HTTP finalizes after the last checkpoint and rejects forged fields,
     let blocked = false;
     f.model.afterCheckpoint = async call => {
       if (!blocked && call.operation === "modify") { blocked = true; await f.social.begin({ accountID: a.accountID, kind: "block", logicalID: b.accountID,
-        requestID: randomUUID(), payloadHash: "a".repeat(64), active: true }); }
+        requestID: randomUUID(), payloadHash: "a".repeat(64), generation: 0, active: true }); }
     };
     const response = await http("messages", { coordinate: center, knownIDs: [sent.id] });
     assert.equal(response.status, 200); const body = await response.json(); assert.deepEqual(body.messages, []); assert.deepEqual(body.removedIDs, [sent.id]);
@@ -307,10 +307,10 @@ test("block capacity is bounded and read rates belong to accounts rather than ac
     const a = await f.session(), targets = [];
     for (let i = 0; i < 200; i++) {
       const target = randomUUID(); targets.push(target);
-      await f.social.begin({ accountID: a.accountID, kind: "block", logicalID: target, requestID: randomUUID(), payloadHash: "a".repeat(64) }); f.advance(1000);
+      await f.social.begin({ accountID: a.accountID, kind: "block", logicalID: target, requestID: randomUUID(), payloadHash: "a".repeat(64), generation: 0 }); f.advance(1000);
     }
-    await assert.rejects(() => f.social.begin({ accountID: a.accountID, kind: "block", logicalID: randomUUID(), requestID: randomUUID(), payloadHash: "a".repeat(64) }), code("COMMUNITY_CAPACITY"));
-    await f.social.begin({ accountID: a.accountID, kind: "block", logicalID: targets[0], requestID: randomUUID(), payloadHash: "b".repeat(64), active: false });
+    await assert.rejects(() => f.social.begin({ accountID: a.accountID, kind: "block", logicalID: randomUUID(), requestID: randomUUID(), payloadHash: "a".repeat(64), generation: 0 }), code("COMMUNITY_CAPACITY"));
+    await f.social.begin({ accountID: a.accountID, kind: "block", logicalID: targets[0], requestID: randomUUID(), payloadHash: "b".repeat(64), generation: 1, active: false });
     assert.equal(f.social.blocked(a.accountID).length, 199);
     await f.call(a, "nearby", { coordinate: center }); const next = await f.session();
     await assert.rejects(() => f.call(next, "nearby", { coordinate: center }), code("COMMUNITY_RATE_LIMITED"));
@@ -338,12 +338,33 @@ test("metadata owner erasure removes only that owner's policy and preserves othe
   try {
     const a = await f.session(), b = await f.session("reader");
     await f.call(a, "send", f.sendBody());
-    await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: true });
-    await f.call(b, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true });
+    await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: true, generation: 0 });
+    await f.call(b, "block", { requestID: randomUUID(), accountID: a.accountID, blocked: true, generation: 0 });
     await assert.rejects(() => f.social.eraseOwner(a.accountID), code("COMMUNITY_STALE"));
     const deletion = await f.beginDeletion(a); await f.erase(deletion); await f.social.eraseOwner(a.accountID);
     assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM community_intents_v1 WHERE account_id=?").get(a.accountID).n, 0);
     assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM community_accounts_v1 WHERE account_id=?").get(a.accountID).n, 0);
     assert.deepEqual(f.social.blocked(b.accountID), [a.accountID]);
+  } finally { f.close(); }
+});
+
+test("block CAS prevents a delayed first request or an old acknowledged retry from undoing a newer choice", async () => {
+  const f = await setup();
+  try {
+    const a = await f.session(), b = await f.session("reader");
+    const old = { requestID: randomUUID(), accountID: b.accountID, blocked: true, generation: 0 };
+    assert.deepEqual((await f.call(a, "block/state", { accountID: b.accountID })).generation, 0);
+    // A later user decision reaches the server before the first network copy.
+    const current = await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: false, generation: 0 });
+    assert.equal(current.generation, 1);
+    f.advance(1000);
+    await assert.rejects(() => f.call(a, "block", old), code("COMMUNITY_STALE"));
+    f.advance(1000); const active = { ...old, requestID: randomUUID(), generation: 1 };
+    assert.equal((await f.call(a, "block", active)).generation, 2);
+    assert.equal((await f.call(a, "block", active)).generation, 2);
+    f.advance(1000); await f.call(a, "block", { requestID: randomUUID(), accountID: b.accountID, blocked: false, generation: 2 });
+    await assert.rejects(() => f.call(a, "block", active), code("COMMUNITY_STALE"));
+    assert.deepEqual((await f.call(a, "block/state", { accountID: b.accountID })).blocked, false);
+    assert.deepEqual((await f.call(a, "blocked")).accountIDs, []);
   } finally { f.close(); }
 });

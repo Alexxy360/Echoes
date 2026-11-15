@@ -31,7 +31,8 @@ try {
   const sent = await run("send", { requestID: randomUUID(), name: "Maja", text: "Żółć i muzyka 🎵", coordinate });
   await run("messages", { coordinate, cursor: null, knownIDs: [sent.id] }, b);
   await run("report", { requestID: randomUUID(), messageID: sent.id, reason: "Sprawdź treść", coordinate }, b);
-  await run("block", { requestID: randomUUID(), accountID: b.accountID, blocked: true });
+  await run("block/state", { accountID: b.accountID });
+  await run("block", { requestID: randomUUID(), accountID: b.accountID, blocked: true, generation: 0 });
   await run("blocked", {});
   await run("profile", {});
   await run("profile/save", { requestID: randomUUID(), name: "Maja", revision: null });

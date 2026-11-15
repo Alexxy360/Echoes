@@ -1,0 +1,178 @@
+{
+  "stage": "CK-04d.2 native CommunityClient, protected journal and account boundary",
+  "observedAt": "2026-11-15T18:19:26.620408+01:00",
+  "baselineCommit": "cd0dba18c1c44541fb4f003170576e67f0822a9e",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 190,
+      "failed": 0,
+      "newTests": 19,
+      "execution": "macOS Swift package, modelled Apple/CloudKit/API and storage, real Foundation transport tests retained"
+    },
+    "EchoesCore": {
+      "passed": 22,
+      "failed": 0,
+      "newTests": 9
+    },
+    "Node22.23.5": {
+      "passed": 257,
+      "failed": 0
+    },
+    "Node24.22.1": {
+      "passed": 257,
+      "failed": 0
+    },
+    "newGatewayTests": 1,
+    "XCTestUI": {
+      "passed": 10,
+      "failed": 0,
+      "demoTests": 4,
+      "deletionTests": 6,
+      "device": "iPhone 17 Pro Simulator",
+      "runtime": "iOS 26.1",
+      "scope": "existing demo and controlled deletion regression; not native community UI acceptance",
+      "finalCodeDifference": "only the final connect-in-progress read guard, covered by added Swift test and final Debug/Release, was added after UI run; exercised UI/Core code unchanged"
+    }
+  },
+  "wireFixture": {
+    "cases": 14,
+    "scope": "concrete local JS HTTP/SQLite with signed CloudKit model consumed by Swift; not live provider acceptance",
+    "blockCAS": "new per-target generation and block/state, preactivation Development contract"
+  },
+  "verified": [
+    "durable operation before mutation dispatch and exact unknown-ack retry",
+    "one unresolved message, original ID/name/text/coordinate/time and recovery after restart",
+    "native scope/origin/binding/account/lease and same-account ABA fencing",
+    "fresh native Apple credential at public dispatch without minute-by-minute domain reset",
+    "remote rejection only fences matching authorization",
+    "owner-derived record ID and author validation",
+    "publish/stop epoch with persisted stop; late callbacks cannot restore data",
+    "block per-target CAS and unchanged generation on identical retry",
+    "stable per-owner exact report UUID across restart/intervening reports",
+    "journal 8-slot/32KiB bound without evicting pending, corruption fails closed",
+    "exact scope erasure and privateScope/binding reconstruction for deletion",
+    "explicit exact-snapshot LOCAL forget does not perform unsend/server deletion",
+    "Core connect/foreground/area/send/delete fences and safe defers/errors",
+    "old-area pending ACK not inserted in current timeline",
+    "expired cursor resets pagination to accept a fresh first page",
+    "pending plaintext cannot be read during unfinished native connect"
+  ],
+  "keychain": {
+    "result": "passed on final signed ad-hoc Simulator app",
+    "simulator": "B3AA0604-82FF-470B-946A-A79E2D2C75F6",
+    "runtime": "iOS 26.1",
+    "nativeIdentity": "explicit synthetic source, no real Apple/iCloud account",
+    "HTTP": "explicit synthetic unavailable response, no network",
+    "operations": [
+      "write pending via actual adapter and restore through new client/lease",
+      "WhenUnlockedThisDeviceOnly and non-synchronizable attributes",
+      "oversize 32769 rejection preserves existing payload; 32768 accepted",
+      "two random scoped account UUIDs; exact A erase preserves B",
+      "all owned random slots removed and confirmed absent"
+    ],
+    "console": "community/storage/deletion result=passed; session/deletion delete status=0 then NOT_FOUND -25300",
+    "firstCapture": "stdout redirect was not available at expected path; final run captured through console-pty",
+    "screenshot": "Docs/evidence/community-journal-keychain.png",
+    "visualInspection": "observed Keychain Debug page with passed result",
+    "screenshotSHA256": "5aa973d90e8d401b928697dc45d84a2f5e02b9429c3f1fa23a604052e021d120",
+    "physicalDeviceLockRebootBackupRestore": false
+  },
+  "negativeControl": {
+    "result": "failed as expected",
+    "mutation": "only generation comparison disabled in isolated temporary copy",
+    "test": "block CAS prevents a delayed first request or an old acknowledged retry from undoing a newer choice",
+    "observation": "missing expected rejection: old block accepted after a newer false decision and after rate delay elapsed",
+    "originalUnchanged": true,
+    "originalStateSHA256": "4663d7bea6473fe60bd77873c4bc079c7df2676d65c009a968cfc2cebe5e333a",
+    "mutatedStateSHA256": "1eb5716a1c0ea2078848ac11d7c084675fcef1dd1bba50d13f89ef4d2604d125"
+  },
+  "builds": {
+    "Debug-iphonesimulator": {
+      "app": "/private/tmp/echoes-community-client-app-build/Build/Products/Debug-iphonesimulator/Echoes.app",
+      "activationAbsent": true,
+      "fixturesAbsent": true,
+      "testBundlesAbsent": true,
+      "releaseDiagnosticMarkersAbsent": false,
+      "signing": "ad-hoc verified"
+    },
+    "Release-iphoneos": {
+      "app": "/private/tmp/echoes-community-client-app-build/Build/Products/Release-iphoneos/Echoes.app",
+      "activationAbsent": true,
+      "fixturesAbsent": true,
+      "testBundlesAbsent": true,
+      "releaseDiagnosticMarkersAbsent": true
+    }
+  },
+  "buildNotes": [
+    "Debug and Release use committed project version and pinned local dependency cache",
+    "Release signing disabled, no publication",
+    "nonfatal AppIntents metadata extraction skip and Xcode UI debugger-version lookup warning"
+  ],
+  "static": {
+    "strictSwiftFiles": 13,
+    "strictSwift": "passed",
+    "mjsSyntaxFiles": 58,
+    "mjsSyntax": "passed on Node22",
+    "communityJSON": "passed"
+  },
+  "project": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "activation": {
+    "GATEWAY_ENABLED": "0",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
+    "COMMUNITY_ENABLED": "0",
+    "bundledConfiguration": "absent",
+    "ordinaryAppServices": "Firebase unchanged",
+    "backendDeployed": false
+  },
+  "knownLimits": [
+    "controlled native map/chat host, AppServices/auth invalidator and recovery UI buttons are next; library methods/headless domain implemented",
+    "single-process MainActor storage boundary, not cross-process/extension CAS",
+    "offline or already-closed native authorization can delay stop until 10-minute server expiry; reconnect retries privacy cleanup",
+    "local forget cannot retract an unknown delivered send",
+    "real provider schema/roles/SIWA/Free CPU/SQL/cost and two ordinary iCloud accounts not accepted",
+    "public profile photos, physical retention, operator workflow and support contact unfinished",
+    "journal Keychain lock/reboot/backup/restore on physical hardware not tested"
+  ],
+  "notPerformed": [
+    "Cloudflare/Apple/CloudKit real records, roles, keys, secrets, deployment or payments",
+    "Firebase data removal or SDK removal",
+    "physical-device install or account change",
+    "Production/TestFlight publication"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAPI.swift": "247f068e85f780ec9fd0aa5eefec7a19c0ff47e466b77e07390f77796cc1e043",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityJournal.swift": "aed442c2f551ca7c8cc5611d797803b8a1a802d919bbaeeeba8907431c0e98c3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityClient.swift": "7b8efe305e5a35c55140fa794897f3e8c2f80a1322c6938be7e46e17c0e36cb1",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "86c99617057ebcb356008a3e345c7a782daea8a0b210d1d0ca8818f47d5be33b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityTests.swift": "6b8396b415afc33a125e9345896860b5337bde11d870e91b4fad658a71b7a3f2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityClientTests.swift": "e1f8f70163a411b64d792deb262a4ac4b54f53f8fdc7162da0008c9bc6e88ccd",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "a2a297d633b6b237fa993f671694d9811b964b26bab699f041f5361c2940956d",
+    "EchoesCore/Sources/EchoesCore/CommunitySession.swift": "229ef5b74438f3245254b459b16e7a10225a5cb8fccff6e3b520a46eb86e16c7",
+    "EchoesCore/Tests/EchoesCoreTests/SessionTests.swift": "a92b7b82a5253039365b25531e0a02cde8e578960659d56f6be4fffb9160bd2f",
+    "Echo/Services/GatewayStorageCheck.swift": "047335fba1757c4a4d6abe93c15a4d92f67ffa02455078cb8907914837c81cae",
+    "Echo/Views/GatewayStorageCheckView.swift": "9f51e042368ba47b9fa2dc50ffeff39bde90c403e883a9420fda8ea8de2cf8a6",
+    "EchoesCore/Sources/EchoesCore/Community.swift": "7e9c50a0e8557d0142fe2814a37b415d3ce82be192ddc0c4c88a650e66cc578c",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "cf358256219e5de8b08e7aee8a5229307c00ca8f9cd40596c785950e3d4489da",
+    "gateway/src/community-state.mjs": "4663d7bea6473fe60bd77873c4bc079c7df2676d65c009a968cfc2cebe5e333a",
+    "gateway/src/community-coordinator.mjs": "1beeb3b70959b681b654725d3f18540f0cd835664f13104bef6017ec15e3935f",
+    "gateway/test/community.test.mjs": "c1c4084be22aff400da5aec20cf443f5ffee6b186ee2b407587d2d4f0a41b3c9",
+    "gateway/test/gateway-http.test.mjs": "f0db30231053430739632f7d1c05ba8e08f264d4a43c85648b9f53b36c66a8ac",
+    "gateway/scripts/export-community-native-fixture.mjs": "27c9b1a907df80d6cededa5bcf3bab05f0fc9e8f9f2a3ae9d86ae42a4850b8c4",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/community-roundtrip.json": "0d65f529884b8f8dd0886ab66aa59b24b768ee6f8b117bb854878617f559d605"
+  },
+  "logSHA256": {
+    "CloudKitSwift": "3cf380406f3f09641da97fd60d4e55bac45fd64c024b06be347236dd521fd189",
+    "CoreSwift": "650841395ede91df16753f1d29720a17d3f15d5041e656a471fab59f995070b8",
+    "Node22": "9ed10e5498df668f1a6eee243cec7f34f3a2ddf0f69e01ef5575d03ff3a0fca0",
+    "Node24": "0cdb66d13f39a43928fcf33f9ef820e49ac56b02d4f6f09f0ad8002054cf21bc",
+    "Debug": "4e5f8deb7d52bcbbc0c73ef0d4b0e776fd50ffa6aa23c54ca13f954fd8a5495f",
+    "Release": "db811b05861aa877639c897d250ab915f61e9ebfe74b6607ec28e39b6925360e",
+    "UI": "629f64fa909e57610fb7591d8ed9b5cee3e61d4b578bfc74083c771354e99b8e",
+    "KeychainConsole": "abe31ded94706272d9e60eedf924fb10a3df1448fd6c4a28ca5dc5ee7b125356",
+    "NegativeBlockCAS": "b328ba77d1c03e9a9ab7e0b7131dba07edd14d4c64df18f529379033342a9591"
+  }
+}

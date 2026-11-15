@@ -34,6 +34,7 @@
             let local = try GatewayLocalAccountData(
                 root: FileManager.default.url(
                     for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
+            let communityStorage = KeychainGatewayCommunityJournalStorage()
             deletion = GatewayDeletionHost(
                 api: deletionAPI, cloudKitAccount: account,
                 apple: NativeAppleGatewayIdentitySource(),
@@ -62,7 +63,14 @@
                                 throw error
                             }
                             await local.fence(binding: binding, accountID: accountID)
-                        }, clearLocalData: { scope in try await local.erase(scope: scope) })
+                        },
+                        clearLocalData: { scope in
+                            try await local.erase(scope: scope)
+                            let journalScope = try GatewayCommunityScope(
+                                configuration: activation.configuration, privateScope: scope, binding: binding
+                            )
+                            try communityStorage.remove(scope: journalScope)
+                        })
                 }, isEnabled: { activation.isActive() })
         }
     }

@@ -20,10 +20,41 @@ public protocol CommunityClient {
     func blockedUsers() async throws -> [String]
     func report(messageID: String, reason: String) async throws
     func deleteOwnData() async throws
+    func pendingMessage() throws -> PendingCommunityMessage?
+    func forgetPendingMessage(_ expected: PendingCommunityMessage) throws
 }
 
 extension CommunityClient {
     public var serverTimeOffset: TimeInterval { 0 }
+    public func pendingMessage() throws -> PendingCommunityMessage? { nil }
+    public func forgetPendingMessage(_ expected: PendingCommunityMessage) throws {
+        throw PendingMessageFailure.changed
+    }
+}
+
+public struct PendingCommunityMessage: Equatable, Sendable {
+    public let requestID: String
+    public let name: String
+    public let text: String
+    public let coordinate: Coordinate
+    public let recoveryID: String
+    public init(requestID: String, name: String, text: String, coordinate: Coordinate, recoveryID: String) {
+        self.requestID = requestID
+        self.name = name
+        self.text = text
+        self.coordinate = coordinate
+        self.recoveryID = recoveryID
+    }
+}
+public enum PendingMessageFailure: Error, LocalizedError, Equatable, Sendable {
+    case unresolved, changed
+    public var errorDescription: String? {
+        switch self {
+        case .unresolved:
+            "Najpierw ponów poprzednią wiadomość lub usuń jej lokalną próbę. Mogła już zostać wysłana."
+        case .changed: "Próba wiadomości zmieniła się. Sprawdź jej aktualny stan."
+        }
+    }
 }
 
 public struct LocationFix: Equatable, Sendable {
@@ -61,6 +92,7 @@ public final class CommunitySession {
     public private(set) var didLoadMessages = false
     public private(set) var nextCursor: String?
     public private(set) var supportURL: URL?
+    public private(set) var pendingMessage: PendingCommunityMessage?
     public var draft = ""
     public var errorMessage: String?
     public var statusMessage: String?
@@ -80,6 +112,7 @@ public final class CommunitySession {
     @ObservationIgnored private var lastPublish = Date.distantPast
     @ObservationIgnored private var lastRefresh = Date.distantPast
     @ObservationIgnored private var attempt: (id: String, text: String, name: String, coordinate: Coordinate)?
+    @ObservationIgnored private var sessionEpoch = UUID()
 
     public init(client: any CommunityClient, now: @escaping () -> Date = Date.init) {
         self.client = client
@@ -103,29 +136,85 @@ public final class CommunitySession {
             && (try? InputValidation.message(draft)) != nil
     }
 
+    /// Synchronous boundary used before changing native accounts or closing their foreground UI.
+    public func invalidateForAccountChange() {
+        sessionEpoch = UUID()
+        visibilityEpoch += 1
+        locationEpoch += 1
+        phase = .idle
+        userID = nil
+        name = ""
+        users = []
+        messages = []
+        blockedIDs = []
+        isSharing = false
+        isChangingVisibility = false
+        isSending = false
+        isLoadingMessages = false
+        isLoadingUsers = false
+        isLoadingOlder = false
+        didLoadUsers = false
+        didLoadMessages = false
+        nextCursor = nil
+        supportURL = nil
+        draft = ""
+        pendingMessage = nil
+        errorMessage = nil
+        statusMessage = nil
+        isChatOpen = false
+        isForeground = false
+        location = nil
+        hasUsableLocation = false
+        previousArea = nil
+        pendingStop = false
+        track = ("", "")
+        trackDirty = false
+        generation = 0
+        lastPublish = .distantPast
+        lastRefresh = .distantPast
+        attempt = nil
+    }
+    private func isCurrent(_ epoch: UUID) -> Bool { epoch == sessionEpoch && !Task.isCancelled }
+
     public func connect(name value: String) async {
         guard phase != .connecting else { return }
+        let validated: String
+        do { validated = try InputValidation.name(value) } catch {
+            errorMessage = error.localizedDescription
+            return
+        }
+        let foreground = isForeground
+        invalidateForAccountChange()
+        isForeground = foreground
+        let epoch = sessionEpoch
+        phase = .connecting
+        defer { if epoch == sessionEpoch, phase == .connecting { phase = .idle } }
         do {
-            let name = try InputValidation.name(value)
-            phase = .connecting
-            errorMessage = nil
             let uid = try await client.connect()
-            let support = try await client.configuration()
-            let blocked = try await client.blockedUsers()
-            // Start each process privately, including cleanup of a previous unclean exit.
+            guard isCurrent(epoch) else { return }
+            // Privacy cleanup precedes auxiliary reads and uses the adapter's persisted stop ID.
             let currentGeneration = try await client.stopSharing()
-            guard !Task.isCancelled else {
-                phase = .idle
-                return
-            }
+            guard isCurrent(epoch) else { return }
+            let support = try await client.configuration()
+            guard isCurrent(epoch) else { return }
+            let blocked = try await client.blockedUsers()
+            guard isCurrent(epoch) else { return }
+            let pending = try client.pendingMessage()
+            guard isCurrent(epoch) else { return }
             userID = uid
-            self.name = name
+            name = validated
             supportURL = support
             blockedIDs = Set(blocked)
             generation = currentGeneration
+            pendingMessage = pending
+            if let pending {
+                draft = pending.text
+                attempt = (pending.requestID, pending.text, pending.name, pending.coordinate)
+            }
             phase = .ready
             lastRefresh = .distantPast
         } catch {
+            guard isCurrent(epoch) else { return }
             phase = .failed
             errorMessage = error.localizedDescription
         }
@@ -134,6 +223,7 @@ public final class CommunitySession {
     public func setForeground(_ active: Bool) async {
         isForeground = active
         if !active {
+            locationEpoch += 1
             lastRefresh = .distantPast
             await setSharing(false)
         }
@@ -153,7 +243,9 @@ public final class CommunitySession {
             }
             return
         }
-        if previousArea == nil || previousArea!.distance(to: coordinate) >= 250 {
+        if previousArea == nil
+            || previousArea!.distance(to: coordinate) >= CommunityPolicy.areaRefreshDistanceMeters
+        {
             previousArea = coordinate
             locationEpoch += 1
             users = []
@@ -172,16 +264,21 @@ public final class CommunitySession {
     }
 
     public func setSharing(_ enabled: Bool) async {
+        let session = sessionEpoch
         if !enabled {
             let needsStop = isSharing || isChangingVisibility || pendingStop
             isSharing = false
             visibilityEpoch += 1
+            let epoch = visibilityEpoch
             guard userID != nil, needsStop else { return }
             pendingStop = true
             do {
-                generation = try await client.stopSharing()
+                let value = try await client.stopSharing()
+                guard isCurrent(session), epoch == visibilityEpoch else { return }
+                generation = value
                 pendingStop = false
             } catch {
+                guard isCurrent(session), epoch == visibilityEpoch else { return }
                 statusMessage =
                     "Zatrzymano publikowanie na tym urządzeniu. Ostatni profil może być widoczny do 10 minut; ponowimy jego ukrycie po odzyskaniu połączenia."
             }
@@ -194,16 +291,19 @@ public final class CommunitySession {
         }
         isChangingVisibility = true
         let epoch = visibilityEpoch
-        defer { isChangingVisibility = false }
+        defer { if session == sessionEpoch { isChangingVisibility = false } }
         do {
             let newGeneration = try await client.visibilityGeneration()
-            guard epoch == visibilityEpoch, isForeground, !Task.isCancelled else { return }
+            guard isCurrent(session), epoch == visibilityEpoch, isForeground else { return }
             try await client.publish(
                 name: name, coordinate: fix.coordinate, measuredAt: fix.measuredAt,
                 song: track.title, songID: track.id, generation: newGeneration)
-            guard epoch == visibilityEpoch, isForeground, !Task.isCancelled else {
+            guard isCurrent(session) else { return }
+            guard epoch == visibilityEpoch, isForeground else {
                 pendingStop = true
-                generation = try await client.stopSharing()
+                let value = try await client.stopSharing()
+                guard isCurrent(session) else { return }
+                generation = value
                 pendingStop = false
                 return
             }
@@ -213,15 +313,20 @@ public final class CommunitySession {
             lastPublish = now()
             trackDirty = false
             statusMessage = nil
-        } catch { if epoch == visibilityEpoch { errorMessage = error.localizedDescription } }
+        } catch {
+            if isCurrent(session), epoch == visibilityEpoch { errorMessage = error.localizedDescription }
+        }
     }
 
     public func tick() async {
         expireCached()
         guard phase == .ready, isForeground else { return }
+        let session = sessionEpoch
         if pendingStop {
             do {
-                generation = try await client.stopSharing()
+                let value = try await client.stopSharing()
+                guard isCurrent(session) else { return }
+                generation = value
                 pendingStop = false
                 statusMessage = nil
             } catch { return }
@@ -233,8 +338,10 @@ public final class CommunitySession {
         if elapsed(since: lastRefresh) >= 15 {
             lastRefresh = now()
             await refreshUsers()
+            guard isCurrent(session) else { return }
             if isChatOpen { await refreshMessages() }
         }
+        guard isCurrent(session) else { return }
         if isSharing
             && (elapsed(since: lastPublish) >= 30 || (trackDirty && elapsed(since: lastPublish) >= 5))
         {
@@ -245,15 +352,20 @@ public final class CommunitySession {
     private func refreshPresence() async {
         guard isSharing, isForeground, let fix = location, fix.isUsable(at: now()) else { return }
         let epoch = visibilityEpoch
+        let session = sessionEpoch
         let sentTrack = track
         do {
             try await client.publish(
                 name: name, coordinate: fix.coordinate, measuredAt: fix.measuredAt,
                 song: sentTrack.title, songID: sentTrack.id, generation: generation)
-            guard epoch == visibilityEpoch, isSharing else { return }
+            guard isCurrent(session), epoch == visibilityEpoch, isSharing else { return }
             lastPublish = now()
             trackDirty = track != sentTrack
-        } catch { statusMessage = "Nie udało się odnowić obecności. Spróbujemy ponownie." }
+        } catch {
+            if isCurrent(session), epoch == visibilityEpoch {
+                statusMessage = "Nie udało się odnowić obecności. Spróbujemy ponownie."
+            }
+        }
     }
 
     public func refreshUsers() async {
@@ -261,17 +373,22 @@ public final class CommunitySession {
             return
         }
         let epoch = locationEpoch
+        let session = sessionEpoch
         isLoadingUsers = true
-        defer { isLoadingUsers = false }
+        defer { if session == sessionEpoch { isLoadingUsers = false } }
         do {
             let result = try await client.nearby(coordinate: coordinate)
-            guard epoch == locationEpoch, isForeground, !Task.isCancelled else { return }
+            guard isCurrent(session), epoch == locationEpoch, isForeground else { return }
             let valid = result.filter {
                 $0.id != userID && !blockedIDs.contains($0.id) && $0.isValid(at: serverNow)
             }
             if users != valid { users = valid }
             didLoadUsers = true
-        } catch { if !Task.isCancelled { errorMessage = error.localizedDescription } }
+        } catch {
+            if isCurrent(session), epoch == locationEpoch, isForeground {
+                errorMessage = error.localizedDescription
+            }
+        }
     }
 
     public func refreshMessages(older: Bool = false) async {
@@ -282,15 +399,18 @@ public final class CommunitySession {
         isLoadingMessages = true
         isLoadingOlder = older
         let epoch = locationEpoch
+        let session = sessionEpoch
         let pageCursor = older ? nextCursor : nil
         defer {
-            isLoadingMessages = false
-            isLoadingOlder = false
+            if session == sessionEpoch {
+                isLoadingMessages = false
+                isLoadingOlder = false
+            }
         }
         do {
             let page = try await client.messages(
                 coordinate: coordinate, cursor: pageCursor, knownIDs: messages.map(\.id))
-            guard epoch == locationEpoch, isForeground, isChatOpen, !Task.isCancelled else { return }
+            guard isCurrent(session), epoch == locationEpoch, isForeground, isChatOpen else { return }
             let removed = Set(page.removedIDs)
             let updated = Array(
                 MessageTimeline.merge(
@@ -301,7 +421,15 @@ public final class CommunitySession {
             if older || !didLoadMessages { nextCursor = page.nextCursor }
             if messages.count >= 200 { nextCursor = nil }
             didLoadMessages = true
-        } catch { if !Task.isCancelled { errorMessage = error.localizedDescription } }
+        } catch {
+            if isCurrent(session), epoch == locationEpoch, isForeground, isChatOpen {
+                if error as? CommunityPageFailure == .cursorExpired {
+                    nextCursor = nil
+                    didLoadMessages = false
+                }
+                errorMessage = error.localizedDescription
+            }
+        }
     }
 
     @discardableResult
@@ -311,46 +439,84 @@ public final class CommunitySession {
             errorMessage = ValidationError.location.localizedDescription
             return false
         }
-        let sendingUserID = userID
+        let epoch = sessionEpoch
+        let area = locationEpoch
         do {
             let text = try InputValidation.message(draft)
-            if attempt?.text != text || attempt?.name != name {
+            let pending = try client.pendingMessage()
+            pendingMessage = pending
+            if let pending {
+                guard pending.text == text else { throw PendingMessageFailure.unresolved }
+                attempt = (pending.requestID, pending.text, pending.name, pending.coordinate)
+            } else if attempt?.text != text || attempt?.name != name {
                 attempt = (UUID().uuidString, text, name, coordinate)
             }
             guard let attempt else { return false }
             isSending = true
-            defer { isSending = false }
+            defer { if epoch == sessionEpoch { isSending = false } }
             let sent = try await client.send(
-                text: attempt.text, name: attempt.name,
-                coordinate: attempt.coordinate, requestID: attempt.id)
-            guard !Task.isCancelled, userID == sendingUserID else { return false }
+                text: attempt.text, name: attempt.name, coordinate: attempt.coordinate, requestID: attempt.id)
+            guard isCurrent(epoch) else { return false }
             if (try? InputValidation.message(draft)) == text { draft = "" }
             self.attempt = nil
-            messages = Array(
-                MessageTimeline.merge(messages, with: [sent], now: serverNow, blocked: blockedIDs).suffix(
-                    200))
+            pendingMessage = nil
+            if area == locationEpoch, isForeground,
+                attempt.coordinate.distance(to: coordinate) < CommunityPolicy.areaRefreshDistanceMeters
+            {
+                messages = Array(
+                    MessageTimeline.merge(messages, with: [sent], now: serverNow, blocked: blockedIDs).suffix(
+                        200))
+            }
             return true
         } catch {
+            guard isCurrent(epoch) else { return false }
+            do { pendingMessage = try client.pendingMessage() } catch {
+                // Preserve the last verified snapshot on protected-storage failure.
+            }
             errorMessage = error.localizedDescription
             return false
         }
     }
+    @discardableResult
+    public func retryPendingMessage() async -> Bool {
+        guard !isSending, let pending = pendingMessage else { return false }
+        let epoch = sessionEpoch
+        let edited = draft
+        draft = pending.text
+        attempt = (pending.requestID, pending.text, pending.name, pending.coordinate)
+        let sent = await sendDraft()
+        if isCurrent(epoch), edited != pending.text, draft.isEmpty || draft == pending.text { draft = edited }
+        return sent
+    }
+    /// Explicit LOCAL removal only. It does not claim that an unknown send was never delivered.
+    public func forgetPendingMessage(_ expected: PendingCommunityMessage) throws {
+        guard !isSending, pendingMessage == expected else { throw PendingMessageFailure.changed }
+        try client.forgetPendingMessage(expected)
+        pendingMessage = nil
+        attempt = nil
+    }
 
     public func block(userID: String, blocked: Bool = true) async {
+        guard phase == .ready, isForeground else { return }
+        let epoch = sessionEpoch
         do {
             try await client.block(userID: userID, blocked: blocked)
+            guard isCurrent(epoch) else { return }
             if blocked { blockedIDs.insert(userID) } else { blockedIDs.remove(userID) }
             expireCached()
             users.removeAll { blockedIDs.contains($0.id) }
             statusMessage = blocked ? "Użytkownik został zablokowany." : "Blokada została usunięta."
-        } catch { errorMessage = error.localizedDescription }
+        } catch { if isCurrent(epoch) { errorMessage = error.localizedDescription } }
     }
 
     public func report(messageID: String, reason: String) async {
+        guard phase == .ready, isForeground else { return }
+        let epoch = sessionEpoch
         do {
             try await client.report(messageID: messageID, reason: reason)
+            guard isCurrent(epoch) else { return }
             statusMessage = "Zgłoszenie zostało zapisane do sprawdzenia."
-        } catch { errorMessage = error.localizedDescription }
+        } catch { if isCurrent(epoch) { errorMessage = error.localizedDescription } }
     }
 
     public func changeName(_ value: String) throws {
@@ -369,21 +535,16 @@ public final class CommunitySession {
     }
 
     public func deleteOwnData() async -> Bool {
+        let epoch = sessionEpoch
         await setSharing(false)
+        guard isCurrent(epoch) else { return false }
         do {
             try await client.deleteOwnData()
-            users = []
-            messages = []
-            blockedIDs = []
-            userID = nil
-            name = ""
-            draft = ""
-            attempt = nil
-            nextCursor = nil
-            isChatOpen = false
-            phase = .idle
+            guard isCurrent(epoch) else { return false }
+            invalidateForAccountChange()
             return true
         } catch {
+            guard isCurrent(epoch) else { return false }
             errorMessage = error.localizedDescription
             return false
         }

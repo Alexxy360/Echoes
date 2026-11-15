@@ -2,7 +2,7 @@ import { CommunityError, CommunityCursor, communityPolicy as policy, objectField
   communityCoordinate, moderationPhrases, moderateText, supportAddress, distanceMeters, messageName, laterMessage, beforeCursor } from "./community-domain.mjs";
 import { inputHash, normalizePublicInput } from "./public-record-schema.mjs";
 
-export const communityActions = Object.freeze(["config", "visibility", "publish", "stop", "nearby", "messages", "send", "block", "blocked", "report", "profile", "profile/save"]);
+export const communityActions = Object.freeze(["config", "visibility", "publish", "stop", "nearby", "messages", "send", "block", "block/state", "blocked", "report", "profile", "profile/save"]);
 /** Functional server boundary. Finalizers run synchronously AFTER the outer remote checkpoint. */
 export class CommunityCoordinator {
   #state; #authentication; #repository; #clock; #cursor; #phrases; #support;
@@ -35,6 +35,7 @@ export class CommunityCoordinator {
     }
     if (action === "visibility") { objectFields(body, []); return result(() => this.#state.visibility(accountID)); }
     if (action === "blocked") { objectFields(body, []); return result(() => ({ accountIDs: this.#state.blocked(accountID) })); }
+    if (action === "block/state") { objectFields(body, ["accountID"]); communityUUID(body.accountID); return result(() => this.#state.blockState(accountID, body.accountID)); }
     if (action === "profile" || action === "profile/save") {
       if (action === "profile/save") {
         objectFields(body, ["requestID", "name", "revision"]); communityUUID(body.requestID);
@@ -66,7 +67,7 @@ export class CommunityCoordinator {
         objectFields(body, ["requestID", "name", "text", "coordinate"]);
         input = { name: this.#text(body.name, 40), text: this.#text(body.text, 500), ...communityCoordinate(body.coordinate) }; logicalID = body.requestID;
       } else {
-        objectFields(body, ["requestID", "accountID", "blocked"]); communityUUID(body.accountID);
+        objectFields(body, ["requestID", "accountID", "blocked", "generation"]); communityUUID(body.accountID);
         input = { targetID: body.accountID, blocked: body.blocked }; logicalID = body.accountID;
       }
       communityUUID(body.requestID);
@@ -79,6 +80,7 @@ export class CommunityCoordinator {
         accessToken, kind, logicalID, requestID: body.requestID, input, signal, authorizeMutation: permit });
       permit(); await this.#state.finish(intent);
       return result(() => { permit(); return { id: receipt.recordName, ...(kind === "presence" ? { generation: intent.generation, visible: !!intent.active } : {}),
+        ...(kind === "block" ? { generation: intent.generation, blocked: !!intent.active } : {}),
         ...(kind === "message" ? { message: { id: receipt.recordName, authorID: accountID, name: receipt.fields.name.value,
           text: receipt.fields.text.value, timestamp: receipt.fields.createdAt.value, expiresAt: receipt.fields.expiresAt.value } } : {}) }; });
     }

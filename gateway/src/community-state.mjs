@@ -55,9 +55,10 @@ export class CommunityState {
       this.#ensure(accountID); const account = this.#account(accountID), old = this.#row(accountID, kind, logicalID);
       if (kind === "presence" && (generation !== account.generation || !Number.isSafeInteger(generation))) throw new CommunityError("COMMUNITY_STALE");
       if (old?.request_id === requestID) {
-        if (old.payload_hash !== payloadHash || old.active !== Number(active)) throw new CommunityError("COMMUNITY_STALE");
+        if (old.payload_hash !== payloadHash || old.active !== Number(active) || kind === "block" && generation + 1 !== old.generation) throw new CommunityError("COMMUNITY_STALE");
         return old;
       }
+      if (kind === "block" && (!Number.isSafeInteger(generation) || generation < 0 || generation >= Number.MAX_SAFE_INTEGER || generation !== (old?.generation ?? 0))) throw new CommunityError("COMMUNITY_STALE");
       this.#rate(accountID, kind, { presence: 5000, message: 5000, block: 1000, report: 10000 }[kind]);
       if (kind === "block") {
         communityUUID(logicalID);
@@ -69,7 +70,7 @@ export class CommunityState {
       this.#storage.sql.exec(`INSERT INTO community_intents_v1(account_id,kind,logical_id,request_id,payload_hash,ready,active,generation)
         VALUES(?,?,?,?,?,0,?,?) ON CONFLICT(account_id,kind,logical_id) DO UPDATE SET request_id=excluded.request_id,
         payload_hash=excluded.payload_hash,ready=0,active=excluded.active,generation=excluded.generation`,
-      accountID, kind, logicalID, requestID, payloadHash, Number(active), account.generation);
+      accountID, kind, logicalID, requestID, payloadHash, Number(active), kind === "block" ? generation + 1 : account.generation);
       return this.#row(accountID, kind, logicalID);
     });
     await this.#durable(); this.assertCurrent(intent); return intent;
@@ -94,13 +95,14 @@ export class CommunityState {
     return this.#tx(() => {
       const account = this.#account(intent.account_id), row = this.#row(intent.account_id, intent.kind, intent.logical_id);
       if (!row || row.request_id !== intent.request_id || row.payload_hash !== intent.payload_hash ||
-          intent.kind === "presence" && (row.generation !== account.generation || row.generation !== intent.generation)) throw new CommunityError("COMMUNITY_STALE");
+          row.generation !== intent.generation || intent.kind === "presence" && row.generation !== account.generation) throw new CommunityError("COMMUNITY_STALE");
       return row;
     });
   }
   async finish(intent) {
     this.#tx(() => { this.#account(intent.account_id); const row = this.#row(intent.account_id, intent.kind, intent.logical_id);
       if (!row || row.request_id !== intent.request_id || row.payload_hash !== intent.payload_hash ||
+          row.generation !== intent.generation ||
           intent.kind === "presence" && this.#account(intent.account_id).generation !== intent.generation) throw new CommunityError("COMMUNITY_STALE");
       this.#storage.sql.exec("UPDATE community_intents_v1 SET ready=1 WHERE account_id=? AND kind=? AND logical_id=? AND request_id=?", intent.account_id, intent.kind, intent.logical_id, intent.request_id);
     });
@@ -120,6 +122,14 @@ export class CommunityState {
     });
   }
   blocked(accountID) { return this.#tx(() => { this.#account(accountID); return this.#rows("SELECT logical_id FROM community_intents_v1 WHERE account_id=? AND kind='block' AND active=1 ORDER BY logical_id LIMIT 200", accountID).map(row => row.logical_id); }); }
+  blockState(accountID, targetID) {
+    communityUUID(targetID);
+    return this.#tx(() => {
+      this.#account(accountID); if (accountID === targetID) throw new CommunityError("COMMUNITY_INPUT");
+      const row = this.#row(accountID, "block", targetID);
+      return { generation: row?.generation ?? 0, blocked: !!row?.active };
+    });
+  }
   /** Trusted operator hooks only. No moderation authority is exposed through public HTTP. */
   async hideMessage(accountID, requestID) { this.#tx(() => this.#storage.sql.exec("UPDATE community_intents_v1 SET hidden=1 WHERE account_id=? AND kind='message' AND request_id=?", accountID, requestID)); await this.#durable(); }
   async setSuspended(accountID, suspended) {

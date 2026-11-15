@@ -90,7 +90,9 @@ private func operation(_ action: String, _ body: [String: Any]) -> GatewayCommun
         )
     case "block":
         return .block(
-            requestID: string("requestID"), accountID: string("accountID"), blocked: body["blocked"] as! Bool)
+            requestID: string("requestID"), accountID: string("accountID"), blocked: body["blocked"] as! Bool,
+            generation: body["generation"] as! Int)
+    case "block/state": return .blockState(accountID: string("accountID"))
     case "report":
         return .report(
             requestID: string("requestID"), messageID: string("messageID"), reason: string("reason"),
@@ -105,7 +107,7 @@ private func operation(_ action: String, _ body: [String: Any]) -> GatewayCommun
     async throws
 {
     let cases = try fixtureCases()
-    #expect(cases.count == 13)
+    #expect(cases.count == 14)
     for entry in cases {
         let action = entry["action"] as! String
         let body = entry["request"] as! [String: Any]
@@ -141,6 +143,7 @@ private func operation(_ action: String, _ body: [String: Any]) -> GatewayCommun
             #expect(message.text == body["text"] as? String)
             #expect(message.timestamp == communityNow.timeIntervalSince1970 * 1000)
         case ("blocked", .blocked(let identifiers)): #expect(identifiers.count == 1)
+        case ("block/state", .blockState): break
         case ("block", .receipt), ("report", .accepted), ("profile", .profile),
             ("profile/save", .savedProfile):
             break
