@@ -47,9 +47,18 @@ private final class RefuseGatewayRedirects: NSObject, URLSessionTaskDelegate {
 
 public final class NativeGatewayTransport: GatewayHTTPTransport {
     private let session: URLSession
+    private let maximumResponseBytes: Int
     public convenience init() { self.init(protocolClasses: nil) }
+    public static func community() -> NativeGatewayTransport { community(protocolClasses: nil) }
+    static func community(protocolClasses: [AnyClass]?) -> NativeGatewayTransport {
+        .init(protocolClasses: protocolClasses, maximumResponseBytes: 262_144)
+    }
     // Package-only injection for exercising the real URLSession streaming and redirect delegate.
-    init(protocolClasses: [AnyClass]?) {
+    convenience init(protocolClasses: [AnyClass]?) {
+        self.init(protocolClasses: protocolClasses, maximumResponseBytes: 32_768)
+    }
+    private init(protocolClasses: [AnyClass]?, maximumResponseBytes: Int) {
+        self.maximumResponseBytes = maximumResponseBytes
         let config = URLSessionConfiguration.ephemeral
         if let protocolClasses { config.protocolClasses = protocolClasses }
         config.httpCookieStorage = nil
@@ -68,11 +77,11 @@ public final class NativeGatewayTransport: GatewayHTTPTransport {
             let (bytes, response) = try await session.bytes(for: request)
             defer { bytes.task.cancel() }
             guard let http = response as? HTTPURLResponse, http.url == request.url,
-                response.expectedContentLength <= 32_768
+                response.expectedContentLength <= maximumResponseBytes
             else { throw GatewayFailure.invalidResponse }
             var data = Data()
             for try await byte in bytes {
-                guard data.count < 32_768 else { throw GatewayFailure.invalidResponse }
+                guard data.count < maximumResponseBytes else { throw GatewayFailure.invalidResponse }
                 data.append(byte)
             }
             return .init(

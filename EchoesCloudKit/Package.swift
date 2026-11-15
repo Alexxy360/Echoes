@@ -8,6 +8,7 @@ let package = Package(
     dependencies: [.package(path: "../EchoesCore")],
     targets: [
         .target(name: "EchoesCloudKit", dependencies: [.product(name: "EchoesCore", package: "EchoesCore")]),
-        .testTarget(name: "EchoesCloudKitTests", dependencies: ["EchoesCloudKit"]),
+        .testTarget(
+            name: "EchoesCloudKitTests", dependencies: ["EchoesCloudKit"], resources: [.copy("Fixtures")]),
     ]
 )

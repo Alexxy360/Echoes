@@ -78,7 +78,9 @@ export class CommunityCoordinator {
       const receipt = await this.#repository[kind === "presence" || kind === "block" ? "writeLatest" : "write"]({
         accessToken, kind, logicalID, requestID: body.requestID, input, signal, authorizeMutation: permit });
       permit(); await this.#state.finish(intent);
-      return result(() => { permit(); return { id: receipt.recordName, ...(kind === "presence" ? { generation: intent.generation, visible: !!intent.active } : {}) }; });
+      return result(() => { permit(); return { id: receipt.recordName, ...(kind === "presence" ? { generation: intent.generation, visible: !!intent.active } : {}),
+        ...(kind === "message" ? { message: { id: receipt.recordName, authorID: accountID, name: receipt.fields.name.value,
+          text: receipt.fields.text.value, timestamp: receipt.fields.createdAt.value, expiresAt: receipt.fields.expiresAt.value } } : {}) }; });
     }
     if (action === "report") {
       objectFields(body, ["requestID", "messageID", "reason", "coordinate"]); communityUUID(body.requestID);

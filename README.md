@@ -85,3 +85,5 @@ CK-04a dodaje lokalnie podłączony [serwerowy adapter rekordów CloudKit](Docs/
 CK-04b dodaje [zdalny punkt kontrolny rejestru](Docs/PUNKT_KONTROLNY_REJESTRU.md) z trwałym outboxem, ochroną odtworzenia SQLite i cofnięcia sesji. Bootstrap i rzeczywiste środowiska nadal nieaktywne; natywny klient iOS pozostaje do podłączenia, a koordynator serwera został dodany w CK-04c.
 
 CK-04c dodaje [serwerową obecność, czat i zasady dostępu](Docs/FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md): zamknięte HTTP, generację widoczności, dwustronne blokady, moderację/zgłoszenia, własny profil tekstowy, strony i zaszyfrowane kursory. 256/256 lokalnych testów Node 22/24; COMMUNITY_ENABLED=0. Backend nie jest wdrożony, zwykłe iOS nadal Firebase. Realny schemat/role/Free/A-B, natywny adapter, zdjęcia i fizyczna retencja wymagają odbioru.
+
+CK-04d.1 dodaje [natywny kontrakt HTTP funkcji społecznościowych](Docs/NATYWNY_KONTRAKT_SPOLECZNOSCIOWY.md), 13 par między JS i Swift oraz oryginalny ack wiadomości. 171/171 Swift, 256/256 Node 22/24, Debug/Release poprawne; bez aktywacji. CommunityClient, chroniony journal i integracja mapy/czatu pozostają kolejną częścią natywnego etapu.

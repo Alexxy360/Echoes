@@ -325,9 +325,11 @@ test("unknown message response retries reconcile exactly one immutable record an
     f.model.after = call => { if (!lost && call.operation === "modify" && call.body.operations[0].record.recordType === "EchoesLocalMessageV1") { lost = true; throw new Error("lost"); } };
     await assert.rejects(() => f.call(a, "send", body), publicCode("PUBLIC_UNAVAILABLE"));
     assert.equal((await f.call(b, "messages", { coordinate: center })).messages.length, 0);
-    const timestamp = f.clock(); f.advance(5000); await f.call(a, "send", body);
+    const timestamp = f.clock(); f.advance(5000); const acknowledgement = await f.call(a, "send", body);
     const messages = (await f.call(b, "messages", { coordinate: center })).messages;
     assert.equal(f.model.records.size, 1); assert.equal(messages.length, 1); assert.equal(messages[0].timestamp, timestamp);
+    assert.deepEqual(acknowledgement.message, messages[0]);
+    assert.deepEqual((await f.call(a, "send", body)).message, messages[0]);
   } finally { f.close(); }
 });
 

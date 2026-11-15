@@ -100,3 +100,17 @@ private final class GatewayURLProtocol: URLProtocol, @unchecked Sendable {
         #expect(GatewayURLProtocol.plan.finish(origin).count == 1)
     }
 }
+
+@Test func nativeCommunityTransportAllowsLargerBoundedStreamsWhileAuthenticationKeepsItsLimit() async throws {
+    let data = Data(repeating: 32, count: 50_000)
+    let origin = GatewayURLProtocol.plan.install(.stream(data))
+    let transport = NativeGatewayTransport.community(protocolClasses: [GatewayURLProtocol.self])
+    let response = try await transport.send(URLRequest(url: origin))
+    #expect(response.body == data)
+    #expect(GatewayURLProtocol.plan.finish(origin).count == 1)
+    let oversized = GatewayURLProtocol.plan.install(.stream(Data(repeating: 32, count: 262_145)))
+    await #expect(throws: GatewayFailure.invalidResponse) {
+        try await transport.send(URLRequest(url: oversized))
+    }
+    #expect(GatewayURLProtocol.plan.finish(oversized).count == 1)
+}

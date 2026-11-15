@@ -108,6 +108,8 @@ Postęp CK-04a: serwerowy adapter Web Services i trwały rejestr wszystkich zapi
 
 Postęp CK-04b: zdalny punkt kontrolny z trwałym outboxem i epoką blokuje utratę/cofnięcie spójnej kopii SQLite, fork przy tym samym liczniku, późne potwierdzenia oraz odtworzenie revoked session. HTTP, dostawcy, repozytorium i procesor korzystają z kontroli; bootstrap nie uruchamia się automatycznie. 234/234 Node 22/24 (17 nowych) i negatywna kontrola w osobnej kopii. Brak wdrożenia nowego typu/punktu/ról; realny PITR i CPU/SQL/A-B wymagają odbioru. Następnie CK-04c: koordynator społecznościowy (zakres, obecność, strony czatu, blokady/zgłoszenia), zamknięte HTTP i adapter iOS; profil/zdjęcia, retencja oraz realny odbiór nadal w pełnym zakresie planu. [Protokół i granice](PUNKT_KONTROLNY_REJESTRU.md).
 
+Postęp CK-04d.1: natywny typowany kontrakt wszystkich tras, mapowanie do modeli Core, oryginalny send ack i osobny limit odpowiedzi 256 KiB przy zachowaniu 32 KiB auth. 13 par z lokalnego HTTP JS jest konsumowanych przez Swift; 171/171 Swift, 256/256 Node 22/24, Debug ad-hoc Simulator i Release iOS bez podpisywania. Brak aktywacji/providerów lub zmiany zwykłego AppServices. Dalej CK-04d.2: CommunityClient i trwały chroniony request journal związany z kontem, następnie host/mapa/czat i regresja UI. [Kontrakt i zakres](NATYWNY_KONTRAKT_SPOLECZNOSCIOWY.md).
+
 - Zastąpić wywołania Firebase operacjami adaptera; zachować domyślnie ukryty profil i osobną zgodę na muzykę.
 - Zachować wyłącznie foreground GPS, kontrolę wieku/dokładności i przybliżenie pozycji przed publicznym zapisem.
 - Zmierzyć geograficzne zapytania CloudKit dla okolicy około 3 km, przy granicach obszarów i większej liczbie rekordów; nie zakładać identycznej semantyki indeksów jak w Firestore.

@@ -1,0 +1,124 @@
+{
+  "stage": "CK-04d.1 native typed community contract",
+  "observedAt": "2026-11-15T17:04:47.788632+01:00",
+  "baselineCommit": "78de605cb637a332c438ece2bff8ff5acb2767be",
+  "Swift": {
+    "passed": 171,
+    "failed": 0,
+    "newTests": 9,
+    "execution": "macOS host Swift package, actual Foundation URLSession via in-process URLProtocol; synthetic HTTP responses, not live providers"
+  },
+  "gateway": {
+    "Node22.23.5": {
+      "passed": 256,
+      "failed": 0
+    },
+    "Node24.22.1": {
+      "passed": 256,
+      "failed": 0
+    },
+    "change": "full original immutable message acknowledgement after send/retry; existing assertions expanded, no added test count"
+  },
+  "crossImplementationFixture": {
+    "cases": 13,
+    "exporter": "gateway/scripts/export-community-native-fixture.mjs",
+    "resource": "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/community-roundtrip.json",
+    "scope": "concrete local HTTP handler/coordinator/SQLite and signed synthetic CloudKit; consumed by Swift typed requests/responses",
+    "containsTokenOrKey": false,
+    "realProviderAcceptance": false
+  },
+  "verified": [
+    "closed operation and field inventory, bearer only, exact request encoding for every route",
+    "UTF-16/UUID/coordinate/generation/tag/knownID/cursor input bounds before transport",
+    "full Unicode page larger than 32KiB",
+    "schema/duplicate/order/removedID/expiry/distance checks on responses",
+    "send and profile acknowledgements match submitted content",
+    "expired send acknowledgement preserves original timestamp and is not a valid visible message",
+    "finite safe error codes and bounded retry hints without automatic retry or upstream text",
+    "activation origin/window before and after await; cancellation rejects late response",
+    "real Foundation streaming cap increased only for community; auth 32KiB regression preserved"
+  ],
+  "builds": {
+    "DebugSimulator": {
+      "result": "passed",
+      "signing": "ad-hoc verified",
+      "project": "committed baseline version",
+      "executedOrInstalled": false
+    },
+    "ReleaseIOS": {
+      "result": "passed",
+      "signing": "disabled",
+      "project": "committed baseline version",
+      "published": false
+    },
+    "initialDebugFailure": {
+      "result": "failed before compilation",
+      "cause": "selected SourcePackages cache lacked pinned Git trees for multiple dependencies",
+      "recovery": "verified all pinned trees in /private/tmp/echoes-foundation-build/SourcePackages; reused without changing dependency versions or Package.resolved"
+    },
+    "warning": "AppIntents metadata extraction skipped because no AppIntents.framework dependency"
+  },
+  "artifacts": {
+    "Debug-iphonesimulator": {
+      "app": "/private/tmp/echoes-community-native-app-build/Build/Products/Debug-iphonesimulator/Echoes.app",
+      "activationAbsent": true,
+      "fixtureAbsent": true,
+      "testBundleAbsent": true,
+      "bundleIdentifier": "mpvEcho.Echo",
+      "signing": "ad-hoc verified"
+    },
+    "Release-iphoneos": {
+      "app": "/private/tmp/echoes-community-native-app-build/Build/Products/Release-iphoneos/Echoes.app",
+      "activationAbsent": true,
+      "fixtureAbsent": true,
+      "testBundleAbsent": true,
+      "bundleIdentifier": "mpvEcho.Echo"
+    }
+  },
+  "static": {
+    "SwiftFormatStrict": "passed (5 changed Swift/package files)",
+    "mjsSyntaxFiles": 58,
+    "mjsSyntax": "passed on Node22",
+    "communityJSON": "passed"
+  },
+  "project": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "activation": {
+    "bundledGatewayConfiguration": "absent in Debug and Release",
+    "GATEWAY_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "COMMUNITY_ENABLED": "0",
+    "ordinaryAppServices": "Firebase unchanged"
+  },
+  "notPerformed": [
+    "native CommunityClient/identity-bound journal and map/chat integration (next part)",
+    "new UI screenshots/tests, new journal Keychain tests or device installation",
+    "live Apple/CloudKit/Cloudflare records, roles, keys, OAuth, deployment or secrets",
+    "two ordinary iCloud accounts/service identity acceptance",
+    "physical retention or Firebase removal",
+    "Production/TestFlight publication or paid service activation"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Package.swift": "1476d315cab0f6f6e02317fa81db74a28fcfeef878ee4143108874726c6462b2",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayHTTPClient.swift": "d26443297a78c74beaefb73087c9fe93edbbff4a39f4cb1740fcf6c445dba9f5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAPI.swift": "50032d47c40f8dfde66b00b3a437624202782dc9644859447b61419b83b1b02b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityTests.swift": "4a182c84e21ccad2d4f899ec053aa7979b99336283bd595701005ca991b36881",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayTransportTests.swift": "7c2993bb5fad047696b8183ef1fbcb66122516cad7a269df15e7898eda262cf4",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/community-roundtrip.json": "228a30d7f3994d86083b04f0ab2421e8da0d9c5b4e290adb0885641fc10a16b2",
+    "gateway/src/community-coordinator.mjs": "adb289385692e3adad0b6a712c7126ca822b48b744bc34515502610ca9b1ddda",
+    "gateway/test/community.test.mjs": "252e2703099cb9ea13a2e6e1b740a6c009733a83c1a0fdb274c6ab65767ce892",
+    "gateway/scripts/export-community-native-fixture.mjs": "91adf9aca341eae040f4af4106607c12239b359bdda4a5d5e07ac496e606831e"
+  },
+  "logSHA256": {
+    "Swift": "66ca4f090a9702fb78f7f815f2d148ac263735f4162c0e18533d4573fa6130a5",
+    "Node22": "53d01f11f277848556b1466598d809a84c0877c4cd884c64df3c71df682632fc",
+    "Node24": "d4f6265d7ae37883e013e905717c933f2b588bfdb23ee9fed793a8dc69c69b92",
+    "DebugInitialFailure": "37f0e36da22668289737b5213a50c9f5d8abd7147631bb84f58496d9efc2a05d",
+    "DebugCacheRetry": "de4cf2e6898935a355517942e0d85d7cf64c851da7ac530fd9c7bbabf657086a",
+    "DebugFinal": "ea06b7451abf3918f9adee1895d577fb3c94856d9f050a6d48315b97a9e05ba6",
+    "Release": "4accf41fe402a2e55fe3eede025de9c69448423989a86c25d2fce290bfcc1d87"
+  }
+}

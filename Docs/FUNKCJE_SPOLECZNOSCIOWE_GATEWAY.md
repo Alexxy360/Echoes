@@ -14,7 +14,7 @@ Wszystkie poniższe trasy mają prefiks `/v1/community/`, metodę POST, JSON i B
 | stop | requestID, generation | Nowa generation i visible=false po potwierdzeniu czyszczenia |
 | nearby | coordinate | Do 100 najbliższych użytkowników |
 | messages | coordinate; opcjonalne cursor, knownIDs | Do 50 wiadomości od starszej do nowszej, cursor albo null, removedIDs |
-| send | requestID, name, text, coordinate | ID wiadomości |
+| send | requestID, name, text, coordinate | ID i pełne message z pierwotnym serwerowym czasem |
 | block | requestID, accountID celu, blocked | ID własnej preferencji |
 | blocked | pusty obiekt | Własne aktywne blokady |
 | report | requestID, messageID, reason, coordinate | accepted=true |
@@ -61,3 +61,5 @@ Wygaśnięcie po 10 min/2 h ukrywa obecność/wiadomości. Nie wykonano jeszcze 
 Raport: [community-local-tests.json](evidence/community-local-tests.json). Źródeł iOS/projektu nie zmieniono i nie powtarzano nieadekwatnej kompilacji. Nie wykonywano operacji na rzeczywistych usługach lub danych użytkowników.
 
 Do wykonania: natywny CommunityClient z trwałym requestID i obsługą rewizji/generacji, podłączenie mapy/czatu, profile innych osób/zdjęcia, retencja i operator moderacji, kontakt wsparcia, realne SIWA/schemat/role/Workers oraz dwa zwykłe konta A/B. Nie odłączono Firebase i nie publikowano TestFlight/Production. Domyślna aktywacja pozostaje wyłączona; wymaga równocześnie PUBLIC_RECORDS_ENABLED i ACCOUNT_DELETION_ENABLED oraz prawidłowego checkpoint.
+
+CK-04d.1 dodaje [natywny typowany kontrakt](NATYWNY_KONTRAKT_SPOLECZNOSCIOWY.md) i pełny ack send; utracona odpowiedź jest rozstrzygana z oryginalnym timestamp/expiresAt, także gdy wiadomość już wygasła. Swift konsumuje 13 rzeczywistych odpowiedzi lokalnego handlera, bez zaliczania ich jako odbioru prawdziwych usług. CommunityClient, dziennik i integracja UI pozostają kolejną częścią natywnego etapu.

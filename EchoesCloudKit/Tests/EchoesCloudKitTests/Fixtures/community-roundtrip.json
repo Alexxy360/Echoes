@@ -1,0 +1,220 @@
+{
+  "version": 1,
+  "source": "Offline concrete gateway HTTP/coordinator/SQLite with signed synthetic CloudKit model; not provider acceptance",
+  "cases": [
+    {
+      "action": "config",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "radiusMeters": 3000,
+        "presenceLifetimeSeconds": 600,
+        "messageLifetimeSeconds": 7200,
+        "messagePageSize": 50,
+        "supportURL": null,
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "visibility",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "generation": 0,
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "publish",
+      "request": {
+        "requestID": "d4864b14-f2de-4bc0-9a91-f602e95ce54b",
+        "name": "Maja",
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        },
+        "song": "Echoes",
+        "songID": "1234",
+        "generation": 0,
+        "measuredAt": 1794603600000
+      },
+      "response": {
+        "protocolVersion": 1,
+        "id": "community-v1-presence-56793cf71a8fb7f5e5c3a0a5bdc2756f20c9b80656d5add292ea77e755dd5c3d",
+        "generation": 0,
+        "visible": true,
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "nearby",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "users": [
+          {
+            "id": "50886b7d-3476-4c87-a8d8-a4b4df18cb11",
+            "name": "Maja",
+            "latitude": 51.111,
+            "longitude": 17.037699436098478,
+            "song": "Echoes",
+            "songID": "1234",
+            "updatedAt": 1794603600000,
+            "expiresAt": 1794604200000,
+            "distanceMeters": 265
+          }
+        ],
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "send",
+      "request": {
+        "requestID": "4a9cd30f-da80-46a3-aba9-2a21d3f04827",
+        "name": "Maja",
+        "text": "Żółć i muzyka 🎵",
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "id": "community-v1-message-e2292b308d9e87dc084732cf5b1402dc58e54784d5d4aa2cd772ef0912707322",
+        "message": {
+          "id": "community-v1-message-e2292b308d9e87dc084732cf5b1402dc58e54784d5d4aa2cd772ef0912707322",
+          "authorID": "50886b7d-3476-4c87-a8d8-a4b4df18cb11",
+          "name": "Maja",
+          "text": "Żółć i muzyka 🎵",
+          "timestamp": 1794603600000,
+          "expiresAt": 1794610800000
+        },
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "messages",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        },
+        "cursor": null,
+        "knownIDs": [
+          "community-v1-message-e2292b308d9e87dc084732cf5b1402dc58e54784d5d4aa2cd772ef0912707322"
+        ]
+      },
+      "response": {
+        "protocolVersion": 1,
+        "messages": [
+          {
+            "id": "community-v1-message-e2292b308d9e87dc084732cf5b1402dc58e54784d5d4aa2cd772ef0912707322",
+            "authorID": "50886b7d-3476-4c87-a8d8-a4b4df18cb11",
+            "name": "Maja",
+            "text": "Żółć i muzyka 🎵",
+            "timestamp": 1794603600000,
+            "expiresAt": 1794610800000
+          }
+        ],
+        "cursor": null,
+        "removedIDs": [],
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "report",
+      "request": {
+        "requestID": "3b6f0927-4463-4316-8d29-18e51050e40a",
+        "messageID": "community-v1-message-e2292b308d9e87dc084732cf5b1402dc58e54784d5d4aa2cd772ef0912707322",
+        "reason": "Sprawdź treść",
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "accepted": true,
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "block",
+      "request": {
+        "requestID": "a8e175a2-f07f-4667-9831-7171cc3cdd65",
+        "accountID": "e2a09805-6863-44b9-afec-ccdcfc97cf44",
+        "blocked": true
+      },
+      "response": {
+        "protocolVersion": 1,
+        "id": "community-v1-block-0c70102ab321c19d05f5c708c4bfaf3b319e068d3b394b5187af79af842d9c55",
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "blocked",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "accountIDs": [
+          "e2a09805-6863-44b9-afec-ccdcfc97cf44"
+        ],
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "profile",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "profile": null,
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "profile/save",
+      "request": {
+        "requestID": "7c3c2906-3387-4d17-ae75-e784bba384e3",
+        "name": "Maja",
+        "revision": null
+      },
+      "response": {
+        "protocolVersion": 1,
+        "name": "Maja",
+        "revision": "25",
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "profile",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "profile": {
+          "name": "Maja",
+          "revision": "25"
+        },
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "action": "stop",
+      "request": {
+        "requestID": "b25de0fb-76b4-4add-ba37-47d078c82fe5",
+        "generation": 0
+      },
+      "response": {
+        "protocolVersion": 1,
+        "id": "community-v1-presence-56793cf71a8fb7f5e5c3a0a5bdc2756f20c9b80656d5add292ea77e755dd5c3d",
+        "generation": 1,
+        "visible": false,
+        "serverTime": 1794603600000
+      }
+    }
+  ]
+}

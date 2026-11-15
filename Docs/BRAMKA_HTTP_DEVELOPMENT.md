@@ -85,3 +85,5 @@ Przy public storage HTTP sprawdza zdalny checkpoint po limitach/body, a przed di
 ## CK-04c — funkcje społecznościowe
 
 Dodano wyłącznie zamknięte POST /v1/community dla config/visibility/publish/stop/nearby/messages/send/block/blocked/report/profile oraz `profile/save`. [Pełny kontrakt](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md). COMMUNITY_ENABLED=0; aktywacja wymaga publicznych rekordów i usuwania. Body 48 KiB, wszystkie te żądania liczą się do dotychczasowych ciężkich limitów Development. Końcowy filtr jest wywoływany synchronicznie po ostatnim checkpoint, przed serializacją Response; zmieniona w tym czasie blokada/sesja nie korzysta z gotowego starego wyniku. Bez proxy, publicznego odczytu zgłoszeń lub operator RPC. Testy lokalne nie stanowią odbioru Workers/schematu/ról.
+
+CK-04d.1: [natywny klient typowanego protokołu](NATYWNY_KONTRAKT_SPOLECZNOSCIOWY.md) sprawdzony względem 13 par z konkretnego lokalnego HTTP. Send zawiera teraz pełny message z pierwotnym serwerowym czasem, również przy retry. Nie zmienia to aktywacji ani nie przełącza zwykłego iOS.
