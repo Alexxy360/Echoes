@@ -105,9 +105,10 @@ function deletionResponse(value, status = 200, recovered = false) {
 
 /** Closed native API. serverBudgetHash is supplied by the trusted edge/authority, never taken from JSON. */
 export function createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
-  deletionEnabled = false, limits, scheduleMaintenance, isEnabled, inputTimeoutMilliseconds = 3000 } = {}) {
+  deletionEnabled = false, limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000 } = {}) {
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
       typeof sessionReset?.reset !== "function" ||
+      (checkpoint !== undefined && (typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function")) ||
       typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" ||
       typeof deletionEnabled !== "boolean" || !Number.isInteger(inputTimeoutMilliseconds) || inputTimeoutMilliseconds < 1 || inputTimeoutMilliseconds > 3000 ||
       (deletionEnabled && (typeof deletions?.status !== "function" || typeof deletionCoordinator?.request !== "function" || typeof deletionCoordinator?.recover !== "function"))) throw new Error("Gateway dependencies are unavailable.");
@@ -119,66 +120,76 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
       const heavy = ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover"].includes(path);
       await limits.consume(serverBudgetHash, { heavy });
       const body = await objectBody(request, heavy ? 16384 : 256, inputTimeoutMilliseconds);
-      if (path.startsWith("/v1/account/") && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
-      if (path === "/v1/auth/challenge") {
-        fields(body, ["purpose"]);
-        if (!["login", "account_deletion", "session_reset", "deletion_recovery"].includes(body.purpose)) throw new GatewayHTTPError();
-        if (["account_deletion", "deletion_recovery"].includes(body.purpose) && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
-        await scheduleMaintenance();
-        const value = await authentication.issueChallenge(serverBudgetHash, { purpose: body.purpose });
-        if (typeof value.challengeID !== "string" || !uuid.test(value.challengeID) ||
-            typeof value.nonce !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(value.nonce) || !Number.isSafeInteger(value.expiresAt)) throw new Error();
-        return gatewayJSON({ challengeID: value.challengeID, nonce: value.nonce, expiresAt: value.expiresAt });
-      }
-      if (path === "/v1/auth/login") {
-        fields(body, ["challengeID", "identityToken", "authorizationCode"]); uuidField(body.challengeID);
-        opaqueField(body.identityToken, 12288); opaqueField(body.authorizationCode, 2048);
-        await scheduleMaintenance(); return sessionResponse(await login.login(body));
-      }
-      if (path === "/v1/auth/renew") {
-        fields(body, []); const token = bearer(request, 120);
-        await scheduleMaintenance(); return sessionResponse(await renewal.renew(token));
-      }
-      if (path === "/v1/auth/session-reset") {
-        fields(body, ["challengeID", "identityToken"], ["expectedAccountID"]); uuidField(body.challengeID);
-        opaqueField(body.identityToken, 12288);
-        if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
-        await scheduleMaintenance(); await sessionReset.reset(body);
-        return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
-      }
-      if (path === "/v1/auth/session") {
-        fields(body, []); const value = authentication.authorize(bearer(request, 80));
-        return gatewayJSON({ accountID: value.accountID, expiresAt: value.expiresAt });
-      }
-      if (path === "/v1/auth/logout" || path === "/v1/auth/logout-all") {
-        fields(body, []); const token = bearer(request, path.endsWith("-all") ? 80 : 120); await scheduleMaintenance();
-        if (path.endsWith("-all")) await authentication.revokeAllSessions(token);
-        else try { await authentication.revokeRenewal(token); } catch (error) {
-          if (!(error instanceof AuthenticationStateError && error.code === "INVALID_SESSION")) throw error;
+      // Budget/body limits precede any checkpoint network traffic, including malformed input.
+      await checkpoint?.verify({ signal: request.signal });
+      const dispatch = async () => {
+        if (path.startsWith("/v1/account/") && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+        if (path === "/v1/auth/challenge") {
+          fields(body, ["purpose"]);
+          if (!["login", "account_deletion", "session_reset", "deletion_recovery"].includes(body.purpose)) throw new GatewayHTTPError();
+          if (["account_deletion", "deletion_recovery"].includes(body.purpose) && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+          await scheduleMaintenance();
+          const value = await authentication.issueChallenge(serverBudgetHash, { purpose: body.purpose });
+          if (typeof value.challengeID !== "string" || !uuid.test(value.challengeID) ||
+              typeof value.nonce !== "string" || !/^[A-Za-z0-9_-]{43}$/.test(value.nonce) || !Number.isSafeInteger(value.expiresAt)) throw new Error();
+          return gatewayJSON({ challengeID: value.challengeID, nonce: value.nonce, expiresAt: value.expiresAt });
         }
-        return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
-      }
-      if (path === "/v1/account/deletion/recover") {
-        fields(body, ["challengeID", "identityToken"], ["expectedAccountID"]); uuidField(body.challengeID);
-        opaqueField(body.identityToken, 12288);
-        if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
-        // Recovery takes only fresh owner proof; do not accept a bearer as a substitute.
-        if (request.headers.has("Authorization")) throw new GatewayHTTPError();
+        if (path === "/v1/auth/login") {
+          fields(body, ["challengeID", "identityToken", "authorizationCode"]); uuidField(body.challengeID);
+          opaqueField(body.identityToken, 12288); opaqueField(body.authorizationCode, 2048);
+          await scheduleMaintenance(); return sessionResponse(await login.login(body));
+        }
+        if (path === "/v1/auth/renew") {
+          fields(body, []); const token = bearer(request, 120);
+          await scheduleMaintenance(); return sessionResponse(await renewal.renew(token));
+        }
+        if (path === "/v1/auth/session-reset") {
+          fields(body, ["challengeID", "identityToken"], ["expectedAccountID"]); uuidField(body.challengeID);
+          opaqueField(body.identityToken, 12288);
+          if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
+          await scheduleMaintenance(); await sessionReset.reset(body);
+          return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
+        }
+        if (path === "/v1/auth/session") {
+          fields(body, []); const value = authentication.authorize(bearer(request, 80));
+          return gatewayJSON({ accountID: value.accountID, expiresAt: value.expiresAt });
+        }
+        if (path === "/v1/auth/logout" || path === "/v1/auth/logout-all") {
+          fields(body, []); const token = bearer(request, path.endsWith("-all") ? 80 : 120); await scheduleMaintenance();
+          if (path.endsWith("-all")) await authentication.revokeAllSessions(token);
+          else try { await authentication.revokeRenewal(token); } catch (error) {
+            if (!(error instanceof AuthenticationStateError && error.code === "INVALID_SESSION")) throw error;
+          }
+          return new Response(null, { status: 204, headers: { "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" } });
+        }
+        if (path === "/v1/account/deletion/recover") {
+          fields(body, ["challengeID", "identityToken"], ["expectedAccountID"]); uuidField(body.challengeID);
+          opaqueField(body.identityToken, 12288);
+          if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
+          // Recovery takes only fresh owner proof; do not accept a bearer as a substitute.
+          if (request.headers.has("Authorization")) throw new GatewayHTTPError();
+          await scheduleMaintenance();
+          return deletionResponse(await deletionCoordinator.recover(body), 200, true);
+        }
+        fields(body, ["deletionID"], path === "/v1/account/deletion" ? ["challengeID", "identityToken", "expectedAccountID"] : []);
+        uuidField(body.deletionID); const statusToken = bearer(request, 80);
+        if (statusToken.length !== 80 || statusToken.slice(0, 37) !== body.deletionID + "." ||
+            !/^[A-Za-z0-9_-]{43}$/.test(statusToken.slice(37))) throw new GatewayHTTPError("INVALID_SESSION", 401);
+        if (path === "/v1/account/deletion" && Object.keys(body).length > 1) {
+          uuidField(body.challengeID); opaqueField(body.identityToken, 12288);
+          if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
+        }
         await scheduleMaintenance();
-        return deletionResponse(await deletionCoordinator.recover(body), 200, true);
-      }
-      fields(body, ["deletionID"], path === "/v1/account/deletion" ? ["challengeID", "identityToken", "expectedAccountID"] : []);
-      uuidField(body.deletionID); const statusToken = bearer(request, 80);
-      if (statusToken.length !== 80 || statusToken.slice(0, 37) !== body.deletionID + "." ||
-          !/^[A-Za-z0-9_-]{43}$/.test(statusToken.slice(37))) throw new GatewayHTTPError("INVALID_SESSION", 401);
-      if (path === "/v1/account/deletion" && Object.keys(body).length > 1) {
-        uuidField(body.challengeID); opaqueField(body.identityToken, 12288);
-        if (body.expectedAccountID !== undefined) uuidField(body.expectedAccountID);
-      }
-      await scheduleMaintenance();
-      if (path === "/v1/account/deletion") return deletionResponse(await deletionCoordinator.request({ ...body, statusToken }), 202);
-      if (path.endsWith("/private-cleanup")) return deletionResponse(await deletions.acknowledgePrivateCleanup({ ...body, statusToken }));
-      return deletionResponse(deletions.status({ ...body, statusToken }));
+        if (path === "/v1/account/deletion") return deletionResponse(await deletionCoordinator.request({ ...body, statusToken }), 202);
+        if (path.endsWith("/private-cleanup")) return deletionResponse(await deletions.acknowledgePrivateCleanup({ ...body, statusToken }));
+        return deletionResponse(deletions.status({ ...body, statusToken }));
+      };
+      let response;
+      try { response = await dispatch(); }
+      catch (error) { await checkpoint?.advance({ signal: request.signal }); throw error; }
+      await checkpoint?.advance({ signal: request.signal });
+      if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+      return response;
     } catch (error) { return gatewayFailure(error); }
   };
 }

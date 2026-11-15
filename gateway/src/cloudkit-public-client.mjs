@@ -1,10 +1,11 @@
 import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
 import { PublicRecordError, plain, publicRecordName, publicRecordTypes, validTag } from "./public-record-schema.mjs";
+import { checkpointRecordName, checkpointRecordType, checkpointFields } from "./public-registry-checkpoint.mjs";
 
 const responseLimit = 512 * 1024;
 const recordCodes = new Set(["NOT_FOUND", "EXISTS", "CONFLICT", "ACCESS_DENIED", "AUTHENTICATION_FAILED",
   "AUTHENTICATION_REQUIRED", "THROTTLED", "QUOTA_EXCEEDED", "BAD_REQUEST", "INTERNAL_ERROR", "TRY_AGAIN_LATER"]);
-const types = new Set(Object.values(publicRecordTypes));
+const types = new Set([...Object.values(publicRecordTypes), checkpointRecordType]);
 /** Server-only, fixed Development/public target. It is never an HTTP proxy or a client signer. */
 export class CloudKitPublicClient {
   #signer; #fetch; #enabled; #clock; #timeout;
@@ -87,11 +88,27 @@ export class CloudKitPublicClient {
     return this.#call("records/lookup", { records: names.map(recordName => ({ recordName })),
       ...(metadataOnly ? { desiredKeys: ["schemaVersion", "ownerKey", "erased", "deletionKey"] } : {}) }, names, signal);
   }
+  async lookupCheckpoint({ signal } = {}) {
+    return (await this.#call("records/lookup", { records: [{ recordName: checkpointRecordName }] }, [checkpointRecordName], signal)).get(checkpointRecordName);
+  }
+  async replaceCheckpoint(value, expectedTag, { signal } = {}) {
+    if (!validTag(expectedTag) || value?.parentAnchorID === "") throw new PublicRecordError("PUBLIC_INPUT");
+    return (await this.#call("records/modify", { atomic: false, operations: [{ operationType: "replace", record: {
+      recordName: checkpointRecordName, recordType: checkpointRecordType, recordChangeTag: expectedTag,
+      fields: checkpointFields(value) } }] }, [checkpointRecordName], signal)).get(checkpointRecordName);
+  }
+  /** Trusted one-time operator operation after inventory/approval. Never called by runtime recovery. */
+  async createCheckpointForBootstrap(value, { signal } = {}) {
+    if (value?.parentAnchorID !== "" || value?.registeredCount !== 0) throw new PublicRecordError("PUBLIC_INPUT");
+    return (await this.#call("records/modify", { atomic: false, operations: [{ operationType: "create", record: {
+      recordName: checkpointRecordName, recordType: checkpointRecordType, fields: checkpointFields(value) } }] },
+    [checkpointRecordName], signal)).get(checkpointRecordName);
+  }
   async modify(operations, { signal } = {}) {
     if (!Array.isArray(operations) || operations.length < 1 || operations.length > 25 ||
         new Set(operations.map(op => op?.record?.recordName)).size !== operations.length || operations.some(op =>
           !plain(op) || !["create", "replace"].includes(op.operationType) || !plain(op.record) || !publicRecordName.test(op.record.recordName ?? "") ||
-          !types.has(op.record.recordType) || !plain(op.record.fields) || (op.operationType === "replace" ? !validTag(op.record.recordChangeTag) : op.record.recordChangeTag !== undefined))) throw new PublicRecordError("PUBLIC_INPUT");
+          !Object.values(publicRecordTypes).includes(op.record.recordType) || !plain(op.record.fields) || (op.operationType === "replace" ? !validTag(op.record.recordChangeTag) : op.record.recordChangeTag !== undefined))) throw new PublicRecordError("PUBLIC_INPUT");
     return this.#call("records/modify", { atomic: false, operations }, operations.map(op => op.record.recordName), signal);
   }
 }

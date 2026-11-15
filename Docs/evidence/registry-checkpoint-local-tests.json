@@ -1,0 +1,159 @@
+{
+  "stage": "CK-04b",
+  "observedAt": "2026-11-15T13:42:50.719604+01:00",
+  "baselineCommit": "925559a74a5d50f41b0928d722ce10b2cf7105db",
+  "tests": {
+    "Node22.23.5": {
+      "passed": 234,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Node24.22.1": {
+      "passed": 234,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newTests": 17,
+    "newCheckpointTests": 12,
+    "newHTTPRuntimeTests": 5,
+    "scope": "actual local SQLite, synthetic whole-table snapshots, synthetic signed CloudKit protocol and Apple; not actual Cloudflare PITR"
+  },
+  "negativeControl": {
+    "result": "expected failure detected",
+    "mutation": "only confirmed remote anchor/tag comparison disabled in separate /tmp copy",
+    "test": "a restored registry cannot mask rollback by reaching the same record count on another branch",
+    "failedTests": 1,
+    "expectedReservedRecords": 2,
+    "actualReservedRecords": 3,
+    "originalSourceUnchanged": true,
+    "originalCheckpointSHA256": "574361cedc454441f55cd9017bb911635422c86d59d05aede48d4761265c46a6",
+    "mutatedCheckpointSHA256": "ff3cf337da6bc689c93d84e5724e8b9c730b53a0b48215ad7ca5efa22740c9c0",
+    "logSHA256": "b4682c63e268797c776248cfd3f3cfb622e1bd2fb462125448b62e26ad08baac"
+  },
+  "verified": [
+    "missing marker never bootstraps automatically",
+    "initial create is separate/internal and cannot overwrite existing remote state",
+    "exact durable pending can reconcile unknown checkpoint response without a second write",
+    "failed local confirmation/sync preserves or retries the specific outbox",
+    "rollback/fork blocked even at equal registration count",
+    "erasure cannot claim no remaining records after registry rollback",
+    "full epoch loss and unanchored/counter-inconsistent registry fail closed",
+    "late CAS in either order cannot overwrite a newer local branch",
+    "HTTP rollback cannot reauthorize a revoked session",
+    "limits precede checkpoint traffic; exhausted requests cause no more checkpoint calls",
+    "Apple dispatch blocked without valid checkpoint; public generic methods reject marker",
+    "anchored authority cannot downgrade to auth-only; local retention remains available"
+  ],
+  "bootstrap": {
+    "type": "EchoesRegistryCheckpointV1",
+    "record": "community-registry-checkpoint-v1",
+    "automaticRemoteCreation": false,
+    "realRecordCreated": false,
+    "operatorInventoryAndApprovalRequired": true,
+    "schemaAndRolesDeployed": false
+  },
+  "configuration": {
+    "gatewayEnabled": false,
+    "publicRecordsEnabled": false,
+    "deletionEnabled": false,
+    "newServicesKeysSecrets": false,
+    "diagnosticUnchanged": true
+  },
+  "staticChecks": {
+    "node": "22.23.5",
+    "syntaxMJS": [
+      "gateway/scripts/bundle-dashboard.mjs",
+      "gateway/scripts/prepare-development-upload.mjs",
+      "gateway/scripts/probe-development.mjs",
+      "gateway/src/account-deletion-state.mjs",
+      "gateway/src/account-deletion.mjs",
+      "gateway/src/apple-identity.mjs",
+      "gateway/src/apple-login.mjs",
+      "gateway/src/apple-oauth.mjs",
+      "gateway/src/apple-public-keys.mjs",
+      "gateway/src/authentication-state.mjs",
+      "gateway/src/cloudkit-probe.mjs",
+      "gateway/src/cloudkit-public-client.mjs",
+      "gateway/src/cloudkit-request.mjs",
+      "gateway/src/community-worker.mjs",
+      "gateway/src/deletion-schema.mjs",
+      "gateway/src/gateway-http.mjs",
+      "gateway/src/gateway-limits.mjs",
+      "gateway/src/gateway-maintenance.mjs",
+      "gateway/src/gateway-runtime.mjs",
+      "gateway/src/probe-gate.mjs",
+      "gateway/src/probe-http.mjs",
+      "gateway/src/public-record-registry.mjs",
+      "gateway/src/public-record-repository.mjs",
+      "gateway/src/public-record-schema.mjs",
+      "gateway/src/public-registry-checkpoint.mjs",
+      "gateway/src/refresh-credential-vault.mjs",
+      "gateway/src/renewal-proofs.mjs",
+      "gateway/src/runtime-check.mjs",
+      "gateway/src/session-renewal.mjs",
+      "gateway/src/session-reset-schema.mjs",
+      "gateway/src/session-reset.mjs",
+      "gateway/src/worker.mjs",
+      "gateway/test/account-deletion.test.mjs",
+      "gateway/test/apple-identity.test.mjs",
+      "gateway/test/apple-oauth.test.mjs",
+      "gateway/test/authentication-state.test.mjs",
+      "gateway/test/cloudkit-probe.test.mjs",
+      "gateway/test/cloudkit-request.test.mjs",
+      "gateway/test/deletion-recovery.test.mjs",
+      "gateway/test/gateway-http.test.mjs",
+      "gateway/test/gateway-maintenance.test.mjs",
+      "gateway/test/probe-gate.test.mjs",
+      "gateway/test/probe-http.test.mjs",
+      "gateway/test/public-records.test.mjs",
+      "gateway/test/redirect-safety.test.mjs",
+      "gateway/test/refresh-credential-vault.test.mjs",
+      "gateway/test/registry-checkpoint.test.mjs",
+      "gateway/test/renewal-proofs.test.mjs",
+      "gateway/test/session-reset.test.mjs",
+      "gateway/test/support/authentication-fixture.mjs",
+      "gateway/test/support/public-record-fixture.mjs",
+      "gateway/test/support/sqlite-snapshot.mjs"
+    ],
+    "communityJSON": "passed"
+  },
+  "iOS": "Swift/UI/entitlements/project unchanged from baseline; prior 162 Swift/10 UI and Debug/Release not repeated",
+  "project": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "knownLimits": [
+    "protection is for consistent transactional snapshots/PITR; no claim against arbitrary manual rewriting of both stores",
+    "real bootstrap, initial inventory, roles/PITR and operator recovery not accepted",
+    "extra checkpoint network calls/serialized work need actual Workers Free CPU/SQL/latency measurements",
+    "retained fences/metadata and quotas still require release retention",
+    "social coordinator/HTTP/native adapter and public profiles/photos not finished",
+    "two ordinary iCloud accounts and separate service identity acceptance still required"
+  ],
+  "notPerformed": [
+    "actual Apple/CloudKit records/types/roles or token operations",
+    "Cloudflare deployment, secrets, PITR, namespace/binding or paid-plan changes",
+    "new native builds/tests or physical-device installation",
+    "Firebase data operations",
+    "Production or TestFlight publication"
+  ],
+  "sourceSHA256": {
+    "gateway/src/cloudkit-public-client.mjs": "3afbef5e3023f6ec18dc518c6e85d268746b0ed2184305e69ceb5fd324a77235",
+    "gateway/src/gateway-http.mjs": "a908ba00de1f72be9199180fa0eb2ecf76e35afe1cd8715711c554a3ba55e8f6",
+    "gateway/src/gateway-runtime.mjs": "34a89fc5dee59cd1c43351933cc315d927e1f4affd37069111f61d88b500acf2",
+    "gateway/src/public-record-registry.mjs": "d4d08d5f51d7644938c03e4e01af54ce214c4435dc7630f77f014f1c2165dff8",
+    "gateway/src/public-record-repository.mjs": "29559a0e92d2df57e2f884265c8e29ee4b79ee32ab603da3e416644f254ad9b5",
+    "gateway/src/public-record-schema.mjs": "51312c983d9ff594d16e4300174f9dc89dbc566c870876d74f08763fe5306547",
+    "gateway/src/public-registry-checkpoint.mjs": "574361cedc454441f55cd9017bb911635422c86d59d05aede48d4761265c46a6",
+    "gateway/test/gateway-http.test.mjs": "01168de1c5a485db507315837112a7497f9cfd2165388cd8925cd73579ed386d",
+    "gateway/test/public-records.test.mjs": "3483fc2b6769c740a26314a8696132bad84411e8f377ddb4f7fd1806defa532b",
+    "gateway/test/registry-checkpoint.test.mjs": "b8d021f571b4b6c949f337da08cfb60b8c1359cbed03168ef586f4507e63adaf",
+    "gateway/test/support/public-record-fixture.mjs": "601be753371925d379eb03309363ae7b9893cae05fcffe6ae78c22c54f288ccd",
+    "gateway/test/support/sqlite-snapshot.mjs": "9e389112d43455fdbf6604c335e8bb7cc6ab06850e3a7cd07dafc34f92dd001d"
+  },
+  "logSHA256": {
+    "Node22": "a919b2a333afc3bf5eeed6910026df780d8557e3c46ac54aa06d373479888793",
+    "Node24": "a392e10db36869548d1bd624c65c825b8e1ef22866a3966b4fb909a3aa50c586"
+  },
+  "staticLogSHA256": "41940590f105f95b4ab71952f72072f043ffc7668daba65e112990b94b330d85"
+}

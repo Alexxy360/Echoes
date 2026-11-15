@@ -1,4 +1,6 @@
 import { PublicRecordError, publicUUID, recordIdentity, recordIdentityFromKey, validTag } from "./public-record-schema.mjs";
+import { randomUUID } from "node:crypto";
+import { validCheckpoint, sameCheckpoint } from "./public-registry-checkpoint.mjs";
 
 const schema = [
   `CREATE TABLE IF NOT EXISTS public_records_v1 (
@@ -9,10 +11,13 @@ const schema = [
     UNIQUE(account_id,kind,logical_key))`,
   `CREATE INDEX IF NOT EXISTS public_record_owner_v1 ON public_records_v1(account_id,phase,record_name)`,
   `CREATE TABLE IF NOT EXISTS public_record_counts_v1(scope TEXT PRIMARY KEY,value INTEGER NOT NULL CHECK(value>=0 AND value<=10000))`,
+  `CREATE TABLE IF NOT EXISTS public_registry_checkpoint_v1(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
+    registry_id TEXT NOT NULL,initial_anchor TEXT NOT NULL,confirmed_value TEXT,confirmed_tag TEXT,
+    pending_value TEXT,pending_expected_tag TEXT)`,
 ];
 /** Metadata only, in the SAME private SQLite authority as auth/jobs. No names, text or GPS in SQL. */
 export class PublicRecordRegistry {
-  #storage; #clock;
+  #storage; #clock; #registryID;
   constructor(storage, { clock = Date.now } = {}) {
     if (typeof storage?.sql?.exec !== "function" || typeof storage.transactionSync !== "function" ||
         typeof storage.sync !== "function" || typeof clock !== "function") throw new PublicRecordError();
@@ -23,6 +28,17 @@ export class PublicRecordRegistry {
         storage.sql.exec("INSERT INTO public_record_counts_v1(scope,value) SELECT '*',COUNT(*) FROM public_records_v1");
         storage.sql.exec("INSERT INTO public_record_counts_v1(scope,value) SELECT account_id,COUNT(*) FROM public_records_v1 GROUP BY account_id");
       }
+      if (!this.#rows("SELECT singleton FROM public_registry_checkpoint_v1 WHERE singleton=1").length) {
+        if (this.#rows("SELECT record_name FROM public_records_v1 LIMIT 1").length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        storage.sql.exec("INSERT INTO public_registry_checkpoint_v1(singleton,registry_id,initial_anchor) VALUES(1,?,?)", randomUUID(), randomUUID());
+      }
+      this.#registryID = this.#rows("SELECT registry_id FROM public_registry_checkpoint_v1 WHERE singleton=1")[0].registry_id;
+      // Validate once at open. PITR restores the whole SQLite database at an instance restart.
+      const rows = this.#rows("SELECT account_id,COUNT(*) AS n FROM public_records_v1 GROUP BY account_id");
+      const counts = new Map(this.#rows("SELECT scope,value FROM public_record_counts_v1").map(row => [row.scope, row.value]));
+      if (rows.reduce((n, row) => n + row.n, 0) !== counts.get("*") || rows.some(row => counts.get(row.account_id) !== row.n) ||
+          counts.size !== rows.length + 1) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      this.#checkpointState();
     });
   }
   #tx(action) {
@@ -32,6 +48,64 @@ export class PublicRecordRegistry {
   #rows(sql, ...args) { return this.#storage.sql.exec(sql, ...args).toArray(); }
   #now() { const now = this.#clock(); if (!Number.isSafeInteger(now) || now < 0) throw new PublicRecordError(); return now; }
   async #durable() { try { await this.#storage.sync(); } catch { throw new PublicRecordError(); } }
+  #checkpointState() {
+    const row = this.#rows("SELECT * FROM public_registry_checkpoint_v1 WHERE singleton=1")[0];
+    const count = this.#rows("SELECT value FROM public_record_counts_v1 WHERE scope='*'")[0]?.value;
+    if (!row || row.registry_id !== this.#registryID || !publicUUID.test(row.registry_id ?? "") ||
+        !publicUUID.test(row.initial_anchor ?? "") || !Number.isInteger(count) || count < 0 || count > 10000) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    const initial = { schemaVersion: 1, registryID: row.registry_id, anchorID: row.initial_anchor, parentAnchorID: "", registeredCount: 0 };
+    const decode = value => {
+      if (typeof value !== "string" || value.length > 2048) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      const parsed = JSON.parse(value);
+      if (!validCheckpoint(parsed) || parsed.registryID !== row.registry_id || parsed.registeredCount > count) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      return Object.freeze(parsed);
+    };
+    const confirmed = row.confirmed_value === null && row.confirmed_tag === null ? null :
+      { value: decode(row.confirmed_value), tag: row.confirmed_tag };
+    const pending = row.pending_value === null && row.pending_expected_tag === null ? null :
+      { value: decode(row.pending_value), expectedTag: row.pending_expected_tag };
+    if (confirmed && !validTag(confirmed.tag) || pending && (!confirmed || !validTag(pending.expectedTag) ||
+        pending.expectedTag !== confirmed.tag || pending.value.parentAnchorID !== confirmed.value.anchorID ||
+        pending.value.anchorID === confirmed.value.anchorID || pending.value.registeredCount < confirmed.value.registeredCount)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    return Object.freeze({ registryID: row.registry_id, initial: Object.freeze(initial), confirmed, pending, registeredCount: count });
+  }
+  async checkpointState() { const state = this.#tx(() => this.#checkpointState()); await this.#durable(); return state; }
+  /** Trusted operator preparation ONLY; runtime never creates a missing remote record. */
+  async prepareBootstrap() {
+    const state = await this.checkpointState();
+    if (state.confirmed || state.pending || state.registeredCount !== 0) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    return state.initial;
+  }
+  async confirmInitialCheckpoint(remote) {
+    this.#tx(() => {
+      const state = this.#checkpointState();
+      if (state.confirmed || state.pending || state.registeredCount !== 0 || !sameCheckpoint(remote?.value, state.initial) ||
+          !validTag(remote?.tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      this.#storage.sql.exec("UPDATE public_registry_checkpoint_v1 SET confirmed_value=?,confirmed_tag=? WHERE singleton=1", JSON.stringify(remote.value), remote.tag);
+    });
+    await this.#durable();
+  }
+  async prepareCheckpoint(expected) {
+    const pending = this.#tx(() => {
+      const state = this.#checkpointState();
+      if (!state.confirmed || state.pending || !sameCheckpoint(expected?.value, state.confirmed.value) || expected.tag !== state.confirmed.tag) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      const value = { schemaVersion: 1, registryID: state.registryID, anchorID: randomUUID(),
+        parentAnchorID: state.confirmed.value.anchorID, registeredCount: state.registeredCount };
+      this.#storage.sql.exec("UPDATE public_registry_checkpoint_v1 SET pending_value=?,pending_expected_tag=? WHERE singleton=1", JSON.stringify(value), state.confirmed.tag);
+      return Object.freeze({ value: Object.freeze(value), expectedTag: state.confirmed.tag });
+    });
+    await this.#durable(); return pending;
+  }
+  async confirmPendingCheckpoint(expected, remote) {
+    this.#tx(() => {
+      const state = this.#checkpointState();
+      if (!state.pending || !sameCheckpoint(expected?.value, state.pending.value) || expected.expectedTag !== state.pending.expectedTag ||
+          !sameCheckpoint(remote?.value, state.pending.value) || !validTag(remote?.tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      this.#storage.sql.exec(`UPDATE public_registry_checkpoint_v1 SET confirmed_value=?,confirmed_tag=?,
+        pending_value=NULL,pending_expected_tag=NULL WHERE singleton=1`, JSON.stringify(remote.value), remote.tag);
+    });
+    await this.#durable();
+  }
   #active(accountID, generation) {
     const row = this.#rows("SELECT generation FROM auth_accounts_v1 WHERE account_id=? AND disabled=0", accountID)[0];
     if (!row || !Number.isSafeInteger(row.generation) || (generation !== undefined && row.generation !== generation)) throw new PublicRecordError("PUBLIC_SCOPE");

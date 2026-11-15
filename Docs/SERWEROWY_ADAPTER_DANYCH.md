@@ -2,6 +2,8 @@
 
 Stan: 15 listopada 2026. Zaimplementowano rzeczywisty transport CloudKit Web Services Development/public, rejestr zapisów w prywatnym SQLite i repozytorium pięciu typów. Po jawnym włączeniu w konfiguracji runtime podłącza ten adapter do istniejącego procesu usuwania. Domyślne `PUBLIC_RECORDS_ENABLED=0`, `GATEWAY_ENABLED=0` i `ACCOUNT_DELETION_ENABLED=0` pozostają wyłączone. Nie utworzono usługi, typów/indeksów/ról ani sekretów w chmurze. Zwykły klient iOS nadal korzysta z Firebase; HTTP mapy/czatu/profilu nie jest jeszcze podłączone.
 
+Aktualizacja CK-04b: dodano [punkt kontrolny i obsługę cofnięcia rejestru](PUNKT_KONTROLNY_REJESTRU.md), także dla auth/HTTP i procesora. Aktualnie 234/234 Node 22/24; poniższy CK-04a zachowuje swój zakres historyczny. Nadal brak aktywacji i rzeczywistego odbioru usług.
+
 ## Własność i format
 
 `CloudKitPublicRepository.write` ustala accountID przez istniejącą autoryzację access tokenu. Klient nie wybiera właściciela, typu CloudKit, dowolnego pola, terminu lub ścieżki podpisywania. Zamknięty kontrakt obejmuje:
@@ -44,7 +46,7 @@ Aktywacja wymaga PUBLIC_RECORDS_ENABLED=1, włączonego usuwania, istniejącego 
 
 217/217 testów na Node 22.23.5 i 24.22.1, w tym 21 nowych (20 transportu/rejestru/repozytorium i 1 kompozycji runtime/HTTP). P-256 jest generowane w pamięci i niezależnie sprawdzane verify(). SQLite jest rzeczywiste lokalnie, CloudKit/Apple są jawnymi modelami. Testy obejmują nieznane create/replace, późne odpowiedzi po barierze, różne konta, wszystkie typy, 52 rekordy, częściowy błąd, dodatkowe pola, lease, limity 1000/10000, rollback, deadline/cancel i rozdział kluczy. Node 22 pobrano tymczasowo z nodejs.org i sprawdzono SHA-256; nie instalowano systemowo. Składnia 49 MJS i konfiguracja JSON poprawne. [Raport i hashe](evidence/public-records-local-tests.json).
 
-Przed aktywacją na danych użytkowników potrzebne są jeszcze zabezpieczenia i procedura odtworzenia rejestru: po utracie lub cofnięciu SQLite obecny rejestr nie dowodzi kompletności CloudKit. Należy dodać sprawdzany zdalny checkpoint/epokę i odbiór awarii przed dopuszczeniem takiego stanu do completed. Nowa przestrzeń wymaga też potwierdzenia braku wcześniejszych niezarejestrowanych rekordów. To obowiązkowy następny krok, nie zaliczona własność tego etapu.
+CK-04b dodaje zdalny checkpoint/epokę i outbox wymagane przed potwierdzaniem completed. Odbiór dotyczy lokalnych modeli i spójnych snapshotów SQLite, nie rzeczywistego PITR. Przed aktywacją nadal trzeba przygotować i odebrać bootstrap, inwentarz nowej przestrzeni i procedurę operatora oraz potwierdzić brak wcześniejszych niezarejestrowanych rekordów.
 
 Nadal wymagane są retencja barier/rejestru, workflow operatora, HTTP funkcji społecznościowych wraz z limitami, blokadami/zakresem 3 km/moderacją, iOS CommunityClient, publiczne zdjęcia/CKAsset, schemat/indeksy/role, rzeczywisty Workers CPU/SQL i A/B. Prymityw zapisu preferencji/zgłoszeń sam nie egzekwuje blokad odpowiedzi ani uprawnień do zgłaszanej wiadomości; zrobi to koordynator. Nie zaliczono pełnej migracji lub TestFlight. Swift/UI i projekt aplikacji pozostały identyczne z poprzednim checkpointem; nie powtarzano ich testów.
 

@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
 import { PublicRecordRegistry } from "../src/public-record-registry.mjs";
+import { PublicRegistryCheckpoint } from "../src/public-registry-checkpoint.mjs";
 import { CloudKitPublicRepository } from "../src/public-record-repository.mjs";
 import { normalizePublicInput, fieldValues, recordIdentity, ownerKey } from "../src/public-record-schema.mjs";
 import { publicFixture, publicClient, publicCode, profileInput, messageInput } from "./support/public-record-fixture.mjs";
 
 test("durable registry limits bound each owner and the whole controlled target without provider requests", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const owners = [];
     for (let user = 0; user < 10; user++) {
@@ -34,7 +35,7 @@ test("durable registry limits bound each owner and the whole controlled target w
 
 test("an insert failure rolls back both registry counters and the record reservation", async () => {
   let armed = false;
-  const f = publicFixture({ sqlHook: sql => { if (armed && sql.startsWith("INSERT INTO public_records_v1")) throw new Error("PRIVATE SQL path"); } });
+  const f = await publicFixture({ sqlHook: sql => { if (armed && sql.startsWith("INSERT INTO public_records_v1")) throw new Error("PRIVATE SQL path"); } });
   try {
     const session = await f.session(), input = profileInput(session); armed = true;
     await assert.rejects(() => f.repository.write(input), publicCode("PUBLIC_UNAVAILABLE"));
@@ -47,7 +48,7 @@ test("an insert failure rolls back both registry counters and the record reserva
 });
 
 test("signed public writes derive the owner from access, reserve first and keep text/GPS out of SQLite", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session();
     f.model.before = () => {
@@ -64,7 +65,7 @@ test("signed public writes derive the owner from access, reserve first and keep 
 });
 
 test("create and conditional replace preserve versions, idempotency and conflict with a stale editor", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(), initial = profileInput(session), first = await f.repository.write(initial);
     assert.deepEqual(await f.repository.write(initial), first); assert.equal(f.model.requests.length, 1);
@@ -77,14 +78,14 @@ test("create and conditional replace preserve versions, idempotency and conflict
 });
 
 test("lost create/replace responses reconcile only the same durable operation, including after reopen", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(), input = profileInput(session); let lose = true;
     f.model.after = () => { if (lose) { lose = false; throw new Error("PRIVATE upstream body"); } };
     await assert.rejects(() => f.repository.write(input), publicCode("PUBLIC_UNAVAILABLE"));
     assert.equal(f.db.prepare("SELECT phase FROM public_records_v1").get().phase, "pending");
     const registry = new PublicRecordRegistry(f.storage, { clock: f.clock });
-    const reopened = new CloudKitPublicRepository({ registry, client: f.client, authentication: f.state, clock: f.clock });
+    const reopened = new CloudKitPublicRepository({ registry, client: f.client, checkpoint: new PublicRegistryCheckpoint({ registry, client: f.client }), authentication: f.state, clock: f.clock });
     await assert.rejects(() => reopened.write(profileInput(session, "Other")), publicCode("PUBLIC_PENDING"));
     const recovered = await reopened.write(input);
     assert.equal(f.model.records.size, 1); assert.equal(recovered.fields.name.value, "Maja");
@@ -97,7 +98,7 @@ test("lost create/replace responses reconcile only the same durable operation, i
 
 test("durability failure prevents dispatch and a genuine retry retains the original request identity", async () => {
   let armed = false;
-  const f = publicFixture({ syncHook: () => { if (armed) throw new Error("PRIVATE disk error"); } });
+  const f = await publicFixture({ syncHook: () => { if (armed) throw new Error("PRIVATE disk error"); } });
   try {
     const session = await f.session(), input = profileInput(session); armed = true;
     await assert.rejects(() => f.repository.write(input), publicCode("PUBLIC_UNAVAILABLE"));
@@ -108,10 +109,13 @@ test("durability failure prevents dispatch and a genuine retry retains the origi
 
 test("a deletion beginning during durability prevents the prepared write from ever being dispatched", async () => {
   let hook;
-  const f = publicFixture({ syncHook: async () => { const action = hook; hook = undefined; await action?.(); } });
+  const f = await publicFixture({ syncHook: async () => { const action = hook; hook = undefined; await action?.(); } });
   try {
     const session = await f.session(); let ticket;
-    hook = async () => { ticket = await f.beginDeletion(session); };
+    hook = async function afterReservation() {
+      if (!f.db.prepare("SELECT record_name FROM public_records_v1 LIMIT 1").get()) { hook = afterReservation; return; }
+      ticket = await f.beginDeletion(session);
+    };
     await assert.rejects(() => f.repository.write(profileInput(session)), error => error.code === "INVALID_SESSION");
     assert.equal(f.model.requests.length, 0);
     assert.equal((await f.erase(ticket)).remaining, false);
@@ -120,7 +124,7 @@ test("a deletion beginning during durability prevents the prepared write from ev
 });
 
 test("an unknown create still queued in transit loses to its exact durable erasure fence", async () => {
-  const f = publicFixture(); let release, reached;
+  const f = await publicFixture(); let release, reached;
   try {
     const session = await f.session(), ready = new Promise(resolve => { reached = resolve; });
     let hold = true;
@@ -138,7 +142,7 @@ test("an unknown create still queued in transit loses to its exact durable erasu
 
 test("an update committing before erasure is removed, and one committing after its fence conflicts", async () => {
   for (const beforeCommit of [true, false]) {
-    const f = publicFixture(); let release, reached;
+    const f = await publicFixture(); let release, reached;
     try {
       const session = await f.session(), first = await f.repository.write(profileInput(session));
       const ready = new Promise(resolve => { reached = resolve; }); let hold = true;
@@ -154,7 +158,7 @@ test("an update committing before erasure is removed, and one committing after i
 });
 
 test("exact-ID erasure covers all five types without queries, strips unknown fields and preserves another owner", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const a = await f.session(), b = await f.session("another.user");
     const profile = await f.repository.write(profileInput(a));
@@ -182,7 +186,7 @@ test("exact-ID erasure covers all five types without queries, strips unknown fie
 });
 
 test("batches are at most 25 and public completion needs a later settle pass plus the separate private ACK", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session();
     for (let i = 0; i < 52; i++) await f.repository.write(messageInput(session, "message " + i));
@@ -201,7 +205,7 @@ test("batches are at most 25 and public completion needs a later settle pass plu
 });
 
 test("wrong owner or expired erasure lease cannot select records or advance the local ledger", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(); await f.repository.write(profileInput(session));
     const ticket = await f.beginDeletion(session), context = await f.deletions.claimPublicBatch(ticket.deletionID), count = f.model.requests.length;
@@ -214,7 +218,7 @@ test("wrong owner or expired erasure lease cannot select records or advance the 
 });
 
 test("partial modify errors keep erasure incomplete and a fresh batch reconciles already-cleared content", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(); await f.repository.write(profileInput(session)); await f.repository.write(messageInput(session));
     const ticket = await f.beginDeletion(session), context = await f.deletions.claimPublicBatch(ticket.deletionID); let first = true;
@@ -231,7 +235,7 @@ test("partial modify errors keep erasure incomplete and a fresh batch reconciles
 });
 
 test("a fence returned by metadata is replaced again so unexpected content cannot hide behind erased=1", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(); const saved = await f.repository.write(profileInput(session));
     const ticket = await f.beginDeletion(session); let fail = true;
@@ -245,7 +249,7 @@ test("a fence returned by metadata is replaced again so unexpected content canno
 });
 
 test("foreign provider metadata never authorizes a replace or false erasure receipt", async () => {
-  const f = publicFixture();
+  const f = await publicFixture();
   try {
     const session = await f.session(), saved = await f.repository.write(profileInput(session));
     f.model.records.get(saved.recordName).fields.ownerKey.value = ownerKey(randomUUID());

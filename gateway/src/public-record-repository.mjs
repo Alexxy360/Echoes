@@ -12,12 +12,14 @@ function checkScope(record, context) {
 }
 /** Only trusted coordinators call this repository. No arbitrary-record HTTP methods are exposed. */
 export class CloudKitPublicRepository {
-  #registry; #client; #authentication; #clock;
-  constructor({ registry, client, authentication, clock = Date.now } = {}) {
+  #registry; #client; #authentication; #clock; #checkpoint;
+  constructor({ registry, client, authentication, checkpoint, clock = Date.now } = {}) {
     if (typeof registry?.reserve !== "function" || typeof client?.modify !== "function" || typeof client.lookup !== "function" ||
-        typeof authentication?.authorize !== "function" || typeof clock !== "function") throw new PublicRecordError();
-    this.#registry = registry; this.#client = client; this.#authentication = authentication; this.#clock = clock;
+        typeof authentication?.authorize !== "function" || typeof checkpoint?.verify !== "function" ||
+        typeof checkpoint.advance !== "function" || typeof clock !== "function") throw new PublicRecordError();
+    this.#registry = registry; this.#client = client; this.#authentication = authentication; this.#clock = clock; this.#checkpoint = checkpoint;
   }
+  prepareBootstrap() { return this.#registry.prepareBootstrap(); }
   #check(signal) { if (signal?.aborted) throw new PublicRecordError(); }
   #authorize(accessToken, expectedID) {
     const identity = this.#authentication.authorize(accessToken);
@@ -29,8 +31,11 @@ export class CloudKitPublicRepository {
     const identity = this.#authorize(accessToken), fields = normalizePublicInput(kind, input, this.#clock());
     if (["message", "report"].includes(kind) && (logicalID !== requestID || expectedTag !== null) ||
         kind === "block" && logicalID !== fields.targetID) throw new PublicRecordError("PUBLIC_INPUT");
+    await this.#checkpoint.verify({ signal });
     const context = await this.#registry.reserve({ accountID: identity.accountID, kind, logicalID,
       requestID, payloadHash: inputHash(fields), expectedTag });
+    this.#check(signal); this.#authorize(accessToken, context.accountID);
+    await this.#checkpoint.advance({ signal });
     this.#check(signal); this.#authorize(accessToken, context.accountID);
     const current = this.#registry.assertMutationCurrent(context), expectedFields = liveFields(context, fields);
     if (current.phase === "settled") return this.#receipt(current, expectedFields);
@@ -47,8 +52,9 @@ export class CloudKitPublicRepository {
     checkScope(record, context);
     if (!matchesFields(record.fields, expectedFields)) throw new PublicRecordError("PUBLIC_CONFLICT");
     const saved = await this.#registry.settle(context, record.recordChangeTag);
+    await this.#checkpoint.advance({ signal });
     this.#check(signal); this.#authorize(accessToken, saved.accountID);
-    return this.#receipt(saved, expectedFields);
+    return this.#receipt(this.#registry.assertMutationCurrent(saved), expectedFields);
   }
   #receipt(context, fields) {
     return Object.freeze({ recordName: context.recordName, recordType: context.recordType,
@@ -57,7 +63,9 @@ export class CloudKitPublicRepository {
   async erasePublicDataBatch({ accountID, deletionID, leaseID, maximumRecords = 100, signal } = {}) {
     const context = { accountID, deletionID, leaseID };
     this.#check(signal);
+    await this.#checkpoint.verify({ signal });
     const batch = await this.#registry.erasureBatch(context, maximumRecords);
+    await this.#checkpoint.advance({ signal });
     this.#check(signal);
     const succeeded = new Map(), operations = [];
     if (batch.length) {
@@ -93,6 +101,8 @@ export class CloudKitPublicRepository {
       }
     }
     const receipt = await this.#registry.completeErasure(context, succeeded);
+    await this.#checkpoint.advance({ signal });
+    this.#registry.assertErasureCurrent(context);
     this.#check(signal);
     if (failure) throw failure;
     return receipt;

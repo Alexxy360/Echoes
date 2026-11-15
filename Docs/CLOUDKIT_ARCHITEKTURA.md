@@ -63,3 +63,7 @@ Przygotowano `EchoesCloudKit` jako oddzielny pakiet i połączono go z podpisany
 ## CK-04a — lokalna implementacja zaufanego magazynu
 
 CloudKitPublicRepository i rejestr jednej authority obejmują EchoesPublicProfileV1, EchoesPresenceV1, EchoesLocalMessageV1, EchoesBlockV1 i EchoesReportV1. Public database wymaga dla tych typów wyłącznie praw tożsamości serwisowej, zwłaszcza dla blokad/zgłoszeń; ról jeszcze nie wdrożono. Zapisy są związane z serwerowym UUID sesji, rejestrowane przed dispatch i warunkowe. Czyszczenie bazuje na dokładnych ID oraz zachowanych minimalnych barierach, bez polegania na pustym indeksie. PUBLIC_RECORDS_ENABLED=0. Nie jest to jeszcze klient społecznościowy ani dowód kompletności po odtworzeniu SQLite; checkpoint/epoka, retencja i realny odbiór są obowiązkowe przed aktywacją. [Protokół, dowody i dalsze wymagania](SERWEROWY_ADAPTER_DANYCH.md).
+
+## CK-04b — zdalna kontrola spójnej kopii authority
+
+Planowany typ administracyjny EchoesRegistryCheckpointV1 ma stały pojedynczy rekord, dostępny wyłącznie tożsamości serwisowej. Losowa epoka i outbox z tagiem wiążą odpowiedzi/dispatch z utrwalonym SQLite. Brak znanego anchor lub inna gałąź blokują zapis, usuwanie i dostęp; licznik sam nie jest dowodem historii. Punkt nie jest typem danych użytkownika i nie podlega jego erasure. Typ/róle/bootstrap nie zostały utworzone. Ochrona spójnego odtworzenia ma lokalne testy i negatywną kontrolę; realny PITR, odzyskiwanie operatorskie i budżet nadal otwarte. [Szczegóły](PUNKT_KONTROLNY_REJESTRU.md).

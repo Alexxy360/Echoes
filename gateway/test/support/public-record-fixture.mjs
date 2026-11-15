@@ -4,6 +4,7 @@ import { fixture, hash } from "./authentication-fixture.mjs";
 import { CloudKitPublicClient } from "../../src/cloudkit-public-client.mjs";
 import { CloudKitPublicRepository } from "../../src/public-record-repository.mjs";
 import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
+import { PublicRegistryCheckpoint, checkpointRecordName } from "../../src/public-registry-checkpoint.mjs";
 import { AccountDeletionState } from "../../src/account-deletion-state.mjs";
 import { AccountDeletionCoordinator, AccountDeletionProcessor } from "../../src/account-deletion.mjs";
 
@@ -19,7 +20,8 @@ export function publicClient(fetchImplementation, options = {}) {
 /** Explicit protocol model, NOT CloudKit. Indexes are deliberately absent; erasure must use exact IDs. */
 export class PublicCloudKitModel {
   records = new Map(); requests = []; sequence = 0;
-  before; after;
+  controls = new Map(); checkpointRequests = [];
+  before; after; beforeCheckpoint; afterCheckpoint;
   async fetch(request, options) {
     const url = new URL(request.url), raw = await request.text(), body = JSON.parse(raw);
     assert.equal(url.origin, "https://api.apple-cloudkit.com");
@@ -30,11 +32,15 @@ export class PublicCloudKitModel {
     const digest = createHash("sha256").update(raw).digest("base64");
     assert.equal(verify("sha256", Buffer.from(`${timestamp}:${digest}:${url.pathname}`), pair.publicKey, Buffer.from(signature, "base64")), true);
     const operation = url.pathname.split("/").at(-1), call = { operation, body, signal: options.signal };
-    this.requests.push(call);
-    const override = await this.before?.(call);
+    const names = operation === "lookup" ? body.records.map(row => row.recordName) : body.operations.map(row => row.record.recordName);
+    const control = names.includes(checkpointRecordName);
+    if (control) assert.deepEqual(names, [checkpointRecordName]);
+    (control ? this.checkpointRequests : this.requests).push(call);
+    const store = control ? this.controls : this.records;
+    const override = await (control ? this.beforeCheckpoint?.(call) : this.before?.(call));
     if (override) return override;
     const records = operation === "lookup" ? body.records.map(({ recordName }) => {
-      const found = this.records.get(recordName);
+      const found = store.get(recordName);
       if (!found) return { recordName, serverErrorCode: "NOT_FOUND" };
       const record = structuredClone(found);
       if (body.desiredKeys) record.fields = Object.fromEntries(Object.entries(record.fields).filter(([key]) => body.desiredKeys.includes(key)));
@@ -42,26 +48,31 @@ export class PublicCloudKitModel {
     }) : body.operations.map(({ operationType, record }) => {
       assert.equal(body.atomic, false);
       assert.ok(["create", "replace"].includes(operationType));
-      const old = this.records.get(record.recordName);
+      const old = store.get(record.recordName);
       if (operationType === "create" && old) return { recordName: record.recordName, serverErrorCode: "EXISTS" };
       if (operationType === "replace" && (!old || old.recordChangeTag !== record.recordChangeTag)) return {
         recordName: record.recordName, serverErrorCode: old ? "CONFLICT" : "NOT_FOUND" };
       const saved = { recordName: record.recordName, recordType: record.recordType,
         recordChangeTag: String(++this.sequence), fields: structuredClone(record.fields) };
-      this.records.set(saved.recordName, saved); return structuredClone(saved);
+      store.set(saved.recordName, saved); return structuredClone(saved);
     });
     const response = Response.json({ records: records.reverse() });
-    return await this.after?.({ ...call, response }) ?? response;
+    return await (control ? this.afterCheckpoint?.({ ...call, response }) : this.after?.({ ...call, response })) ?? response;
   }
 }
-export function publicFixture(options) {
+export async function publicFixture({ bootstrap = true, ...options } = {}) {
   const f = fixture(options), model = new PublicCloudKitModel();
   const registry = new PublicRecordRegistry(f.storage, { clock: f.clock });
   const client = publicClient((...args) => model.fetch(...args), { clock: f.clock });
-  const repository = new CloudKitPublicRepository({ registry, client, authentication: f.state, clock: f.clock });
+  const checkpoint = new PublicRegistryCheckpoint({ registry, client });
+  const repository = new CloudKitPublicRepository({ registry, client, checkpoint, authentication: f.state, clock: f.clock });
   const deletions = new AccountDeletionState(f.storage, { clock: f.clock });
   const deleter = new AccountDeletionCoordinator({ authenticationState: f.state, deletionState: deletions, verifier: f.verifier });
-  return { ...f, model, registry, client, repository, deletions,
+  if (bootstrap) {
+    const initial = await registry.prepareBootstrap();
+    await client.createCheckpointForBootstrap(initial); await checkpoint.verify();
+  }
+  return { ...f, model, registry, client, checkpoint, repository, deletions,
     async beginDeletion(session, subject = "synthetic.user") {
       const challenge = await f.state.issueChallenge(hash(randomUUID()), { purpose: "account_deletion" });
       const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");

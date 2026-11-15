@@ -16,6 +16,7 @@ import { createGatewayHTTPHandler, inspectGatewayRequest, gatewayFailure, gatewa
 import { CloudKitPublicClient } from "./cloudkit-public-client.mjs";
 import { PublicRecordRegistry } from "./public-record-registry.mjs";
 import { CloudKitPublicRepository } from "./public-record-repository.mjs";
+import { PublicRegistryCheckpoint } from "./public-registry-checkpoint.mjs";
 
 export const authorityName = "echoes-auth-authority-development-v1";
 export function activeGatewayConfiguration(env, now = Date.now()) {
@@ -38,12 +39,17 @@ function keyMap(json) {
   if (!value || typeof value !== "object" || Array.isArray(value) || Object.keys(value).length < 1 || Object.keys(value).length > 3) throw new Error();
   return value;
 }
+function hasRegistryCheckpoint(storage) {
+  return storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='public_registry_checkpoint_v1'").toArray().length > 0 &&
+    storage.sql.exec("SELECT singleton FROM public_registry_checkpoint_v1 WHERE singleton=1").toArray().length > 0;
+}
 
 /** Concrete composition for the Development target. No fake Apple exchange, key or data-erasure fallback. */
 export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImplementation = (request, options) => fetch(request, options), erasePublicDataBatch } = {}) {
   try {
     const config = activeGatewayConfiguration(env, clock());
     if (!config || (config.deletionEnabled && !config.publicRecordsEnabled && typeof erasePublicDataBatch !== "function")) throw new Error();
+    if (!config.publicRecordsEnabled && hasRegistryCheckpoint(storage)) throw new Error();
     if (config.publicRecordsEnabled && createPublicKey(env.CLOUDKIT_PRIVATE_KEY).export({ type: "spki", format: "der" })
       .equals(createPublicKey(env.APPLE_SIGNIN_PRIVATE_KEY).export({ type: "spki", format: "der" }))) throw new Error();
     const refreshKeys = keyMap(env.REFRESH_KEYS_JSON), renewalKeys = keyMap(env.RENEWAL_KEYS_JSON);
@@ -53,32 +59,56 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const credentialVault = new RefreshCredentialVault({ activeKeyID: env.REFRESH_ACTIVE_KEY_ID, keys: refreshKeys });
     const renewalProofs = new RenewalProofs({ activeKeyID: env.RENEWAL_ACTIVE_KEY_ID, keys: renewalKeys });
     const clientSecret = new AppleClientSecret({ privateKeyPEM: env.APPLE_SIGNIN_PRIVATE_KEY, keyID: env.APPLE_SIGNIN_KEY_ID, clock });
+    let checkpoint;
     const guardedFetch = (...args) => {
-      if (!activeGatewayConfiguration(env, clock())) throw new Error("Gateway is inactive.");
+      if (!activeGatewayConfiguration(env, clock()) || !checkpoint && hasRegistryCheckpoint(storage)) throw new Error("Gateway is inactive.");
       return fetchImplementation(...args);
     };
-    const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: guardedFetch });
-    const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: guardedFetch }), clock });
+    const providerFetch = async (...args) => {
+      await checkpoint?.advance({ signal: args[1]?.signal });
+      return guardedFetch(...args);
+    };
+    const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: providerFetch });
+    const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: providerFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
-    const publicRecords = config.publicRecordsEnabled ? new CloudKitPublicRepository({
-      authentication, clock, registry: new PublicRecordRegistry(storage, { clock }),
-      client: new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
+    let publicRecords;
+    if (config.publicRecordsEnabled) {
+      const registry = new PublicRecordRegistry(storage, { clock });
+      const client = new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
         keyID: env.CLOUDKIT_KEY_ID, privateKeyPEM: env.CLOUDKIT_PRIVATE_KEY, clock, fetchImplementation: guardedFetch,
-        isEnabled: () => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true }) }) : undefined;
+        isEnabled: () => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true });
+      checkpoint = new PublicRegistryCheckpoint({ registry, client });
+      publicRecords = new CloudKitPublicRepository({ authentication, clock, registry, client, checkpoint });
+    }
     const limits = new GatewayLimits(storage, { clock });
     const deletions = new AccountDeletionState(storage, { clock });
-    const maintenance = new GatewayMaintenance(storage, { clock, limits, deletions });
+    const localMaintenance = new GatewayMaintenance(storage, { clock, limits, deletions });
+    const afterCheckpoint = async action => {
+      let result;
+      try { result = await action(); }
+      catch (error) { await checkpoint?.advance(); throw error; }
+      await checkpoint?.advance(); return result;
+    };
+    const maintenance = checkpoint ? {
+      schedule: () => localMaintenance.schedule(),
+      alarm: options => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true
+        ? afterCheckpoint(() => localMaintenance.alarm(options))
+        : localMaintenance.alarm({ processor: undefined }),
+    } : localMaintenance;
     const login = new AppleLoginCoordinator({ state: authentication, verifier, credentialVault,
       exchangeAuthorizationCode: input => apple.exchangeAuthorizationCode(input) });
     const renewal = new SessionRenewalCoordinator({ state: authentication, verifier, credentialVault, appleClient: apple });
     const sessionReset = new SessionResetCoordinator({ state: authentication, verifier });
     const deletionCoordinator = new AccountDeletionCoordinator({ authenticationState: authentication, deletionState: deletions, verifier });
-    const processor = config.deletionEnabled ? new AccountDeletionProcessor({ deletionState: deletions, credentialVault,
+    const localProcessor = config.deletionEnabled ? new AccountDeletionProcessor({ deletionState: deletions, credentialVault,
       appleClient: apple, erasePublicDataBatch: publicRecords
         ? context => publicRecords.erasePublicDataBatch(context) : erasePublicDataBatch }) : undefined;
+    const processor = checkpoint ? { step: async deletionID => {
+      await checkpoint.verify(); return afterCheckpoint(() => localProcessor.step(deletionID));
+    } } : localProcessor;
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
-      deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(),
-      isEnabled: () => activeGatewayConfiguration(env, clock()) !== null });
+      deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
+      isEnabled: () => activeGatewayConfiguration(env, clock()) !== null && (checkpoint !== undefined || !hasRegistryCheckpoint(storage)) });
     return Object.freeze({ handle, maintenance, processor, publicRecords });
   } catch { throw new Error("Gateway configuration is unavailable."); }
 }

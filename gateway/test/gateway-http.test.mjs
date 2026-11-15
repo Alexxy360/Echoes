@@ -7,7 +7,8 @@ import { createGatewayRuntime, createGatewayLocalMaintenance, activeGatewayConfi
   forwardGatewayRequest, handleAuthorityRequest } from "../src/gateway-runtime.mjs";
 import { createGatewayHTTPHandler } from "../src/gateway-http.mjs";
 import { fixture, hash, start, syntheticCode } from "./support/authentication-fixture.mjs";
-import { PublicCloudKitModel, syntheticPublicKeyConfiguration, profileInput } from "./support/public-record-fixture.mjs";
+import { PublicCloudKitModel, syntheticPublicKeyConfiguration, publicClient, profileInput } from "./support/public-record-fixture.mjs";
+import { sqliteSnapshot, restoreSQLite } from "./support/sqlite-snapshot.mjs";
 
 function setup({ deletionEnabled = true, ...options } = {}) {
   const refresh = randomBytes(32).toString("base64url"), renewal = randomBytes(32).toString("base64url");
@@ -216,6 +217,84 @@ test("deletion HTTP returns a recoverable ticket status and only the internal al
   } finally { f.close(); }
 });
 
+async function withPublicRuntime(f, { bootstrap = true } = {}) {
+  const model = new PublicCloudKitModel(), env = { ...f.env, PUBLIC_RECORDS_ENABLED: "1", ...syntheticPublicKeyConfiguration() };
+  const fetchImplementation = (request, options) => request.url.startsWith("https://api.apple-cloudkit.com/")
+    ? model.fetch(request, options) : f.dependencies.fetchImplementation(request, options);
+  const runtime = createGatewayRuntime(f.storage, env, { clock: f.clock, fetchImplementation });
+  if (bootstrap) await publicClient((...args) => model.fetch(...args), { clock: f.clock })
+    .createCheckpointForBootstrap(await runtime.publicRecords.prepareBootstrap());
+  const call = async (path, body = {}, token) => {
+    const response = await runtime.handle(f.request(path, body, token), hash("synthetic-checkpoint-budget"));
+    return { status: response.status, body: response.status === 204 ? null : await response.json() };
+  };
+  return { model, env, runtime, call, fetchImplementation };
+}
+
+test("HTTP checkpoint rejects a restored revoked session even when the registration count is unchanged", async () => {
+  const f = setup();
+  try {
+    const active = await withPublicRuntime(f), session = await f.session();
+    assert.equal((await active.call("/v1/auth/session", {}, session.sessionToken)).status, 200);
+    const beforeLogout = sqliteSnapshot(f.db);
+    assert.equal((await active.call("/v1/auth/logout-all", {}, session.sessionToken)).status, 204);
+    assert.throws(() => f.state.authorize(session.sessionToken), error => error.code === "INVALID_SESSION");
+    restoreSQLite(f.storage, beforeLogout);
+    assert.equal(f.state.authorize(session.sessionToken).accountID, session.accountID);
+    const reopened = createGatewayRuntime(f.storage, active.env, { clock: f.clock, fetchImplementation: active.fetchImplementation });
+    const response = await reopened.handle(f.request("/v1/auth/session", {}, session.sessionToken), hash("rollback-budget"));
+    assert.equal(response.status, 503); assert.equal(Object.hasOwn(await response.json(), "accountID"), false);
+    assert.equal(active.model.requests.length, 0);
+  } finally { f.close(); }
+});
+
+test("an anchored authority cannot downgrade to auth-only or continue an older uncheckpointed handler", async () => {
+  const f = setup();
+  try {
+    const session = await f.session(); await withPublicRuntime(f);
+    assert.throws(() => createGatewayRuntime(f.storage, f.env, f.dependencies), /Gateway configuration is unavailable/);
+    const response = await f.call("/v1/auth/session", {}, session.sessionToken);
+    assert.equal(response.status, 503); assert.equal(Object.hasOwn(response.body, "accountID"), false);
+    // Expired/disabled runtimes still retain the separate local-only maintenance entry point.
+    assert.doesNotThrow(() => createGatewayLocalMaintenance(f.storage, { clock: f.clock }));
+  } finally { f.close(); }
+});
+
+test("missing checkpoint blocks Apple dispatch and does not create a remote bootstrap from HTTP", async () => {
+  const f = setup();
+  try {
+    const active = await withPublicRuntime(f, { bootstrap: false }), before = f.counts().externalCalls;
+    const response = await active.call("/v1/auth/login", { challengeID: randomUUID(), identityToken: "synthetic", authorizationCode: "synthetic" });
+    assert.equal(response.status, 503); assert.equal(f.counts().externalCalls, before);
+    assert.equal(active.model.controls.size, 0); assert.ok(active.model.checkpointRequests.every(call => call.operation === "lookup"));
+  } finally { f.close(); }
+});
+
+test("rate limits precede checkpoint calls and an exhausted request cannot cause more CloudKit traffic", async () => {
+  const f = setup();
+  try {
+    const active = await withPublicRuntime(f), session = await f.session();
+    for (let i = 0; i < 120; i++) assert.equal((await active.call("/v1/auth/session", {}, session.sessionToken)).status, 200);
+    const before = active.model.checkpointRequests.length;
+    assert.equal((await active.call("/v1/auth/session", {}, session.sessionToken)).status, 429);
+    assert.equal(active.model.checkpointRequests.length, before);
+  } finally { f.close(); }
+});
+
+test("an unknown post-logout checkpoint result returns no success and reconciles without resurrecting the session", async () => {
+  const f = setup();
+  try {
+    const active = await withPublicRuntime(f), session = await f.session();
+    assert.equal((await active.call("/v1/auth/session", {}, session.sessionToken)).status, 200);
+    let lose = true;
+    active.model.afterCheckpoint = call => { if (lose && call.operation === "modify") { lose = false; throw new Error("PRIVATE lost checkpoint result"); } };
+    assert.equal((await active.call("/v1/auth/logout-all", {}, session.sessionToken)).status, 503);
+    assert.throws(() => f.state.authorize(session.sessionToken), error => error.code === "INVALID_SESSION");
+    assert.equal((await active.call("/v1/auth/session", {}, session.sessionToken)).status, 401);
+    assert.equal(active.model.requests.length, 0);
+  } finally { f.close(); }
+});
+
 test("deletion cannot be enabled without the real erasure dependency and disabled capabilities do not accept jobs", async () => {
   const f = setup({ deletionEnabled: false });
   try {
@@ -242,6 +321,7 @@ test("public repository is composed only by explicit activation, with its own ke
     const fetchImplementation = (request, options) => request.url.startsWith("https://api.apple-cloudkit.com/")
       ? model.fetch(request, options) : f.dependencies.fetchImplementation(request, options);
     const runtime = createGatewayRuntime(f.storage, env, { clock: f.clock, fetchImplementation });
+    await publicClient((...args) => model.fetch(...args), { clock: f.clock }).createCheckpointForBootstrap(await runtime.publicRecords.prepareBootstrap());
     const session = await f.session();
     const saved = await runtime.publicRecords.write(profileInput(session));
     const challenge = await f.state.issueChallenge(hash(randomUUID()), { purpose: "account_deletion" });

@@ -5,7 +5,7 @@ export const publicRecordTypes = Object.freeze({ profile: "EchoesPublicProfileV1
 export const publicUUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export const publicRecordName = /^community-v1-(profile|presence|message|block|report)-[a-f0-9]{64}$/;
 const codes = new Set(["PUBLIC_UNAVAILABLE", "PUBLIC_INPUT", "PUBLIC_CONFLICT", "PUBLIC_LIMIT", "PUBLIC_ERASED",
-  "PUBLIC_PENDING", "PUBLIC_RESPONSE", "PUBLIC_THROTTLED", "PUBLIC_SCOPE"]);
+  "PUBLIC_PENDING", "PUBLIC_RESPONSE", "PUBLIC_THROTTLED", "PUBLIC_SCOPE", "PUBLIC_REGISTRY_UNVERIFIED"]);
 export class PublicRecordError extends Error {
   constructor(code = "PUBLIC_UNAVAILABLE") { super("Community data operation could not be completed."); this.code = codes.has(code) ? code : "PUBLIC_UNAVAILABLE"; }
 }

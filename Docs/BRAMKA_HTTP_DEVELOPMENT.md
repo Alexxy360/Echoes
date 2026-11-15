@@ -77,3 +77,7 @@ CK-02l: dodano świeży reset po limicie sesji, barierę kolejności/migrację o
 ## CK-04a — repozytorium rekordów i rzeczywisty transport
 
 Przy PUBLIC_RECORDS_ENABLED=1 runtime tworzy CloudKitPublicClient/PublicRecordRegistry/CloudKitPublicRepository i używa go jako erasure adaptera zamiast wstrzykniętego modelu. Oddzielny klucz CloudKit, włączone usuwanie i aktualna aktywacja są obowiązkowe; brak/reużycie klucza zamyka konfigurację, także przy innym formatowaniu PEM. Domyślne flagi pozostają 0 i brak nowych endpointów danych. 217/217 Node 22/24. Odtworzenie rejestru, retencja, koordynator HTTP/obszar/moderacja i rzeczywisty runtime nadal przed odbiorem. [Zakres](SERWEROWY_ADAPTER_DANYCH.md).
+
+## CK-04b — kontrola odtworzenia authority
+
+Przy public storage HTTP sprawdza zdalny checkpoint po limitach/body, a przed dispatch, oraz utrwala nowy przed odpowiedzią. Punkty poprzedzają też żądania Apple i obejmują kroki procesora/aktywne maintenance. Przywrócone stare sesje/odwołania nie dają dostępu. Authority z epoką nie przechodzi do auth-only; lokalna retencja po wyłączeniu pozostaje bez sieci. Bootstrap jest osobną przygotowaną operacją wewnętrzną, bez endpointu HTTP i automatycznego tworzenia w CloudKit. 234/234 lokalne testy Node 22/24, provider/PITR/CPU/A-B nadal przed odbiorem. [Protokół i awarie](PUNKT_KONTROLNY_REJESTRU.md).
