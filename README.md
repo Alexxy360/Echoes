@@ -80,6 +80,8 @@ Testy: `swift test --package-path EchoesCloudKit` i `python3 scripts/test_cloudk
 
 [Lokalny kontrakt bramki Development](Docs/BRAMKA_HTTP_DEVELOPMENT.md) opisuje endpointy, osobne rodzaje tokenów, limity i alarm. Nowy target jest domyślnie wyłączony, bez zasobów/sekretów w chmurze. Nie obsługuje jeszcze profili/mapy/czatu ani prawdziwego usuwania CloudKit.
 
-CK-04a dodaje lokalnie podłączony [serwerowy adapter rekordów CloudKit](Docs/SERWEROWY_ADAPTER_DANYCH.md), trwały rejestr zapisów i czyszczenie z barierami spóźnionych wyników. PUBLIC_RECORDS_ENABLED=0; brak wdrożenia, endpointów mapy/czatu/profilu i przełączenia zwykłego iOS. Przed aktywacją wymagane są checkpoint/odtwarzanie rejestru, retencja i realny odbiór.
+CK-04a dodaje lokalnie podłączony [serwerowy adapter rekordów CloudKit](Docs/SERWEROWY_ADAPTER_DANYCH.md), trwały rejestr zapisów i czyszczenie z barierami spóźnionych wyników. PUBLIC_RECORDS_ENABLED=0; brak wdrożenia i przełączenia zwykłego iOS; serwerowe endpointy dodano później w CK-04c. Przed aktywacją wymagane są checkpoint/odtwarzanie rejestru, retencja i realny odbiór.
 
-CK-04b dodaje [zdalny punkt kontrolny rejestru](Docs/PUNKT_KONTROLNY_REJESTRU.md) z trwałym outboxem, ochroną odtworzenia SQLite i cofnięcia sesji. Bootstrap i rzeczywiste środowiska nadal nieaktywne; koordynator danych i klient iOS pozostają do podłączenia.
+CK-04b dodaje [zdalny punkt kontrolny rejestru](Docs/PUNKT_KONTROLNY_REJESTRU.md) z trwałym outboxem, ochroną odtworzenia SQLite i cofnięcia sesji. Bootstrap i rzeczywiste środowiska nadal nieaktywne; natywny klient iOS pozostaje do podłączenia, a koordynator serwera został dodany w CK-04c.
+
+CK-04c dodaje [serwerową obecność, czat i zasady dostępu](Docs/FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md): zamknięte HTTP, generację widoczności, dwustronne blokady, moderację/zgłoszenia, własny profil tekstowy, strony i zaszyfrowane kursory. 256/256 lokalnych testów Node 22/24; COMMUNITY_ENABLED=0. Backend nie jest wdrożony, zwykłe iOS nadal Firebase. Realny schemat/role/Free/A-B, natywny adapter, zdjęcia i fizyczna retencja wymagają odbioru.

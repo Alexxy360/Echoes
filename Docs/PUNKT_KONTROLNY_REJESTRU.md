@@ -46,3 +46,5 @@ Kontrola negatywna w oddzielnej kopii /tmp, po wyłączeniu jednego porównania 
 Prawdziwe SDK/role/PITR/Workers i zwykłe konta A/B niezaliczone. Dodatkowe odczyty i modyfikacje punktu zwiększają opóźnienia i liczbę operacji; CPU/SQL/transfer w Workers Free trzeba zmierzyć przed aktywacją. Retencja barier i metadanych, inwentarz/operacyjne odzyskanie, koordynator funkcji/HTTP, adapter iOS, profile/zdjęcia i pełna regresja produktu pozostają wymagane. Nie powtarzano kompilacji iOS, bo źródła Swift/projekt są identyczne. Bez zmian Production, płatnych usług, danych użytkowników lub Firebase.
 
 Podstawa warunkowego zapisu: [Apple — create/replace i recordChangeTag](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/ModifyRecords.html).
+
+Aktualizacja CK-04c: koordynator funkcji i zamknięte HTTP są już [zaimplementowane lokalnie](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md). Finalizer odpowiedzi ponawia lokalne kontrole po ostatnim advance, a czyszczenie projekcji także otrzymuje punkt kontrolny przed receipt procesora. Realny bootstrap/PITR/role, natywny adapter, retencja i odbiór kosztów pozostają otwarte.

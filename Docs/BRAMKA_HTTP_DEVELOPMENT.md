@@ -81,3 +81,7 @@ Przy PUBLIC_RECORDS_ENABLED=1 runtime tworzy CloudKitPublicClient/PublicRecordRe
 ## CK-04b — kontrola odtworzenia authority
 
 Przy public storage HTTP sprawdza zdalny checkpoint po limitach/body, a przed dispatch, oraz utrwala nowy przed odpowiedzią. Punkty poprzedzają też żądania Apple i obejmują kroki procesora/aktywne maintenance. Przywrócone stare sesje/odwołania nie dają dostępu. Authority z epoką nie przechodzi do auth-only; lokalna retencja po wyłączeniu pozostaje bez sieci. Bootstrap jest osobną przygotowaną operacją wewnętrzną, bez endpointu HTTP i automatycznego tworzenia w CloudKit. 234/234 lokalne testy Node 22/24, provider/PITR/CPU/A-B nadal przed odbiorem. [Protokół i awarie](PUNKT_KONTROLNY_REJESTRU.md).
+
+## CK-04c — funkcje społecznościowe
+
+Dodano wyłącznie zamknięte POST /v1/community dla config/visibility/publish/stop/nearby/messages/send/block/blocked/report/profile oraz `profile/save`. [Pełny kontrakt](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md). COMMUNITY_ENABLED=0; aktywacja wymaga publicznych rekordów i usuwania. Body 48 KiB, wszystkie te żądania liczą się do dotychczasowych ciężkich limitów Development. Końcowy filtr jest wywoływany synchronicznie po ostatnim checkpoint, przed serializacją Response; zmieniona w tym czasie blokada/sesja nie korzysta z gotowego starego wyniku. Bez proxy, publicznego odczytu zgłoszeń lub operator RPC. Testy lokalne nie stanowią odbioru Workers/schematu/ról.

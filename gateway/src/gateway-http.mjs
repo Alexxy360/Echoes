@@ -1,8 +1,12 @@
 import { AuthenticationStateError } from "./authentication-state.mjs";
 import { GatewayLimitError } from "./gateway-limits.mjs";
+import { CommunityError } from "./community-domain.mjs";
+import { PublicRecordError } from "./public-record-schema.mjs";
+import { communityActions } from "./community-coordinator.mjs";
 
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
   "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
+for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -13,6 +17,12 @@ export class GatewayHTTPError extends Error {
   constructor(code = "INVALID_REQUEST", status = 400) { super("Gateway request could not be processed."); this.code = code; this.status = status; }
 }
 export function gatewayFailure(error) {
+  if (error instanceof CommunityError || error instanceof PublicRecordError) {
+    const status = { COMMUNITY_INPUT: 400, COMMUNITY_STALE: 409, COMMUNITY_NOT_FOUND: 404, COMMUNITY_RATE_LIMITED: 429,
+      COMMUNITY_CAPACITY: 429, COMMUNITY_TEXT_REJECTED: 400, COMMUNITY_CURSOR: 400,
+      PUBLIC_INPUT: 400, PUBLIC_CONFLICT: 409, PUBLIC_PENDING: 409, PUBLIC_ERASED: 409, PUBLIC_LIMIT: 429, PUBLIC_THROTTLED: 503 }[error.code] ?? 503;
+    return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
+  }
   if (error instanceof GatewayHTTPError) return gatewayJSON({ error: error.code }, error.status, error.status === 405 ? { Allow: "POST" } : {});
   if (error instanceof GatewayLimitError) return gatewayJSON({ error: error.code }, error.code === "RATE_LIMITED" ? 429 : 503,
     { "Retry-After": String(error.retryAfterSeconds) });
@@ -105,11 +115,11 @@ function deletionResponse(value, status = 200, recovered = false) {
 
 /** Closed native API. serverBudgetHash is supplied by the trusted edge/authority, never taken from JSON. */
 export function createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
-  deletionEnabled = false, limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000 } = {}) {
+  deletionEnabled = false, community, isCommunityEnabled = () => false, limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000 } = {}) {
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
       typeof sessionReset?.reset !== "function" ||
       (checkpoint !== undefined && (typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function")) ||
-      typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" ||
+      typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" || typeof isCommunityEnabled !== "function" ||
       typeof deletionEnabled !== "boolean" || !Number.isInteger(inputTimeoutMilliseconds) || inputTimeoutMilliseconds < 1 || inputTimeoutMilliseconds > 3000 ||
       (deletionEnabled && (typeof deletions?.status !== "function" || typeof deletionCoordinator?.request !== "function" || typeof deletionCoordinator?.recover !== "function"))) throw new Error("Gateway dependencies are unavailable.");
   return async (request, serverBudgetHash) => {
@@ -117,12 +127,19 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
       const { path } = inspectGatewayRequest(request);
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
-      const heavy = ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover"].includes(path);
+      const social = path.startsWith("/v1/community/");
+      if (social && (isCommunityEnabled() !== true || typeof community?.prepare !== "function")) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      const heavy = social || ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover"].includes(path);
       await limits.consume(serverBudgetHash, { heavy });
-      const body = await objectBody(request, heavy ? 16384 : 256, inputTimeoutMilliseconds);
+      const body = await objectBody(request, social ? 49152 : heavy ? 16384 : 256, inputTimeoutMilliseconds);
       // Budget/body limits precede any checkpoint network traffic, including malformed input.
       await checkpoint?.verify({ signal: request.signal });
       const dispatch = async () => {
+        if (social) {
+          const finalize = await community.prepare(path.slice("/v1/community/".length), body, { accessToken: bearer(request, 80), signal: request.signal });
+          if (typeof finalize !== "function") throw new Error();
+          return () => gatewayJSON(finalize());
+        }
         if (path.startsWith("/v1/account/") && !deletionEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
         if (path === "/v1/auth/challenge") {
           fields(body, ["purpose"]);
@@ -189,7 +206,8 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
       catch (error) { await checkpoint?.advance({ signal: request.signal }); throw error; }
       await checkpoint?.advance({ signal: request.signal });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
-      return response;
+      if (social && isCommunityEnabled() !== true) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      return typeof response === "function" ? response() : response;
     } catch (error) { return gatewayFailure(error); }
   };
 }

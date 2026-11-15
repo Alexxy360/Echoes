@@ -1,0 +1,105 @@
+{
+  "stage": "CK-04c (server functionality)",
+  "observedAt": "2026-11-15T14:25:08.337811+01:00",
+  "baselineCommit": "92d5105c3250ffbc34d072cd244b52e41163316c",
+  "tests": {
+    "Node22.23.5": {
+      "passed": 256,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Node24.22.1": {
+      "passed": 256,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newTests": 22,
+    "communityTests": 20,
+    "newRuntimeTests": 2,
+    "scope": "actual local SQLite and crypto, independent signature verification, synthetic CloudKit regional query/lookup/conditional-write and Apple; not actual providers"
+  },
+  "static": {
+    "mjsFiles": 57,
+    "syntax": "passed on Node22",
+    "communityJSON": "passed"
+  },
+  "negativeControl": {
+    "result": "expected test failure detected",
+    "mutation": "single final CommunityState.visible guard removed in isolated temporary copy",
+    "test": "closed HTTP finalizes after the last checkpoint and rejects forged fields, extra routes, browser origin and disabled feature",
+    "originalSourceUnchanged": true,
+    "originalSHA256": "98a89a607d6f338ad969e29819933506b2025f37eec3d8a8a4816b87c82cb10a",
+    "mutatedSHA256": "7603f98ae69e2db1748e96503566e9db186482dae98acf8b7bbf7af2f2d1d316",
+    "logSHA256": "6b243f6b5f51e761f880f25ca3e93231f8508b6d296e1868301e591b4105597d"
+  },
+  "verified": [
+    "visibility generation and inactive minimal slot",
+    "late publish cannot undo stop before or after provider commit",
+    "late stop cannot clear a newer publication",
+    "latest mutable slots recover unknown outcomes",
+    "immutable message retry preserves ID/timestamp after lost response",
+    "bidirectional blocks before provider acknowledgement and after final checkpoint",
+    "active author/viewer/session, moderation and expiry at disclosure",
+    "125-message pagination and account/area/time/tamper-bound encrypted cursors",
+    "knownIDs removed for hidden, expired, moved or deleted messages",
+    "3km server distance, original ~500m approximation, dateline and poles",
+    "confidential report validation and exact profile CAS",
+    "rate/capacity errors rather than false empty/complete results",
+    "real runtime cleanup of own policy projection after feature disable/restart; other owner blocks retained"
+  ],
+  "geoExploration": {
+    "syntheticSamples": 100000,
+    "finding": "one non-idempotent wrapped adaptive longitude; exact stored coordinates are validated against durable original payload hash instead of re-coarsening",
+    "regression": "end-to-end near latitude -88.028 / longitude 179.988"
+  },
+  "activation": {
+    "GATEWAY_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "COMMUNITY_ENABLED": "0",
+    "realServiceDeployed": false
+  },
+  "iOS": "Swift/UI/project unchanged from baseline; prior 162 Swift/10 UI and Debug/Release not repeated",
+  "project": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "knownLimits": [
+    "asserted GPS can be spoofed; no proof of physical presence",
+    "async CloudKit indexes and pages are not an atomic snapshot",
+    "16 query pages/400 candidates and 40 data reads are controlled Development caps; 200 known IDs, 1000 intent rows/account",
+    "existing gateway 2000 requests/300 heavy per day and 12 heavy/minute per network budget are not public social-app capacity",
+    "actual schema/index/filter combinations, ordinary roles, two ordinary iCloud accounts and separate service identity not accepted",
+    "real Free CPU/SQL/latency/storage costs not measured; no guarantee of fitting Free",
+    "physical retention/fence metadata reclamation and operator moderation workflow unfinished",
+    "ordinary iOS still Firebase; native CommunityClient/profile photos not yet connected"
+  ],
+  "notPerformed": [
+    "actual CloudKit records/types/indexes/roles or Apple OAuth operations",
+    "Cloudflare deployment, namespace, secrets, token or paid-plan changes",
+    "native builds/tests/device installation",
+    "Firebase data operations",
+    "Production/TestFlight publication"
+  ],
+  "sourceSHA256": {
+    "gateway/src/community-geo.mjs": "0f16e1521a7d24c6ca160062460140ff39fec65c62c931824e10956f868fac7c",
+    "gateway/src/community-domain.mjs": "16db05ba0746d85cf25bd5cf2f797d9123a2fb9d802b6b2c690263a2ed609cfa",
+    "gateway/src/community-state.mjs": "2fd69c3b2196216f81d7edec6745e1aa597a95f0fc98eda92907f4ed205d1b02",
+    "gateway/src/community-coordinator.mjs": "98a89a607d6f338ad969e29819933506b2025f37eec3d8a8a4816b87c82cb10a",
+    "gateway/src/cloudkit-public-client.mjs": "9456249c9c72d2d1403c394c32b164b4c04811fad95eeb99463046104e321ea3",
+    "gateway/src/public-record-schema.mjs": "8358c4349cf3a89dbe0a471765c34a38537ecdbcf34ab75c435b3c4aa4ad3df6",
+    "gateway/src/public-record-registry.mjs": "bb529a7475d4e07462b8f193098a0cadbb9b9664d2327c36381b46ea4dc31701",
+    "gateway/src/public-record-repository.mjs": "6c5423caf08bcada5278c12a4c86d28857d8ba35b6dffd7758fdf9968cb91ce8",
+    "gateway/src/gateway-http.mjs": "3f9f58f404390898c464b7ff5baad4fe1ec2cee842998baa48931a9c4af303fc",
+    "gateway/src/gateway-runtime.mjs": "f9c2b5c06bf3cec15d2d5f8f38e0de49be59faaff3a90b44231caea11471f22c",
+    "gateway/test/community.test.mjs": "0ee85839aebdd95b6b443a506a2a5a5c74b6d1e5f2e8a6fb3ccb6007a4659625",
+    "gateway/test/gateway-http.test.mjs": "5c7a23cfe42bd8b8ac4056d5a2fdaee37b86e02495c9b8322a9197475ba92b46",
+    "gateway/test/public-records.test.mjs": "f4e7293932c7fc38883edd9e3d22035426717088a8558a5dca7cb3cb6dd8ebae",
+    "gateway/test/support/public-record-fixture.mjs": "e413119f149e8efc334250f7ef1c1f5ca71b5a02c9605ebf71de1b0fff7c72a2",
+    "gateway/wrangler.community.jsonc": "a7f70ced46fee5dba1030507fa671d98603bfca7b4ddf2933f70412be0d8d6e3"
+  },
+  "logSHA256": {
+    "Node22": "191d2b71f552b16408b5b47bbd7302752973ebfdcad8510adb6391abf5229b14",
+    "Node24": "1ade6670a283e7b7b7f18f347863254813aad1dbe77437ea01fa49cc80ac2383"
+  }
+}

@@ -217,8 +217,8 @@ test("deletion HTTP returns a recoverable ticket status and only the internal al
   } finally { f.close(); }
 });
 
-async function withPublicRuntime(f, { bootstrap = true } = {}) {
-  const model = new PublicCloudKitModel(), env = { ...f.env, PUBLIC_RECORDS_ENABLED: "1", ...syntheticPublicKeyConfiguration() };
+async function withPublicRuntime(f, { bootstrap = true, community = false } = {}) {
+  const model = new PublicCloudKitModel(), env = { ...f.env, PUBLIC_RECORDS_ENABLED: "1", COMMUNITY_ENABLED: community ? "1" : "0", ...syntheticPublicKeyConfiguration() };
   const fetchImplementation = (request, options) => request.url.startsWith("https://api.apple-cloudkit.com/")
     ? model.fetch(request, options) : f.dependencies.fetchImplementation(request, options);
   const runtime = createGatewayRuntime(f.storage, env, { clock: f.clock, fetchImplementation });
@@ -337,6 +337,47 @@ test("public repository is composed only by explicit activation, with its own ke
     env.PUBLIC_RECORDS_ENABLED = "0";
     await assert.rejects(() => runtime.publicRecords.write(profileInput(other)));
     assert.equal(model.requests.length, calls);
+  } finally { f.close(); }
+});
+
+test("community composes real HTTP/policy/repository and owner cleanup survives feature disable and restart", async () => {
+  const f = setup();
+  try {
+    assert.equal((await f.call("/v1/community/config")).status, 503);
+    for (const changes of [{ COMMUNITY_ENABLED: "yes" }, { COMMUNITY_ENABLED: "1" }]) {
+      assert.throws(() => createGatewayRuntime(f.storage, { ...f.env, ...changes }, f.dependencies), /Gateway configuration is unavailable/);
+    }
+    const active = await withPublicRuntime(f, { community: true }), a = await f.session(), b = await f.session("reader");
+    const sent = await active.call("/v1/community/send", { requestID: randomUUID(), name: "Maja", text: "Treść",
+      coordinate: { latitude: 0, longitude: 0 } }, a.sessionToken);
+    assert.equal(sent.status, 200);
+    assert.equal((await active.call("/v1/community/messages", { coordinate: { latitude: 0, longitude: 0 } }, b.sessionToken)).body.messages.length, 1);
+    assert.equal((await active.call("/v1/community/config", {}, b.sessionToken)).body.supportURL, null);
+    const block = await active.call("/v1/community/block", { requestID: randomUUID(), accountID: a.accountID, blocked: true }, b.sessionToken);
+    assert.equal(block.status, 200);
+    const challenge = await f.state.issueChallenge(hash(randomUUID()), { purpose: "account_deletion" });
+    const deletionID = randomUUID(), statusToken = deletionID + "." + randomBytes(32).toString("base64url");
+    assert.equal((await active.call("/v1/account/deletion", { deletionID, challengeID: challenge.challengeID,
+      identityToken: f.token(challenge), expectedAccountID: a.accountID }, statusToken)).status, 202);
+    active.env.COMMUNITY_ENABLED = "0";
+    assert.equal((await active.call("/v1/community/config", {}, b.sessionToken)).status, 503);
+    const restarted = createGatewayRuntime(f.storage, active.env, { clock: f.clock, fetchImplementation: active.fetchImplementation });
+    await restarted.processor.step(deletionID);
+    assert.equal(active.model.records.get(sent.body.id).fields.erased.value, 1);
+    assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM community_intents_v1 WHERE account_id=?").get(a.accountID).n, 0);
+    assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM community_accounts_v1 WHERE account_id=?").get(a.accountID).n, 0);
+    assert.equal(f.db.prepare("SELECT logical_id FROM community_intents_v1 WHERE account_id=? AND kind='block'").get(b.accountID).logical_id, a.accountID);
+  } finally { f.close(); }
+});
+
+test("community policy configuration fails closed before traffic for malformed moderation or support", async () => {
+  const f = setup();
+  try {
+    const env = { ...f.env, PUBLIC_RECORDS_ENABLED: "1", COMMUNITY_ENABLED: "1", ...syntheticPublicKeyConfiguration() };
+    for (const changes of [{ COMMUNITY_BLOCKED_PHRASES_JSON: "invalid" }, { COMMUNITY_SUPPORT_URL: "javascript:alert(1)" },
+      { COMMUNITY_SUPPORT_URL: "https://user:secret@example.invalid" }]) assert.throws(() => createGatewayRuntime(f.storage,
+      { ...env, ...changes }, f.dependencies), /Gateway configuration is unavailable/);
+    assert.equal(f.counts().externalCalls, 0);
   } finally { f.close(); }
 });
 

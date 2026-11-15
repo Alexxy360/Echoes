@@ -56,7 +56,10 @@ test("signed public writes derive the owner from access, reserve first and keep 
       assert.equal(row.account_id, session.accountID);
     };
     const saved = await f.repository.write(messageInput(session, "PRIVATE-SYNTHETIC-CONTENT"));
-    assert.equal(saved.fields.latitude.value, 51.112); assert.equal(saved.fields.longitude.value, 17.035);
+    const lat = Math.round(51.1123456 / 0.0045) * 0.0045;
+    const step = 0.0045 / Math.cos(lat * Math.PI / 180), lon = Math.round(17.0345678 / step) * step;
+    assert.equal(saved.fields.latitude.value, lat); assert.ok(Math.abs(saved.fields.longitude.value - lon) < 1e-10);
+    assert.deepEqual(saved.fields.location, { type: "LOCATION", value: { latitude: lat, longitude: saved.fields.longitude.value } });
     assert.equal(saved.fields.accountID.value, session.accountID); assert.equal(saved.fields.ownerKey.value, ownerKey(session.accountID));
     const row = f.db.prepare("SELECT * FROM public_records_v1").get();
     assert.equal(row.phase, "settled"); assert.equal(JSON.stringify(row).includes("PRIVATE-SYNTHETIC-CONTENT"), false);

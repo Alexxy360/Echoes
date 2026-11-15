@@ -1,6 +1,7 @@
 import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
 import { PublicRecordError, plain, publicRecordName, publicRecordTypes, validTag } from "./public-record-schema.mjs";
 import { checkpointRecordName, checkpointRecordType, checkpointFields } from "./public-registry-checkpoint.mjs";
+import { approximateLocation, communityCoordinate, communityPolicy } from "./community-domain.mjs";
 
 const responseLimit = 512 * 1024;
 const recordCodes = new Set(["NOT_FOUND", "EXISTS", "CONFLICT", "ACCESS_DENIED", "AUTHENTICATION_FAILED",
@@ -62,10 +63,11 @@ export class CloudKitPublicClient {
       const operationPromise = (async () => {
         const response = await this.#fetch(request, { signal: controller.signal });
         const body = await this.#json(response, controller.signal);
-        if (!plain(body) || body.serverErrorCode || !Array.isArray(body.records) || body.records.length !== names.length) throw new PublicRecordError("PUBLIC_RESPONSE");
+        if (!plain(body) || body.serverErrorCode || !Array.isArray(body.records) ||
+            (names === null ? body.records.length > communityPolicy.queryPage : body.records.length !== names.length)) throw new PublicRecordError("PUBLIC_RESPONSE");
         const records = new Map();
         for (const record of body.records) {
-          if (!plain(record) || !names.includes(record.recordName) || records.has(record.recordName)) throw new PublicRecordError("PUBLIC_RESPONSE");
+          if (!plain(record) || (names === null ? !publicRecordName.test(record.recordName ?? "") : !names.includes(record.recordName)) || records.has(record.recordName)) throw new PublicRecordError("PUBLIC_RESPONSE");
           if (record.serverErrorCode !== undefined) {
             if (!recordCodes.has(record.serverErrorCode)) throw new PublicRecordError("PUBLIC_RESPONSE");
             records.set(record.recordName, Object.freeze({ recordName: record.recordName, serverErrorCode: record.serverErrorCode }));
@@ -74,7 +76,11 @@ export class CloudKitPublicClient {
             records.set(record.recordName, record);
           }
         }
-        this.#check(parent); return records;
+        this.#check(parent);
+        if (names !== null) return records;
+        const marker = body.continuationMarker ?? null;
+        if (marker !== null && (typeof marker !== "string" || !marker.length || marker.length > 8192)) throw new PublicRecordError("PUBLIC_RESPONSE");
+        return { records, marker };
       })();
       return await Promise.race([operationPromise, cancelled, new Promise((_, reject) => {
         timer = setTimeout(() => { controller.abort(); reject(new PublicRecordError()); }, this.#timeout);
@@ -87,6 +93,25 @@ export class CloudKitPublicClient {
         names.some(name => typeof name !== "string" || !publicRecordName.test(name))) throw new PublicRecordError("PUBLIC_INPUT");
     return this.#call("records/lookup", { records: names.map(recordName => ({ recordName })),
       ...(metadataOnly ? { desiredKeys: ["schemaVersion", "ownerKey", "erased", "deletionKey"] } : {}) }, names, signal);
+  }
+  /** Fixed regional index lookup. Results are candidates only; callers must perform exact reads. */
+  async regionalCandidates({ kind, coordinate, cutoff, marker = null, signal } = {}) {
+    if (!["presence", "message"].includes(kind) || !Number.isSafeInteger(cutoff) || cutoff < 0 ||
+        marker !== null && (typeof marker !== "string" || !marker.length || marker.length > 8192)) throw new PublicRecordError("PUBLIC_INPUT");
+    const center = approximateLocation(communityCoordinate(coordinate));
+    const filterBy = [
+      { fieldName: "location", comparator: "NEAR", fieldValue: { type: "LOCATION", value: center }, distance: communityPolicy.queryRadius },
+      { fieldName: "erased", comparator: "EQUALS", fieldValue: { type: "INT64", value: 0 } },
+      { fieldName: "expiresAt", comparator: "GREATER_THAN", fieldValue: { type: "INT64", value: cutoff } },
+    ];
+    if (kind === "presence") filterBy.push({ fieldName: "active", comparator: "EQUALS", fieldValue: { type: "INT64", value: 1 } });
+    else filterBy.push({ fieldName: "createdAt", comparator: "LESS_THAN_OR_EQUALS", fieldValue: { type: "INT64", value: cutoff } });
+    const result = await this.#call("records/query", { query: { recordType: publicRecordTypes[kind], filterBy,
+      sortBy: [{ fieldName: kind === "message" ? "createdAt" : "updatedAt", ascending: false }, { systemFieldName: "recordName", ascending: false }] },
+      resultsLimit: communityPolicy.queryPage, desiredKeys: ["ownerKey"], ...(marker === null ? {} : { continuationMarker: marker }) }, null, signal);
+    for (const record of result.records.values()) if (record.serverErrorCode || record.recordType !== publicRecordTypes[kind] ||
+        !record.recordName.startsWith("community-v1-" + kind + "-")) throw new PublicRecordError("PUBLIC_RESPONSE");
+    return result;
   }
   async lookupCheckpoint({ signal } = {}) {
     return (await this.#call("records/lookup", { records: [{ recordName: checkpointRecordName }] }, [checkpointRecordName], signal)).get(checkpointRecordName);

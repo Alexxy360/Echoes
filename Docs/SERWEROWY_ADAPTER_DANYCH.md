@@ -1,8 +1,8 @@
 # Serwerowy adapter rekordów społecznościowych — CK-04a
 
-Stan: 15 listopada 2026. Zaimplementowano rzeczywisty transport CloudKit Web Services Development/public, rejestr zapisów w prywatnym SQLite i repozytorium pięciu typów. Po jawnym włączeniu w konfiguracji runtime podłącza ten adapter do istniejącego procesu usuwania. Domyślne `PUBLIC_RECORDS_ENABLED=0`, `GATEWAY_ENABLED=0` i `ACCOUNT_DELETION_ENABLED=0` pozostają wyłączone. Nie utworzono usługi, typów/indeksów/ról ani sekretów w chmurze. Zwykły klient iOS nadal korzysta z Firebase; HTTP mapy/czatu/profilu nie jest jeszcze podłączone.
+Stan: 15 listopada 2026. Zaimplementowano rzeczywisty transport CloudKit Web Services Development/public, rejestr zapisów w prywatnym SQLite i repozytorium pięciu typów. Po jawnym włączeniu w konfiguracji runtime podłącza ten adapter do istniejącego procesu usuwania. Domyślne `PUBLIC_RECORDS_ENABLED=0`, `GATEWAY_ENABLED=0` i `ACCOUNT_DELETION_ENABLED=0` pozostają wyłączone. Nie utworzono usługi, typów/indeksów/ról ani sekretów w chmurze. Zwykły klient iOS nadal korzysta z Firebase; serwerowe HTTP mapy/czatu i własnego profilu dodano w CK-04c, nadal bez aktywacji i natywnego adaptera.
 
-Aktualizacja CK-04b: dodano [punkt kontrolny i obsługę cofnięcia rejestru](PUNKT_KONTROLNY_REJESTRU.md), także dla auth/HTTP i procesora. Aktualnie 234/234 Node 22/24; poniższy CK-04a zachowuje swój zakres historyczny. Nadal brak aktywacji i rzeczywistego odbioru usług.
+Aktualizacja CK-04b: dodano [punkt kontrolny i obsługę cofnięcia rejestru](PUNKT_KONTROLNY_REJESTRU.md), także dla auth/HTTP i procesora. W CK-04b 234/234 Node 22/24; poniższy CK-04a zachowuje swój zakres historyczny. Nadal brak aktywacji i rzeczywistego odbioru usług.
 
 ## Własność i format
 
@@ -51,3 +51,5 @@ CK-04b dodaje zdalny checkpoint/epokę i outbox wymagane przed potwierdzaniem co
 Nadal wymagane są retencja barier/rejestru, workflow operatora, HTTP funkcji społecznościowych wraz z limitami, blokadami/zakresem 3 km/moderacją, iOS CommunityClient, publiczne zdjęcia/CKAsset, schemat/indeksy/role, rzeczywisty Workers CPU/SQL i A/B. Prymityw zapisu preferencji/zgłoszeń sam nie egzekwuje blokad odpowiedzi ani uprawnień do zgłaszanej wiadomości; zrobi to koordynator. Nie zaliczono pełnej migracji lub TestFlight. Swift/UI i projekt aplikacji pozostały identyczne z poprzednim checkpointem; nie powtarzano ich testów.
 
 Podstawy protokołu: [lookup](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/LookupRecords.html), [create/replace i tagi](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/ModifyRecords.html), [kody błędów](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/ErrorCodes.html).
+
+Aktualizacja CK-04c: [funkcje i zamknięte HTTP](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md), 256/256 Node 22/24. Odczyty exact-ID po regionalnych kandydatach, writeLatest tylko dla presence/block z aktualnym zamiarem, inactive slot bez treści i zachowanie około 500 m. Prywatna projekcja zasad jest czyszczona przez procesor właściciela. Pole LOCATION i indeksy wymagają rzeczywistego odbioru; domyślne flagi 0.

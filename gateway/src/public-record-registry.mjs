@@ -171,6 +171,50 @@ export class PublicRecordRegistry {
     return row;
   }
   assertMutationCurrent(context) { return this.#tx(() => this.#mutation(context)); }
+  /** A settled row is necessary for declassification. Unknown or incomplete content stays hidden. */
+  readable(name, kind) {
+    return this.#tx(() => {
+      const row = this.#row(name);
+      if (!row || row.kind !== kind || row.phase !== "settled") return null;
+      const context = this.#context(row);
+      if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=0", row.account_id).length) return null;
+      return context;
+    });
+  }
+  owned(accountID, kind, logicalID) {
+    return this.#tx(() => {
+      this.#active(accountID);
+      const row = this.#row(recordIdentity(accountID, kind, logicalID).recordName);
+      return row ? this.#context(row) : null;
+    });
+  }
+  /** Trusted latest-intent slots only. Immutable content and profiles keep strict explicit CAS. */
+  async reserveLatest(value) {
+    if (!["presence", "block"].includes(value?.kind)) throw new PublicRecordError("PUBLIC_INPUT");
+    const identity = recordIdentity(value.accountID, value.kind, value.logicalID);
+    const old = this.#tx(() => {
+      this.#active(value.accountID);
+      const row = this.#row(identity.recordName);
+      if (!row) return null;
+      const context = this.#context(row);
+      if (["erasing", "erased"].includes(context.phase)) throw new PublicRecordError("PUBLIC_ERASED");
+      if (context.requestID === value.requestID && context.payloadHash !== value.payloadHash) throw new PublicRecordError("PUBLIC_CONFLICT");
+      return context;
+    });
+    if (!old) return this.reserve(value);
+    if (!publicUUID.test(value.requestID ?? "") || !/^[a-f0-9]{64}$/.test(value.payloadHash ?? "") ||
+        value.expectedTag !== null && !validTag(value.expectedTag)) throw new PublicRecordError("PUBLIC_INPUT");
+    const result = this.#tx(() => {
+      const current = this.#context(this.#row(identity.recordName));
+      if (["erasing", "erased"].includes(current.phase) || current.requestID !== old.requestID || current.payloadHash !== old.payloadHash ||
+          current.expectedTag !== old.expectedTag || current.recordTag !== old.recordTag) throw new PublicRecordError("PUBLIC_CONFLICT");
+      this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='pending',request_id=?,payload_hash=?,expected_tag=?,
+        generation=?,started_at=? WHERE record_name=?`, value.requestID, value.payloadHash, value.expectedTag,
+      this.#active(value.accountID), old.requestID === value.requestID ? old.startedAt : this.#now(), identity.recordName);
+      return this.#context(this.#row(identity.recordName));
+    });
+    await this.#durable(); return result;
+  }
   async settle(context, recordTag) {
     if (!validTag(recordTag)) throw new PublicRecordError("PUBLIC_RESPONSE");
     this.#tx(() => {

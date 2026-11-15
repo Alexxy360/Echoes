@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { approximateLocation } from "./community-geo.mjs";
 
 export const publicRecordTypes = Object.freeze({ profile: "EchoesPublicProfileV1", presence: "EchoesPresenceV1",
   message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1" });
@@ -37,7 +38,7 @@ function keys(value, required) {
 }
 function coordinate(latitude, longitude) {
   if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) throw new PublicRecordError("PUBLIC_INPUT");
-  return { latitude: Math.round(latitude * 1000) / 1000, longitude: Math.round(longitude * 1000) / 1000 };
+  return approximateLocation({ latitude, longitude });
 }
 /** Strict server-side field inventory. No arbitrary CloudKit fields, owner, time or expiration from a client. */
 export function normalizePublicInput(kind, value, now) {
@@ -45,11 +46,16 @@ export function normalizePublicInput(kind, value, now) {
   switch (kind) {
   case "profile": keys(value, ["name"]); return { name: text(value.name, 40) };
   case "presence": {
+    if (value?.active === false) {
+      keys(value, ["active", "generation"]);
+      if (!Number.isSafeInteger(value.generation) || value.generation < 0) throw new PublicRecordError("PUBLIC_INPUT");
+      return { active: 0, generation: value.generation };
+    }
     keys(value, ["name", "latitude", "longitude", "song", "songID", "generation", "measuredAt"]);
     if (!Number.isSafeInteger(value.generation) || value.generation < 0 || !Number.isSafeInteger(value.measuredAt) ||
         value.measuredAt < now - 60000 || value.measuredAt > now + 5000 || typeof value.song !== "string" ||
         value.song.length > 300 || typeof value.songID !== "string" || !/^[0-9]{0,30}$/.test(value.songID)) throw new PublicRecordError("PUBLIC_INPUT");
-    return { name: text(value.name, 40), ...coordinate(value.latitude, value.longitude),
+    return { active: 1, name: text(value.name, 40), ...coordinate(value.latitude, value.longitude),
       song: value.song, songID: value.songID, generation: value.generation };
   }
   case "message": keys(value, ["name", "text", "latitude", "longitude"]);
@@ -72,9 +78,13 @@ export function liveFields(context, input) {
   const values = { schemaVersion: 1, ownerKey: context.ownerKey, erased: 0, accountID: context.accountID,
     mutationKey: digest("echoes/public-mutation/v1\0" + context.requestID), payloadHash: context.payloadHash,
     createdAt: context.createdAt, updatedAt: context.startedAt, ...input };
-  if (context.kind === "presence") values.expiresAt = context.startedAt + 600000;
+  if (context.kind === "presence") values.expiresAt = context.startedAt + (input.active === 0 ? 0 : 600000);
   if (context.kind === "message") values.expiresAt = context.createdAt + 7200000;
-  return fieldValues(values);
+  const fields = fieldValues(values);
+  if (context.kind === "message" || context.kind === "presence" && input.active === 1) {
+    fields.location = { type: "LOCATION", value: { latitude: input.latitude, longitude: input.longitude } };
+  }
+  return fields;
 }
 export function erasedFields(context, deletionID) {
   if (!publicUUID.test(deletionID ?? "")) throw new PublicRecordError("PUBLIC_SCOPE");
@@ -86,5 +96,7 @@ export function matchesFields(actual, expected) {
   if (!plain(actual)) return false;
   const actualKeys = Object.keys(actual).filter(key => actual[key]?.value !== null);
   return actualKeys.length === Object.keys(expected).length && Object.entries(expected).every(([key, field]) =>
-    plain(actual[key]) && actual[key].value === field.value && (actual[key].type === undefined || actual[key].type === field.type));
+    plain(actual[key]) && (field.type === "LOCATION" ? plain(actual[key].value) &&
+      actual[key].value.latitude === field.value.latitude && actual[key].value.longitude === field.value.longitude : actual[key].value === field.value) &&
+      (actual[key].type === undefined || actual[key].type === field.type));
 }

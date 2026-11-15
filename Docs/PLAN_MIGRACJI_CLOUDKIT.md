@@ -118,6 +118,8 @@ Odbiór: późny GPS, zmiana okolicy, zmiana muzyki bez ruchu, tło/powrót, utr
 
 ### CK-05 — czat, bezpieczeństwo i retencja
 
+Postęp CK-04c (część serwerowa): koordynator obecności/czatu/blokad/zgłoszeń i własnego profilu tekstowego oraz zamknięte HTTP. Najnowszy zamiar i generacja chronią publish/stop; polityka serwera filtruje po ostatnim checkpoint, strony mają zaszyfrowane kursory i knownIDs. Zachowano siatkę około 500 m, odbiór 125 wiadomości, 3 km, moderacji i erasure projekcji. 256/256 Node 22/24 (22 nowe) i kontrola negatywna końcowego filtra. COMMUNITY_ENABLED=0; bez usług/schematu/ról/sekretów i bez przełączenia iOS. Dalej CK-04d: natywny CommunityClient, trwałe operacje i integracja mapy/czatu; następnie zdjęcia/profile, fizyczna retencja, realny odbiór Free/ról/A-B. Limity lokalnego targetu nie są limitem gotowej aplikacji. [Kontrakt i ograniczenia](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY.md).
+
 - Przenieść stronicowanie i najnowsze wiadomości; zachować szkic po błędzie oraz idempotencję.
 - Zaimplementować decyzje CK-01 dotyczące walidacji, moderacji, zgłoszeń, blokad i limitów. Oznaczyć, co jest wymuszane przez usługę, a co stanowi wyłącznie zachowanie klienta.
 - Oddzielić wygaśnięcie widoczności od fizycznego kasowania. Określić wykonawcę kasowania i harmonogram także wtedy, gdy autor już nie uruchamia aplikacji; nie obiecywać TTL Firestore w CloudKit.

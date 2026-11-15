@@ -7,6 +7,7 @@ import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
 import { PublicRegistryCheckpoint, checkpointRecordName } from "../../src/public-registry-checkpoint.mjs";
 import { AccountDeletionState } from "../../src/account-deletion-state.mjs";
 import { AccountDeletionCoordinator, AccountDeletionProcessor } from "../../src/account-deletion.mjs";
+import { distanceMeters } from "../../src/community-geo.mjs";
 
 const pair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const pem = pair.privateKey.export({ type: "pkcs8", format: "pem" });
@@ -17,7 +18,7 @@ export function publicClient(fetchImplementation, options = {}) {
   return new CloudKitPublicClient({ container: "iCloud.mpvEcho.Echo", environment: "development", keyID: "synthetic-public-v1",
     privateKeyPEM: pem, fetchImplementation, isEnabled: () => true, ...options });
 }
-/** Explicit protocol model, NOT CloudKit. Indexes are deliberately absent; erasure must use exact IDs. */
+/** Explicit protocol model, NOT CloudKit. Erasure never uses this synthetic regional index. */
 export class PublicCloudKitModel {
   records = new Map(); requests = []; sequence = 0;
   controls = new Map(); checkpointRequests = [];
@@ -25,13 +26,29 @@ export class PublicCloudKitModel {
   async fetch(request, options) {
     const url = new URL(request.url), raw = await request.text(), body = JSON.parse(raw);
     assert.equal(url.origin, "https://api.apple-cloudkit.com");
-    assert.match(url.pathname, /^\/database\/1\/iCloud\.mpvEcho\.Echo\/development\/public\/records\/(lookup|modify)$/);
+    assert.match(url.pathname, /^\/database\/1\/iCloud\.mpvEcho\.Echo\/development\/public\/records\/(lookup|modify|query)$/);
     assert.equal(request.method, "POST"); assert.equal(request.redirect, "manual");
     const timestamp = request.headers.get("X-Apple-CloudKit-Request-ISO8601Date");
     const signature = request.headers.get("X-Apple-CloudKit-Request-SignatureV1");
     const digest = createHash("sha256").update(raw).digest("base64");
     assert.equal(verify("sha256", Buffer.from(`${timestamp}:${digest}:${url.pathname}`), pair.publicKey, Buffer.from(signature, "base64")), true);
     const operation = url.pathname.split("/").at(-1), call = { operation, body, signal: options.signal };
+    if (operation === "query") {
+      this.requests.push(call);
+      const override = await this.before?.(call); if (override) return override;
+      const filters = body.query.filterBy;
+      const records = [...this.records.values()].filter(record => record.recordType === body.query.recordType && filters.every(filter => {
+        const value = record.fields[filter.fieldName]?.value, compared = filter.fieldValue.value;
+        return filter.comparator === "NEAR" ? value && distanceMeters(value, compared) <= filter.distance :
+          filter.comparator === "EQUALS" ? value === compared : filter.comparator === "GREATER_THAN" ? value > compared : value <= compared;
+      })).sort((a, b) => (b.fields[body.query.sortBy[0].fieldName].value - a.fields[body.query.sortBy[0].fieldName].value) ||
+        (a.recordName < b.recordName ? 1 : a.recordName > b.recordName ? -1 : 0));
+      const offset = body.continuationMarker ? Number(body.continuationMarker.split(":")[1]) : 0;
+      const page = records.slice(offset, offset + body.resultsLimit).map(record => ({ ...structuredClone(record),
+        fields: Object.fromEntries(Object.entries(record.fields).filter(([key]) => body.desiredKeys.includes(key))) }));
+      const response = Response.json({ records: page, ...(offset + page.length < records.length ? { continuationMarker: "index:" + (offset + page.length) } : {}) });
+      return await this.after?.({ ...call, response }) ?? response;
+    }
     const names = operation === "lookup" ? body.records.map(row => row.recordName) : body.operations.map(row => row.record.recordName);
     const control = names.includes(checkpointRecordName);
     if (control) assert.deepEqual(names, [checkpointRecordName]);
