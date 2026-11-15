@@ -76,18 +76,22 @@ struct StoredGatewayDeletionJournal: Codable {
 }
 
 public enum GatewayDeletionFailure: Error, LocalizedError, Equatable {
-    case freshProofRequired, journalFull, missingRequest
+    case freshProofRequired, journalFull, missingRequest, receiptChanged
     public var errorDescription: String? {
         switch self {
         case .freshProofRequired: "Potwierdź ponownie przez Apple odzyskanie usuwania."
         case .journalFull:
-            "Zachowano limit lokalnych potwierdzeń usuwania. Nie nadpisano wcześniejszych danych."
+            "Osiągnięto limit zapisanych żądań. Dokończ rozpoczęte usuwanie lub usuń lokalne potwierdzenie zakończonego usuwania, aby zwolnić miejsce."
         case .missingRequest: "Nie znaleziono lokalnego biletu tego usuwania."
+        case .receiptChanged:
+            "Potwierdzenie zmieniło się lub usuwanie nie jest zakończone. Sprawdź ponownie jego stan."
         }
     }
 }
 
 public struct GatewayDeletionProgress: Equatable, Sendable {
+    // Part of the immutable local snapshot, not an authorization credential. Recovery rotates it.
+    let attemptID: String
     public let journalID: String
     public let accountID: String?
     public let status: GatewayDeletionStatus?

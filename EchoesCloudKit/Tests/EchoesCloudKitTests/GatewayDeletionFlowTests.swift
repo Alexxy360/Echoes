@@ -15,6 +15,7 @@ final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
         get { lock.withLock { failWriteNumber } }
         set { lock.withLock { failWriteNumber = newValue } }
     }
+    var totalWrites: Int { lock.withLock { writes } }
     func read() throws -> Data? { lock.withLock { value } }
     func write(_ value: Data) throws {
         try lock.withLock {
@@ -45,6 +46,8 @@ final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
         beforeACK: (() throws -> Void)?
     var holdRequest = false, pendingRequest: CheckedContinuation<Void, Never>?
     var failStatus = false
+    var holdNextStatus = false
+    var pendingStatus: CheckedContinuation<Void, Never>?
     var challengePurposes: [Bool] = []
     var holdNextRecovery = false
     var pendingRecovery: CheckedContinuation<Void, Never>?
@@ -108,7 +111,12 @@ final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
     func deletionStatus(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus {
         statusCalls += 1
         if failStatus { throw GatewayFailure.transport }
-        return try status(ticket)
+        let response = try status(ticket)
+        if holdNextStatus {
+            holdNextStatus = false
+            await withCheckedContinuation { pendingStatus = $0 }
+        }
+        return response
     }
     func acknowledgePrivateCleanup(ticket: GatewayDeletionTicket) async throws -> GatewayDeletionStatus {
         ackCalls += 1

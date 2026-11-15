@@ -76,6 +76,77 @@ import Testing
     }
 }
 
+@Test @MainActor func completedReceiptRemovalNeedsExplicitConfirmationButNoNewAppleProof()
+    async throws
+{
+    let f = try DeletionHostFixture()
+    f.flow.cleanup.complete = true
+    let initial = try await f.start()
+    await f.host.continueDeletion(journalID: initial.journalID)
+    #expect(f.host.progress?.completed == true)
+    f.apple.state = .revoked
+    f.setAuthentication(nil)
+    await f.host.activate()
+    let before = try f.flow.storage.read()
+    let calls = (f.sheet.calls, f.apple.calls, f.flow.api.statusCalls, f.flow.api.challengePurposes.count)
+    f.host.ask(.forgetCompleted(journalID: initial.journalID))
+    #expect(f.host.confirmation?.buttonTitle == "Usuń potwierdzenie")
+    f.host.cancelConfirmation()
+    #expect(try f.flow.storage.read() == before)
+    f.host.ask(.forgetCompleted(journalID: initial.journalID))
+    let selected = try #require(f.host.confirmation)
+    f.host.confirmFromUserAction(selected)
+    f.host.cancelConfirmation()
+    for _ in 0..<1000 where f.host.isBusy { await Task.yield() }
+    #expect(f.host.requests.isEmpty && f.host.progress == nil && f.host.phase == .ready)
+    #expect(try f.flow.storage.journal().requests.isEmpty)
+    #expect(
+        (f.sheet.calls, f.apple.calls, f.flow.api.statusCalls, f.flow.api.challengePurposes.count) == calls)
+    await f.host.confirm(selected)
+    #expect(try f.flow.storage.journal().requests.isEmpty)
+}
+
+@Test @MainActor func incompleteOrChangedIdentityCannotConfirmLocalReceiptRemoval() async throws {
+    let f = try DeletionHostFixture()
+    let initial = try await f.start()
+    f.host.ask(.forgetCompleted(journalID: initial.journalID))
+    #expect(f.host.confirmation == nil)
+    f.flow.cleanup.complete = true
+    await f.host.continueDeletion(journalID: initial.journalID)
+    f.host.ask(.forgetCompleted(journalID: initial.journalID))
+    let selected = try #require(f.host.confirmation)
+    let before = try f.flow.storage.read()
+    f.flow.owner.name = "owner-B"
+    await f.host.confirm(selected)
+    #expect(try f.flow.storage.read() == before)
+    #expect(f.host.requests.isEmpty && f.host.errorMessage != nil)
+}
+
+@Test @MainActor func localReceiptConfirmationDoesNotDiscardAConcurrentlyRotatedRecoveryTicket()
+    async throws
+{
+    let f = try DeletionHostFixture()
+    f.flow.cleanup.complete = true
+    let initial = try await f.start()
+    await f.host.continueDeletion(journalID: initial.journalID)
+    f.host.ask(.forgetCompleted(journalID: initial.journalID))
+    let selected = try #require(f.host.confirmation)
+    // A separate coordinator has its own native session; only protected storage is shared.
+    let external = try DeletionFlowFixture(storage: f.flow.storage)
+    external.api.activeTicket = f.flow.api.activeTicket
+    external.api.serverAck = true
+    external.api.serverCompleted = true
+    let newer = try await external.controller().recover(
+        challenge: flowChallenge(), proof: flowProof(), expectedAccountID: flowAccountID,
+        journalID: initial.journalID)
+    let before = try f.flow.storage.read()
+    let sheets = f.sheet.calls
+    await f.host.confirm(selected)
+    #expect(try f.flow.storage.read() == before)
+    #expect(f.host.errorMessage != nil && f.host.requests == [newer])
+    #expect(f.sheet.calls == sheets)
+}
+
 @Test @MainActor func deletionHostRequiresOneUseConfirmationAndPinsTheSignedInAppleAndApplicationAccount()
     async throws
 {

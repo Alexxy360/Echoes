@@ -298,6 +298,23 @@ import Observation
         }
     }
 
+    /// Explicit local removal of a fully completed receipt. No gateway calls or content erasure.
+    /// The immutable displayed snapshot pins the attempt/status; a rotated receipt cannot be lost.
+    public func forgetCompleted(receipt: GatewayDeletionProgress) async throws {
+        try await work { operation in
+            var journal = try self.read()
+            let current = try self.entry(receipt.journalID)
+            guard receipt.completed, self.summary(current) == receipt else {
+                throw GatewayDeletionFailure.receiptChanged
+            }
+            try self.check(operation)
+            journal.requests.removeAll { $0.journalID == receipt.journalID }
+            // Synchronous read/check/write: no suspension can overwrite a concurrent checkpoint.
+            try self.write(journal)
+            self.phase = .ready
+        }
+    }
+
     private func work<T>(_ body: (Operation) async throws -> T) async throws -> T {
         guard foreground, isEnabled() else { throw GatewayFailure.configuration }
         guard busy == nil else { throw GatewayFailure.operationInProgress }
@@ -410,7 +427,8 @@ import Observation
     }
     private func summary(_ entry: StoredGatewayDeletion) -> GatewayDeletionProgress {
         .init(
-            journalID: entry.journalID, accountID: entry.accountID, status: entry.status,
+            attemptID: entry.attemptID, journalID: entry.journalID, accountID: entry.accountID,
+            status: entry.status,
             needsFreshProof: entry.phase == .recoveryPending,
             canRetryInitialRequest: entry.ticket != nil && entry.status == nil,
             privateContentDeleted: entry.contentDeleted, localDataDeleted: entry.localDataDeleted,

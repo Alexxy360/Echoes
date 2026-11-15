@@ -10,7 +10,7 @@ Aktualizacja CK-02o: dodano host, potwierdzenie, selektywne zamknięcie sesji i 
 
 Atomowy dziennik mieści do 8 żądań i 64 KiB. Każde żądanie jest związane z natywnym Apple userID, skrótem właściciela iCloud, UUID zadania i autorytatywnym kontem Echoes. Zawiera tylko potrzebny bilet, status, kursor SDK i checkpointy. Nie zapisuje JWT, kodu ani nonce Apple. Wersja, namespace, format biletu, identyfikatory i spójność checkpointów są sprawdzane przy odczycie. Błąd/pełny magazyn nie oznaczają pustego konta i nie nadpisują wcześniejszych danych.
 
-Nie ma jeszcze automatycznej retencji lokalnych receipts. Limit zabezpiecza wzrost, ale wymaga obsługi/polityki przed wydaniem. Nie wolno usuwać starszych potwierdzeń tylko po to, by ukryć błąd zapisu. Końcowa retencja prywatnego guarda CK-03b także pozostaje do wdrożenia.
+CK-02p dodaje [świadome usunięcie ukończonego lokalnego potwierdzenia](LOKALNE_POTWIERDZENIA_USUWANIA.md), po sprawdzeniu własnych checkpointów i osobnym zatwierdzeniu. Nie ma jeszcze automatycznej retencji lokalnych receipts. Limit zabezpiecza wzrost, ale wymaga obsługi/polityki przed wydaniem. Nie wolno usuwać starszych potwierdzeń tylko po to, by ukryć błąd zapisu. Końcowa retencja prywatnego guarda CK-03b także pozostaje do wdrożenia.
 
 ## Przebieg
 

@@ -42,6 +42,11 @@
                 ForEach(Array(host.requests.enumerated()), id: \.element.journalID) { index, request in
                     Section("Zapisane usuwanie \(index + 1)") {
                         GatewayDeletionProgressView(progress: request)
+                        if request.completed {
+                            Button("Usuń potwierdzenie z urządzenia", role: .destructive) {
+                                host.ask(.forgetCompleted(journalID: request.journalID))
+                            }.accessibilityIdentifier("gateway.deletion.forget")
+                        }
                         if request.canRetryInitialRequest {
                             Button("Potwierdź żądanie przez Apple", role: .destructive) {
                                 host.ask(.retryInitial(journalID: request.journalID))
@@ -85,7 +90,7 @@
             ) { pending in
                 Button("Anuluj", role: .cancel) { host.cancelConfirmation() }
                     .accessibilityIdentifier("gateway.deletion.cancel")
-                Button("Potwierdź przez Apple", role: confirmationRole(pending.action)) {
+                Button(pending.buttonTitle, role: confirmationRole(pending.action)) {
                     host.confirmFromUserAction(pending)
                 }
                 .accessibilityIdentifier("gateway.deletion.confirm")

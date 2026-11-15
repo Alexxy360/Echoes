@@ -53,9 +53,11 @@
         "ECHOES_GATEWAY_STORAGE_CHECK": true
       },
       "activationKeyAbsent": true,
-      "packageActivationFiles": []
+      "packageActivationFiles": [],
+      "activationInfoDictionaryKey": "EchoesGatewayDevelopment"
     },
-    "entitlementsAndProjectChanges": false
+    "entitlementsAndProjectChanges": false,
+    "activationRecheckCK02p": "Checked actual parser key EchoesGatewayDevelopment in the preserved CK-02o Release Info.plist; absent. Prior script checked an incorrect key name; observed result remains unchanged."
   },
   "knownLimits": [
     "ordinary AppServices still Firebase; isolated host has no profile memory cache",

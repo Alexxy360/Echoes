@@ -29,7 +29,7 @@ GatewayHTTPClient/NativeGatewayTransport, KeychainGatewaySessionStorage i Gatewa
 
 GatewaySignInHost zarządza natywną tożsamością i UI, foreground/background, barierami i callbackiem czyszczenia domeny. NativeAppleGatewayAuthorizer (iOS) prezentuje arkusz z właściwego okna; NativeAppleGatewayIdentitySource sprawdza credentialState. GatewayDevelopmentActivation i ActivatedGatewayAuthenticationAPI odcinają wyłączoną/wygasłą konfigurację. Host jest przygotowany w osobnym ekranie Debug, obecnie unconfigured; zwykły CommunityClient nadal nie korzysta z niego. 63/63 testy pakietu na macOS, bez prawdziwego Apple login. [Cykl życia i wymagane podłączenie](../Docs/NATYWNY_HOST_LOGOWANIA.md).
 
-CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Po CK-02o aktualnie 151/151 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
+CK-02l dodał osobny purpose/session-reset i natywne potwierdzenie odzyskiwania po SESSION_LIMITED, przypięte do konta nieudanej próby. Bez automatycznego retry/login. Po CK-02p aktualnie 162/162 testów pakietu; prawdziwe logowanie nadal nieaktywne. [Zakres](../Docs/ODZYSKIWANIE_SESJI_GATEWAY.md).
 
 ## Bilet usuwania i HTTP (CK-02m)
 
@@ -42,3 +42,5 @@ KeychainGatewayDeletionStorage i GatewayDeletionController zapisują osobny dzie
 ## Host i kontrolny ekran usuwania (CK-02o)
 
 GatewayDeletionHost łączy świeżą natywną tożsamość, jednorazowe potwierdzenie, chronione wskazówki oraz sterownik. GatewaySignInHost/GatewaySessionController zamykają selektywnie pasujące konto, a GatewayLocalAccountData ogranicza lease/pliki/cache do jednej przestrzeni. Izolowana kompozycja Debug korzysta z realnych zależności wyłącznie po aktywacji; jawny podgląd UI ma modele w pamięci i banner. Zwykły AppServices nadal Firebase. 151/151 Swift i 9/9 UI, kompilacje Debug/Release; bez odbioru dostawców. [Przepływ, pliki i pozostałe wymagania](../Docs/NATYWNE_USUWANIE_UI.md).
+
+CK-02p dodaje świadome lokalne usuwanie ukończonych potwierdzeń: snapshot/attemptID, kontrola właściciela i atomowe zachowanie pozostałych wpisów. Bez nowego dowodu Apple, wywołań gateway lub automatycznego TTL. 162/162 Swift i 10/10 UI. [Zasady i ograniczenia](../Docs/LOKALNE_POTWIERDZENIA_USUWANIA.md).

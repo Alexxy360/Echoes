@@ -25,19 +25,31 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
         case deleteAccount
         case retryInitial(journalID: String)
         case recover(journalID: String?)
+        case forgetCompleted(journalID: String)
         var isInitial: Bool {
-            if case .recover = self { return false }
-            return true
+            switch self {
+            case .deleteAccount, .retryInitial: true
+            case .recover, .forgetCompleted: false
+            }
         }
     }
     public struct Confirmation: Identifiable, Equatable {
         public let id: UUID
         public let action: Action
         public var title: String {
-            action.isInitial ? "Rozpocząć usuwanie konta?" : "Odzyskać usuwanie konta?"
+            if case .forgetCompleted = action { return "Usunąć potwierdzenie z urządzenia?" }
+            return action.isInitial ? "Rozpocząć usuwanie konta?" : "Odzyskać usuwanie konta?"
+        }
+        public var buttonTitle: String {
+            if case .forgetCompleted = action { return "Usuń potwierdzenie" }
+            return "Potwierdź przez Apple"
         }
         public var message: String {
-            action.isInitial
+            if case .forgetCompleted = action {
+                return
+                    "Usuniesz tylko zapis zakończonego usuwania z tego urządzenia. Nie cofa to usunięcia danych ani nie odłącza Apple. Jeśli odłączenie Apple nadal jest wymagane, wykonaj je wcześniej w ustawieniach konta Apple."
+            }
+            return action.isInitial
                 ? "Usuwanie zamknie dostęp do tego konta Echoes i usunie jego dane. Potwierdzisz tożsamość przez Apple. Nie usunie to konta Apple."
                 : "Odszukasz wcześniej rozpoczęte usuwanie po potwierdzeniu tożsamości przez Apple. Nie rozpocznie to usuwania nowego konta."
         }
@@ -47,6 +59,7 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
         let target: GatewayIdentityBinding?
         let expectedAccountID: String?
         let authentication: GatewayAuthenticatedIdentity?
+        let receipt: GatewayDeletionProgress?
     }
     public private(set) var phase: Phase = .suspended
     public private(set) var confirmation: Confirmation?
@@ -127,6 +140,7 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
         let authentication = currentAuthentication()
         let target: GatewayIdentityBinding?
         let accountID: String?
+        var receipt: GatewayDeletionProgress?
         switch action {
         case .deleteAccount:
             target = authentication?.binding
@@ -148,12 +162,19 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
                 target = nil
                 accountID = nil
             }
+        case .forgetCompleted(let id):
+            guard let binding = bindings[id], let entry = requests.first(where: { $0.journalID == id }),
+                entry.completed
+            else { return }
+            target = binding
+            accountID = entry.accountID
+            receipt = entry
         }
         errorMessage = nil
         confirmation = .init(
             id: UUID(), action: action, generation: generation,
             cloudRevision: cloudKitAccount.identityRevision, cloudHash: hash,
-            target: target, expectedAccountID: accountID, authentication: authentication)
+            target: target, expectedAccountID: accountID, authentication: authentication, receipt: receipt)
     }
     /// One use, explicit confirmation. No automatic authorization sheet on activate/poll/resume.
     public func confirm(_ selected: Confirmation) async {
@@ -176,7 +197,7 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
             return nil
         }
         confirmation = nil
-        phase = .authorizing
+        phase = selected.receipt == nil ? .authorizing : .working
         errorMessage = nil
         progress = nil
         requests = []
@@ -186,6 +207,18 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
         do {
             let original = try await cloudIdentity(operation)
             guard try hash(original) == selected.cloudHash else { throw GatewayFailure.accountMismatch }
+            if case .forgetCompleted(let id) = selected.action {
+                guard let binding = selected.target, let receipt = selected.receipt,
+                    receipt.journalID == id, receipt.accountID == selected.expectedAccountID,
+                    currentAuthentication() == selected.authentication
+                else { throw GatewayFailure.superseded }
+                try await controller(binding).forgetCompleted(receipt: receipt)
+                try check(operation)
+                try await reloadRequests(operation)
+                try check(operation)
+                phase = .ready
+                return
+            }
             let challenge = try await api.deletionChallenge(recovering: !selected.action.isInitial)
             try check(operation)
             let proof = try await authorizer.authorize(challenge: challenge)
@@ -219,6 +252,8 @@ private final class DeletionIdentityObservers: @unchecked Sendable {
                 result = try await controller.recover(
                     challenge: challenge, proof: proof, expectedAccountID: selected.expectedAccountID,
                     journalID: id)
+            case .forgetCompleted:
+                throw GatewayFailure.superseded
             }
             try check(operation)
             try await reloadRequests(operation)

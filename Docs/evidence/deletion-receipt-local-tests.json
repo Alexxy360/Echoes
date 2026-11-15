@@ -1,0 +1,93 @@
+{
+  "stage": "CK-02p",
+  "observedAt": "2026-11-15T12:03:25.069689+01:00",
+  "baselineCommit": "64a3b6548588fcaf37b091b9f5859a7ebf388493",
+  "nativeTests": {
+    "passed": 162,
+    "failed": 0,
+    "newTests": 11,
+    "newControllerTests": 8,
+    "newHostTests": 3,
+    "platform": "macOS arm64",
+    "transport": "synthetic account/API/storage; no actual provider or Keychain calls"
+  },
+  "initialTestFailure": "one new assertion used a shared native session for an external coordinator, so the confirmation was correctly invalidated by revision before dispatch; corrected fixture to independent native session and shared protected storage",
+  "uiTests": {
+    "passed": 10,
+    "failed": 0,
+    "skipped": 0,
+    "newTests": 1,
+    "platform": "iPhone 17 Pro / iOS Simulator 26.1",
+    "resultBundle": "/private/tmp/echoes-receipt-ui.xcresult",
+    "runtimeWarnings": [],
+    "mode": "explicit in-memory preview/unconfigured native screen, not provider acceptance",
+    "visualAcceptance": "confirmation and empty state screenshots inspected"
+  },
+  "builds": {
+    "Debug": "succeeded with UI suite, existing project/local ad-hoc, no provisioning updates",
+    "Release": "succeeded, signing disabled",
+    "sourceUnchangedAfterTests": true,
+    "preExistingProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "postUIRefinement": "Only GatewayReceiptTests.swift changed after UI/Release: independent native sessions make the delayed-response test exercise absence in durable storage rather than native revision invalidation. Reviewed full Swift suite: 162/162 passed; product and UI sources unchanged."
+  },
+  "staticChecks": {
+    "changedSwiftStrictLint": "passed, 8 files",
+    "Release": {
+      "releaseExecutableSHA256": "ae7a2f3a3f86003016cff7104a6726f8db032f3405de74280932c8e42248d478",
+      "debugMarkersAbsent": true,
+      "activationInfoDictionaryKey": "EchoesGatewayDevelopment",
+      "activationKeyAbsent": true,
+      "projectFromGitSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+    },
+    "InfoActivationAbsentDebugAndRelease": true,
+    "preExistingProjectAndEntitlementsUnchanged": true
+  },
+  "verified": [
+    "exact completed local record removal with other binding retained",
+    "no gateway, Apple authorization/revoke or content-cleaner calls",
+    "global completed alone is insufficient; uncertain initial/recovery cannot be discarded",
+    "immutable attempt/status snapshot rejects rotated ticket",
+    "write failure preserves journal and permits genuine retry",
+    "owner/binding/corruption fail closed",
+    "late status response cannot resurrect a removed record",
+    "8-entry journal admits a new request only after explicit completed receipt removal",
+    "separate cancel/confirm and no extra Apple proof even after revocation"
+  ],
+  "knownLimits": [
+    "explicit local receipt removal, no automatic TTL",
+    "native account check may contact iCloud; not an offline guarantee",
+    "server retention, private guard and legacy unchanged",
+    "ordinary app still Firebase; isolated Development gateway unconfigured",
+    "fresh recovery requires server-retained receipt and Apple proof",
+    "real provider/Keychain/A-B acceptance not repeated"
+  ],
+  "notPerformed": [
+    "real Apple login, CloudKit records/assets, Cloudflare runtime",
+    "new capabilities, keys, secrets, services, paid plans or deployment",
+    "physical device install or user data operations",
+    "Production or TestFlight publication"
+  ],
+  "sourceSHA256": {
+    "Echo/Views/GatewayAccountDeletionView.swift": "bd3c5d338b936dcf142b26b5f36a6f8242fb71d9b7bb344ad56f3a9166f155b6",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionController.swift": "aade603e7407bc858dc34439c6f3495f0d4f231b544b837195288471fe718882",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionHost.swift": "cfc671ffc143c59bb479c3f7a136e974d2e9084320f5a803ed9d3ec5c01e4576",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayDeletionStorage.swift": "85967aa7de66edf895a34588581ddf6a1f6cbb69863ec4406a7897517f15c51a",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionFlowTests.swift": "01643fec93c11f707c4fc6eda36cc3f24b66817507c5ccd5dcb6cde3589a1bcb",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayDeletionHostTests.swift": "faf7f4c732e42186c8860af7126aa7bfe909ab21dbd597f4ca6bbbbb9e14c8f3",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReceiptTests.swift": "c1cba756ba0c1e4b12e990f14ce191a18dadd66470e0cc23cc9b1757fe8911ab",
+    "EchoesUITests/GatewayDeletionUITests.swift": "293845f522cf394ab0d8a26d8f7fcbd051c57500e6791c791dc3474faf342663"
+  },
+  "screenshotsSHA256": {
+    "Docs/evidence/deletion-receipt-confirmation.png": "2c9267dd364ac388210dc670a5201dc6d5d6411545b3dde9eb52fd9f44e097ef",
+    "Docs/evidence/deletion-receipt-empty.png": "2e9b3ab1b93a577f1202b0a03f653ee98fdc650013a8fe70d2139c4af9c23383"
+  },
+  "logSHA256": {
+    "swiftInitial": "0d53f7c4e4f78c5768c2b53d196e2cc77d08748308c4b52b67e6a73122c78808",
+    "swiftFinal": "fb858f81cac0a48ff7ca3ca727087d56bcd9994fa812fa83c91e123cd55b7c80",
+    "DebugAndUI": "d4f8380a690a12cc35b5c2a6bd85988e1ee7ef7c96a6bed6aae6e143e3e17e7a",
+    "UIResultSummary": "5fe2cfb1a3421af9e6120cdf8d5830478c2e5c6479404417e0505e4f63e6457d",
+    "Release": "7c44f248761c80ce58aee9e077a6ba66452decb73cb3467ca7d7fbaf17b69eca",
+    "SwiftFormat": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "swiftReviewed": "ebcda9b8725bbc969c520e988c91ce20142c27048e83c80b6cb59f2df841dd9e"
+  }
+}

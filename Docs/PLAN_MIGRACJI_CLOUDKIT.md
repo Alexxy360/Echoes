@@ -75,6 +75,8 @@ Postęp CK-02n: oddzielny trwały dziennik Keychain, zapis przed dispatch, natyw
 
 Postęp CK-02o: natywny host usuwania i kontrolny ekran Debug, świeże potwierdzenie Apple oraz wznowienie ważnym biletem. Selektywny trwały fence zachowuje inne/nowsze konto; rzeczywisty scoped cache ma ograniczone pliki, lease i bezpieczne czyszczenie. Brak aktywacji nie uruchamia podglądu. 151/151 Swift (26 nowych), 9/9 UI (5 nowych), Debug/Release i przegląd zrzutów. Pełne AppServices/profil/serwerowy adapter oraz retencja i provider/A-B nadal wymagane; zwykła aplikacja pozostaje na Firebase. Następnie: usunąć pozostałe luki retencji/prywatnych danych i zintegrować profile/zdjęcia oraz adapter społecznościowy, przed przygotowaną konfiguracją i rzeczywistą próbą. [Zakres i granice](NATYWNE_USUWANIE_UI.md).
 
+Postęp CK-02p: jawne usuwanie wyłącznie lokalnego ukończonego potwierdzenia po osobnym zatwierdzeniu. Niezmienny snapshot/attemptID, native owner i atomowy zapis chronią przed rotacją, zmianą konta i utratą trwającego zadania; późna odpowiedź nie odtwarza wpisu. Zwalnia miejsce w limicie 8 wpisów, bez automatycznego TTL i zmian guarda/serwera. 162/162 Swift (11 nowych), 10/10 UI (1 nowy). Automatyczna retencja, guard/legacy i provider/A-B pozostają otwarte. [Zakres](LOKALNE_POTWIERDZENIA_USUWANIA.md).
+
 ### CK-03 — trwały profil i model gotowy na zdjęcia
 
 Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konfliktów i izolacją kont oraz lokalne przygotowanie avatarów/miniatur bez GPS/EXIF. Przeszło 9 testów profilu i 4 avatarów (łącznie 21 w pakiecie wraz z obsługą konta). Komponenty nie publikują danych i nie są jeszcze podłączone do UI; publiczny profil, CKAsset i testy dwóch kont nadal oczekują.

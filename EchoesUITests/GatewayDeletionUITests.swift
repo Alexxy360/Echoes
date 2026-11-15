@@ -107,4 +107,27 @@ import XCTest
         attach(app, "deletion-confirmation-error")
     }
 
+    func testCompletedReceiptCanBeRemovedLocallyOnlyAfterItsOwnConfirmation() {
+        let app = application("completed")
+        let remove = app.buttons["gateway.deletion.forget"]
+        reveal(app, remove)
+        remove.tap()
+        let cancel = app.buttons["gateway.deletion.cancel"].firstMatch
+        XCTAssertTrue(cancel.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Usuń potwierdzenie"].exists)
+        XCTAssertFalse(app.buttons["Potwierdź przez Apple"].exists)
+        attach(app, "deletion-forget-confirmation")
+        cancel.tap()
+        XCTAssertTrue(element(app, "gateway.deletion.completed").exists)
+        reveal(app, remove)
+        remove.tap()
+        app.buttons["gateway.deletion.confirm"].firstMatch.tap()
+        XCTAssertTrue(
+            app.staticTexts["Brak zapisanych żądań na tym urządzeniu."].waitForExistence(timeout: 10))
+        XCTAssertFalse(element(app, "gateway.deletion.completed").exists)
+        XCTAssertFalse(remove.exists)
+        XCTAssertFalse(element(app, "gateway.deletion.error").exists)
+        attach(app, "deletion-forget-empty")
+    }
+
 }
