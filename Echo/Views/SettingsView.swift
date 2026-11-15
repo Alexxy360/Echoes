@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     let services: AppServices
+    var openNativeAccount: (() -> Void)? = nil
     @State private var name = ""
     @State private var musicBusy = false
     @State private var confirmDeletion = false
@@ -16,13 +17,17 @@ struct SettingsView: View {
                     TextField("Pseudonim", text: $name).textContentType(.nickname)
                     Button("Zapisz pseudonim") { services.saveName(name) }.disabled(
                         (try? InputValidation.name(name)) == nil)
+                    if services.isGatewayDevelopment {
+                        Text("W tym teście pseudonim jest zapamiętywany tylko do zamknięcia mapy.").font(
+                            .caption)
+                    }
                     Text("Nazwa nie jest unikalna. Widoczność włączasz osobno na mapie.").font(.caption)
                 }
                 Section("Muzyka") {
                     Toggle(
                         "Udostępniaj utwór z aplikacji Muzyka",
                         isOn: Binding(get: { services.music.isEnabled }, set: changeMusic)
-                    ).disabled(musicBusy)
+                    ).disabled(musicBusy || !services.canUseNativeSensors)
                     if services.music.authorization == .denied || services.music.authorization == .restricted
                     {
                         Text(
@@ -36,14 +41,29 @@ struct SettingsView: View {
                     Text(
                         "Dane okolicy odświeżają się podczas korzystania z aplikacji. Po przejściu w tło zatrzymujemy publikowanie i próbujemy ukryć profil; bez połączenia ostatni profil wygaśnie do 10 minut."
                     )
-                    Text(
-                        "GPS jest używany do wyszukiwania okolicy. Zapisywane pozycje profili i wiadomości są przybliżone. Wiadomości wygasają po 2 godzinach, a zgłoszenia są przechowywane do 30 dni. Fizyczne kasowanie działa asynchronicznie."
-                    )
-                    Text(
-                        "Dane są przetwarzane w Firebase/Google Cloud. Aplikacja nie korzysta z analityki ani reklam."
-                    )
-                    Button("Usuń moje dane i konto", role: .destructive) { confirmDeletion = true }.disabled(
-                        deleting)
+                    if services.isGatewayDevelopment {
+                        Text(
+                            "GPS służy do wyszukiwania okolicy. Zapisywane pozycje są przybliżone. Wiadomości znikają z kanału po 2 godzinach. Proces fizycznego kasowania i retencji zgłoszeń jest jeszcze przygotowywany."
+                        )
+                        Text(
+                            "Kontrolowany tryb używa CloudKit i pośrednika Cloudflare. Aplikacja nie korzysta z analityki ani reklam."
+                        )
+                        .accessibilityIdentifier("settings.native.privacy")
+                        Button("Konto i usuwanie danych", role: .destructive) {
+                            openNativeAccount?()
+                            dismiss()
+                        }.disabled(openNativeAccount == nil).accessibilityIdentifier(
+                            "settings.native.account")
+                    } else {
+                        Text(
+                            "GPS jest używany do wyszukiwania okolicy. Zapisywane pozycje profili i wiadomości są przybliżone. Wiadomości wygasają po 2 godzinach, a zgłoszenia są przechowywane do 30 dni. Fizyczne kasowanie działa asynchronicznie."
+                        )
+                        Text(
+                            "Dane są przetwarzane w Firebase/Google Cloud. Aplikacja nie korzysta z analityki ani reklam."
+                        )
+                        Button("Usuń moje dane i konto", role: .destructive) { confirmDeletion = true }
+                            .disabled(deleting)
+                    }
                 }
                 if !services.session.blockedIDs.isEmpty {
                     Section("Zablokowani użytkownicy") {
@@ -85,8 +105,13 @@ struct SettingsView: View {
             services.music.disable()
             return
         }
+        guard services.canUseNativeSensors else { return }
         musicBusy = true
         Task {
+            guard services.canUseNativeSensors else {
+                musicBusy = false
+                return
+            }
             await services.music.enable()
             musicBusy = false
         }

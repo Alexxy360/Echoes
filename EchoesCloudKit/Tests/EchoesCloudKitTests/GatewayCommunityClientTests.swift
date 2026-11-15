@@ -526,3 +526,102 @@ func communityRemoteRevocationClosesTheMatchingNativeAuthorizationWithoutDiscard
     _ = try await task.value
     #expect(try restored.client.pendingMessage()?.text == "Chroniony szkic")
 }
+
+@MainActor private func communityHost(
+    _ f: ClientFixture, enabled: @escaping @MainActor () -> Bool = { true },
+    clear: @escaping @MainActor () -> Void = {}
+) -> GatewayCommunityHost {
+    GatewayCommunityHost(
+        api: f.api, configuration: f.configuration, cloudKit: f.cloudKit,
+        authorization: f.source, storage: f.storage, isEnabled: enabled, clearLocalState: clear,
+        now: { clientNow })
+}
+@Test @MainActor func communityHostFailsClosedBeforeOpeningOrWriting() async throws {
+    let f = try ClientFixture()
+    let disabled = communityHost(f, enabled: { false })
+    #expect(throws: GatewayFailure.signInRequired) { try disabled.open() }
+    f.source.communityAuthorization = nil
+    let host = communityHost(f)
+    #expect(throws: GatewayFailure.signInRequired) { try host.open() }
+    #expect(host.presentation == nil && f.storage.data.isEmpty)
+    #expect(await f.api.captured().isEmpty)
+}
+@Test @MainActor func communityHostRejectsDoubleOpenAndReconcilesNewRevision() async throws {
+    let f = try ClientFixture()
+    var clears = 0
+    let host = communityHost(f, clear: { clears += 1 })
+    let first = try host.open()
+    #expect(throws: GatewayCommunityFailure.busy) { try host.open() }
+    #expect(host.isCurrent(first.id) && clears == 0)
+    first.domain.session.draft = "Private draft"
+    try f.source.select(ownerA)
+    #expect(!host.isCurrent(first.id))
+    host.reconcileAuthorization()
+    #expect(host.presentation == nil && first.domain.session.draft.isEmpty && clears == 1)
+    let next = try host.open()
+    #expect(next.id != first.id && next.domain !== first.domain && host.isCurrent(next.id))
+}
+@Test @MainActor func communityHostExpiryAndExplicitInvalidationClearSynchronously() throws {
+    let f = try ClientFixture()
+    let enabled = HostEnabled()
+    var clears = 0
+    let host = communityHost(f, enabled: { enabled.value }, clear: { clears += 1 })
+    let first = try host.open()
+    first.domain.session.draft = "Secret"
+    first.domain.session.updateLocation(
+        .init(coordinate: clientPosition, accuracy: 10, measuredAt: clientNow))
+    enabled.value = false
+    host.reconcileAuthorization()
+    #expect(host.presentation == nil && first.domain.session.draft.isEmpty)
+    #expect(first.domain.session.location == nil && !first.domain.session.isForeground && clears == 1)
+    host.invalidate()
+    #expect(clears == 2)
+}
+@Test @MainActor func communityHostLateCloseNeverClearsReopenedAccount() async throws {
+    let f = try ClientFixture()
+    var clears = 0
+    let host = communityHost(f, clear: { clears += 1 })
+    let first = try host.open()
+    await first.domain.session.connect(name: "A")
+    await f.api.hold("stop")
+    let closing = Task { await host.close(first.id) }
+    await f.api.waitForHold()
+    #expect(host.presentation == nil && first.domain.session.name.isEmpty && clears == 1)
+    try f.source.select(ownerB, apple: "apple-B", cloud: "cloud-B")
+    let second = try host.open()
+    await second.domain.session.connect(name: "B")
+    second.domain.session.draft = "B draft"
+    await f.api.release()
+    await closing.value
+    #expect(host.isCurrent(second.id) && host.presentation === second && clears == 1)
+    #expect(second.domain.session.name == "B" && second.domain.session.draft == "B draft")
+    await host.close(first.id)
+    #expect(host.isCurrent(second.id) && clears == 1)
+}
+@Test @MainActor func communityHostInvalidationPreservesUnknownSendWithoutAutomaticRetry() async throws {
+    let f = try ClientFixture()
+    let host = communityHost(f)
+    let first = try host.open()
+    let session = first.domain.session
+    await session.setForeground(true)
+    await session.connect(name: "A")
+    session.updateLocation(.init(coordinate: clientPosition, accuracy: 10, measuredAt: clientNow))
+    await f.api.loseSend()
+    session.draft = "Possibly delivered"
+    #expect(await session.sendDraft() == false)
+    #expect(session.pendingMessage != nil)
+    host.invalidate()
+    #expect(session.pendingMessage == nil && session.draft.isEmpty && session.userID == nil)
+    let second = try host.open()
+    await second.domain.session.connect(name: "A")
+    #expect(second.domain.session.pendingMessage?.text == "Possibly delivered")
+    #expect(second.domain.session.draft == "Possibly delivered")
+    #expect(await f.api.messageCount() == 1)
+    let sends = await f.api.captured().filter {
+        if case .send = $0 { return true }
+        return false
+    }
+    #expect(sends.count == 1)
+}
+
+@MainActor private final class HostEnabled { var value = true }

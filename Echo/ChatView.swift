@@ -16,6 +16,9 @@ struct ChatView: View {
                 ScrollViewReader { proxy in
                     ScrollView {
                         LazyVStack(spacing: 14) {
+                            if let pending = session.pendingMessage {
+                                PendingMessageView(session: session, pending: pending)
+                            }
                             if session.nextCursor != nil {
                                 Button("Wczytaj starsze") {
                                     Task { await session.refreshMessages(older: true) }
@@ -81,7 +84,7 @@ struct ChatView: View {
                         }
                     }
                     .accessibilityLabel("Wyślij wiadomość").accessibilityIdentifier("chat.send").disabled(
-                        !session.canSend)
+                        !session.canSend || session.pendingMessage != nil)
                 }.padding().background(.regularMaterial)
                 if session.draft.utf16.count > CommunityPolicy.maximumMessageLength {
                     Text("Wiadomość może mieć najwyżej 500 znaków.").font(.caption).foregroundStyle(
@@ -92,7 +95,14 @@ struct ChatView: View {
             .background(Color.meddleNavy).navigationTitle("Lokalny kanał").navigationBarTitleDisplayMode(
                 .inline
             )
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Zamknij") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Zamknij") { dismiss() } }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Ukryj klawiaturę") { inputFocused = false }
+                        .accessibilityIdentifier("chat.keyboard.hide")
+                }
+            }
             .task {
                 session.isChatOpen = true
                 await session.refreshMessages()

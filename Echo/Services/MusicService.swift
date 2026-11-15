@@ -10,11 +10,16 @@ final class MusicService {
     private(set) var songID = ""
     private(set) var authorization = MPMediaLibrary.authorizationStatus()
     private var observing = false
+    private var generation = UUID()
 
     func enable() async {
-        authorization = await withCheckedContinuation { continuation in
+        let expected = UUID()
+        generation = expected
+        let result = await withCheckedContinuation { continuation in
             MPMediaLibrary.requestAuthorization { continuation.resume(returning: $0) }
         }
+        guard generation == expected, !Task.isCancelled else { return }
+        authorization = result
         guard authorization == .authorized else {
             disable()
             return
@@ -35,6 +40,7 @@ final class MusicService {
     }
 
     func disable() {
+        generation = UUID()
         if observing { MPMusicPlayerController.systemMusicPlayer.endGeneratingPlaybackNotifications() }
         NotificationCenter.default.removeObserver(self)
         observing = false

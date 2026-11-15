@@ -10,14 +10,17 @@ struct EchoApp: App {
 
     init() {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] != nil
+            if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] != nil
+                || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_IDENTITY_CHECK"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_STORAGE_CHECK"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_AUTH_CHECK"] == "1"
             {
-                _services = State(initialValue: AppServices.preview())
+                _services = State(
+                    initialValue: ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
+                        ? AppServices.preview() : AppServices.inactive())
                 return
             }
         #endif
@@ -28,7 +31,10 @@ struct EchoApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-                if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] {
+                if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] {
+                    GatewayCommunityPreviewView(mode: mode)
+                } else if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"]
+                {
                     GatewayDeletionPreviewView(mode: mode)
                 } else if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_AUTH_CHECK"] == "1" {
                     GatewayAuthCheckView()

@@ -1,0 +1,142 @@
+{
+  "stage": "CK-04d.3 controlled native community presentation and recovery UI",
+  "observedAt": "2026-11-15T19:06:54.625531+01:00",
+  "baselineCommit": "d6f5f9804dc3215de98ee2f9d45358d81daad6b2",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 196,
+      "failed": 0,
+      "newTests": 6,
+      "execution": "macOS package; real host/client/domain, modelled Apple/CloudKit/API/storage"
+    },
+    "XCTestUI": {
+      "uniquePassed": 16,
+      "failedFinal": 0,
+      "newTests": 6,
+      "fullRunBeforeLayoutFix": 16,
+      "afterLayoutFixAffectedTestsPassed": 10,
+      "unaffectedDeletionTestsPreviouslyPassed": 6,
+      "execution": "approved signed ad-hoc iPhone 17 Pro Simulator iOS 26.1; synthetic identity/API/storage; native map tiles may use network"
+    },
+    "EchoesCore": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true,
+      "previousPassed": 22
+    },
+    "gatewayNode22And24": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true,
+      "previousPassedEach": 257
+    },
+    "strictSwiftFormat": {
+      "passed": true,
+      "files": 18
+    }
+  },
+  "builds": {
+    "DebugSimulator": "passed via final UI build/test",
+    "ReleaseUnsignedIOS": "passed"
+  },
+  "artifacts": {
+    "Debug": {
+      "activationAbsent": true,
+      "testResourcesAbsent": true,
+      "binarySHA256": {
+        "Echoes": "fe9385efcaeff3b7dc05b90cd4d1e0e42c87b218d0f8933165e0629e3a11ba30",
+        "__preview.dylib": "3aa381032eb1e8509dc44ee2242f7890dc748937937317d207d7e6e4c4cf646d",
+        "Echoes.debug.dylib": "ac1f93b97f96b9c43eb35493d93ed79711869945aae47bf754c973050d24f9ce"
+      },
+      "debugMarkers": [
+        "ECHOES_GATEWAY_AUTH_CHECK",
+        "ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW",
+        "ECHOES_GATEWAY_DELETION_UI_PREVIEW"
+      ]
+    },
+    "Release": {
+      "activationAbsent": true,
+      "testResourcesAbsent": true,
+      "binarySHA256": {
+        "Echoes": "105747c3c7556ab5b71c1793634629b4519dc8fcc292f4b0872b72131dc9c466"
+      },
+      "debugMarkers": []
+    }
+  },
+  "activation": {
+    "GATEWAY_ENABLED": "0",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
+    "COMMUNITY_ENABLED": "0",
+    "bundledConfiguration": "absent",
+    "ordinaryEntry": "Firebase",
+    "newBackendDeployed": false
+  },
+  "visualReview": {
+    "images": {
+      "community-host-account-route.png": "f8467370db18c4de285b5142fafc987909210071c321a9a159190f601dcc7981",
+      "community-host-large-text.png": "6ec22287194f63702981488bb499132c63a3e8b50758ca4421d97a8694d35117",
+      "community-host-pending.png": "0da246b0f436ac5a024f9d0f267987e8c48ab35100b13b1d4bc972dcaa5bbbbc",
+      "community-host-map.png": "4f9948d7ece1e8bc42587e3194e364bea8250f968e2c7df6fff22c45b3149c79",
+      "community-host-forget.png": "c854afde429f6ea6a3e89ce9fdd329733afd267998ea2766904ece6daacbed5a"
+    },
+    "observed": true,
+    "layoutRegression": "preview footer allocated outside NavigationStack content, no overlap with draft at AX XXXL",
+    "uiAcceptance": "synthetic UI only; not provider authorization/real deletion"
+  },
+  "resolvedDuringValidation": [
+    "incorrect initial auth-client/community-client composition corrected before acceptance",
+    "synthetic API attempted internal secret property; removed from fixture, no public exposure added",
+    "new host fixture clock aligned with synthetic server; first failed run/held waiter interrupted",
+    "system confirmation popover had no visible cancel; explicit alert uses captured snapshot and cancel",
+    "test assumed cursor replacement/keyboard shortcut; final test captures exact edited draft and checks preservation, alert nested accessibility query narrowed",
+    "visual review after green tests exposed preview footer overlap; fixed with VStack layout and geometry regression; repeated affected 10 UI tests"
+  ],
+  "warnings": [
+    "Xcode SDK build/debugger snapshot warnings; simulator focus sometimes emits non-finite-frame warning; no screenshot acceptance inferred from tests alone"
+  ],
+  "knownLimits": [
+    "ordinary entry still Firebase; actual new native runtime fails closed without bundled activation",
+    "native pseudonym/privacy acceptance is ephemeral per presentation; persistent profile/photos next",
+    "offline or lost authorization stop may wait for 10-minute expiry",
+    "local forget never retracts a delivered message",
+    "real SIWA/capabilities, separate service identity, schema/indexes/roles, Workers Free CPU/SQL and two ordinary accounts remain unaccepted",
+    "physical retention, moderation/operator/support and physical-device performance remain unfinished",
+    "no new physical Keychain test this stage; prior journal proof remains separate"
+  ],
+  "notPerformed": [
+    "new service deployment, keys, capabilities or secret transfer",
+    "real Apple/CloudKit/gateway user-record operations",
+    "paid plan activation",
+    "Firebase data/SDK removal",
+    "Production/TestFlight publication"
+  ],
+  "projectPreservation": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "sourceSHA256": {
+    "Echo/ChatView.swift": "096861e81fe22197b6ca9a54015c3816797f6c2fbf2ff6782691a5f44294ef68",
+    "Echo/ContentView.swift": "9503e9a25676e107cc0a8cdbd7416bf42db307f5b91e26e8795a4a4dcf7b15b4",
+    "Echo/EchoApp.swift": "340a38dccd25aea3f20d759a104e9e0498d478227581be17038ed1ad5331a4f1",
+    "Echo/Services/AppServices.swift": "d30b78e94729f91edca55a06f8daeca1bc1c7270610315d4801897c597e32669",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "e3593462bea9365a6e791011d070623f5657755b39ad3203880b8723fadd54a8",
+    "Echo/Services/LocationService.swift": "9edc3d703f9bf060153610bbd0abaad053beb3c0495c3fe402c46364ba3a4b49",
+    "Echo/Services/MusicService.swift": "e3c7c3956a5c7ff29db800345d0dabcc82052dbff0cb5661b086da553658667d",
+    "Echo/Views/GatewayAuthCheckView.swift": "bd2681a81a8d4ba14fa032f5ebc64aeb469ef1568cb54ec89d750ec1feadd07b",
+    "Echo/Views/GatewayCommunityPreviewView.swift": "548b8aaa19ccc57054d0e901dd7d30745cc26aba5ad363bae229f03237c2f4ac",
+    "Echo/Views/GatewayDeletionPreviewView.swift": "830b61230d9379a5112acd9776b34b7de25c6f81f3f56c46d93f94195f2d2a86",
+    "Echo/Views/MapComponents.swift": "d9305dc6b13e568e1901caa5c3660c368def3abadda76ada0bfc118f7157c1dc",
+    "Echo/Views/PendingMessageView.swift": "e87fd645b78226b7fbb374d6c13407d64adb28acfd5e76af649e2506bb1bd5f1",
+    "Echo/Views/SettingsView.swift": "206b729de9ee7a9668c618d2d65a5a073b8dff10884f0c763e375850b74c20bb",
+    "Echo/Views/WelcomeView.swift": "2ba940537023a16aaaaf2e8aaecd33ea714eb973dfc5914f2f055863a676c773",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityHost.swift": "6c8506bef7276254ce42fc8b7e13f5a95c29ee308decbc07019a40b74e4585e2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityClientTests.swift": "341d07ef8c7958b90ea9f2dd23abb549bab5d725b05aa0655dafa3a7898098ae",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayHostTests.swift": "08bd05df74e2eca6598c8730945503547ba3c67a677f0121b7adf1306dc5396e",
+    "EchoesUITests/GatewayCommunityUITests.swift": "eb02e63900a1921e23fa00861e6bef3de27ced357ebb5ab420faa32f87f865c4"
+  },
+  "logSHA256": {
+    "Swift": "34bab42865f81ff2d4531cf0be028c323829612e4a9da8532a8ba817b70618de",
+    "UIFull": "5e23138e14c1936cbd91a781bfa729b37a18fc1d223be961a9178b48fbc55297",
+    "UILayout": "9f5a4567d7bddbdab349a69b91f18f856eb5576067583eb5328fd7b382724b6a",
+    "Release": "aca14ed40576eecd5c4ea2a6cdafc1effcae6722274df91f1209ba38e68d76a7"
+  }
+}

@@ -84,7 +84,7 @@ struct MapStatusView: View {
                     }
                 } else {
                     Button("Udostępnij lokalizację podczas używania") {
-                        services.location.requestPermission()
+                        services.requestLocationPermission()
                     }
                 }
             } else if services.session.isLoadingUsers && !services.session.didLoadUsers {

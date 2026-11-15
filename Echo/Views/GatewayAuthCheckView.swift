@@ -12,6 +12,7 @@
         @State private var anchor = GatewayPresentationWindow()
         @State private var configurationFailed = false
         @State private var confirmation: SessionConfirmation?
+        @State private var presentationError: String?
 
         var body: some View {
             NavigationStack(path: $path) {
@@ -23,7 +24,7 @@
                         Form {
                             Section("Logowanie Apple") {
                                 Text(
-                                    "Kontrolowany test logowania. Funkcje społecznościowe nie są jeszcze przełączone."
+                                    "Kontrolowany test Development. Mapa i czat używają nowego adaptera; zwykła wersja aplikacji nie jest jeszcze przełączona."
                                 )
                                 .font(.caption).foregroundStyle(.secondary)
                                 if host.phase == .ready {
@@ -57,11 +58,19 @@
                                     }
                                 }
                             }
+                            Section("Okolica — Development") {
+                                Button("Otwórz mapę i czat") {
+                                    do { path = [.community(try runtime.openCommunity())] } catch {
+                                        presentationError = error.localizedDescription
+                                    }
+                                }.disabled(host.phase != .ready).accessibilityIdentifier(
+                                    "gateway.auth.community")
+                            }
                             Section("Konto") {
                                 NavigationLink("Usuwanie konta", value: Destination.deletion)
                                     .disabled(host.isBusy).accessibilityIdentifier("gateway.auth.deletion")
                             }
-                            if let error = host.errorMessage {
+                            if let error = presentationError ?? host.errorMessage {
                                 Section { Text(error).accessibilityIdentifier("gateway.auth.error") }
                             }
                             if host.logoutUnconfirmed {
@@ -98,10 +107,6 @@
                         } message: { action in
                             Text(action.message)
                         }
-                        .onChange(of: host.authenticatedIdentity) { _, _ in
-                            confirmation = nil
-                            runtime.deletion.authenticationChanged()
-                        }
                         .onChange(of: host.canResetSessions) { _, canReset in
                             if !canReset, confirmation == .reset { confirmation = nil }
                         }
@@ -110,8 +115,26 @@
                     }
                 }
                 .navigationTitle("Logowanie — Development")
-                .navigationDestination(for: Destination.self) { _ in
-                    if let runtime { GatewayAccountDeletionView(host: runtime.deletion) }
+                .navigationDestination(for: Destination.self) { destination in
+                    if let runtime {
+                        switch destination {
+                        case .deletion: GatewayAccountDeletionView(host: runtime.deletion)
+                        case .community(let id):
+                            if runtime.community.isCurrent(id), runtime.communityPresentationID == id,
+                                let services = runtime.communityServices
+                            {
+                                ContentView(
+                                    services: services, usesNavigationStack: false,
+                                    openNativeAccount: {
+                                        guard runtime.community.isCurrent(id) else { return }
+                                        path = [.deletion]
+                                    }
+                                ).id(id)
+                            } else {
+                                ContentUnavailableView("Sesja została zamknięta", systemImage: "lock")
+                            }
+                        }
+                    }
                 }
             }
             .background(GatewayWindowReader(anchor: anchor).frame(width: 0, height: 0))
@@ -120,7 +143,21 @@
                     Color(.systemBackground).overlay { Text("Echoes").font(.title.bold()) }.ignoresSafeArea()
                 }
             }
-            .task { await prepare() }
+            .task {
+                await prepare()
+                while !Task.isCancelled {
+                    runtime?.community.reconcileAuthorization()
+                    do { try await Task.sleep(for: .seconds(1)) } catch { break }
+                }
+            }
+            .onChange(of: runtime?.authentication.authenticatedIdentity) { _, _ in
+                confirmation = nil
+                presentationError = nil
+                runtime?.deletion.authenticationChanged()
+            }
+            .onChange(of: runtime?.community.presentation?.id) { _, id in
+                if id == nil, path.contains(where: { $0.communityID != nil }) { path = [] }
+            }
             .onChange(of: scenePhase) { _, phase in
                 if phase == .background {
                     runtime?.authentication.suspend()
@@ -131,8 +168,14 @@
                     }
                 }
             }
-            .onChange(of: path) { _, current in
-                if current.isEmpty { Task { await runtime?.authentication.activate() } }
+            .onChange(of: path) { previous, current in
+                let closing = previous.compactMap(\.communityID).first
+                Task {
+                    if let closing, !current.contains(.community(closing)) {
+                        await runtime?.closeCommunity(closing)
+                    }
+                    if path.isEmpty, current.isEmpty { await runtime?.authentication.activate() }
+                }
             }
             .onDisappear {
                 runtime?.authentication.stop()
@@ -154,7 +197,14 @@
             }
         }
 
-        private enum Destination: Hashable { case deletion }
+        private enum Destination: Hashable {
+            case deletion
+            case community(UUID)
+            var communityID: UUID? {
+                if case .community(let id) = self { return id }
+                return nil
+            }
+        }
         private func prepare() async {
             guard runtime == nil, !configurationFailed else { return }
             do {

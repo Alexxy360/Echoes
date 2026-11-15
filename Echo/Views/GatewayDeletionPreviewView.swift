@@ -32,7 +32,7 @@
         }
     }
 
-    @MainActor private enum GatewayDeletionPreviewFixture {
+    @MainActor enum GatewayDeletionPreviewFixture {
         static func make(mode: String) throws -> GatewayDeletionHost {
             guard ["pending", "completed", "recovery"].contains(mode) else {
                 throw GatewayFailure.configuration

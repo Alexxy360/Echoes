@@ -176,6 +176,7 @@ private actor HostAPI: GatewayAuthenticationAPI {
 @MainActor private final class HostSwitch {
     var enabled = true
     var invalidations = 0
+    var onInvalidation: (@MainActor () -> Void)?
 }
 @MainActor private struct HostFixture {
     let api = HostAPI()
@@ -194,7 +195,11 @@ private actor HostAPI: GatewayAuthenticationAPI {
             api: api, session: session, cloudKitAccount: .init(source: cloud), apple: apple,
             authorizer: authorizer, isEnabled: { [policy] in policy.enabled },
             now: { [clock] in clock.now() },
-            notificationCenter: center, clearDomainState: { [policy] in policy.invalidations += 1 })
+            notificationCenter: center,
+            clearDomainState: { [policy] in
+                policy.invalidations += 1
+                policy.onInvalidation?()
+            })
     }
     func signIn() async {
         await host.activate()
@@ -740,5 +745,45 @@ private func activationInfo(expires: Date = hostNow.addingTimeInterval(3_600)) -
             binding: foreign, accountID: UUID().uuidString.lowercased())
     }
     #expect(f.host.phase == .unavailable && f.host.authenticatedIdentity == nil)
+    f.host.stop()
+}
+
+private struct HostCommunityAPI: GatewayCommunityAPI {
+    let origin = "https://host.example.invalid"
+    func perform(_ operation: GatewayCommunityOperation, token: GatewaySecret) async throws
+        -> GatewayCommunityReply
+    {
+        throw GatewayCommunityFailure.unavailable
+    }
+}
+@MainActor private final class HostCommunityStorage: GatewayCommunityJournalStorage {
+    func read(scope: GatewayCommunityScope) throws -> Data? { nil }
+    func write(_ data: Data, scope: GatewayCommunityScope) throws {}
+    func remove(scope: GatewayCommunityScope) throws {}
+}
+@Test @MainActor func nativeAuthInvalidatorClosesCommunityBeforeSuspensionAndHeldLogoutFinish() async throws {
+    let f = HostFixture()
+    let host = GatewayCommunityHost(
+        api: HostCommunityAPI(),
+        configuration: try .init(origin: URL(string: "https://host.example.invalid")!),
+        cloudKit: try .init(containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development),
+        authorization: f.host, storage: HostCommunityStorage(), isEnabled: { true })
+    f.policy.onInvalidation = { [weak host] in host?.invalidate() }
+    await f.signIn()
+    let first = try host.open()
+    first.domain.session.draft = "Private before suspension"
+    f.host.suspend()
+    #expect(host.presentation == nil && first.domain.session.draft.isEmpty)
+    #expect(!host.isCurrent(first.id))
+    await f.host.activate()
+    let second = try host.open()
+    second.domain.session.draft = "Private before logout"
+    await f.api.holdLogout()
+    let logout = Task { await f.host.signOut() }
+    try await waitForHost { await f.api.waitingForLogout() }
+    #expect(host.presentation == nil && second.domain.session.draft.isEmpty)
+    #expect(!host.isCurrent(second.id))
+    await f.api.resumeLogout()
+    await logout.value
     f.host.stop()
 }

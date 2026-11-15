@@ -9,8 +9,11 @@ final class AppServices {
     let session: CommunitySession
     let location = LocationService()
     let music = MusicService()
-    private let preferences: UserDefaults
+    private let preferences: UserDefaults?
     private let demo: Bool
+    let isGatewayDevelopment: Bool
+    private let isCurrent: @MainActor () -> Bool
+    private let simulatedCoordinate: Coordinate?
     private(set) var hasAcceptedPrivacy: Bool
     private(set) var savedName: String
 
@@ -19,16 +22,49 @@ final class AppServices {
     ) {
         self.preferences = preferences
         self.demo = demo
+        isGatewayDevelopment = false
+        isCurrent = { true }
+        simulatedCoordinate = demo ? PreviewCommunityClient.center : nil
         session = CommunitySession(client: client ?? FirebaseCommunityAPI())
         savedName = preferences.string(forKey: "userName") ?? ""
         hasAcceptedPrivacy = preferences.bool(forKey: "privacyAcceptedV2")
     }
 
+    /// Controlled native presentation: no Firebase fallback or shared legacy preferences.
+    init(
+        nativeSession: CommunitySession, simulatedCoordinate: Coordinate? = nil,
+        isCurrent: @escaping @MainActor () -> Bool
+    ) {
+        session = nativeSession
+        preferences = nil
+        demo = simulatedCoordinate != nil
+        self.simulatedCoordinate = simulatedCoordinate
+        self.isCurrent = isCurrent
+        isGatewayDevelopment = true
+        savedName = ""
+        hasAcceptedPrivacy = false
+    }
+
+    func invalidateNativePresentation() {
+        guard isGatewayDevelopment else { return }
+        location.reset()
+        music.disable()
+        savedName = ""
+        hasAcceptedPrivacy = false
+    }
+
+    var canUseNativeSensors: Bool { isCurrent() && !demo }
+    func requestLocationPermission() {
+        guard canUseNativeSensors else { return }
+        location.requestPermission()
+    }
+
     func enter(name: String) async {
+        guard isCurrent(), !Task.isCancelled else { return }
         do {
             let validated = try InputValidation.name(name)
-            preferences.set(validated, forKey: "userName")
-            preferences.set(true, forKey: "privacyAcceptedV2")
+            preferences?.set(validated, forKey: "userName")
+            preferences?.set(true, forKey: "privacyAcceptedV2")
             savedName = validated
             hasAcceptedPrivacy = true
             await session.connect(name: validated)
@@ -36,25 +72,28 @@ final class AppServices {
     }
 
     func activate() async {
+        guard isCurrent(), !Task.isCancelled else { return }
         music.refresh()
         await session.setForeground(true)
+        guard isCurrent(), !Task.isCancelled else { return }
         if hasAcceptedPrivacy {
             if session.phase == .idle { await session.connect(name: savedName) }
-            if !demo { location.resume() }
+            if isCurrent(), !demo { location.resume() }
         }
     }
 
     func deactivate() async {
         location.pause()
+        guard isCurrent() else { return }
         await session.setForeground(false)
     }
 
     func run() async {
-        guard hasAcceptedPrivacy else { return }
-        while !Task.isCancelled {
-            if demo {
+        guard hasAcceptedPrivacy, isCurrent() else { return }
+        while !Task.isCancelled, isCurrent() {
+            if let simulatedCoordinate {
                 session.updateLocation(
-                    .init(coordinate: PreviewCommunityClient.center, accuracy: 10, measuredAt: Date()))
+                    .init(coordinate: simulatedCoordinate, accuracy: 10, measuredAt: Date()))
             } else {
                 location.refreshIfNeeded()
                 session.updateLocation(
@@ -72,22 +111,28 @@ final class AppServices {
     }
 
     func saveName(_ value: String) {
+        guard isCurrent() else { return }
         do {
             try session.changeName(value)
             savedName = session.name
-            preferences.set(savedName, forKey: "userName")
+            preferences?.set(savedName, forKey: "userName")
         } catch { session.errorMessage = error.localizedDescription }
     }
 
     func deleteOwnData() async {
+        guard isCurrent(), !isGatewayDevelopment else { return }
         if await session.deleteOwnData() {
             music.disable()
             location.pause()
-            preferences.removeObject(forKey: "userName")
-            preferences.removeObject(forKey: "privacyAcceptedV2")
+            preferences?.removeObject(forKey: "userName")
+            preferences?.removeObject(forKey: "privacyAcceptedV2")
             hasAcceptedPrivacy = false
             savedName = ""
         }
+    }
+
+    static func inactive() -> AppServices {
+        AppServices(nativeSession: CommunitySession(client: PreviewCommunityClient()), isCurrent: { false })
     }
 
     static func preview() -> AppServices {

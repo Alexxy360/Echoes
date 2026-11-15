@@ -41,7 +41,9 @@ struct WelcomeView: View {
                 )
                 .accessibilityIdentifier("onboarding.enter")
                 Text(
-                    "Pseudonim nie jest publiczny, dopóki nie opublikujesz profilu lub wiadomości. Konto działa anonimowo — bez hasła."
+                    services.isGatewayDevelopment
+                        ? "Test CloudKit Development i Cloudflare. Używasz konta Echoes powiązanego z Apple i iCloud. Pseudonim w tym teście jest lokalny do zamknięcia mapy; stanie się widoczny po publikacji profilu lub wiadomości."
+                        : "Pseudonim nie jest publiczny, dopóki nie opublikujesz profilu lub wiadomości. Konto działa anonimowo — bez hasła."
                 )
                 .font(.caption).foregroundStyle(.secondary)
             }

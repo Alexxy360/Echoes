@@ -59,6 +59,12 @@ final class LocationService: NSObject, CLLocationManagerDelegate {
         manager.stopUpdatingLocation()
     }
 
+    func reset() {
+        pause()
+        location = nil
+        status = .idle
+    }
+
     func refreshIfNeeded() {
         guard isActive,
             [.authorizedWhenInUse, .authorizedAlways].contains(manager.authorizationStatus),

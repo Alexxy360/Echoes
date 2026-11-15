@@ -1,13 +1,43 @@
 #if DEBUG
     import EchoesCloudKit
     import Foundation
+    import Observation
     import UIKit
 
     /// Native composition for the isolated Development screen. Missing activation throws before
     /// native identity sources are constructed. Ordinary AppServices still uses its current adapter.
-    @MainActor final class GatewayDevelopmentRuntime {
+    @MainActor private final class GatewayCommunityInvalidationRelay {
+        weak var host: GatewayCommunityHost?
+        weak var services: AppServices?
+        func clearServices() { services?.invalidateNativePresentation() }
+    }
+
+    @MainActor @Observable final class GatewayDevelopmentRuntime {
         let authentication: GatewaySignInHost
         let deletion: GatewayDeletionHost
+        let community: GatewayCommunityHost
+        private(set) var communityServices: AppServices?
+        private(set) var communityPresentationID: UUID?
+        private let relay: GatewayCommunityInvalidationRelay
+
+        @discardableResult func openCommunity() throws -> UUID {
+            let presentation = try community.open()
+            let id = presentation.id
+            let services = AppServices(nativeSession: presentation.domain.session) { [weak community] in
+                community?.isCurrent(id) == true
+            }
+            relay.services = services
+            communityServices = services
+            communityPresentationID = id
+            return id
+        }
+        func closeCommunity(_ id: UUID) async {
+            await community.close(id)
+            if communityPresentationID == id {
+                communityServices = nil
+                communityPresentationID = nil
+            }
+        }
         init(anchor: @escaping @MainActor () -> UIWindow?) throws {
             let activation = try GatewayDevelopmentActivation(
                 infoDictionary: Bundle.main.infoDictionary ?? [:],
@@ -18,14 +48,15 @@
             let session = GatewaySessionController(
                 api: authenticationAPI,
                 storage: KeychainGatewaySessionStorage(configuration: activation.configuration))
-            // No profile/domain view in this isolated screen.
+            let relay = GatewayCommunityInvalidationRelay()
+            self.relay = relay
             let auth = GatewaySignInHost(
                 api: authenticationAPI, session: session,
                 cloudKitAccount: .init(
                     source: NativeCloudKitAccountSource(configuration: activation.cloudKit)),
                 apple: NativeAppleGatewayIdentitySource(),
                 authorizer: NativeAppleGatewayAuthorizer(anchor: anchor),
-                isEnabled: { activation.isActive() }, clearDomainState: {})
+                isEnabled: { activation.isActive() }, clearDomainState: { relay.host?.invalidate() })
             authentication = auth
             let account = CloudKitAccountSession(
                 source: NativeCloudKitAccountSource(configuration: activation.cloudKit))
@@ -35,6 +66,14 @@
                 root: FileManager.default.url(
                     for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
             let communityStorage = KeychainGatewayCommunityJournalStorage()
+            let communityAPI = try ActivatedGatewayCommunityAPI(
+                api: GatewayCommunityHTTPClient(configuration: activation.configuration),
+                activation: activation)
+            community = GatewayCommunityHost(
+                api: communityAPI, configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, storage: communityStorage, isEnabled: { activation.isActive() },
+                clearLocalState: { relay.clearServices() })
+            relay.host = community
             deletion = GatewayDeletionHost(
                 api: deletionAPI, cloudKitAccount: account,
                 apple: NativeAppleGatewayIdentitySource(),
