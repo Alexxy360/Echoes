@@ -85,6 +85,8 @@ Postęp CK-03b: przestrzeń prywatna zależy teraz od natywnego iCloud i zweryfi
 
 Postęp CK-04e.1: prywatny pseudonim podłączony do kontrolowanego Runtime/onboardingu/ustawień, z obowiązkowym świeżym dostępem do odczytu, prezentacją i nativem scope. Core zmienia nazwę po ACK; unknown/conflict wymaga odczytu i jawnego zapisu, z zachowaniem szkicu. Epoka operacji zamyka same-scope clear/reload oraz stare defer. 204/204 Swift i 22/22 UI, Debug/Release; dostawcy modelowani. Bez automatycznego importu legacy lub trwałej akceptacji zasad. Następny CK-04e.2: rzeczywisty ograniczony test SDK Development profilu/guarda/konfliktów i sprzątania, następnie CKAsset według [planu zdjęć](PLAN_AVATAROW_CLOUDKIT.md); nadal konieczne rzeczywiste SIWA/role/Free/A-B i cały pozostały plan. [Kompozycja](TRWALY_PSEUDONIM_IOS.md), [dowody](evidence/private-profile-ui-local-tests.json).
 
+Postęp CK-04e.2a: gotowa nieaktywna diagnostyka prawdziwego SDK na telefonie, z podpisaną konfiguracją dwóch konkretnych losowych stref, wspólnym ograniczeniem czasu, trwałym claim i dokładnym cleanup. 212/212 Swift, 2/2 UI, podpisany Debug Development i Release; brak instalacji lub operacji SDK. Świeży konkretny zakres zgody przygotowany i zgłoszony; nie zaliczono rzeczywistego profilu/CAS/guarda ani A/B. [Zakres](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md), [dowody](evidence/private-profile-sdk-preparation.json). Następnie ograniczona próba po zgodzie oraz zdjęcia zgodnie z planem, bez blokowania niezależnej pracy lokalnej.
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

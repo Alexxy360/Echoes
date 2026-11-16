@@ -10,7 +10,8 @@ struct EchoApp: App {
 
     init() {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] != nil
+            if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1"
+                || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_DEMO_MODE"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_CLOUDKIT_PROBE"] == "1"
@@ -31,7 +32,11 @@ struct EchoApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-                if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] {
+                if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1" {
+                    PrivateProfileSDKProbeView()
+                } else if let mode = ProcessInfo.processInfo.environment[
+                    "ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"]
+                {
                     GatewayCommunityPreviewView(mode: mode)
                 } else if let mode = ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"]
                 {

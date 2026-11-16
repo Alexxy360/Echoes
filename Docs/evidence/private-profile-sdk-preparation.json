@@ -1,0 +1,113 @@
+{
+  "stage": "CK-04e.2a inactive bounded private CloudKit SDK probe",
+  "observedAt": "2026-11-16T12:30:32.960007+01:00",
+  "baselineCommit": "8fd2b900ab7b16a6b3a45e4f0b0fe34a59266063",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 212,
+      "failed": 0,
+      "new": 8,
+      "execution": "macOS package, local files; no real CloudKit"
+    },
+    "renamedProbeTests": {
+      "passed": 8,
+      "failed": 0,
+      "change": "two test names lowerCamelCase; production sources unchanged"
+    },
+    "XCTestUI": {
+      "passed": 2,
+      "failed": 0,
+      "new": 1,
+      "device": "approved iPhone 17 Pro Simulator / iOS26.1",
+      "scope": "missing SDK configuration plus existing unconfigured gateway"
+    },
+    "strictSwiftFormat": {
+      "passed": true,
+      "files": 7
+    },
+    "gatewayAndCore": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true
+    }
+  },
+  "builds": {
+    "DebugSimulator": "passed",
+    "DebugPhysicalSignedInactive": "passed",
+    "ReleaseUnsignedIOS": "passed"
+  },
+  "physicalSigning": {
+    "codesignVerified": true,
+    "bundle": "mpvEcho.Echo",
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "Development",
+    "embeddedExistingProfileMatches": true,
+    "profileUpdated": false,
+    "activationAbsent": true,
+    "installed": false,
+    "SDKMutations": false
+  },
+  "release": {
+    "activationAbsent": true,
+    "SDKDiagnosticBinaryMarkersAbsent": true
+  },
+  "visualReview": {
+    "image": "Docs/evidence/private-sdk-unconfigured.png",
+    "SHA256": "4afedbe7a4b4f46910efc9d5d90979cf8c889bc22b26b2e3a5af0b6d6ff108d6",
+    "observed": true,
+    "edited": false
+  },
+  "approval": {
+    "state": "fresh concrete approval requested; not received at evidence creation",
+    "scope": "up to three predeclared attempts, each two absent random namespaces, common 1800-second window; synthetic data and exact cleanup only",
+    "livePermitCreated": false
+  },
+  "resolvedDuringValidation": [
+    "global manual provisioning profile override affected SPM resource bundles; final physical build uses existing automatic signing without provisioning updates",
+    "strict lint required lowerCamelCase for two test names; fixed and eight tests repeated"
+  ],
+  "notPerformed": [
+    "phone installation/run",
+    "real SDK account/profile/CAS/guard/cleanup",
+    "new CloudKit schema or permissions",
+    "Cloudflare/secrets/keys/payment/Production",
+    "two ordinary iCloud accounts"
+  ],
+  "knownLimits": [
+    "SDK probe uses scoped diagnostic authorization; no real gateway or accepted server deletion ticket",
+    "two Echoes UUIDs on same iCloud account cannot prove A/B privacy",
+    "SDK already dispatched may finish after deadline; subsequent operations fail closed",
+    "pending cleanup after expiry requires permitted recovery; no automatic extension",
+    "avatar, SIWA, hosting Free limits, service identity, roles and full migration remain unfinished"
+  ],
+  "projectPreservation": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "sourceSHA256": {
+    ".gitignore": "025523d5591a3d07629d31e6fca3cf33c12681a084bd235f78542edb22024477",
+    "Echo/EchoApp.swift": "d00e6cbae7c9dba7a6a49fedd40cf30a9f050bb8fd5817c97afd324d7316b245",
+    "Echo/Services/PrivateProfileSDKProbe.swift": "45805e81863e5e8ab47c96d72354e4d33da3e029535a01ca8d078ac18e1d3009",
+    "Echo/Views/PrivateProfileSDKProbeView.swift": "8fd257123a3312ade5c6571a71d08c4a78c4644eaa2b975a5ba8c41204ec55d3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileProbePlan.swift": "198d572b0fc4e26e77afcfcb2764fad0d3e97a4700b114f99b82f276df80895a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileProbeClaim.swift": "69a426cbe524ab14c16d9005bb270677dc89dec3113176bd4927d030bdd7abcc",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateProfileProbePlanTests.swift": "d973b8fc53a377667b8a8eae555c5ab47e67a852635d0379001a27cb2fb5dd0a",
+    "EchoesUITests/PrivateSDKProbeUITests.swift": "b0f9205c59c11e92cc05ed842a48e3156452c63e226798c3d669e06a50ab2da4"
+  },
+  "logSHA256": {
+    "/private/tmp/echoes-private-profile-sdk-swift-final.log": "c86e01bfcabc71080ae03d69b60e5b013f73bb4d154e7ac98c0ecd90a8624d2b",
+    "/private/tmp/echoes-private-profile-sdk-swift-renamed.log": "b2405d07ec8891eea4ec4746d8c279a9f9dee0f5005de24af6a99c9cff5e2eba",
+    "/private/tmp/echoes-private-profile-sdk-ui.log": "9bde5bc723a6c6ea9a7993769835e0d1bc56b8d282caecfa281cbaf7de611a68",
+    "/private/tmp/echoes-private-profile-sdk-device-build.log": "e3ef188e5d1ce0aacd442d443a0d89f6f41c9f62769f5aa608e6439a6d760735",
+    "/private/tmp/echoes-private-profile-sdk-release.log": "852e7dc233ded355f43299dcdedc79bb6494bfc5b1e6869cf6290f2fc06ccb83"
+  },
+  "artifactSHA256": {
+    "DebugPhysical": {
+      "Echoes": "a51652b2f222f5b6068365bd7ecaa4856db3548c7d9758cb702ef8135ebceb7e",
+      "Echoes.debug.dylib": "aa8a1e11d855c940aed9b529d0d6bc72731804bdc3804c526a9aba6fe86fcf29"
+    },
+    "Release": {
+      "Echoes": "3d5174a0eada06cab7a690d8603183cc14f9f1cea78304c9bf71c1db4dcbf523"
+    }
+  }
+}

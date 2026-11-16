@@ -54,3 +54,6 @@ __pycache__/
 .dev.vars*
 .wrangler/
 .secrets/
+
+# Short-lived, signed SDK diagnostic activation; never commit a live permit.
+Echo/Resources/EchoesPrivateProfileProbe.json
