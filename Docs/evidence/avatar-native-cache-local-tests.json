@@ -1,0 +1,201 @@
+{
+  "stage": "CK-04e.3h.1",
+  "observedAtUTC": "2026-11-16T18:29:10.920800+00:00",
+  "baselineCommit": "6b9ee03939d8616e29511a355712c53091098554",
+  "tests": {
+    "defined": 267,
+    "macOS": {
+      "passed": 266,
+      "skipped": 1,
+      "failed": 0
+    },
+    "iOSSimulator": {
+      "passed": 266,
+      "skipped": 1,
+      "failed": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "B3AA0604-82FF-470B-946A-A79E2D2C75F6",
+        "deviceName": "iPhone 17 Pro",
+        "modelName": "iPhone 17 Pro",
+        "osBuildNumber": "23B86",
+        "osVersion": "26.1",
+        "platform": "iOS Simulator"
+      }
+    },
+    "newPassedTests": 20,
+    "newExplicitPhysicalDeviceGate": 1,
+    "strictSwiftFormat": {
+      "files": 3,
+      "passed": true
+    },
+    "actualXcresultSummaryVerified": true,
+    "UIRepeated": false,
+    "reasonNoUI": "No view changed; deletion composition exercised by actual controller + filesystem unit test",
+    "gatewayCoreDependencyProjectSourceUnchanged": true,
+    "gatewayCoreFullSuitesOrAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newCacheSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "b45744a6aa1685ddeb9c51e19dec8d6ca6655d840eb3acb5085bf100c03b5d4d",
+        "Echoes.debug.dylib": "11dd6d400d90d8645669f86c89f53f1b531905806b63c49d3a158d5d510bd9d0"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newCacheSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "bed7ceb742a4fb9fab9c30981e9781ba6cf7489d645851535e2c6fad5303f84a"
+      }
+    }
+  },
+  "implemented": [
+    "scoped persistent cache bound to private account/iCloud and gateway/native identity",
+    "closed magic/length/metadata/JPEG envelope with manifest, exact bytes/SHA and actual ImageIO validation",
+    "replacement leases, exact old-lease fence, native binding/account fence, matching erase invalidation",
+    "O_NOFOLLOW/NONBLOCK/openat inode/UID/type/nlink checks, reject symlink/hardlink/FIFO/oversize on read/write",
+    "bounded directories/scans/quota/LRU, fixed creation-time eligibility and lazy cleanup of owned temps/expiry",
+    "new O_EXCL temporary file with 0600, 0700 directories, backup exclusion; file fsync/atomic rename/directory fsync",
+    "iOS complete set before contents; physical device branch also requires readable complete attribute before content",
+    "exact private-account cleanup across its gateway bindings, fsync directory mutations and failure on unknown formats",
+    "single cache instance in controlled Debug runtime and erase before localDataDeleted/private ACK"
+  ],
+  "bounds": {
+    "entriesPerCommunityScope": 64,
+    "bytesPerCommunityScope": 8388608,
+    "eligibilityLifetimeSeconds": 86400,
+    "metadataJSONBytes": 3072,
+    "maximumFileReadBytes": 260096,
+    "thumbnailFileReadBytes": 36096,
+    "privateScopeDirectories": 8,
+    "communityDirectoriesPerPrivateScope": 2,
+    "maximumScannedFilesPerCommunityScope": 128,
+    "maximumLogicalQuotaBytesAllScopes": 134217728,
+    "temporaryFilesPerSerializedWrite": 1,
+    "physicalTTLOrZeroizationGuarantee": false
+  },
+  "coverage": [
+    "both variants and fresh store instance persistence",
+    "account/native/origin partition and rejected iCloud mismatch",
+    "old lease fence cannot close newer account; exact erase keeps other account",
+    "all bindings of one owner erased, writes fenced, idempotent retry",
+    "permissions/backup flag/redacted names and diagnostics",
+    "expiry does not renew with reads or duplicate store; LRU/count/bytes quota; global directory limits",
+    "same-version changed valid JPEG rejected without altering old file",
+    "corrupted hash/magic/header length/time/extra fields/foreign version discarded",
+    "linked file/directory, FIFO, oversize and unknown file fail safely without touching external target",
+    "owned crash temp cleanup and cancellation before IO",
+    "actual deletion controller checkpoint/ACK held after real cache erase failure and scoped retry completes"
+  ],
+  "dataProtection": {
+    "setterExecutedInSimulator": true,
+    "simulatorReadAttributeObserved": null,
+    "physicalPositiveTest": false,
+    "lockedDeviceReadDeniedTest": false,
+    "physicalAttributeRequirementCompiledInRelease": true,
+    "explicitSkippedTest": "avatarDiskCachePhysicalFileProtectionIsComplete",
+    "temporaryDiagnosticRemoved": true,
+    "noClaimOfPhysicalEncryptionOrProtectedDataAcceptance": true
+  },
+  "deletionProof": {
+    "actualComponents": [
+      "GatewayDeletionController",
+      "GatewayAvatarCache",
+      "Darwin filesystem IO"
+    ],
+    "modeledComponents": [
+      "CloudKit private cleaner",
+      "gateway deletion API",
+      "native identity"
+    ],
+    "unknownFileBeforeRetry": {
+      "ackCalls": 0,
+      "localDataDeleted": false,
+      "lateOldLeaseWriteRejected": true
+    },
+    "afterScopedRetry": {
+      "ackCalls": 1,
+      "completed": true,
+      "privateCleanerCalls": 1
+    }
+  },
+  "negativeControl": {
+    "mutation": "disable active lease invalidation in exact erase",
+    "test": "avatarDiskCacheDeletionRemovesAllBindingsOfExactOwnerAndFencesItsWrites",
+    "exitCode": 1,
+    "failedTests": 1,
+    "issues": 2,
+    "guardRestoredBeforeAcceptedSuites": true,
+    "laterChangesBeforeFinalSuites": [
+      "strict numeric envelope time validation",
+      "directory fsync erasure",
+      "explicit physical protection gate and physical readback requirement"
+    ]
+  },
+  "resolvedDuringValidation": [
+    "UTIME_OMIT imported as Int32; explicit Int required for timespec",
+    "19 initial cache tests passed on Mac; strict envelope/time test adds twentieth executed test",
+    "Simulator full suite initially had one attribute assertion failure; diagnostic observed nil",
+    "focused Xcode filter selected zero tests and is not treated as verification",
+    "full diagnostic rerun confirmed nil, so physical verification is now a separate explicit skipped gate; physical code remains strict",
+    "temporary diagnostic removed; final Mac/Simulator have exactly 266 passes and one explicit skip; final Debug/Release passed",
+    "xcresulttool summary required escalation to read result artifact; observed 266 passed/1 skipped/0 failed"
+  ],
+  "knownLimits": [
+    "cache lease is cooperative local access control, not a server authorization or persistent account-deletion tombstone; new activation must be gated by current native source",
+    "native read/render driver, fresh token/204 full-manifest match and account/visibility/version fences remain CK-04e.3h.2",
+    "eligibility uses device wall clock; cleanup is lazy and inactive accounts may retain protected files until access/erase/system purge",
+    "quota is logical application bytes plus one temporary write, not APFS blocks or snapshot size",
+    "one shared actor must own the tree; not a defense against compromised process/device owner or malicious concurrent filesystem mutation",
+    "ImageIO/cache validation does not strip original photo metadata; gateway normalization is required",
+    "filesystem unlink/fsync is not proof of physical removal of every memory/backup/snapshot copy",
+    "physical Data Protection readback and locked-phone behavior remain unverified; Simulator nil is not a pass",
+    "provider roles/SIWA/CloudKit/hosted Free/ordinary A-B remain open"
+  ],
+  "notPerformed": [
+    "UI/render/read driver or protected binary HTTP/admission route activation",
+    "real device cache protection or new SDK mutation/installation",
+    "real CloudKit assets/roles, cloud deployment/key/secret/service/fee changes",
+    "physical retention/orphan cleanup or moderator/content inspection/photo reports",
+    "Production/TestFlight release or Firebase changes/deletion"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarCache.swift": "8c0c48c1fde909ca6224fe821c2f2333da4334c3c90c2e9dc399177ba82f6c50",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarCacheTests.swift": "082f9b4898d94b64d0e6d9de3bf0ca559fa38b16494e1b22bb685a3e00679c8c",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "a6326ffc4e32bb1e7f0cb9e687f373dadf8f8205b197b105c64ced1d69dfe1d6"
+  },
+  "documentationSHA256": {
+    "Docs/NATYWNY_CACHE_AVATAROW.md": "dc0d892c48cf1737cfa448ebc7caa601103d22eaf61653486872eb15954fe072",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "54e4e7d4a01b54a4acbf068868ee67ae3ee874dc1f53f6004307df731bb07ece",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "7c1016f1d3f8cb8c3e2c71d27f92effd28d814985a3f52571738f72e02fc9fae",
+    "Docs/DZIENNIK_ZMIAN.md": "148343b971b6b0cc179e47cb3b1df31d3d37807117929597c7fddbdf1ff749a9",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "56788974817fd15132aa8d3fdc8f2f57729de1ddf41f945e10e0c7f391d45863",
+    "EchoesCloudKit/README.md": "9ee9ce23e8664461d9d1726d2b8e5a5a80edac29eec63f8e3b0be3e738bcf2cd"
+  },
+  "logSHA256": {
+    "echoes-avatar-cache-first-compile.log": "775cd838e315161dc87c068998d4b79f3092b7a67131ef517e2d425fdcbef025",
+    "echoes-avatar-cache-first-tests.log": "1a3d525fb974124446eb787f147b77de3ee276faffba4af01107700821788be1",
+    "echoes-avatar-cache-expanded-tests.log": "9ffccba5c8818080db9745ca64937389e53d57f75dd303d10ef542a398578b9e",
+    "echoes-avatar-cache-negative-control.log": "73689f2bea16bce2f0d0608af10f29db5e415ede553c115f5d31f0b3bdc2223c",
+    "echoes-avatar-cache-full-tests.log": "2d3b9f1ec8c6593e562a79886ada12c69fc6cfeb2c780db3ce2b01eef8b5732f",
+    "echoes-avatar-cache-simulator-tests.log": "1c2483407a82019e1fd2bfd96e76eef68b3dd7610c2b54c0d301e7d1260983cc",
+    "echoes-avatar-cache-simulator-protection-diagnostic.log": "b986552bd4881325ec0e4b70dde2b6acecf8e10f91abb972aebdbf1c79b489f0",
+    "echoes-avatar-cache-simulator-protection-full-diagnostic.log": "a4a3c3fe2007a741ba14b88cd963b495f45eaa37bfe6f59af56aa434a4b6d4c7",
+    "echoes-avatar-cache-full-accepted.log": "f4b3db09b5cc634c2a5331ddfdf5b601bee23e7b05c54bf05e425cb252454653",
+    "echoes-avatar-cache-simulator-accepted.log": "ac7225bda4d443892b8d6889a87f8bbe372dcf818fa698f50a3ee9842b68429a",
+    "echoes-avatar-cache-debug-accepted.log": "9279e07db50fd8599c14a1c0c738e0c96abb7f25e082ac7617817bfaeda9f66f",
+    "echoes-avatar-cache-release-accepted.log": "1cee765bd4192e4c4602c3afb8ce238a98724ccc57b29d1052b7c8c9cb3ce626",
+    "echoes-avatar-cache-simulator-summary.json": "6adc496dddf6a0c2f6a5a54174cec2dd9044c25a12e71bbc98151738b1e06629"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

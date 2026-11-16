@@ -49,3 +49,8 @@ CK-02p dodaje świadome lokalne usuwanie ukończonych potwierdzeń: snapshot/att
 ## Transport zdjęć (CK-04e.3g)
 
 GatewayAvatarHTTPClient/NativeGatewayAvatarTransport mają osobną granicę binarnego JPEG i świeżej rewalidacji204, weryfikację nagłówków przed body, hash/limity i odmowę przekierowań. Domyślnie nieaktywne; brak połączenia z UI/cache i serwerowego endpointu. Kontrakt serwera/modeli przechodzi przez rzeczywisty URLSession/ImageIO; 246/246 testów pakietu i Debug/Release. [Granice i dalsze wymagania](../Docs/NATYWNY_TRANSPORT_AVATAROW.md).
+
+
+## Cache odbiorcy (CK-04e.3h.1)
+
+GatewayAvatarCache jest trwałym, bounded magazynem kandydatów per konto/iCloud/native/origin. SHA/ImageIO, atomic IO, local erasure/fence i kontrolowane Runtime przed private ACK. Nie daje uprawnień do offline; sterownik i świeża rewalidacja są kolejnym etapem. 266 testów zaliczonych na Macu i symulatorze, 1 jawnie pominięty test wymagający fizycznego iOS; Debug/Release poprawne. [Granice ochrony i retencji](../Docs/NATYWNY_CACHE_AVATAROW.md).

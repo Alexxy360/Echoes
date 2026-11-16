@@ -16,6 +16,7 @@
         let authentication: GatewaySignInHost
         let deletion: GatewayDeletionHost
         let community: GatewayCommunityHost
+        let avatarCache: GatewayAvatarCache
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private let relay: GatewayCommunityInvalidationRelay
@@ -84,9 +85,11 @@
                 source: NativeCloudKitAccountSource(configuration: activation.cloudKit))
             let storage = KeychainGatewayDeletionStorage(
                 configuration: activation.configuration, cloudKit: activation.cloudKit)
-            let local = try GatewayLocalAccountData(
-                root: FileManager.default.url(
-                    for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true))
+            let cachesRoot = try FileManager.default.url(
+                for: .cachesDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let local = try GatewayLocalAccountData(root: cachesRoot)
+            let avatarCache = try GatewayAvatarCache(root: cachesRoot)
+            self.avatarCache = avatarCache
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),
@@ -121,12 +124,15 @@
                                     binding: binding, accountID: accountID)
                             } catch {
                                 await local.fence(binding: binding, accountID: accountID)
+                                await avatarCache.fence(binding: binding, accountID: accountID)
                                 throw error
                             }
                             await local.fence(binding: binding, accountID: accountID)
+                            await avatarCache.fence(binding: binding, accountID: accountID)
                         },
                         clearLocalData: { scope in
                             try await local.erase(scope: scope)
+                            try await avatarCache.erase(scope: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )
