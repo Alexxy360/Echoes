@@ -1,6 +1,6 @@
 # Prywatne dane konta — CK-03b
 
-Stan z 14 listopada 2026: lokalna implementacja i testy modelu. Zwykły interfejs nadal używa Firebase; nie zmieniano schematu ani danych CloudKit. Ten etap przygotowuje bezpieczne czyszczenie prywatnych danych przed natywnym biletem usuwania konta.
+Podstawa CK-03b z 14 listopada 2026; CK-04e.1 z 16 listopada podłącza [prywatny pseudonim do kontrolowanego UI](TRWALY_PSEUDONIM_IOS.md), z odcięciem starej operacji także w tym samym scope i obowiązkową świeżą autoryzacją odczytu. Zwykły interfejs nadal używa Firebase; nie zmieniano schematu ani danych CloudKit. Ten etap przygotowuje bezpieczne czyszczenie prywatnych danych przed natywnym biletem usuwania konta.
 
 ## Przestrzeń konta
 
@@ -18,7 +18,7 @@ Host dostarcza obowiązkowy callback `authorizePrivateWrite`. Sprawdza natywny c
 
 Profil i zmieniony guard zapisują się atomowo w jednej strefie, z ifServerRecordUnchanged. Wymagana jest capability atomic, bez słabszego fallback. Rozpoczęcie usuwania zmienia guard w deleted=1. Starszy zapis ma nieaktualny change tag, więc w modelu nie odtwarza profilu; nowszy zapis odrzuca stan usuwania. Brak guarda przy istniejącym profilu, obcy identyfikator i uszkodzony/nowszy schemat nie są traktowane jako pusta baza.
 
-`deleteProfile` usuwa tylko profil i pozostawia aktywną przestrzeń. Nie oznacza usunięcia konta. `eraseAccountContentStep` wymaga osobnej autoryzacji zaakceptowanego przez serwer zadania dla dokładnie tego konta. Zwykły access token lub UUID klienta nie zastępują biletu. To połączenie nie jest jeszcze zaimplementowane.
+`deleteProfile` usuwa tylko profil i pozostawia aktywną przestrzeń. Nie oznacza usunięcia konta. `eraseAccountContentStep` wymaga osobnej autoryzacji zaakceptowanego przez serwer zadania dla dokładnie tego konta. Zwykły access token lub UUID klienta nie zastępują biletu. Połączenie z biletem i private ACK zostało podłączone w późniejszych etapach kontrolowanego usuwania; pełny odbiór providerów nadal pozostaje otwarty.
 
 ## Czyszczenie i wznowienie
 

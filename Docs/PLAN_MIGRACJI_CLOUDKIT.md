@@ -83,6 +83,8 @@ Postęp CK-03a: zaimplementowano prywatny rekord pseudonimu z kontrolą konflikt
 
 Postęp CK-03b: przestrzeń prywatna zależy teraz od natywnego iCloud i zweryfikowanego UUID konta Echoes. Atomowy guard blokuje zapis po rozpoczęciu usuwania, a stronicowany cleaner obejmuje wszystkie typy we własnej strefie. Host wymaga świeżej autoryzacji zapisu. 90/90 testów Swift (19 nowych), kompilacje Debug/Release. To lokalna podstawa przed obsługą biletu i private ACK (CK-02m/CK-02n), bez zmian usług i bez odbioru SDK. Retencja guarda, legacy, CKAsset, UI i A/B pozostają otwarte. [Kontrakt i dowody](PRYWATNE_DANE_KONTA.md).
 
+Postęp CK-04e.1: prywatny pseudonim podłączony do kontrolowanego Runtime/onboardingu/ustawień, z obowiązkowym świeżym dostępem do odczytu, prezentacją i nativem scope. Core zmienia nazwę po ACK; unknown/conflict wymaga odczytu i jawnego zapisu, z zachowaniem szkicu. Epoka operacji zamyka same-scope clear/reload oraz stare defer. 204/204 Swift i 22/22 UI, Debug/Release; dostawcy modelowani. Bez automatycznego importu legacy lub trwałej akceptacji zasad. Następny CK-04e.2: rzeczywisty ograniczony test SDK Development profilu/guarda/konfliktów i sprzątania, następnie CKAsset według [planu zdjęć](PLAN_AVATAROW_CLOUDKIT.md); nadal konieczne rzeczywiste SIWA/role/Free/A-B i cały pozostały plan. [Kompozycja](TRWALY_PSEUDONIM_IOS.md), [dowody](evidence/private-profile-ui-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

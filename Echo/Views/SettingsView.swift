@@ -1,3 +1,4 @@
+import EchoesCloudKit
 import EchoesCore
 import MediaPlayer
 import SwiftUI
@@ -10,18 +11,34 @@ struct SettingsView: View {
     @State private var musicBusy = false
     @State private var confirmDeletion = false
     @State private var deleting = false
+    @FocusState private var nameFocused: Bool
     var body: some View {
         NavigationStack {
             Form {
                 Section("Twój profil") {
                     TextField("Pseudonim", text: $name).textContentType(.nickname)
-                    Button("Zapisz pseudonim") { services.saveName(name) }.disabled(
-                        (try? InputValidation.name(name)) == nil)
-                    if services.isGatewayDevelopment {
-                        Text("W tym teście pseudonim jest zapamiętywany tylko do zamknięcia mapy.").font(
-                            .caption)
+                        .focused($nameFocused).autocorrectionDisabled()
+                        .onSubmit { nameFocused = false }
+                        .disabled(services.isUpdatingName || (services.privateProfile?.isBusy ?? false))
+                        .accessibilityIdentifier("settings.name")
+                    Button("Zapisz pseudonim") {
+                        let draft = name
+                        Task { _ = await services.saveName(draft) }
+                    }.disabled(
+                        (try? InputValidation.name(name)) == nil || !services.canEnterProfile
+                    )
+                    .accessibilityIdentifier("settings.saveName")
+                    if services.privateProfile != nil {
+                        Text(
+                            "Pseudonim zapisujemy prywatnie w iCloud. Inni widzą go w udostępnionym profilu i wysłanych wiadomościach."
+                        ).font(.caption)
+                        PrivateProfileStatusView(services: services, alwaysShowRefresh: true)
+                    } else if services.isGatewayDevelopment {
+                        Text("W tym teście pseudonim jest lokalny do zamknięcia mapy.").font(.caption)
                     }
                     Text("Nazwa nie jest unikalna. Widoczność włączasz osobno na mapie.").font(.caption)
+                    Text("Używany pseudonim: " + services.session.name).font(.caption)
+                        .accessibilityIdentifier("settings.currentName")
                 }
                 Section("Muzyka") {
                     Toggle(
@@ -87,7 +104,14 @@ struct SettingsView: View {
             }
             .safeAreaInset(edge: .top) { SessionFeedback(session: services.session) }
             .navigationTitle("Ustawienia")
-            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Gotowe") { dismiss() } } }
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) { Button("Gotowe") { dismiss() } }
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Ukryj klawiaturę") { nameFocused = false }
+                        .accessibilityIdentifier("settings.keyboard.hide")
+                }
+            }
             .onAppear { name = services.session.name }
             .confirmationDialog(
                 "Usunąć Twoje konto, profil i wiadomości?", isPresented: $confirmDeletion,

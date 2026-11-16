@@ -1,3 +1,4 @@
+import EchoesCloudKit
 import EchoesCore
 import SwiftUI
 
@@ -5,6 +6,7 @@ struct WelcomeView: View {
     let services: AppServices
     @State private var name = ""
     @State private var isEntering = false
+    @FocusState private var nameFocused: Bool
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
@@ -25,10 +27,13 @@ struct WelcomeView: View {
                     "Szanuj innych: bez gróźb, nękania i spamu. Treści można zgłaszać, a użytkowników blokować. Udostępnianie muzyki jest osobnym wyborem w ustawieniach."
                 )
                 .font(.subheadline).foregroundStyle(.secondary)
+                PrivateProfileStatusView(services: services)
                 TextField("Twój pseudonim", text: $name).textContentType(.nickname).textFieldStyle(
                     .roundedBorder
                 )
                 .accessibilityIdentifier("onboarding.name")
+                .focused($nameFocused).autocorrectionDisabled()
+                .onSubmit { nameFocused = false }
                 Button(action: enter) {
                     if isEntering {
                         ProgressView("Łączenie…").frame(maxWidth: .infinity)
@@ -37,12 +42,14 @@ struct WelcomeView: View {
                     }
                 }
                 .buttonStyle(.borderedProminent).disabled(
-                    (try? InputValidation.name(name)) == nil || isEntering
+                    (try? InputValidation.name(name)) == nil || isEntering || !services.canEnterProfile
                 )
                 .accessibilityIdentifier("onboarding.enter")
                 Text(
                     services.isGatewayDevelopment
-                        ? "Test CloudKit Development i Cloudflare. Używasz konta Echoes powiązanego z Apple i iCloud. Pseudonim w tym teście jest lokalny do zamknięcia mapy; stanie się widoczny po publikacji profilu lub wiadomości."
+                        ? (services.privateProfile != nil
+                            ? "Test CloudKit Development i Cloudflare. Konto Echoes jest powiązane z Apple i iCloud. Pseudonim zapisujemy prywatnie w iCloud. Będzie widoczny dla innych po udostępnieniu profilu lub wysłaniu wiadomości."
+                            : "Test CloudKit Development i Cloudflare. Pseudonim jest lokalny do zamknięcia mapy.")
                         : "Pseudonim nie jest publiczny, dopóki nie opublikujesz profilu lub wiadomości. Konto działa anonimowo — bez hasła."
                 )
                 .font(.caption).foregroundStyle(.secondary)
@@ -50,6 +57,16 @@ struct WelcomeView: View {
             .padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }
         .background(Color.meddleNavy).onAppear { name = services.savedName }
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Ukryj klawiaturę") { nameFocused = false }
+                    .accessibilityIdentifier("onboarding.keyboard.hide")
+            }
+        }
+        .onChange(of: services.savedName) { _, saved in
+            if name.isEmpty, !isEntering { name = saved }
+        }
     }
     private func enter() {
         isEntering = true

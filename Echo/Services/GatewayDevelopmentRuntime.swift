@@ -19,13 +19,34 @@
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private let relay: GatewayCommunityInvalidationRelay
+        private let profileConfiguration: CloudKitConfiguration
 
         @discardableResult func openCommunity() throws -> UUID {
+            let auth = authentication
+            let configuration = profileConfiguration
+            guard let native = auth.communityAuthorization,
+                let scope = auth.privateDataScope(configuration: configuration)
+            else { throw GatewayFailure.signInRequired }
             let presentation = try community.open()
             let id = presentation.id
-            let services = AppServices(nativeSession: presentation.domain.session) { [weak community] in
-                community?.isCurrent(id) == true
+            let current: @MainActor () -> Bool = { [weak community, weak auth] in
+                community?.isCurrent(id) == true && auth?.communityAuthorization == native
+                    && auth?.privateDataScope(configuration: configuration) == scope
             }
+            let authorize: @MainActor (PrivateAccountScope) async throws -> Void = { requested in
+                guard current(), requested == scope else { throw PrivateDataFailure.invalidScope }
+                try await auth.authorizePrivateWrite(requested)
+                guard current() else { throw PrivateDataFailure.invalidScope }
+            }
+            let database = NativePrivateProfileDatabase(
+                configuration: configuration,
+                account: auth.cloudKitAccount, authorizeWrite: authorize)
+            let profile = PrivateProfileStore(
+                account: auth.cloudKitAccount,
+                scope: { current() ? scope : nil }, database: database, authorizeRead: authorize)
+            let services = AppServices(
+                nativeSession: presentation.domain.session,
+                privateProfile: profile, isCurrent: current)
             relay.services = services
             communityServices = services
             communityPresentationID = id
@@ -42,6 +63,7 @@
             let activation = try GatewayDevelopmentActivation(
                 infoDictionary: Bundle.main.infoDictionary ?? [:],
                 bundleIdentifier: Bundle.main.bundleIdentifier)
+            profileConfiguration = activation.cloudKit
             let client = GatewayHTTPClient(configuration: activation.configuration)
             let authenticationAPI = try ActivatedGatewayAuthenticationAPI(api: client, activation: activation)
             let deletionAPI = try ActivatedGatewayAccountDeletionAPI(api: client, activation: activation)

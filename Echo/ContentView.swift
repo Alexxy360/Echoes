@@ -161,6 +161,7 @@ struct ContentView: View {
         } message: {
             Text(services.session.errorMessage ?? "")
         }
+        .task { await services.prepareProfile() }
         .task(id: services.hasAcceptedPrivacy && scenePhase == .active) {
             await runForegroundSession()
         }

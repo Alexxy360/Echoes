@@ -23,7 +23,7 @@ Alert przechowuje konkretny snapshot. Core i Keychain ponownie go porównują; s
 
 ## Dane i ustawienia
 
-Natywny AppServices otrzymuje sesję jawnie, bez domyślnego klienta Firebase. W tym kontrolowanym etapie pseudonim i akceptacja zasad istnieją tylko do zamknięcia mapy; nie są czytane ze wspólnych preferencji dawnego konta. To ograniczenie jest wyświetlane. Trwały profil i zdjęcia wymagają następnej części planu.
+Natywny AppServices otrzymuje sesję jawnie, bez domyślnego klienta Firebase. CK-04e.1 podłącza już prywatny zapis/odczyt pseudonimu do iCloud z obowiązkową kontrolą dostępu; [opis](TRWALY_PSEUDONIM_IOS.md). Akceptacja zasad w tym kontrolowanym etapie pozostaje do zamknięcia prezentacji. Dawne preferencje Firebase nie są przypisywane automatycznie. Rzeczywisty odbiór SDK i zdjęcia pozostają do wykonania.
 
 Teksty nowej ścieżki opisują CloudKit/Cloudflare i powiązanie konta Apple/iCloud. Wygasanie z kanału jest oddzielone od przygotowywanego fizycznego kasowania i retencji zgłoszeń. Przycisk konta otwiera istniejący GatewayDeletionHost ze świeżym potwierdzeniem Apple; nie wywołuje legacy deleteOwnData. Zakres starego Firebase i dawnych danych pozostaje osobny.
 

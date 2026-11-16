@@ -72,25 +72,32 @@ public final class PrivateProfileStore {
         let revision: UInt64
         let domain: PrivateAccountScope
     }
+    private struct Operation: Equatable {
+        let scope: Scope
+        let id: UUID
+    }
     private let account: CloudKitAccountSession
     @ObservationIgnored private let scopeProvider: @MainActor () -> PrivateAccountScope?
     @ObservationIgnored private let database: any PrivateProfileDatabase
+    @ObservationIgnored private let authorizeRead: @MainActor (PrivateAccountScope) async throws -> Void
+    @ObservationIgnored private var generation = UUID()
     private var cachedProfile: PrivateProfile?
     @ObservationIgnored private var cachedRecord: CKRecord?
     private var cachedError: String?
     private var loaded = false
     private var cacheScope: Scope?
-    private var busyScope: Scope?
+    private var busy: Operation?
 
     public init(
         account: CloudKitAccountSession, scope: @escaping @MainActor () -> PrivateAccountScope?,
-        database: any PrivateProfileDatabase
+        database: any PrivateProfileDatabase,
+        authorizeRead: @escaping @MainActor (PrivateAccountScope) async throws -> Void
     ) {
         self.account = account
         scopeProvider = scope
         self.database = database
+        self.authorizeRead = authorizeRead
     }
-
     private var currentScope: Scope? {
         guard account.state == .ready, let name = account.userRecordName, let domain = scopeProvider(),
             domain.matchesCloudKitRecordName(name)
@@ -100,95 +107,107 @@ public final class PrivateProfileStore {
     public var profile: PrivateProfile? { cacheScope == currentScope ? cachedProfile : nil }
     public var errorMessage: String? { cacheScope == currentScope ? cachedError : nil }
     public var didLoad: Bool { currentScope != nil && cacheScope == currentScope && loaded }
-    public var isBusy: Bool { currentScope != nil && busyScope == currentScope }
+    public var isBusy: Bool { busy?.scope == currentScope && busy?.id == generation }
 
     public func clearCache() {
+        generation = UUID()
+        busy = nil
         cacheScope = nil
         cachedRecord = nil
         cachedProfile = nil
         cachedError = nil
         loaded = false
     }
-
+    private func isCurrent(_ operation: Operation) -> Bool {
+        operation.id == generation && operation.scope == currentScope && !Task.isCancelled
+    }
+    private func begin(_ scope: Scope) -> Operation {
+        generation = UUID()
+        let operation = Operation(scope: scope, id: generation)
+        busy = operation
+        return operation
+    }
     public func load() async {
         guard !isBusy, let scope = currentScope else { return }
         clearCache()
         cacheScope = scope
-        busyScope = scope
-        defer { if busyScope == scope { busyScope = nil } }
+        let operation = begin(scope)
+        defer { if busy == operation { busy = nil } }
         do {
+            try await authorizeRead(scope.domain)
+            guard isCurrent(operation) else { return }
             let record = try await database.fetchProfile(scope: scope.domain)
-            guard scope == currentScope, !Task.isCancelled else { return }
+            guard isCurrent(operation) else { return }
             cachedProfile = try record.map { try PrivateProfileRecordCodec.decode($0, scope: scope.domain) }
             cachedRecord = record
             loaded = true
-        } catch { recordFailure(error, scope: scope) }
+        } catch { recordFailure(error, operation: operation) }
     }
-
-    @discardableResult
-    public func save(displayName: String) async -> Bool {
+    @discardableResult public func save(displayName: String) async -> Bool {
         guard !isBusy, let scope = currentScope else { return false }
         prepareCache(for: scope)
         guard didLoad else {
             cachedError = cachedError ?? PrivateProfileFailure.loadRequired.localizedDescription
             return false
         }
-        busyScope = scope
+        let operation = begin(scope)
         cachedError = nil
-        defer { if busyScope == scope { busyScope = nil } }
+        var dispatched = false
+        defer { if busy == operation { busy = nil } }
         do {
             let draft = try PrivateProfile(displayName: displayName)
             let record = try PrivateProfileRecordCodec.encode(
                 draft, updating: cachedRecord, scope: scope.domain)
+            dispatched = true
             let saved = try await database.saveProfile(record, scope: scope.domain)
-            guard scope == currentScope, !Task.isCancelled else { return false }
+            guard isCurrent(operation) else { return false }
             cachedProfile = try PrivateProfileRecordCodec.decode(saved, scope: scope.domain)
             cachedRecord = saved
             return true
         } catch {
-            recordFailure(error, scope: scope)
+            if isCurrent(operation), dispatched { loaded = false }
+            recordFailure(error, operation: operation)
             return false
         }
     }
-
-    @discardableResult
-    public func delete() async -> Bool {
+    @discardableResult public func delete() async -> Bool {
         guard !isBusy, let scope = currentScope else { return false }
         prepareCache(for: scope)
-        busyScope = scope
-        defer { if busyScope == scope { busyScope = nil } }
+        let operation = begin(scope)
+        cachedError = nil
+        defer { if busy == operation { busy = nil } }
         do {
             try await database.deleteProfile(scope: scope.domain)
-            guard scope == currentScope, !Task.isCancelled else { return false }
+            guard isCurrent(operation) else { return false }
             clearCache()
             cacheScope = scope
             loaded = true
             return true
         } catch {
-            recordFailure(error, scope: scope)
+            if isCurrent(operation) { loaded = false }
+            recordFailure(error, operation: operation)
             return false
         }
     }
-
-    private func recordFailure(_ error: any Error, scope: Scope) {
-        guard scope == currentScope, !Task.isCancelled else { return }
+    private func recordFailure(_ error: any Error, operation: Operation) {
+        guard isCurrent(operation) else { return }
         if error as? PrivateDataFailure == .invalidScope {
             account.invalidate()
             clearCache()
             return
         }
-        prepareCache(for: scope)
         if let error = error as? PrivateDataFailure {
             cachedError = error.localizedDescription
         } else if let error = error as? PrivateProfileFailure {
             cachedError = error.localizedDescription
         } else if let error = error as? ValidationError {
             cachedError = error.localizedDescription
+        } else if let error = error as? GatewayFailure {
+            cachedError = error.localizedDescription
         } else {
             cachedError = CloudKitFailure.classify(error).localizedDescription
         }
     }
-
     private func prepareCache(for scope: Scope) {
         if cacheScope != scope {
             clearCache()

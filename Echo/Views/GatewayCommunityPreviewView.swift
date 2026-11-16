@@ -1,4 +1,5 @@
 #if DEBUG
+    import CloudKit
     import CryptoKit
     import EchoesCloudKit
     import EchoesCore
@@ -48,6 +49,7 @@
                         Menu("Test", systemImage: "testtube.2") {
                             Button("Zmień konto testowe") { Task { await fixture?.changeAccount() } }
                             Button("Zamknij sesję testową") { fixture?.invalidate() }
+                            Button("Zakończ opóźniony odczyt") { fixture?.releaseProfileRead() }
                         }.accessibilityIdentifier("community.preview.actions")
                     }
                 }
@@ -75,13 +77,38 @@
         let deletion: GatewayDeletionHost
         private let mode: String
         private let api: CommunityPreviewAPI
+        private let cloud = CommunityPreviewProfileCloud()
+        private let profileDatabase = CommunityPreviewProfileDatabase()
+        private let profileConfiguration: CloudKitConfiguration
+        private let profileAccount: CloudKitAccountSession
+        private var configuredProfileFailure = false
         private(set) var services: AppServices?
         private var first = true
         init(mode: String) throws {
-            guard ["happy", "pending"].contains(mode) else { throw GatewayFailure.configuration }
+            guard
+                [
+                    "happy", "pending", "profile-onboarding", "profile-offline", "profile-conflict",
+                    "profile-unknown", "profile-delayed", "profile-empty",
+                ].contains(mode)
+            else { throw GatewayFailure.configuration }
             self.mode = mode
             source = try CommunityPreviewAuthorization()
             api = CommunityPreviewAPI()
+            profileConfiguration = try .init(
+                containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development)
+            profileAccount = CloudKitAccountSession(source: cloud)
+            if ["profile-onboarding", "profile-offline", "profile-delayed"].contains(mode) {
+                let scope = try PrivateAccountScope(
+                    configuration: profileConfiguration,
+                    accountID: CommunityPreviewAPI.ownerA, cloudKitRecordName: cloud.name)
+                profileDatabase.seed(scope, name: "Zapisany pseudonim")
+                let other = try PrivateAccountScope(
+                    configuration: profileConfiguration,
+                    accountID: CommunityPreviewAPI.ownerB, cloudKitRecordName: "synthetic-cloud-B")
+                profileDatabase.seed(other, name: "Pseudonim konta B")
+            }
+            profileDatabase.failRead = mode == "profile-offline"
+            profileDatabase.holdRead = mode == "profile-delayed"
             host = GatewayCommunityHost(
                 api: api, configuration: try .init(origin: URL(string: api.origin)!),
                 cloudKit: try .init(containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development),
@@ -92,14 +119,42 @@
             do {
                 await api.selectOwner(
                     source.isSecond ? CommunityPreviewAPI.ownerB : CommunityPreviewAPI.ownerA)
+                cloud.name = source.isSecond ? "synthetic-cloud-B" : "synthetic-cloud-A"
+                await profileAccount.refresh()
+                guard let native = source.communityAuthorization else { throw GatewayFailure.signInRequired }
+                let scope = try PrivateAccountScope(
+                    configuration: profileConfiguration,
+                    accountID: native.identity.accountID, cloudKitRecordName: cloud.name)
                 let presentation = try host.open()
                 let id = presentation.id
+                let gate: @MainActor () -> Bool = { [weak host, weak source] in
+                    host?.isCurrent(id) == true && source?.communityAuthorization == native
+                }
+                let profile = PrivateProfileStore(
+                    account: profileAccount,
+                    scope: { gate() ? scope : nil }, database: profileDatabase,
+                    authorizeRead: { requested in
+                        guard gate(), requested == scope else { throw PrivateDataFailure.invalidScope }
+                    })
                 let current = AppServices(
-                    nativeSession: presentation.domain.session,
-                    simulatedCoordinate: PreviewCommunityClient.center
-                ) { [weak host] in host?.isCurrent(id) == true }
+                    nativeSession: presentation.domain.session, privateProfile: profile,
+                    simulatedCoordinate: PreviewCommunityClient.center, isCurrent: gate)
                 services = current
-                await current.enter(name: source.isSecond ? "Nowe konto" : "Gość")
+                await current.prepareProfile()
+                guard gate() else { return }
+                if ["profile-onboarding", "profile-offline", "profile-delayed", "profile-empty"].contains(
+                    mode)
+                {
+                    return
+                }
+                await current.enter(
+                    name: current.savedName.isEmpty
+                        ? (source.isSecond ? "Nowe konto" : "Gość") : current.savedName)
+                if !configuredProfileFailure {
+                    configuredProfileFailure = true
+                    profileDatabase.conflict = mode == "profile-conflict"
+                    profileDatabase.loseSave = mode == "profile-unknown"
+                }
                 await current.activate()
                 current.session.updateLocation(
                     .init(
@@ -113,6 +168,7 @@
                 }
             } catch { invalidate() }
         }
+        func releaseProfileRead() { profileDatabase.release() }
         func close(_ id: UUID) async {
             services?.invalidateNativePresentation()
             await host.close(id)
@@ -127,6 +183,67 @@
             try? source.changeAccount()
             await open()
         }
+    }
+    @MainActor private final class CommunityPreviewProfileCloud: CloudKitAccountSource {
+        var name = "synthetic-cloud-A"
+        func availability() async throws -> CloudKitAccountAvailability { .available }
+        func userRecordName() async throws -> String { name }
+    }
+    @MainActor private final class CommunityPreviewProfileDatabase: PrivateProfileDatabase {
+        private struct Row {
+            let name: String
+            let version: Int
+        }
+        private var rows: [String: Row] = [:]
+        var failRead = false, holdRead = false, conflict = false, loseSave = false
+        private var pending: CheckedContinuation<Void, Never>?
+        func seed(_ scope: PrivateAccountScope, name: String) {
+            rows[scope.digest] = Row(name: name, version: 1)
+        }
+        func release() {
+            pending?.resume()
+            pending = nil
+        }
+        func fetchProfile(scope: PrivateAccountScope) async throws -> CKRecord? {
+            if failRead {
+                failRead = false
+                throw CKError(.networkUnavailable)
+            }
+            let snapshot: CKRecord?
+            if let row = rows[scope.digest] {
+                let record = try PrivateProfileRecordCodec.encode(
+                    .init(displayName: row.name), updating: nil, scope: scope)
+                record["previewRevision"] = row.version as NSNumber
+                snapshot = record
+            } else {
+                snapshot = nil
+            }
+            if holdRead {
+                holdRead = false
+                await withCheckedContinuation { pending = $0 }
+            }
+            return snapshot
+        }
+        func saveProfile(_ record: CKRecord, scope: PrivateAccountScope) async throws -> CKRecord {
+            let profile = try PrivateProfileRecordCodec.decode(record, scope: scope)
+            let previous = rows[scope.digest]?.version ?? 0
+            if conflict {
+                conflict = false
+                rows[scope.digest] = Row(name: "Nazwa z drugiego urządzenia", version: previous + 1)
+                throw CKError(.serverRecordChanged)
+            }
+            guard (record["previewRevision"] as? NSNumber)?.intValue ?? 0 == previous else {
+                throw CKError(.serverRecordChanged)
+            }
+            rows[scope.digest] = Row(name: profile.displayName, version: previous + 1)
+            record["previewRevision"] = (previous + 1) as NSNumber
+            if loseSave {
+                loseSave = false
+                throw CKError(.networkFailure)
+            }
+            return record
+        }
+        func deleteProfile(scope: PrivateAccountScope) async throws { rows[scope.digest] = nil }
     }
     @MainActor private final class CommunityPreviewAuthorization: GatewayCommunityAuthorizationSource {
         var communityAuthorization: GatewayCommunityAuthorization?

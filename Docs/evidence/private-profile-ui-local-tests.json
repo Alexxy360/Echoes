@@ -1,0 +1,122 @@
+{
+  "stage": "CK-04e.1 private profile persistence and UI binding",
+  "observedAt": "2026-11-16T11:41:13.871815+01:00",
+  "baselineCommit": "f9f2949f7a7cafc98ad1ef629556b7ab64826aec",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 204,
+      "failed": 0,
+      "newTests": 8,
+      "execution": "macOS package; modelled iCloud/provider; new authorization and same-scope epoch cases"
+    },
+    "XCTestUI": {
+      "passed": 22,
+      "failed": 0,
+      "newTests": 6,
+      "execution": "signed ad-hoc approved iPhone 17 Pro Simulator/iOS26.1; actual store/community client with synthetic identity, private provider, HTTP and storage"
+    },
+    "strictSwiftFormat": {
+      "passed": true,
+      "files": 10
+    },
+    "EchoesCore": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true,
+      "previousPassed": 22
+    },
+    "gatewayNode22And24": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true,
+      "previousPassedEach": 257
+    }
+  },
+  "builds": {
+    "Debug": "passed",
+    "ReleaseUnsignedIOS": "passed"
+  },
+  "artifacts": {
+    "Debug": {
+      "activationAbsent": true,
+      "testResourcesAbsent": true,
+      "binarySHA256": {
+        "Echoes": "5e495e3fc563deb2528c94e501265f21b278ca8998f3076c8235d33ece560623",
+        "__preview.dylib": "3aa381032eb1e8509dc44ee2242f7890dc748937937317d207d7e6e4c4cf646d",
+        "Echoes.debug.dylib": "dff729c14ded067594a4036fa34302fe727d32d9c9323a8c7b1bd43c348f4acf"
+      },
+      "debugMarkers": [
+        "ECHOES_GATEWAY_AUTH_CHECK",
+        "ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW",
+        "ECHOES_GATEWAY_DELETION_UI_PREVIEW"
+      ]
+    },
+    "Release": {
+      "activationAbsent": true,
+      "testResourcesAbsent": true,
+      "binarySHA256": {
+        "Echoes": "240bf0382d5ca1b4d930643d60adc37036fc693d32038202f67c09a7f7fb8860"
+      },
+      "debugMarkers": []
+    }
+  },
+  "visualReview": {
+    "images": {
+      "private-profile-reload.png": "d3bd5cfd4da51f790e9e4f48e00389821885bf3eac253e395c9752de4e8f8ceb",
+      "private-profile-conflict.png": "3ece28037c12323208b409c144bc5e1b4f80590faffd95e98b80292667c83d0b",
+      "private-profile-restored.png": "a2ea35117635407bf47cd6eb9230e4a576c05f499904507406c0c6f43729358a",
+      "private-profile-unknown.png": "6c6540f16809be67289c1c3458d6ed9730fa67ce8194af38c2734ce7b88f3a4d",
+      "private-profile-large-text.png": "dbaeaaec5c26b8e39e67cdb1e17e3765380a34c20847bc2a90c5021fe17af9d3",
+      "private-profile-account.png": "1987520aa8fd349038ab6bc485c9523886c9a64c2e7efbe79b7ed4bf5f4510f7"
+    },
+    "observed": true,
+    "edited": false
+  },
+  "activation": {
+    "GATEWAY_ENABLED": "0",
+    "ACCOUNT_DELETION_ENABLED": "0",
+    "PUBLIC_RECORDS_ENABLED": "0",
+    "COMMUNITY_ENABLED": "0",
+    "bundledConfiguration": "absent",
+    "ordinaryEntry": "Firebase",
+    "deployed": false
+  },
+  "resolvedDuringValidation": [
+    "new status view initially missed EchoesCloudKit import; fixed before UI integration; first full 22-test UI run passed"
+  ],
+  "knownLimits": [
+    "real SDK profile/change tags/guard/conflict/cleanup not performed in this stage; next bounded Development test",
+    "synthetic restart coverage creates a new Store/presentation in one process; not real iCloud cross-process/device persistence",
+    "private profile contains only a name; consent remains ephemeral per presentation; no automatic import of legacy anonymous preferences",
+    "public profile/photo publication, CKAsset upload/download and erasure remain unimplemented; technical plan supplied",
+    "real SIWA/Workers Free CPU/SQL, schema/indexes/roles, two ordinary accounts and separate service identity remain unaccepted",
+    "retention, moderation/operator/support and device performance remain unfinished"
+  ],
+  "notPerformed": [
+    "real SDK iCloud mutations or role changes",
+    "physical-device installation/run; read-only inventory only",
+    "new services, keys, entitlements, secret transfers or payments",
+    "Production/TestFlight publication",
+    "Firebase SDK/data removal"
+  ],
+  "projectPreservation": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "sourceSHA256": {
+    "Echo/ContentView.swift": "6460e6815213147d020caffcfdd31530d1202d110d1049f1bcf5b132db4c6c5a",
+    "Echo/Services/AppServices.swift": "cf8a2fb3726285debad14c09e8cbfe7b56317ddb8e25d51e47260475e816d834",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "db4fc36a258e2d301d9a752e554032d70e293a5ffbfabbb8a8aef891ccf6655f",
+    "Echo/Views/GatewayCommunityPreviewView.swift": "20b2d199ee2b54116972eddc33b3f26b0e8d8bda22b49142e344a5395a775e16",
+    "Echo/Views/PrivateProfileStatusView.swift": "358b9de4342e9d66bf0bbfd64a225728d1440f01cf6ea0e48525e443c4146afe",
+    "Echo/Views/SettingsView.swift": "47099047d2051104394b935ca606d3b7fdc8345c06120b417ac1170bfa919af9",
+    "Echo/Views/WelcomeView.swift": "467b92e24ef8696356bc60d3211bf38f94ca9f6f1aa4b8b460bcf334531b0240",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileStore.swift": "9aa868d7122ea4b78891e617881a31646c6805a9e7cad29aa314d9d35d6a4bf9",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/PrivateProfileTests.swift": "1ef175f0ff6d5ebed45ef9358a2a555c65f9171d5f9fb7814c8b3f460ee4d0d3",
+    "EchoesUITests/GatewayProfileUITests.swift": "952365cabb56298b883ce9a7e1cd31485bce5ecfd84c59f35ed66941f04b88ab"
+  },
+  "logSHA256": {
+    "Swift": "544e742f3210345c3f7f6b245be421a4d9f6f518f93b059de6da2ebe0931022a",
+    "UI": "432327e396d386c61392b7a86cf58c371160fecd2eea346b961005bf55034851",
+    "Debug": "3a94f633b8d1cf3e3b517e3236365e19fb4f8410c648f56f1681bd2a111be510",
+    "Release": "f75ddc6f3d8d7f5e322cc00aac67d08a7f78e78846c664c063752487872cdb7b"
+  }
+}

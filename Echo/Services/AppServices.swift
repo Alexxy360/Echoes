@@ -1,4 +1,5 @@
 import CoreLocation
+import EchoesCloudKit
 import EchoesCore
 import Observation
 import SwiftUI
@@ -7,6 +8,8 @@ import SwiftUI
 @Observable
 final class AppServices {
     let session: CommunitySession
+    let privateProfile: PrivateProfileStore?
+    private(set) var isUpdatingName = false
     let location = LocationService()
     let music = MusicService()
     private let preferences: UserDefaults?
@@ -14,12 +17,14 @@ final class AppServices {
     let isGatewayDevelopment: Bool
     private let isCurrent: @MainActor () -> Bool
     private let simulatedCoordinate: Coordinate?
+    @ObservationIgnored private var hasPreparedProfile = false
     private(set) var hasAcceptedPrivacy: Bool
     private(set) var savedName: String
 
     init(
         client: (any CommunityClient)? = nil, preferences: UserDefaults = .standard, demo: Bool = false
     ) {
+        privateProfile = nil
         self.preferences = preferences
         self.demo = demo
         isGatewayDevelopment = false
@@ -32,10 +37,12 @@ final class AppServices {
 
     /// Controlled native presentation: no Firebase fallback or shared legacy preferences.
     init(
-        nativeSession: CommunitySession, simulatedCoordinate: Coordinate? = nil,
+        nativeSession: CommunitySession, privateProfile: PrivateProfileStore? = nil,
+        simulatedCoordinate: Coordinate? = nil,
         isCurrent: @escaping @MainActor () -> Bool
     ) {
         session = nativeSession
+        self.privateProfile = privateProfile
         preferences = nil
         demo = simulatedCoordinate != nil
         self.simulatedCoordinate = simulatedCoordinate
@@ -47,10 +54,26 @@ final class AppServices {
 
     func invalidateNativePresentation() {
         guard isGatewayDevelopment else { return }
+        hasPreparedProfile = true
+        privateProfile?.clearCache()
+        isUpdatingName = false
         location.reset()
         music.disable()
         savedName = ""
         hasAcceptedPrivacy = false
+    }
+
+    var canEnterProfile: Bool {
+        isCurrent() && !isUpdatingName && (privateProfile?.didLoad ?? true)
+            && !(privateProfile?.isBusy ?? false)
+    }
+    func prepareProfile(force: Bool = false) async {
+        guard isCurrent(), let privateProfile, !Task.isCancelled else { return }
+        guard force || !hasPreparedProfile else { return }
+        hasPreparedProfile = true
+        await privateProfile.load()
+        guard isCurrent(), !Task.isCancelled, privateProfile.didLoad, !hasAcceptedPrivacy else { return }
+        savedName = privateProfile.profile?.displayName ?? ""
     }
 
     var canUseNativeSensors: Bool { isCurrent() && !demo }
@@ -60,9 +83,16 @@ final class AppServices {
     }
 
     func enter(name: String) async {
-        guard isCurrent(), !Task.isCancelled else { return }
+        guard canEnterProfile, !Task.isCancelled else { return }
+        isUpdatingName = true
+        defer { isUpdatingName = false }
         do {
             let validated = try InputValidation.name(name)
+            if let privateProfile, privateProfile.profile?.displayName != validated {
+                guard await privateProfile.save(displayName: validated), isCurrent(), !Task.isCancelled else {
+                    return
+                }
+            }
             preferences?.set(validated, forKey: "userName")
             preferences?.set(true, forKey: "privacyAcceptedV2")
             savedName = validated
@@ -110,13 +140,26 @@ final class AppServices {
         }
     }
 
-    func saveName(_ value: String) {
-        guard isCurrent() else { return }
+    @discardableResult func saveName(_ value: String) async -> Bool {
+        guard canEnterProfile, !Task.isCancelled else { return false }
+        isUpdatingName = true
+        defer { isUpdatingName = false }
         do {
-            try session.changeName(value)
+            let validated = try InputValidation.name(value)
+            if let privateProfile {
+                guard await privateProfile.save(displayName: validated), isCurrent(), !Task.isCancelled else {
+                    return false
+                }
+            }
+            try session.changeName(validated)
             savedName = session.name
             preferences?.set(savedName, forKey: "userName")
-        } catch { session.errorMessage = error.localizedDescription }
+            if privateProfile != nil { session.statusMessage = "Pseudonim został zapisany w iCloud." }
+            return true
+        } catch {
+            if isCurrent(), !Task.isCancelled { session.errorMessage = error.localizedDescription }
+            return false
+        }
     }
 
     func deleteOwnData() async {
