@@ -1,0 +1,213 @@
+{
+  "stage": "CK-04e.3c",
+  "observedAtUTC": "2026-11-16T13:24:32.854313+00:00",
+  "baselineCommit": "0db8eadae4262ec1848537ab141da6a9225c7fe5",
+  "tests": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 301,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0,
+      "cleanInstallDirectory": true
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 301,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "newGatewayTests": 15,
+    "newGatewayBreakdown": {
+      "normalizerAndInternalTransportIntegration": 14,
+      "actualLocalWorkerdDurableObjectSQLite": 1
+    },
+    "swift": {
+      "package": "EchoesCloudKit",
+      "platform": "macOS",
+      "passed": 222,
+      "newTests": 1,
+      "failed": 0,
+      "exitCode": 0,
+      "realImageIOAndCoreGraphics": true,
+      "nativeProductCodeChanged": false
+    },
+    "dependencies": {
+      "npmCi": "passed with --ignore-scripts from pinned public lockfile in fresh temporary directory",
+      "knownAuditVulnerabilities": 0,
+      "auditExitCode": 0,
+      "exactLicenseCopies": 5
+    },
+    "static": {
+      "observedAtUTC": "2026-11-16T13:23:41.073912+00:00",
+      "syntaxMJS": 70,
+      "parsedJSON": 3,
+      "exactLicenseCopies": 5,
+      "pinnedPublicRegistryPackages": 35,
+      "miniflareAbsent": true,
+      "swiftStrictLint": "passed via xcrun swift-format"
+    }
+  },
+  "implemented": [
+    "bounded baseline JPEG structural inspection before decoder allocation, removal of incoming APP/COM, canonical safe JFIF",
+    "actual full MozJPEG Wasm entropy decoding; warnings and fatal errors rejected, next healthy request recovers",
+    "Rust Wasm full JPEG reencoding and aspect-preserving bilinear thumbnail from the same pixels",
+    "fresh native decoder heap each request, zero own temporary buffers in finally, repeat activation/identity/cancel checks",
+    "opaque normalized handle, exact native manifest, owner/version/request-bound copies into existing durable claim/asset transport",
+    "pinned static Wasm adapter for existing CommunityAuthority; no runtime or HTTP import",
+    "required dependency notices and CI lockfile install/audit"
+  ],
+  "bounds": {
+    "inputBytes": 256000,
+    "imageMaximumEdge": 512,
+    "thumbnailBytes": 32000,
+    "thumbnailMaximumEdge": 128,
+    "inputSegments": 64,
+    "scan": "single 8-bit baseline, 1 or 3 numeric sequential components",
+    "outputQuality": {
+      "image": 80,
+      "thumbnail": 75
+    },
+    "sampling": "4:2:0 average",
+    "codecHeapPostOperationThresholdBytes": 33554432,
+    "concurrency": "one operation per normalizer instance; singleton/admission must be imposed by trusted host",
+    "cancellation": "checked around synchronous codec stages, cannot preempt Wasm call"
+  },
+  "localWorkerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "existingProposedHostedDateUnchanged": "2026-11-14",
+    "actualDurableObject": true,
+    "actualLocalSQLite": "SELECT 1 AS value; localDisk in own temporary directory",
+    "wasmStaticModules": true,
+    "loopbackOnly": true,
+    "outbound": "deny IPv4/IPv6/Unix",
+    "syntheticInput": true,
+    "cleanup": "own child exited and own temporary disk directory removed",
+    "notHostedCloudflare": true,
+    "experimentalFlag": "local workerd localDisk only"
+  },
+  "performance": {
+    "artifact": "Docs/evidence/avatar-normalizer-local-benchmark.json",
+    "sha256": "c0f841f9f065fa012dcd121482f7c2cd33739b09f54a29f8c419d59bf2fc8bbb",
+    "samplesPerCorpus": 20,
+    "measurement": "Node wall and process CPU; workerd HTTP wall only",
+    "placement": "existing Durable Object, default 30 seconds CPU; edge 10ms not the codec budget",
+    "hostedAcceptance": false,
+    "coldStartAcceptance": false,
+    "limitations": "Node process CPU includes background/JIT; generating fixture preinitializes encoder. Local measurements do not establish hosted CPU, quotas, billing, or sustained free capacity."
+  },
+  "dependencies": {
+    "@jsquash/jpeg": {
+      "version": "1.6.0",
+      "resolved": "https://registry.npmjs.org/@jsquash/jpeg/-/jpeg-1.6.0.tgz",
+      "integrity": "sha512-zwN46Awh1VM6gXlIcALwb5WzqK5H2e6+Awcs1QP8AvS8ohsK/sbE4esvmH4jhlhW7+CgiUUww66vg0aTnlSIMA==",
+      "license": "Apache-2.0"
+    },
+    "jpeg-encoder-wasm": {
+      "version": "0.1.2",
+      "resolved": "https://registry.npmjs.org/jpeg-encoder-wasm/-/jpeg-encoder-wasm-0.1.2.tgz",
+      "integrity": "sha512-nntv/vRgkSXjQLSq/6doJwz6owtA0fT3ycua6YX8ME0/frsAJlPk3lp9gCQASuEJDnVMPpgc+MLydl2ODZdfSQ==",
+      "license": "(MIT OR Apache-2.0) AND IJG"
+    },
+    "esbuild": {
+      "version": "0.28.2",
+      "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.2.tgz",
+      "integrity": "sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==",
+      "license": "MIT"
+    },
+    "workerd": {
+      "version": "1.20260730.1",
+      "resolved": "https://registry.npmjs.org/workerd/-/workerd-1.20260730.1.tgz",
+      "integrity": "sha512-zmfNIjwYSWFY5chGBOjWtH3xAE7p97FTC6vR4Ep98290ho6AeAR/NVcBD274YCLEUYzqm8yxdtZlxMybU8a3jA==",
+      "license": "Apache-2.0"
+    }
+  },
+  "wasm": {
+    "@jsquash/jpeg/codec/dec/mozjpeg_dec.wasm": {
+      "bytes": 166470,
+      "sha256": "a7c4b12169817e779ff4af137981393ae924944e167ad1bd95747c9199162d3e"
+    },
+    "jpeg-encoder-wasm/pkg/esm/jpeg_encoder_bg.wasm": {
+      "bytes": 52375,
+      "sha256": "414534c47e59f8b0bd0d8b1a2cd325400611521b98315e02cb00a2a93d7bd448"
+    }
+  },
+  "activation": {
+    "runtimeImport": false,
+    "httpEndpoint": false,
+    "existingFlagsRemainZero": true,
+    "realUploadHostsRemainEmpty": true,
+    "cloudDeployed": false
+  },
+  "resolvedDuringValidation": [
+    "initial MozJPEG full encoder too slow locally; final chosen encoder is Rust, with full decode/reencode retained",
+    "prototype MozJPEG trellis_loops=0 trapped divide-by-zero; prototype rejected",
+    "Miniflare candidate pulled vulnerable transitives; removed; final direct workerd/esbuild pinned tree audit zero",
+    "actual encoder uses component IDs 0..2; canonical safe JFIF and strict sequential IDs make colors interoperable with ImageIO",
+    "new constructor test corrected from assert.rejects to assert.throws",
+    "workerd config corrected Capnp Void value and explicit outbound deny CIDRs",
+    "workerd inMemory storage lacks required SQL in this runtime; switched harness to own localDisk; actual SELECT and final full suites passed",
+    "final change after accepted tests only clarifies per-instance singleton responsibility in source comment; benchmark script syntax checked"
+  ],
+  "notPerformed": [
+    "real CloudKit asset grant/upload/record attach/retrieval/retention",
+    "Cloudflare hosted deployment or Free CPU/duration/SQL quota acceptance",
+    "new service, schema, role, secret, key or permission change",
+    "private profile SDK test restart or reuse of closed approval window",
+    "user photograph processing or user data modification",
+    "iOS app build, simulator UI or physical-device test for this milestone; product/UI/Core code unchanged",
+    "ordinary iCloud A/B, real SIWA/gateway product flow, Production/Firebase operations"
+  ],
+  "knownLimits": [
+    "bounded synthetic regression corpus, no general JPEG fuzzing or independent security audit",
+    "post-call Wasm heap checks are not preemptive allocation limits",
+    "synchronous codecs not cancellable mid-call; no claim all heap copies are physically erased",
+    "opaque output lifetime controlled by future host; no unbounded retaining or multiple normalizer instances",
+    "test-only request.arrayBuffer is not a production body admission implementation",
+    "receipt recovery/record attach, moderation/profile CAS, bounded binary HTTP intake, protected read/cache and retention still required",
+    "only one real iCloud account available; cross-account A/B unverified"
+  ],
+  "sourceSHA256": {
+    ".github/workflows/checks.yml": "2a21140fd1bdc8641434b52f83eb66cedbebc187bbbb837751943183c6a7e9a2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/AvatarServerCodecTests.swift": "7dcbe44cd50689237cdb9bba44653a593de7cf636732d95a48d4f72178cc72f5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-normalized/image.jpg": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-normalized/manifests.json": "47dc092f7876198b0f8d18b0664507003e15a2c46f923abbc99575e00d123a80",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-normalized/thumbnail.jpg": "84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764",
+    "gateway/THIRD_PARTY_NOTICES.md": "4841dfc0e7633a5e6dd3031d4f65edfab2349616b207a77326f7590768fa0ebb",
+    "gateway/licenses/jpeg-encoder-Apache-2.0.txt": "85a884980abd6032fc6b5439ba918ab16db9ac9051b5cf18db9c27c587df07c0",
+    "gateway/licenses/jpeg-encoder-IJG.txt": "a21e92ec88aefc6823f0c51994783571a849e8d9b43d9ade61ec9d886776721e",
+    "gateway/licenses/jpeg-encoder-MIT.txt": "4d022727ea392ebba2fe5e9a5f78c610a0eae506b491f3db29c78b6d430d6503",
+    "gateway/licenses/jsquash-Apache-2.0.txt": "8c3690b09c168f196446cf5904332023bbc15eb92b6a7cee470ac829e6a65d20",
+    "gateway/licenses/jsquash-codec.md": "8213556ea36ce3a0f2883db06238463e2452fdad68e3d2e2e4ace2189477a37e",
+    "gateway/package-lock.json": "fdea36dcd924f29b231700a5574995019e401a1316638b5dce074024d138f4d1",
+    "gateway/package.json": "b5bec9a4fe263bda94571814461be09af8d287f1d2dad06c46d56e2903cea166",
+    "gateway/scripts/benchmark-avatar-normalizer.mjs": "03b84852c39829b98e59a28e04ed68b9ba293525f6bea2552bcecf494e6d21a3",
+    "gateway/scripts/export-avatar-native-fixture.mjs": "536f4d56655d63b840b10d537ceecca39dbd7a28317857e01520aec7a3b3e94a",
+    "gateway/src/avatar-codecs-workerd.mjs": "e5ea12146597e148b63c817306865e019572a7a0e20b27ace945b65e8238b1d9",
+    "gateway/src/avatar-jpeg.mjs": "9ce2b73a8840c75593a24b8520fa00a217b3c2675cdac4b506cd91f6b11c8942",
+    "gateway/src/avatar-normalizer.mjs": "37ab97579fcd2fbee8d95ddf7482417568e81a9ffaf6c0734ff788058d875dbd",
+    "gateway/test/avatar-normalizer.test.mjs": "46344a6b91a3efc0351976e0047d0ae79b0b50ea5adfee7be3be85ba64c46fd7",
+    "gateway/test/avatar-workerd.test.mjs": "06c6fad903a30a3aa81407c99fff1f3e68b2fd7f99b711ad5bb54443c85d1719",
+    "gateway/test/support/avatar-image-fixture.mjs": "8f8610fc4a802116d71fe3d7a0b27163a6aae3f191165a39ac8af2d434542c60",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "3c982dd948765bfcb7255c0e354a9365959acd02e8e0c8fb8e9d044477a6194d",
+    "gateway/test/support/workerd-image-harness.mjs": "d18177774c75b2326b4dc764bf05caad43161a480c70db96524005899fb5bf85"
+  },
+  "logSHA256": {
+    "echoes-avatar-ci-install.log": "b3cfd94a80fefffc32b3978e227e23332f544bdce4441d47ae774f69f1f0d48b",
+    "echoes-avatar-ci-node22-final.log": "b6bf9049b546bec32a16661741f5d4fcc630489fe11f4ca47701f519b39af769",
+    "echoes-avatar-normalizer-node24-accepted.log": "a2880fd31636e1834869e2393b311435fa891169bb78e6988b382d30a1b89ec9",
+    "echoes-avatar-normalizer-swift.log": "ac3da157c502415af9859829886923d7adbafc78cb421c84b72a96ae7b619ac7",
+    "echoes-avatar-normalizer-audit-clean.json": "f8d9331bc26131e42841b7aafadc374fe9c1af38083858a0ce8788b0cdacde2e",
+    "echoes-avatar-normalizer-static.json": "46c18794ad79cbf014c415a7d2b8a74f2c50c3fda86cbf6e22b003a32a68e692",
+    "echoes-avatar-normalizer-benchmark.json": "c0f841f9f065fa012dcd121482f7c2cd33739b09f54a29f8c419d59bf2fc8bbb",
+    "echoes-avatar-normalizer-benchmark.err": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedProjectUsedInStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "mustNotStage": true
+  }
+}

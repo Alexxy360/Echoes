@@ -1,0 +1,25 @@
+{
+  "producer": "actual pinned server Wasm codecs; synthetic gradient and metadata only",
+  "manifests": {
+    "image": {
+      "schemaVersion": 1,
+      "ownerID": "64000000-0000-4000-8000-000000000001",
+      "versionID": "64000000-0000-4000-8000-000000000002",
+      "variant": "image",
+      "byteCount": 2446,
+      "width": 256,
+      "height": 128,
+      "sha256": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412"
+    },
+    "thumbnail": {
+      "schemaVersion": 1,
+      "ownerID": "64000000-0000-4000-8000-000000000001",
+      "versionID": "64000000-0000-4000-8000-000000000002",
+      "variant": "thumbnail",
+      "byteCount": 1233,
+      "width": 128,
+      "height": 64,
+      "sha256": "84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764"
+    }
+  }
+}

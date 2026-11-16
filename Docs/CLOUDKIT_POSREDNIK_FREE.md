@@ -94,3 +94,8 @@ Dodano odrębne wyzwanie i zadanie erasure z bounded krokami, statusem za bilete
 ## CK-02i — lokalne HTTP i alarm
 
 Auth ma zamknięte trasy i prawdziwą kompozycję klas, trwały budżet próby oraz alarm/kolejkę. 163 testy lokalne. Target i API nie zostały wdrożone; żadnych nowych uprawnień/sekretów/opłat. Budżety aplikacji nie rezerwują limitów konta Cloudflare i nie zapobiegają naliczaniu wszystkich odrzuconych wywołań. Przed większym testem konieczny jest pomiar ruchu, CPU, wierszy i retencji. [Kontrakt i konfiguracja](BRAMKA_HTTP_DEVELOPMENT.md).
+
+
+## CK-04e.3c — kodek w istniejącym Durable Object
+
+Normalizacja JPEG została sprawdzona w lokalnym workerd z rzeczywistym DO/SQLite. Ma działać w istniejącym CommunityAuthority; nie w edge Workerze z limitem 10 ms. Domyślne 30 s CPU DO nie oznacza nieograniczonej przepustowości: requests/duration/SQL nadal zużywają limity Free. Nie dodano usługi ani aktywacji. Pomiary lokalne nie potwierdzają hosted CPU, cold start lub dziennego budżetu. [Kontrakt, wyniki i ograniczenia](SERWEROWA_NORMALIZACJA_AVATAROW.md), [oficjalne limity DO](https://developers.cloudflare.com/durable-objects/platform/limits/).

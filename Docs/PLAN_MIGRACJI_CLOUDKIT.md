@@ -93,6 +93,8 @@ Postęp CK-04e.2b: po konkretnej zgodzie pierwsza rzeczywista próba SDK na iPho
 
 Postęp CK-04e.3b: wewnętrzna trwała rezerwacja i pierwsze dwa kroki uploadu CloudKit assetów, z niepowtarzalnym claim per wersja/wariant, checkpointem, zamkniętym transportem, niejawnym uchwytem i transakcyjnym erasure metadanych. 286/286 Node22/24 (29 nowych), syntax 60 MJS/3 JSON. Moduł nie jest dostępny z runtime/HTTP, brak prawdziwych hostów/schema/ról i aktywacji. Pozostają serwerowe dekodowanie/moderacja, receipt recovery i utworzenie rekordu, CAS profilu, chroniony odczyt/cache, retencja oraz rzeczywiste Free/CloudKit/A-B. [Kontrakt](UPLOAD_AVATAROW_GATEWAY.md), [dowody](evidence/avatar-assets-local-tests.json).
 
+Postęp CK-04e.3c: rzeczywisty Wasm decode/reencode JPEG i miniatury, zamknięte wejście i uchwyt owner/version/request, statyczne kodeki i licencje. 301/301 Node22/24 (15 nowych), czysty lockfile/audit zero; 222/222 Swift (1 nowy ImageIO/piksele). Lokalny rzeczywisty workerd/DO/SQLite zaliczony, bez wdrożenia i bez hosted CPU/Free acceptance. Kodek przeznaczony do istniejącego DO; brak importu do HTTP/runtime. Następnie receipt/recovery i rekord, moderacja/CAS, bounded intake i chroniony odczyt/cache/retencja. [Kontrakt i granice](SERWEROWA_NORMALIZACJA_AVATAROW.md), [dowody](evidence/avatar-normalizer-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

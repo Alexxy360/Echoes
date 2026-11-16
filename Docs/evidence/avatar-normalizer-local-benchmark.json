@@ -1,0 +1,59 @@
+{
+  "node": "v22.23.5",
+  "samplesPerCorpus": 20,
+  "nodeCorpora": [
+    {
+      "name": "gradient256",
+      "inputBytes": 2446,
+      "outputBytes": 2446,
+      "sha256": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+      "first": {
+        "wall": 6.021874999999998,
+        "cpu": 10.601
+      },
+      "warmedWallMilliseconds": {
+        "minimum": 0.738708999999993,
+        "median": 1.036791000000001,
+        "maximum": 4.117583000000003
+      },
+      "warmedProcessCPUMilliseconds": {
+        "minimum": 0.727,
+        "median": 1.655,
+        "maximum": 13.162
+      }
+    },
+    {
+      "name": "noise512",
+      "inputBytes": 175550,
+      "outputBytes": 163120,
+      "sha256": "70c51865ca52f841f2efa7c9b3de8e57c910a7a0d4c063c39e8a8d7bc593f33d",
+      "first": {
+        "wall": 9.456333999999998,
+        "cpu": 13.464
+      },
+      "warmedWallMilliseconds": {
+        "minimum": 7.794707999999986,
+        "median": 8.02854099999999,
+        "maximum": 9.002749999999992
+      },
+      "warmedProcessCPUMilliseconds": {
+        "minimum": 7.78,
+        "median": 8.473,
+        "maximum": 17.446
+      }
+    }
+  ],
+  "note": "Local evidence only. Node CPU includes process/background compilation. Fixture encoding preinitializes the Rust encoder. workerd values are HTTP wall time, not hosted CPU, quotas or billing.",
+  "workerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "sqlite": true,
+    "outbound": "denied IPv4/IPv6/Unix",
+    "firstHTTPWallMilliseconds": 35.700333,
+    "warmedHTTPWallMilliseconds": {
+      "minimum": 7.982792000000018,
+      "median": 8.518749999999955,
+      "maximum": 11.050792000000001
+    }
+  }
+}
