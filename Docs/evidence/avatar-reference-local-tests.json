@@ -1,0 +1,121 @@
+{
+  "stage": "CK-04e.3i.2a",
+  "observedAtUTC": "2026-11-16T23:02:12.774463+00:00",
+  "baselineCommit": "7a1408286943e79be75164438972ee0a6d137665",
+  "checks": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 427,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 427,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newMetadataTests": 21,
+    "syntaxMJS": 92,
+    "JSON": [
+      "gateway/package.json",
+      "gateway/package-lock.json",
+      "gateway/wrangler.community.jsonc",
+      "gateway/wrangler.jsonc"
+    ],
+    "SwiftCoreUIProjectDependenciesCIConfigurationUnchanged": true,
+    "SwiftBuildUIOrSDKRepeated": false,
+    "unchangedDependencyAuditRepeated": false
+  },
+  "implemented": [
+    "optional nested avatarVersionID UUID or null in profile, nearby users and history messages; existing save/send acknowledgements unchanged",
+    "same AvatarPolicyState instance as CloudKitAvatarReader in concrete runtime, same activation/hosts/deadline guard",
+    "verified CloudKit avatarprofile through existing request-local repository lease and durable publication/registry proof",
+    "peer active current unexpired presence, declared area within3km, visible state and reciprocal blocks; own reference requires no presence/GPS",
+    "synchronous final publication/tag/version/generation/moderation/presence guard after outer checkpoint; no newer version added to captured response",
+    "up to100 distinct authors, batches25, reuse map presence, extra history presence only for authors with publications, unchanged40-call lease cap",
+    "no avatar record/asset GET or URL/receipt/descriptor/hash/private policy fields in metadata",
+    "disabled default omits field and enrichment IO; mid-flight disable strips reference"
+  ],
+  "coverage": [
+    "profile/map/history selected version and exact profile DTO, no asset IO/private values",
+    "own profile/message without presence; peer message remains with null reference",
+    "none/uploading/pending/rejected/cleared do not reveal an unpublished version",
+    "moderation withdrawal, clear and replacement after prepare; finalizer cannot add newer version",
+    "stop, presence expiry using fresh viewer session, reciprocal blocks, suspension and area move after preparation",
+    "expired viewer session rejects whole prepared response independently of presence expiry",
+    "provider pointer corruption fails closed, actual runtime wiring and disabled enrichment has no pointer lookup",
+    "100-author mock-boundary test proves batches<=25 and map presence reuse; duplicate/101-author input rejected"
+  ],
+  "negativeControl": {
+    "mutation": "omit final assertReadPublication proof in reference finalizer",
+    "test": "a changed moderation decision after preparation strips the reference before the final response",
+    "exitCode": 1,
+    "failedTests": 1,
+    "observedFailure": "previous version returned instead of null",
+    "realSourceRestoredBeforeFullSuites": true
+  },
+  "validationCorrections": [
+    "initial new fixture used incorrect policy/moderation/suspension method names; corrected to concrete APIs",
+    "presence expiry initially expired viewer session too; split into fresh-session presence expiry and separate session rejection; production time checks retained",
+    "40/40 focused and425/425 full passed before adding area and reciprocal-block tests; final427/427 both runtimes"
+  ],
+  "evidenceScope": {
+    "realComponents": [
+      "local SQLite transactions and durable state",
+      "concrete community coordinator, publication policy, repository, checkpoint and runtime",
+      "existing full workerd regression with new helper constructed"
+    ],
+    "modeledComponents": [
+      "Apple records/assets responses",
+      "synthetic authentication/accounts and ephemeral unregistered keys",
+      "100-author batching boundary dependencies"
+    ],
+    "newReferenceEnrichmentExecutedInHostedOrLocalWorkerd": false,
+    "nativeParserPreservesReference": false
+  },
+  "knownLimits": [
+    "a version is a hint, not permission; every pixel read independently reauthorizes",
+    "coordinates are client-declared, not physical GPS attestation; already delivered references cannot be revoked",
+    "additional read-call/SQL/CPU costs require real hosted Free acceptance; unchanged bounded limits do not prove public capacity",
+    "profile without public name remains null; save/send acknowledgements require profile/history refresh for reference",
+    "native field validation/storage/UI and uploader/journal/operator/reports/retention remain to implement",
+    "real schema/roles/hosts/SIWA/service identity/ordinary-account A-B/hardware file protection remain unverified"
+  ],
+  "notPerformed": [
+    "remote deployment/activation/schema/permissions/keys/secrets/new services/fees",
+    "actual Apple asset download or hosted enrichment/Free acceptance",
+    "native/UI changes, iOS builds/device install/SDK",
+    "Production/TestFlight publication or Firebase deletion"
+  ],
+  "sourceSHA256": {
+    "gateway/src/community-avatar-references.mjs": "361b040a9e7155d0a771cfd1007e56d8733a79580e8b08b685a41c29e3e7c13e",
+    "gateway/src/community-coordinator.mjs": "35b55107e1addf54f1ef9505e9b54c15093095256278bdeef86724ceb252d977",
+    "gateway/src/gateway-runtime.mjs": "b2c4314f4008b52e194adcd6643896b38e251b71d288a87f63fa314bb07e4a8f",
+    "gateway/test/community-avatar-references.test.mjs": "61deccc3ab7030f92a1f26aefdfd0fad95323e666f78e7b207749e9b33861297"
+  },
+  "documentationSHA256": {
+    "Docs/WERSJE_AVATAROW_W_DANYCH_SPOLECZNOSCIOWYCH.md": "5883102d170609e70d34052075a1803042c7e28af4f49b5f30b97ab1f0288003",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "aba647686686414d421503d3d01185551a36b78f3b8eb209e61f4c278f6dd5ac",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "ce8832efaad7dedb51d5ae1338556ce80aa44cfd8137329dece370c203ffca03",
+    "Docs/DZIENNIK_ZMIAN.md": "63259494f571fe202157ea7c88eb86bf2136b104c1bb99ebbc6b4f165690f06f",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "fee09e878b55495d20fa93258469a3b14f13bd8511e6cf3b94573e80d0c4921a",
+    "gateway/README.md": "3f39dbffd7b9ed2dc485a3ea2a8699cbc5481ddc08e52a0cfccda327ce4040ab"
+  },
+  "logSHA256": {
+    "echoes-avatar-references-unfixed-fixture.log": "f8443acc16fc8e3181e6e208356a1e08a24557be0151e3c5b71f205345783de7",
+    "echoes-avatar-references-time-fixture.log": "f93faee2e46f3874cab7cb11a90adb026680838ce7e91e0635f7bfd1d21c9c5b",
+    "echoes-avatar-references-focused.log": "c50729a39f011813752629121620248ecd0ad190d00e67070e800fd1ed2112f2",
+    "echoes-avatar-references-negative-control.log": "34676769df382cea86f7eae4eedb00bb91668cadbda17baa56462ed6bc297ea2",
+    "echoes-avatar-references-node22-before-range.log": "d2aefbe3683d51d85890922dbefe3126deff3f6ab9b14d30d7e8066300b6ae54",
+    "echoes-avatar-references-node24-before-range.log": "4e3174f187c28eaf0632e7de0915ba985c2cb1559f662abcc4f63aedb0cfbfe3",
+    "echoes-avatar-references-node22.log": "09b3073b7a08863c04cf48d0706422a2ef6732e5a3d7bdd864597ee5d0eab4ef",
+    "echoes-avatar-references-node24.log": "6281caf37db9e7fb991ca586c7caee23d3c6f5047d831154867271696a8e520b",
+    "echoes-avatar-references-static.json": "40a724ea4a4580070d4ce03c4c269b36ea2661ce57a4329ec225071c23266516"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  }
+}

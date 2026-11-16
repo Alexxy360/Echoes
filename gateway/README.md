@@ -112,3 +112,8 @@ CloudKitAvatarReader wiąże bieżącą publikację i tagi z polityką odbiorcy,
 ## Chroniony avatar HTTP (CK-04e.3i.1)
 
 POST `/v1/community/avatar/read` w konkretnym Runtime łączy sesję, trwałe global/IP/account admission i Reader z bezpiecznymi JPEG200/fresh204. Bounded body/deadline/safe headers/edge TypedArray oraz własna ograniczona kopia zamkniętego błędu JSON przed abort; cztery aktywne żądania i jawny enable_request_signal. AVATAR_READ_ENABLED=0 i AVATAR_DOWNLOAD_HOSTS_JSON=[] pozostają domyślne, bez wdrożenia. 406/406 Node22/24 i rzeczywisty lokalny workerd z modelami dostawców. [Kontrakt, limity i otwarte bramki](../Docs/HTTP_AVATAROW_GATEWAY.md).
+
+
+## Wskazania zdjęć (CK-04e.3i.2a)
+
+Opcjonalne avatarVersionID w profilu/mapie/historii pochodzi ze wspólnej polityki i zweryfikowanego wskazania. Finalizer sprawdza ponownie zgodę/moderację/wersję oraz obecność/3 km/blokady peer. Do100 autorów, partie25, ten sam budżet40, bez asset IO i bez domyślnej aktywacji. 427/427 obu Node, 21 nowych i negatywna kontrola moderacji. Natywne zachowanie pola/UI nadal do integracji. [Kontrakt i granice](../Docs/WERSJE_AVATAROW_W_DANYCH_SPOLECZNOSCIOWYCH.md).

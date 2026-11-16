@@ -20,6 +20,7 @@ import { PublicRegistryCheckpoint } from "./public-registry-checkpoint.mjs";
 import { CommunityState } from "./community-state.mjs";
 import { CommunityCoordinator } from "./community-coordinator.mjs";
 import { AvatarPolicyState } from "./avatar-policy-state.mjs";
+import { CommunityAvatarReferences } from "./community-avatar-references.mjs";
 import { CloudKitAvatarReader } from "./cloudkit-avatar-reader.mjs";
 import { avatarReadPath, avatarReadInputLimit, avatarDownloadHosts, avatarHTTPDeadline, avatarEdgeResponse, avatarEdgeErrorResponse } from "./gateway-avatar-http.mjs";
 
@@ -95,10 +96,12 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       checkpoint = new PublicRegistryCheckpoint({ registry, client });
       publicRecords = new CloudKitPublicRepository({ authentication, clock, registry, client, checkpoint });
       if (config.communityEnabled || storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").toArray().length) communityState = new CommunityState(storage, { clock });
-      if (config.communityEnabled) community = new CommunityCoordinator({ state: communityState, authentication, repository: publicRecords,
+      const avatarPolicy = config.avatarReadEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
+      const avatarReferences = config.avatarReadEnabled ? new CommunityAvatarReferences({ avatarPolicy, communityState, clock, isEnabled: isAvatarReadEnabled }) : undefined;
+      if (config.communityEnabled) community = new CommunityCoordinator({ state: communityState, authentication, repository: publicRecords, avatarReferences,
         clock, cursorSecret: env.REQUEST_BUDGET_KEY, phrasesJSON: env.COMMUNITY_BLOCKED_PHRASES_JSON ?? "[]", supportURL: env.COMMUNITY_SUPPORT_URL ?? "" });
       if (config.avatarReadEnabled) avatarReader = new CloudKitAvatarReader({ authentication, communityState,
-        avatarPolicy: new AvatarPolicyState(storage, { registry, clock }), profileRepository: publicRecords, registry, client, checkpoint,
+        avatarPolicy, profileRepository: publicRecords, registry, client, checkpoint,
         clock, isEnabled: isAvatarReadEnabled, verifiedDownloadHosts: config.avatarDownloadHosts, fetchImplementation: guardedFetch });
     }
     const limits = new GatewayLimits(storage, { clock });

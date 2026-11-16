@@ -5,10 +5,12 @@ import { inputHash, normalizePublicInput } from "./public-record-schema.mjs";
 export const communityActions = Object.freeze(["config", "visibility", "publish", "stop", "nearby", "messages", "send", "block", "block/state", "blocked", "report", "profile", "profile/save"]);
 /** Functional server boundary. Finalizers run synchronously AFTER the outer remote checkpoint. */
 export class CommunityCoordinator {
-  #state; #authentication; #repository; #clock; #cursor; #phrases; #support;
-  constructor({ state, authentication, repository, cursorSecret, clock = Date.now, phrasesJSON = "[]", supportURL = "" } = {}) {
+  #state; #authentication; #repository; #clock; #cursor; #phrases; #support; #avatars;
+  constructor({ state, authentication, repository, avatarReferences, cursorSecret, clock = Date.now, phrasesJSON = "[]", supportURL = "" } = {}) {
     if (typeof state?.begin !== "function" || typeof authentication?.authorize !== "function" || typeof repository?.beginRead !== "function") throw new CommunityError();
+    if (avatarReferences !== undefined && typeof avatarReferences?.prepare !== "function") throw new CommunityError();
     this.#state = state; this.#authentication = authentication; this.#repository = repository; this.#clock = clock;
+    this.#avatars = avatarReferences;
     this.#cursor = new CommunityCursor(cursorSecret, { clock }); this.#phrases = moderationPhrases(phrasesJSON); this.#support = supportAddress(supportURL);
   }
   #identity(token, accountID, signal) {
@@ -48,7 +50,9 @@ export class CommunityCoordinator {
       objectFields(body, []);
       const lease = await this.#repository.beginRead({ accessToken, signal });
       const [item] = await lease.lookup([lease.ownName("profile")], "profile");
-      return result(() => ({ profile: item && lease.current(item) ? { name: item.input.name, revision: item.record.recordChangeTag } : null }));
+      const avatars = await this.#avatars?.prepare({ lease, ownerIDs: item && lease.current(item) ? [accountID] : [] });
+      return result(() => ({ profile: item && lease.current(item) ? { name: item.input.name, revision: item.record.recordChangeTag,
+        ...(avatars ? { avatarVersionID: avatars(accountID) } : {}) } : null }));
     }
     if (action === "publish" || action === "stop" || action === "send" || action === "block") {
       const kind = { publish: "presence", stop: "presence", send: "message", block: "block" }[action];
@@ -109,9 +113,14 @@ export class CommunityCoordinator {
         const page = await lease.candidates({ kind: "presence", coordinate, cutoff, marker }); marker = page.marker;
         for (const item of await lease.lookup([...page.records.keys()], "presence")) found.set(item.context.recordName, item);
       } while (marker !== null);
-      return result(() => ({ users: [...found.values()].filter(item => item.context.accountID !== accountID && this.#readable(lease, item, coordinate))
+      const selected = [...found.values()].filter(item => item.context.accountID !== accountID && this.#readable(lease, item, coordinate))
+        .sort((a, b) => Math.round(distanceMeters(coordinate, a.input)) - Math.round(distanceMeters(coordinate, b.input)) || a.context.accountID.localeCompare(b.context.accountID)).slice(0, 100);
+      const avatars = await this.#avatars?.prepare({ lease, ownerIDs: [...new Set(selected.map(item => item.context.accountID))], coordinate,
+        presenceItems: new Map(selected.map(item => [item.context.accountID, item])) });
+      return result(() => ({ users: selected.filter(item => this.#readable(lease, item, coordinate))
         .map(item => ({ id: item.context.accountID, name: item.input.name, latitude: item.input.latitude, longitude: item.input.longitude,
           song: item.input.song, songID: item.input.songID, updatedAt: item.context.startedAt, expiresAt: item.record.fields.expiresAt.value,
+          ...(avatars ? { avatarVersionID: avatars(item.context.accountID) } : {}),
           distanceMeters: Math.round(distanceMeters(coordinate, item.input)) }))
         .sort((a, b) => a.distanceMeters - b.distanceMeters || a.id.localeCompare(b.id)).slice(0, 100) }));
     }
@@ -146,7 +155,9 @@ export class CommunityCoordinator {
     const last = ordered.length ? this.#message(ordered.at(-1)) : position.last;
     const cursor = pending.length || !exhausted ? this.#cursor.seal({ ...position, pending, marker, exhausted,
       last: last ? { id: last.id, timestamp: last.timestamp } : null }) : null;
-    return result(() => ({ messages: ordered.filter(item => this.#readable(lease, item, coordinate)).map(item => this.#message(item)).reverse(), cursor,
+    const avatars = await this.#avatars?.prepare({ lease, ownerIDs: [...new Set(ordered.filter(item => this.#readable(lease, item, coordinate)).map(item => item.context.accountID))], coordinate });
+    return result(() => ({ messages: ordered.filter(item => this.#readable(lease, item, coordinate)).map(item => ({ ...this.#message(item),
+      ...(avatars ? { avatarVersionID: avatars(item.context.accountID) } : {}) })).reverse(), cursor,
       removedIDs: knownIDs.filter(id => !known.has(id) || !this.#readable(lease, known.get(id), coordinate)) }));
   }
 }
