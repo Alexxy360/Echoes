@@ -1,0 +1,111 @@
+{
+  "stage": "CK-04e.3b durable internal avatar asset transfers",
+  "observedAtUTC": "2026-11-16T12:17:24.586650+00:00",
+  "baselineCommit": "73a8d07de901125f4436f2554467a9978d42b584",
+  "tests": {
+    "Node22.23.5": {
+      "passed": 286,
+      "failed": 0,
+      "new": 29
+    },
+    "Node24.22.1": {
+      "passed": 286,
+      "failed": 0,
+      "new": 29
+    },
+    "execution": "actual local SQLite, crypto and registry checkpoint; explicit synthetic HTTP/CloudKit/Apple models, ephemeral generated keys; no remote requests",
+    "syntax": {
+      "mjs": 60,
+      "json": 3,
+      "passed": true,
+      "lastChangedFilesRechecked": 2
+    },
+    "lastAddedTestSyntax": "node --check current transport and 29-test file passed",
+    "SwiftCoreAndUI": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true,
+      "reason": "server-only changes; SDK phone milestone is separate"
+    }
+  },
+  "implemented": [
+    "immutable avatar namespace and one durable upload attempt per version/variant",
+    "metadata-only SQL claim before any asset grant, checkpoint before network, replay/unknown/reopen/rollback protection",
+    "fixed signed Development/public assets/upload and exact verified host allowlist, empty default rejects construction",
+    "snapshot/hash/byte limits, no credentials/signature forwarding, manual redirects, bounded response reader and shared cancellation deadline",
+    "receipt hash durability and redacted opaque handle scoped to same client/version/variant/request/generation, <=120s",
+    "existing erasure fences cover avatar type and clear transfer metadata transactionally; generic reads/writes do not publish avatars"
+  ],
+  "bounds": {
+    "imageBytes": 256000,
+    "thumbnailBytes": 32000,
+    "jsonResponseBytes": 16384,
+    "uploadDeadlineMilliseconds": 8000,
+    "handleLifetimeMilliseconds": 120000,
+    "verifiedHostsMaximum": 8,
+    "reservationsPerOwner": 1000,
+    "reservationsTotal": 10000,
+    "transfersPerReservation": 2,
+    "jsonResponseMaximumChunks": 64,
+    "clockDeadlineDuringReads": true
+  },
+  "activation": {
+    "flags": {
+      "GATEWAY_ENABLED": "0",
+      "ACCOUNT_DELETION_ENABLED": "0",
+      "PUBLIC_RECORDS_ENABLED": "0",
+      "COMMUNITY_ENABLED": "0"
+    },
+    "runtimeImportsAssetModule": false,
+    "HTTPAssetRoutes": false,
+    "configuredRealAssetHosts": false,
+    "deployed": false,
+    "realSchemaCreated": false,
+    "newServicesSecretsOrPayments": false
+  },
+  "resolvedDuringValidation": [
+    "first new test fixture accidentally shadowed its session method; renamed object property",
+    "SQLite rows use null prototype; spread row for exact field-value comparison",
+    "initial full runs hit sandbox EPERM on existing localhost redirect server; accepted runs used authorized escalation for that local socket only",
+    "added stalled-body and synchronous callback cancellation cases, plus attached-asset generic-read denial/erasure model; final 284/284 on both runtimes",
+    "final review bounded body chunks to 64 nonempty parts and checked the clock cutoff in the read loop; avoids timer starvation and per-chunk SQL/authorization work; two additional tests passed"
+  ],
+  "notPerformed": [
+    "server-side JPEG decode/normalization or moderation",
+    "enclosing avatar record create and encrypted durable receipt recovery",
+    "public profile CAS/current-photo pointer or upload HTTP admission/rate",
+    "avatar download/protected cache/native UI integration",
+    "actual CloudKit assets/grants/hosts/rules, Worker Free CPU/SQL/PITR or A/B",
+    "physical unassigned asset garbage collection or guaranteed immediate erasure",
+    "production, new permissions/keys/secrets, Firebase removal"
+  ],
+  "knownLimits": [
+    "transport accepts trusted normalized bytes; client hash/size alone is not image validation or authorization",
+    "consumed unknown upload stays blocked, including acknowledged receipt lost before record attach; no automatic reupload",
+    "orphan asset physical retention and space reclamation depend on unaccepted provider behavior",
+    "checkpoint protects whole-database rollback, not arbitrary isolated manual row edits",
+    "runtime integration must enforce fresh session, consent, moderation and bounds before activation; exact hosts need real provider verification",
+    "archived Apple asset response format and precise upload hosts require actual Development acceptance before integration"
+  ],
+  "sourceSHA256": {
+    "gateway/src/cloudkit-request.mjs": "8c2bc156f88657afc9effed53eb6bf4f4d52eed6f429f78addd09b7431382ba7",
+    "gateway/src/public-record-schema.mjs": "58fb7a5fde698289ff71d67dd90c02f27c6290c10a6e1b6904d1870bed9a886c",
+    "gateway/src/public-record-registry.mjs": "f9e37904f3aac82432e9611f55c1d4455858ecb412379ad841d0b521a2121521",
+    "gateway/src/public-record-repository.mjs": "b3ab5665bc7d28754623bf04e018e10c0af4722e718847fa1ce04e88be925d98",
+    "gateway/src/cloudkit-avatar-assets.mjs": "3561a37210bb0cedfb4beb15dd40708875b34178eb2fee132bb2878a0fa81802",
+    "gateway/test/avatar-assets.test.mjs": "8cd6d07d7de823f66cfb4d12af7dcfc89b41157c3cfeb42c4156bde2ac8a372c"
+  },
+  "logSHA256": {
+    "/private/tmp/echoes-avatar-assets-node22-verified.log": "433d820a6d6332cc4174f4e610fa4b74cfbaa0b84d18eadba514843788d4bdf3",
+    "/private/tmp/echoes-avatar-assets-node24-verified.log": "5f8d3c29544c3aa56282e8fac30d2143e701da124e6a4404a85126d0fc2ab1a1",
+    "/private/tmp/echoes-avatar-assets-first-tests.log": "e960290c1a64a959bafa2d876e6b230adf35b51b2288ec12a68ece4cc95a20a1",
+    "/private/tmp/echoes-avatar-assets-targeted.log": "fa843be370d943f10fa1fbce755b13709fb2ffb879b018a3f3ced2cbdd5f5536",
+    "/private/tmp/echoes-avatar-assets-node22.log": "9f3deb943695a830def06e7a99af9fca337638e3f06d39c3f93da2fd694b8f18",
+    "/private/tmp/echoes-avatar-assets-node24.log": "0765ab065ca2f2fe82ad9aecec080495a72ce61bb6a516b27211420df568843c",
+    "/private/tmp/echoes-avatar-assets-node22-final-accepted.log": "d3df8b2f63f8a06e23a947f14c92f64e8adfb1cb6bd4ee72b4fbd10d0f29167d",
+    "/private/tmp/echoes-avatar-assets-node24-final-accepted.log": "3d9605507882131dd64a878bbd295bab779ba6cd9a1aa430dc319ff784843270"
+  },
+  "projectPreservation": {
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

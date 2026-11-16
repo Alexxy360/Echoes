@@ -81,3 +81,8 @@ Wersjonowany transport CloudKit Development/public, metadata-only rejestr z trwa
 ## Zdalny punkt kontrolny (CK-04b)
 
 Trwały outbox/epoka i warunkowy tag chronią spójne odtworzenie SQLite także przy tym samym liczniku. Repozytorium, HTTP auth/usuwania, dostawcy i procesor utrwalają punkty przed dispatch/odpowiedziami; authority z epoką nie uruchomi auth-only. Brak automatycznego bootstrap lub nowego endpointu operatora. 234/234 Node 22/24, negatywna kontrola porównania wykrywa błąd. Usługi pozostają wyłączone; realny PITR i dodatkowy CPU/SQL/transfer wymagają pomiarów. [Protokół i ograniczenia](../Docs/PUNKT_KONTROLNY_REJESTRU.md).
+
+
+## Wewnętrzne assety avatarów (CK-04e.3b)
+
+CloudKitAvatarAssets i claim SQLite dla niemodyfikowalnego `avatar` przygotowują grant/upload z zamkniętym hostem, limitem, niepowtarzalną próbą i kontrolą checkpointu. Eraser obejmuje także nowy typ i usuwa metadane transferu; generic data API nie udostępnia avatarów. Moduł nie jest importowany przez runtime i nie tworzy endpointu, a rzeczywista lista hostów pozostaje pusta. 286/286 Node22/24 (29 nowych). Nie aktywować bez JPEG/normalizacji, receipt recovery i utworzenia rekordu, moderacji/CAS, chronionego odczytu, pomiaru Free oraz ról/A-B i retencji. [Kontrakt i dowody](../Docs/UPLOAD_AVATAROW_GATEWAY.md).

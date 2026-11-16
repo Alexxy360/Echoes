@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { approximateLocation } from "./community-geo.mjs";
 
 export const publicRecordTypes = Object.freeze({ profile: "EchoesPublicProfileV1", presence: "EchoesPresenceV1",
-  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1" });
+  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1", avatar: "EchoesAvatarV1" });
 export const publicUUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-export const publicRecordName = /^community-v1-(profile|presence|message|block|report)-[a-f0-9]{64}$/;
+export const publicRecordName = /^community-v1-(profile|presence|message|block|report|avatar)-[a-f0-9]{64}$/;
 const codes = new Set(["PUBLIC_UNAVAILABLE", "PUBLIC_INPUT", "PUBLIC_CONFLICT", "PUBLIC_LIMIT", "PUBLIC_ERASED",
   "PUBLIC_PENDING", "PUBLIC_RESPONSE", "PUBLIC_THROTTLED", "PUBLIC_SCOPE", "PUBLIC_REGISTRY_UNVERIFIED"]);
 export class PublicRecordError extends Error {

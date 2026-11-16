@@ -91,6 +91,8 @@ Postęp CK-04e.3a: podczas oczekiwania na zgodę testu telefonu przygotowano nat
 
 Postęp CK-04e.2b: po konkretnej zgodzie pierwsza rzeczywista próba SDK na iPhonie 15 Pro przeszła: zapis/odtworzenie przez nowy Store, change tag i serwerowy konflikt 14, cleaner/guard oraz potwierdzona nieobecność obu nowych stref po sprzątaniu. Użyto jednego z trzech zakresów we wspólnym oknie, zakończono serię i zainstalowano pakiet bez aktywacji. Raport skopiowany przed wymianą; odczytu po wymianie nie zaliczono (EPERM). Dwa UUID na tym samym iCloud nie zastępują A/B lub prawdziwego gateway i biletu/ACK. [Wynik i granice](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md), [dowody](evidence/private-profile-sdk-device-verification.json). Następnie dalszy chroniony przepływ zdjęć i pozostały pełny plan.
 
+Postęp CK-04e.3b: wewnętrzna trwała rezerwacja i pierwsze dwa kroki uploadu CloudKit assetów, z niepowtarzalnym claim per wersja/wariant, checkpointem, zamkniętym transportem, niejawnym uchwytem i transakcyjnym erasure metadanych. 286/286 Node22/24 (29 nowych), syntax 60 MJS/3 JSON. Moduł nie jest dostępny z runtime/HTTP, brak prawdziwych hostów/schema/ról i aktywacji. Pozostają serwerowe dekodowanie/moderacja, receipt recovery i utworzenie rekordu, CAS profilu, chroniony odczyt/cache, retencja oraz rzeczywiste Free/CloudKit/A-B. [Kontrakt](UPLOAD_AVATAROW_GATEWAY.md), [dowody](evidence/avatar-assets-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

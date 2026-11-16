@@ -1,7 +1,7 @@
 import { Buffer } from "node:buffer";
 import { createHash, createPrivateKey, sign } from "node:crypto";
 
-const operations = new Set(["records/lookup", "records/query", "records/modify"]);
+const operations = new Set(["records/lookup", "records/query", "records/modify", "assets/upload"]);
 const maximumBodyBytes = 64 * 1024;
 
 export class GatewayConfigurationError extends Error {

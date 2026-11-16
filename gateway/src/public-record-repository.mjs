@@ -124,6 +124,8 @@ export class CloudKitPublicRepository {
     const inventories = { profile: ["name"], presence: values.active === 0 ? ["active", "generation"] :
       ["name", "latitude", "longitude", "song", "songID", "generation"], message: ["name", "text", "latitude", "longitude"],
     block: ["targetID", "blocked"], report: ["messageID", "reason"] };
+    // Avatar bytes require their separate authorization/validation path; never generic declassification.
+    if (!Object.hasOwn(inventories, context.kind)) throw new PublicRecordError("PUBLIC_INPUT");
     const raw = Object.fromEntries(inventories[context.kind].map(key => [key, values[key]]));
     if (context.kind === "presence") { if (values.active === 0) raw.active = false; else raw.measuredAt = this.#clock(); }
     if (context.kind === "block") raw.blocked = values.blocked === 1;
