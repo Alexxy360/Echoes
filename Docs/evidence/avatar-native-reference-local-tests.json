@@ -1,0 +1,213 @@
+{
+  "stage": "CK-04e.3i.2b",
+  "observedAtUTC": "2026-11-16T23:22:14.160189+00:00",
+  "baselineCommit": "9a0441e2dd248cdeb0b4890a5f44531a2ff1f9e5",
+  "checks": {
+    "Core": {
+      "macOS": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 26,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "CloudKit": {
+      "definedTests": 309,
+      "macOS": {
+        "passed": 308,
+        "skipped": 1,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 308,
+        "skipped": 1,
+        "failed": 0
+      }
+    },
+    "newTestFunctions": 9,
+    "newParameterizedPhaseExamples": 3,
+    "strictSwiftFormatFiles": 7,
+    "newExporter": {
+      "node22": {
+        "version": "v22.23.5",
+        "newExporterSyntaxPassed": true
+      },
+      "node24": {
+        "version": "v24.22.1",
+        "newExporterSyntaxPassed": true
+      }
+    },
+    "simulator": "iPhone17Pro/iOS26.1",
+    "xcresultSummaryVerified": true,
+    "newUIOrRuntimeFlow": false,
+    "gatewayFunctionalSourcesConfigurationProjectDependenciesCIUnchanged": true,
+    "gatewayFullSuitesOrDependencyAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newSourcesCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "3b1c9396b2e531f369cfa3c273e8e32bfed5d480474130413ab91824942ab1a3",
+        "Echoes.debug.dylib": "3de220b28d05b063bbfdb98d7c0f0fa2584296982fe319024449d2d1da41877f"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newSourcesCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "044bef97eaa1473040ae4a492f7821d22f372b5104afb13c55d14cb88dd9b27f"
+      }
+    }
+  },
+  "implemented": [
+    "closed optional canonical UUID avatarVersionID in native profile/map/message DTOs; null/absent clears hint",
+    "reject unknown nested fields, malformed IDs/types/URLs and forged top-level metadata as whole invalid response",
+    "Core optional Codable default preserves legacy data, model validation checks version, Equatable tracks version changes",
+    "actual CommunitySession map/message refresh preserves/replaces/clears version and account invalidation clears models; timeline nil never falls back to old version",
+    "typed AvatarReference conversions use profile-bound owner/map id/message senderID; never URL/manifest/receipt or authorization grant"
+  ],
+  "concreteFixture": {
+    "generator": "gateway/scripts/export-community-avatar-native-fixture.mjs",
+    "cases": 9,
+    "phases": [
+      "published",
+      "cleared",
+      "disabled"
+    ],
+    "actions": [
+      "profile",
+      "nearby",
+      "messages"
+    ],
+    "samePublicationJPEGAndFresh204": true,
+    "thumbnailBytes": 1233,
+    "realComponents": [
+      "gateway runtime/HTTP",
+      "SQLite policy, registry and checkpoint",
+      "server JPEG normalization",
+      "native parser and reference conversion",
+      "GatewayAvatarClient, HTTP parser, persistent cache, ImageIO",
+      "actual CommunitySession refresh and Core timeline"
+    ],
+    "modeledComponents": [
+      "Apple records/assets",
+      "synthetic accounts/sessions and unregistered ephemeral signing keys",
+      "native identity/token source",
+      "in-process HTTP reply transport"
+    ],
+    "noTokenKeyAssetURLReceiptExported": true,
+    "actualNetworkSIWACloudKitOrHostedAcceptance": false
+  },
+  "clientBridge": {
+    "freshReads": 2,
+    "firstJPEG": true,
+    "secondRevalidated204": true,
+    "secondLoadInvalidatesFirstHandle": true,
+    "clearInvalidatesSecondHandle": true,
+    "rejectedLoadAfterClearHasNoAdditionalTransfer": true,
+    "runtimeUICompositionPerformed": false
+  },
+  "negativeControl": {
+    "mutation": "omit Person avatarVersionID propagation into NearbyProfile",
+    "test": "nativeCommunityAvatarConsumesConcreteServerProfileMapAndMessageVersions",
+    "failedTestFunctions": 1,
+    "issues": 3,
+    "phase": "published",
+    "sourceRestoredBeforeFullSuites": true
+  },
+  "dependencyCacheRecovery": {
+    "initialDebugReleaseExit": 74,
+    "reason": "old temporary firebase-ios-sdk checkout missing",
+    "isolatedSourcePackages": "/private/tmp/echoes-native-reference-sources",
+    "copiedAvailableCache": true,
+    "twoCachedHEADsDifferedFromLock": true,
+    "checkedOutExactPins": true,
+    "exactGoogleUtilitiesRevisionFetched": "5459ee5603def3db0fe14ca522185f42c48d978e",
+    "bareStoreAlsoPopulatedBeforeSuccessfulResolve": true,
+    "all13CheckoutHEADsMatchPinsAfterBuild": true,
+    "packageResolvedSHA256Unchanged": "726cb71b685ea42ba3bb58ba2e26142fd69557189d0d2fc82c26740aeedc7022",
+    "versionsUpdated": false
+  },
+  "newTestNames": {
+    "core": [
+      "communityAvatarModelsDecodeLegacyJSONAndRoundTripOptionalVersions",
+      "communityAvatarModelsRejectNoncanonicalVersionsDuringValidation",
+      "communityAvatarEqualityAndTimelineReplaceOrClearVersionsWithoutChangingMessageIdentity",
+      "sessionRefreshPreservesThenReplacesAndClearsAvatarVersions"
+    ],
+    "cloudkit": [
+      "nativeCommunityAvatarConsumesConcreteServerProfileMapAndMessageVersions",
+      "nativeCommunityAvatarRejectsWrongVersionTypesAndNoncanonicalIDs",
+      "nativeCommunityAvatarRejectsUnknownNestedFieldsAndForgedTopLevelMetadata",
+      "nativeCommunityAvatarTypedReferencesNeverAcceptAnAssetURLOrInvalidOwner",
+      "avatarClientConsumesTheSameConcreteGatewayMetadataAndJPEGAndRevokesClearedSelection"
+    ]
+  },
+  "knownLimits": [
+    "computed reference is only a hint; current foreground/version predicate, epochs, native/private scope and fresh server read remain mandatory",
+    "Runtime does not yet instantiate photo client or renderer; ordinary entry still Firebase and cloud activation disabled",
+    "retained messages outside refreshed page can hold an older hint; server reader denies old version, and final presentation/refresh policy remains host work",
+    "physical FileProtection/locked-device acceptance not run; one explicit skip on both platforms",
+    "real schema/roles/hosts/SIWA/isolated service identity/Free and two ordinary iCloud accounts remain unverified",
+    "uploader/journal/UI/operator/content review/reports/contact/retention and rest of migration remain incomplete"
+  ],
+  "notPerformed": [
+    "phone install or renewed private SDK attempt",
+    "UI changes/screenshot/UI test repeat",
+    "remote activation/deployment/schema/permissions/keys/secrets/new services/fees",
+    "Production/TestFlight publication or Firebase changes/deletion"
+  ],
+  "sourceSHA256": {
+    "EchoesCore/Sources/EchoesCore/Community.swift": "54281090e5ee43d688248c04b6c27f3c19f6b4cc83b22b9c10f7c5729c24a735",
+    "EchoesCore/Tests/EchoesCoreTests/CommunityAvatarTests.swift": "3d32706e289d40cf0164b3090987297eebc9b7cc2bedfc4e14b900cbf8cd2cf9",
+    "EchoesCore/Tests/EchoesCoreTests/SessionTests.swift": "e176b0a2d184b6123bd371a9b1ae98c261958c0967b3090c202827ce3e03cdaf",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAPI.swift": "199827bf74f53078dc6de21f1617e220d28ac35981d5767dd362469a8082bfe7",
+    "EchoesCloudKit/Sources/EchoesCloudKit/CommunityAvatarReference.swift": "b39520b4aca5358587c578a084bea6c72030759a77489ab7667f3cafbe3ff543",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/CommunityAvatarReferenceTests.swift": "361c0d3aa5f6428e54f9e69b44a6fba0d7dc6f9a7332d6577bb485d6073c0264",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarClientTests.swift": "87924e295eed0b8637a20fbd1496894b6689c83d8cd1fd5d65687033a11f5eab",
+    "gateway/scripts/export-community-avatar-native-fixture.mjs": "ec3a96b0bb20c6e08d4a515967a9cec05d501fcf636380e4be25f12e44fcb494"
+  },
+  "fixtureSHA256": {
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/community-avatar/responses.json": "6a2a877e71c18cca2cf6f767a18d0014f16adf81a98a703cb14785cecc021f27",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/community-avatar/thumbnail.jpg": "84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764"
+  },
+  "documentationSHA256": {
+    "Docs/NATYWNE_WSKAZANIA_AVATAROW.md": "9f725a4c6e8d594a440e4f9c6845e3734fe3f64281247e583763f0cd11ec718a",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "d91ad43032028d1c6924d6b9d470302d6d1c5296bedbb95106f8bd3d0e4acca5",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "586360fd4eea6e9b2c7221efa5469b775b41f03689afad38ebea343b04e0266d",
+    "Docs/DZIENNIK_ZMIAN.md": "0ff4f1c2816519eb3f282a8b9bba83fd4b38b616fffd56910995e318978dc879",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "b983283473861aef0509dec650c9981022f9cba68a0615e818d9448c89ef75f7",
+    "gateway/README.md": "2f806a1119a895fc0b756f657f36f1b36522f1e317246ad38eb22e43e0312b5c"
+  },
+  "logSHA256": {
+    "echoes-native-reference-core-focused.log": "e6d985b304f88deed22cb0776a3881916946d6a364007d6abc0bb50fc175f997",
+    "echoes-native-reference-focused.log": "ae86996f880dfa93601ba24d5fb99a6721e5a3d4a9400deb4f52e349208d9e4c",
+    "echoes-native-reference-negative.log": "817f33ac43d3eda61bce7901ab721683f00526b0c502a85c39fe2151a2c80a57",
+    "echoes-native-reference-core-full.log": "87e9ff69cc0434917c183a190e57a5ba0ff0e299fc0128fa3e76fd52a801c7e6",
+    "echoes-native-reference-full.log": "b4f01d084a817defe655f90d45ef025b3a7e0b9dade7485160daeadc519cd5b9",
+    "echoes-native-reference-core-simulator.log": "5f2bc8bfbd495c75ac573d496972313b860bf9d34ca2f440af4398aa333f4272",
+    "echoes-native-reference-simulator.log": "51a491acf2fae25a5a88ed4ea50625f11eac7f28e53330f7600dc406d4fc219c",
+    "echoes-native-reference-core-simulator-summary.json": "f10e53d21d41ea2c69b2e696894a47d5556fe896d5d0352ba97209adf7270582",
+    "echoes-native-reference-simulator-summary.json": "99449747ce6a73fef402fb960d23f09fb1dc251c6991b48c0422de98cd141c38",
+    "echoes-native-reference-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-native-reference-debug-missing-checkout.log": "134ef9ff6d93c7e4d038a40504d777e0561c3b3b85dc5953e24727badd7d9de7",
+    "echoes-native-reference-release-missing-checkout.log": "aac0b48bf416df8d3dea8c5d715ef9cea36cdd0a97117112adc8724fe83d9dc2",
+    "echoes-native-reference-resolve.log": "44c659864cd602f1fbbce512a4b0d7776cb6f2e7ed024ebf3c2e78198b733ecf",
+    "echoes-native-reference-resolve-complete.log": "6b0f882a17e8fab2e2cd3eaf77f54b8f910bb8a32df6dfcd67daad1cb36d5fe4",
+    "echoes-native-reference-debug.log": "bf80982162492ba6dfab28d9171c58eb790dcf855b75e57272e61112c6ad8dc7",
+    "echoes-native-reference-release.log": "bd012c107067a8723794efe612dc5fcae525a4623a487bfe3d68756f1e4c4af3"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "testedStageCommittedProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

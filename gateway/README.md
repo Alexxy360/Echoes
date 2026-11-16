@@ -117,3 +117,6 @@ POST `/v1/community/avatar/read` w konkretnym Runtime łączy sesję, trwałe gl
 ## Wskazania zdjęć (CK-04e.3i.2a)
 
 Opcjonalne avatarVersionID w profilu/mapie/historii pochodzi ze wspólnej polityki i zweryfikowanego wskazania. Finalizer sprawdza ponownie zgodę/moderację/wersję oraz obecność/3 km/blokady peer. Do100 autorów, partie25, ten sam budżet40, bez asset IO i bez domyślnej aktywacji. 427/427 obu Node, 21 nowych i negatywna kontrola moderacji. Natywne zachowanie pola/UI nadal do integracji. [Kontrakt i granice](../Docs/WERSJE_AVATAROW_W_DANYCH_SPOLECZNOSCIOWYCH.md).
+
+
+Eksporter scripts/export-community-avatar-native-fixture.mjs generuje offline materiał wspólnej publikacji dla natywnego parsera i sterownika: dziewięć odpowiedzi profil/mapa/historia w trzech stanach oraz thumbnail200/204. Nie eksportuje sesji, kluczy lub URL pliku. [Natywna integracja wersji i granice odbioru](../Docs/NATYWNE_WSKAZANIA_AVATAROW.md).

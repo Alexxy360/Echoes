@@ -760,6 +760,65 @@ private actor PhotoWireTransport: GatewayAvatarTransport {
         return query.knownSHA256 == nil ? fixture.downloaded : fixture.revalidated
     }
 }
+
+@MainActor private final class MetadataPhotoSelection {
+    var reference: AvatarReference?
+}
+private actor MetadataPhotoWireTransport: GatewayAvatarTransport {
+    let wire: NativeCommunityAvatarFixture
+    private(set) var count = 0
+    init(_ wire: NativeCommunityAvatarFixture) { self.wire = wire }
+    func send(_ request: URLRequest, query: GatewayAvatarQuery) async throws -> GatewayAvatarHTTPResponse {
+        #expect(query.reference.ownerID == wire.ownerID && query.reference.versionID == wire.versionID)
+        #expect(query.variant == .thumbnail)
+        count += 1
+        return try wire.photoResponse(revalidated: query.knownSHA256 != nil)
+    }
+}
+
+@Test @MainActor func avatarClientConsumesTheSameConcreteGatewayMetadataAndJPEGAndRevokesClearedSelection()
+    async throws
+{
+    let f = try PhotoFixture()
+    let wire = try NativeCommunityAvatarFixture()
+    defer { f.cleanup() }
+    guard case .nearby(let users) = try await wire.reply(action: "nearby", phase: "published").value
+    else {
+        Issue.record("Missing map reference")
+        return
+    }
+    let reference = try #require(users.first?.avatarReference)
+    let selection = MetadataPhotoSelection()
+    selection.reference = reference
+    let configuration = try GatewayConfiguration(origin: URL(string: "https://metadata.example.invalid")!)
+    let transport = MetadataPhotoWireTransport(wire)
+    let api = GatewayAvatarHTTPClient(configuration: configuration, transport: transport, isEnabled: { true })
+    let client = try GatewayAvatarClient(
+        api: api, configuration: configuration, cloudKit: f.cloudKit,
+        authorization: f.source, cache: f.cache, isEnabled: { true }, isVisible: { selection.reference == $0 }
+    )
+    defer { client.invalidate() }
+    try await client.connect()
+    let first = try await client.load(
+        reference: reference, variant: .thumbnail, coordinate: wire.coordinate())
+    #expect(client.image(for: first)?.width == 128)
+    let second = try await client.load(
+        reference: reference, variant: .thumbnail, coordinate: wire.coordinate())
+    #expect(client.image(for: first) == nil && client.image(for: second)?.width == 128)
+    #expect(await transport.count == 2 && f.source.tokenCalls == 3)
+    guard case .nearby(let cleared) = try await wire.reply(action: "nearby", phase: "cleared").value
+    else {
+        Issue.record("Missing cleared map reference")
+        return
+    }
+    client.invalidateVisibility()
+    selection.reference = cleared.first?.avatarReference
+    #expect(selection.reference == nil && client.image(for: second) == nil)
+    await #expect(throws: GatewayAvatarFailure.notFound) {
+        try await client.load(reference: reference, variant: .thumbnail, coordinate: wire.coordinate())
+    }
+    #expect(await transport.count == 2)
+}
 @Test @MainActor func avatarClientActualServerFixtureBridgesHTTPDiskAndNativeImageIO() async throws {
     let f = try PhotoFixture()
     defer { f.cleanup() }

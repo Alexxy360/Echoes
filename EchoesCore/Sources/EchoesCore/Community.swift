@@ -95,10 +95,11 @@ public struct NearbyProfile: Codable, Identifiable, Equatable, Sendable {
     public let lastSong: String
     public let appleMusicID: String
     public let expiresAt: Double
+    public let avatarVersionID: String?
 
     public init(
         id: String, name: String, coordinate: Coordinate, lastSong: String,
-        appleMusicID: String, expiresAt: Double
+        appleMusicID: String, expiresAt: Double, avatarVersionID: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -106,12 +107,14 @@ public struct NearbyProfile: Codable, Identifiable, Equatable, Sendable {
         self.lastSong = lastSong
         self.appleMusicID = appleMusicID
         self.expiresAt = expiresAt
+        self.avatarVersionID = avatarVersionID
     }
 
     public func isValid(at date: Date) -> Bool {
         !id.isEmpty && coordinate.isValid && (try? InputValidation.name(name)) != nil
             && expiresAt.isFinite && expiresAt > date.timeIntervalSince1970 * 1000
             && lastSong.utf16.count <= 300
+            && validCommunityAvatarVersion(avatarVersionID)
     }
 }
 
@@ -122,10 +125,11 @@ public struct ChatMessage: Codable, Identifiable, Equatable, Sendable {
     public let senderID: String
     public let timestamp: Double
     public let expiresAt: Double
+    public let avatarVersionID: String?
 
     public init(
         id: String, text: String, senderName: String, senderID: String,
-        timestamp: Double, expiresAt: Double
+        timestamp: Double, expiresAt: Double, avatarVersionID: String? = nil
     ) {
         self.id = id
         self.text = text
@@ -133,6 +137,7 @@ public struct ChatMessage: Codable, Identifiable, Equatable, Sendable {
         self.senderID = senderID
         self.timestamp = timestamp
         self.expiresAt = expiresAt
+        self.avatarVersionID = avatarVersionID
     }
 
     public func isValid(at date: Date) -> Bool {
@@ -140,7 +145,13 @@ public struct ChatMessage: Codable, Identifiable, Equatable, Sendable {
             && (try? InputValidation.name(senderName)) != nil && timestamp.isFinite && expiresAt.isFinite
             && timestamp <= date.timeIntervalSince1970 * 1000 + 5_000
             && expiresAt > date.timeIntervalSince1970 * 1000 && expiresAt > timestamp
+            && validCommunityAvatarVersion(avatarVersionID)
     }
+}
+
+private func validCommunityAvatarVersion(_ value: String?) -> Bool {
+    guard let value else { return true }
+    return value.utf8.count == 36 && UUID(uuidString: value)?.uuidString.lowercased() == value
 }
 
 public struct MessagePage: Codable, Sendable {

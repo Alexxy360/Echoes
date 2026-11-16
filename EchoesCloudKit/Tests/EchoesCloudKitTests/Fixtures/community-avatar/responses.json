@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "source": "Concrete local gateway runtime/HTTP/SQLite/policy; synthetic Apple/accounts/keys; real Wasm JPEG",
+  "ownerID": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+  "versionID": "e73632c0-c468-4d88-8235-cece34f00df8",
+  "cases": [
+    {
+      "phase": "published",
+      "action": "profile",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "profile": {
+          "name": "Maja",
+          "revision": "26",
+          "avatarVersionID": "e73632c0-c468-4d88-8235-cece34f00df8"
+        },
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "phase": "published",
+      "action": "nearby",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "users": [
+          {
+            "id": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "latitude": 51.111,
+            "longitude": 17.037699436098478,
+            "song": "",
+            "songID": "",
+            "updatedAt": 1794603600000,
+            "expiresAt": 1794604200000,
+            "avatarVersionID": "e73632c0-c468-4d88-8235-cece34f00df8",
+            "distanceMeters": 265
+          }
+        ],
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "phase": "published",
+      "action": "messages",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        },
+        "cursor": null,
+        "knownIDs": []
+      },
+      "response": {
+        "protocolVersion": 1,
+        "messages": [
+          {
+            "id": "community-v1-message-660bb658bdc1a3c813fdeb8c8f795c06e98c3ca2d837ae6414210e27b538b492",
+            "authorID": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "text": "Zdjęcie i muzyka 🎵",
+            "timestamp": 1794603600000,
+            "expiresAt": 1794610800000,
+            "avatarVersionID": "e73632c0-c468-4d88-8235-cece34f00df8"
+          }
+        ],
+        "cursor": null,
+        "removedIDs": [],
+        "serverTime": 1794603600000
+      }
+    },
+    {
+      "phase": "cleared",
+      "action": "profile",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "profile": {
+          "name": "Maja",
+          "revision": "26",
+          "avatarVersionID": null
+        },
+        "serverTime": 1794603603000
+      }
+    },
+    {
+      "phase": "cleared",
+      "action": "nearby",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "users": [
+          {
+            "id": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "latitude": 51.111,
+            "longitude": 17.037699436098478,
+            "song": "",
+            "songID": "",
+            "updatedAt": 1794603600000,
+            "expiresAt": 1794604200000,
+            "avatarVersionID": null,
+            "distanceMeters": 265
+          }
+        ],
+        "serverTime": 1794603603000
+      }
+    },
+    {
+      "phase": "cleared",
+      "action": "messages",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        },
+        "cursor": null,
+        "knownIDs": []
+      },
+      "response": {
+        "protocolVersion": 1,
+        "messages": [
+          {
+            "id": "community-v1-message-660bb658bdc1a3c813fdeb8c8f795c06e98c3ca2d837ae6414210e27b538b492",
+            "authorID": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "text": "Zdjęcie i muzyka 🎵",
+            "timestamp": 1794603600000,
+            "expiresAt": 1794610800000,
+            "avatarVersionID": null
+          }
+        ],
+        "cursor": null,
+        "removedIDs": [],
+        "serverTime": 1794603603000
+      }
+    },
+    {
+      "phase": "disabled",
+      "action": "profile",
+      "request": {},
+      "response": {
+        "protocolVersion": 1,
+        "profile": {
+          "name": "Maja",
+          "revision": "26"
+        },
+        "serverTime": 1794603606000
+      }
+    },
+    {
+      "phase": "disabled",
+      "action": "nearby",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "response": {
+        "protocolVersion": 1,
+        "users": [
+          {
+            "id": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "latitude": 51.111,
+            "longitude": 17.037699436098478,
+            "song": "",
+            "songID": "",
+            "updatedAt": 1794603600000,
+            "expiresAt": 1794604200000,
+            "distanceMeters": 265
+          }
+        ],
+        "serverTime": 1794603606000
+      }
+    },
+    {
+      "phase": "disabled",
+      "action": "messages",
+      "request": {
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        },
+        "cursor": null,
+        "knownIDs": []
+      },
+      "response": {
+        "protocolVersion": 1,
+        "messages": [
+          {
+            "id": "community-v1-message-660bb658bdc1a3c813fdeb8c8f795c06e98c3ca2d837ae6414210e27b538b492",
+            "authorID": "5fc93894-ffa2-4a60-94b4-9416d919b9d9",
+            "name": "Maja",
+            "text": "Zdjęcie i muzyka 🎵",
+            "timestamp": 1794603600000,
+            "expiresAt": 1794610800000
+          }
+        ],
+        "cursor": null,
+        "removedIDs": [],
+        "serverTime": 1794603606000
+      }
+    }
+  ],
+  "downloaded": {
+    "status": 200,
+    "headers": {
+      "cache-control": "private, no-store",
+      "content-length": "1233",
+      "content-type": "image/jpeg",
+      "x-content-type-options": "nosniff",
+      "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"5fc93894-ffa2-4a60-94b4-9416d919b9d9\",\"versionID\":\"e73632c0-c468-4d88-8235-cece34f00df8\",\"variant\":\"thumbnail\",\"byteCount\":1233,\"width\":128,\"height\":64,\"sha256\":\"84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764\"}"
+    }
+  },
+  "revalidated": {
+    "status": 204,
+    "headers": {
+      "cache-control": "private, no-store",
+      "x-content-type-options": "nosniff",
+      "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"5fc93894-ffa2-4a60-94b4-9416d919b9d9\",\"versionID\":\"e73632c0-c468-4d88-8235-cece34f00df8\",\"variant\":\"thumbnail\",\"byteCount\":1233,\"width\":128,\"height\":64,\"sha256\":\"84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764\"}"
+    }
+  }
+}

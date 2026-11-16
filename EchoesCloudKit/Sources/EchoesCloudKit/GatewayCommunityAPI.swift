@@ -150,6 +150,12 @@ public enum GatewayCommunityOperation: Codable, Equatable, Sendable {
 public struct GatewayPublicProfile: Equatable, Sendable {
     public let name: String
     public let revision: String
+    public let avatarVersionID: String?
+    public init(name: String, revision: String, avatarVersionID: String? = nil) {
+        self.name = name
+        self.revision = revision
+        self.avatarVersionID = avatarVersionID
+    }
 }
 public enum GatewayCommunityValue: Sendable {
     case configuration(supportURL: URL?)
@@ -278,21 +284,24 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
     private struct Message: Decodable {
         let id: String, authorID: String, name: String, text: String
         let timestamp: Double, expiresAt: Double
+        let avatarVersionID: String?
         func validated(serverTime: Double, allowExpired: Bool = false) throws -> ChatMessage {
             guard communityRecordName(id, kind: "message"), gatewayUUID(authorID),
                 (try? InputValidation.name(name)) == name,
                 (try? InputValidation.message(text)) == text, timestamp.isFinite, timestamp >= 0,
                 timestamp <= serverTime + 5000,
-                expiresAt == timestamp + 7_200_000, allowExpired || expiresAt > serverTime
+                expiresAt == timestamp + 7_200_000, allowExpired || expiresAt > serverTime,
+                avatarVersionID == nil || gatewayUUID(avatarVersionID!)
             else { throw GatewayCommunityFailure.invalidResponse }
             return .init(
                 id: id, text: text, senderName: name, senderID: authorID, timestamp: timestamp,
-                expiresAt: expiresAt)
+                expiresAt: expiresAt, avatarVersionID: avatarVersionID)
         }
     }
     private struct Person: Decodable {
         let id: String, name: String, song: String, songID: String
         let latitude: Double, longitude: Double, updatedAt: Double, expiresAt: Double, distanceMeters: Double
+        let avatarVersionID: String?
         func validated(coordinate: Coordinate, serverTime: Double) throws -> NearbyProfile {
             let position = Coordinate(latitude: latitude, longitude: longitude)
             guard gatewayUUID(id), (try? InputValidation.name(name)) == name, position.isValid,
@@ -302,20 +311,24 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
                 expiresAt == updatedAt + 600_000, distanceMeters.isFinite,
                 (0...3000).contains(distanceMeters),
                 coordinate.distance(to: position) <= 3000.001,
-                abs(coordinate.distance(to: position).rounded() - distanceMeters) <= 1
+                abs(coordinate.distance(to: position).rounded() - distanceMeters) <= 1,
+                avatarVersionID == nil || gatewayUUID(avatarVersionID!)
             else { throw GatewayCommunityFailure.invalidResponse }
             return .init(
                 id: id, name: name, coordinate: position, lastSong: song, appleMusicID: songID,
-                expiresAt: expiresAt)
+                expiresAt: expiresAt, avatarVersionID: avatarVersionID)
         }
     }
     private struct Profile: Decodable {
         let name: String, revision: String
+        let avatarVersionID: String?
         func validated() throws -> GatewayPublicProfile {
-            guard (try? InputValidation.name(name)) == name, communityRevision(revision) else {
+            guard (try? InputValidation.name(name)) == name, communityRevision(revision),
+                avatarVersionID == nil || gatewayUUID(avatarVersionID!)
+            else {
                 throw GatewayCommunityFailure.invalidResponse
             }
-            return .init(name: name, revision: revision)
+            return .init(name: name, revision: revision, avatarVersionID: avatarVersionID)
         }
     }
     private struct Body: Decodable {
@@ -339,6 +352,12 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
             guard Set(raw.keys) == Set(expected + ["protocolVersion", "serverTime"]) else {
                 throw GatewayCommunityFailure.invalidResponse
             }
+        }
+        func nestedFields(_ value: Any?, required: [String]) throws {
+            guard let object = value as? [String: Any],
+                Set(required).isSubset(of: Set(object.keys)),
+                Set(object.keys).isSubset(of: Set(required + ["avatarVersionID"]))
+            else { throw GatewayCommunityFailure.invalidResponse }
         }
         func generation() throws -> Int {
             guard let value = body.generation, value >= 0, value < 9_007_199_254_740_991 else {
@@ -388,18 +407,33 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
             value = .publication(id: id, generation: try generation(), visible: visible)
         case .nearby(let position):
             try fields(["users"])
-            guard let users = body.users, users.count <= 100, Set(users.map(\.id)).count == users.count else {
+            guard let users = body.users, users.count <= 100, Set(users.map(\.id)).count == users.count,
+                let rawUsers = raw["users"] as? [Any]
+            else {
                 throw GatewayCommunityFailure.invalidResponse
+            }
+            for user in rawUsers {
+                try nestedFields(
+                    user,
+                    required: [
+                        "id", "name", "song", "songID", "latitude", "longitude", "updatedAt", "expiresAt",
+                        "distanceMeters",
+                    ])
             }
             value = .nearby(
                 try users.map { try $0.validated(coordinate: position, serverTime: body.serverTime) })
         case .messages(_, _, let known):
             try fields(["messages", "cursor", "removedIDs"])
             guard let messages = body.messages, messages.count <= 50,
+                let rawMessages = raw["messages"] as? [Any],
                 Set(messages.map(\.id)).count == messages.count,
                 let removed = body.removedIDs, removed.count <= 200, Set(removed).count == removed.count,
                 Set(removed).isSubset(of: Set(known)), body.cursor == nil || communityCursor(body.cursor!)
             else { throw GatewayCommunityFailure.invalidResponse }
+            for message in rawMessages {
+                try nestedFields(
+                    message, required: ["id", "authorID", "name", "text", "timestamp", "expiresAt"])
+            }
             let mapped = try messages.map { try $0.validated(serverTime: body.serverTime) }
             let ordered = mapped.sorted {
                 $0.timestamp == $1.timestamp ? $0.id < $1.id : $0.timestamp < $1.timestamp
@@ -410,6 +444,8 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
             value = .messages(.init(messages: mapped, nextCursor: body.cursor, removedIDs: removed))
         case .send(_, let expectedName, let expectedText, _):
             try fields(["id", "message"])
+            try nestedFields(
+                raw["message"], required: ["id", "authorID", "name", "text", "timestamp", "expiresAt"])
             guard let message = body.message, message.id == body.id, message.name == expectedName,
                 message.text == expectedText
             else { throw GatewayCommunityFailure.invalidResponse }
@@ -438,13 +474,15 @@ public struct GatewayCommunityHTTPClient: GatewayCommunityAPI {
             value = .accepted
         case .profile:
             try fields(["profile"])
+            if body.profile != nil { try nestedFields(raw["profile"], required: ["name", "revision"]) }
             value = .profile(try body.profile?.validated())
         case .saveProfile(_, let expectedName, _):
             try fields(["name", "revision"])
             guard let name = body.name, name == expectedName, let revision = body.revision else {
                 throw GatewayCommunityFailure.invalidResponse
             }
-            value = .savedProfile(try Profile(name: name, revision: revision).validated())
+            value = .savedProfile(
+                try Profile(name: name, revision: revision, avatarVersionID: nil).validated())
         }
         return .init(serverTime: Date(timeIntervalSince1970: body.serverTime / 1000), value: value)
     }

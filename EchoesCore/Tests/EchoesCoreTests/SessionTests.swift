@@ -3,6 +3,36 @@ import Testing
 
 @testable import EchoesCore
 
+@MainActor @Test func sessionRefreshPreservesThenReplacesAndClearsAvatarVersions() async {
+    let client = MockClient()
+    let clock = Clock()
+    let session = CommunitySession(client: client, now: { clock.date })
+    await session.connect(name: "Gość")
+    await session.setForeground(true)
+    session.updateLocation(clock.fix)
+    session.isChatOpen = true
+    for version in ["68000000-0000-4000-8000-000000000001", "68000000-0000-4000-8000-000000000002", nil] {
+        let timestamp = clock.date.timeIntervalSince1970 * 1000
+        client.profiles = [
+            .init(
+                id: "peer", name: "Maja", coordinate: clock.fix.coordinate,
+                lastSong: "", appleMusicID: "", expiresAt: timestamp + 600000, avatarVersionID: version)
+        ]
+        client.page = .init(
+            messages: [
+                .init(
+                    id: "message", text: "Hej", senderName: "Maja", senderID: "peer",
+                    timestamp: timestamp, expiresAt: timestamp + 7_200_000, avatarVersionID: version)
+            ], nextCursor: nil)
+        await session.refreshUsers()
+        await session.refreshMessages()
+        #expect(session.users.count == 1 && session.users[0].avatarVersionID == version)
+        #expect(session.messages.count == 1 && session.messages[0].avatarVersionID == version)
+    }
+    session.invalidateForAccountChange()
+    #expect(session.users.isEmpty && session.messages.isEmpty)
+}
+
 @MainActor
 private final class MockClient: CommunityClient {
     var serverTimeOffset: TimeInterval = 0
