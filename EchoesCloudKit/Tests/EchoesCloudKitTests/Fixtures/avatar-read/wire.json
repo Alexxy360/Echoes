@@ -1,0 +1,63 @@
+{
+  "producer": "CloudKitAvatarReader + SQL policy/registry + checkpoint; synthetic Apple/files/sessions, real Wasm JPEG",
+  "variants": {
+    "image": {
+      "query": {
+        "ownerID": "29932a2e-0b11-4375-9984-67619a370051",
+        "versionID": "90f115b4-c569-4242-abb2-d493cc21834f",
+        "variant": "image",
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "downloaded": {
+        "status": 200,
+        "headers": {
+          "cache-control": "private, no-store",
+          "content-length": "2446",
+          "content-type": "image/jpeg",
+          "x-content-type-options": "nosniff",
+          "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"29932a2e-0b11-4375-9984-67619a370051\",\"versionID\":\"90f115b4-c569-4242-abb2-d493cc21834f\",\"variant\":\"image\",\"byteCount\":2446,\"width\":256,\"height\":128,\"sha256\":\"7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412\"}"
+        }
+      },
+      "revalidated": {
+        "status": 204,
+        "headers": {
+          "cache-control": "private, no-store",
+          "x-content-type-options": "nosniff",
+          "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"29932a2e-0b11-4375-9984-67619a370051\",\"versionID\":\"90f115b4-c569-4242-abb2-d493cc21834f\",\"variant\":\"image\",\"byteCount\":2446,\"width\":256,\"height\":128,\"sha256\":\"7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412\"}"
+        }
+      }
+    },
+    "thumbnail": {
+      "query": {
+        "ownerID": "29932a2e-0b11-4375-9984-67619a370051",
+        "versionID": "90f115b4-c569-4242-abb2-d493cc21834f",
+        "variant": "thumbnail",
+        "coordinate": {
+          "latitude": 51.1123456,
+          "longitude": 17.0345678
+        }
+      },
+      "downloaded": {
+        "status": 200,
+        "headers": {
+          "cache-control": "private, no-store",
+          "content-length": "1233",
+          "content-type": "image/jpeg",
+          "x-content-type-options": "nosniff",
+          "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"29932a2e-0b11-4375-9984-67619a370051\",\"versionID\":\"90f115b4-c569-4242-abb2-d493cc21834f\",\"variant\":\"thumbnail\",\"byteCount\":1233,\"width\":128,\"height\":64,\"sha256\":\"84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764\"}"
+        }
+      },
+      "revalidated": {
+        "status": 204,
+        "headers": {
+          "cache-control": "private, no-store",
+          "x-content-type-options": "nosniff",
+          "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"29932a2e-0b11-4375-9984-67619a370051\",\"versionID\":\"90f115b4-c569-4242-abb2-d493cc21834f\",\"variant\":\"thumbnail\",\"byteCount\":1233,\"width\":128,\"height\":64,\"sha256\":\"84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764\"}"
+        }
+      }
+    }
+  }
+}

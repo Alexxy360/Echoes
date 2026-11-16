@@ -601,3 +601,12 @@ Bez nowego HTTP/aktywacji/usług/schema/ról/sekretów, realnego CloudKit/Free/A
 Workerd/SQLite/auth/policy/rejestr/podpisy rzeczywiście obsłużyły binarny 200, cache 204 i odmowę po bloku; Apple/tożsamości są modelowane. Wykryto brak Request.credentials w runtime, skorygowano tylko fixture i usunięto diagnostykę; świeże nagłówki nadal sprawdzane. Negatywna kopia bez guard 3 km oblewa test. Odczyt nie odnawia generacji mutacji autora po zmianie jego sesji. [Kontrakt](CHRONIONY_ODCZYT_AVATAROW.md), [dowody/SHA](evidence/avatar-read-local-tests.json).
 
 Bez nowego HTTP/runtime aktywacji, usług/schema/ról/sekretów, realnego providera/Free/A-B, zmian Swift/UI/Core/projektu/zależności lub powtarzania ich testów. Natywny cache/transport, intake/admission/UI/operator/zgłoszenia/retencja i realny odbiór nadal wymagane.
+
+
+## CK-04e.3g — natywny odbiór chronionych zdjęć
+
+246/246 testów Swift (24 nowe: 16 kontraktu/klienta i 8 rzeczywistego URLSession), strict swift-format 3 plików oraz Debug Simulator/Release iOS. Osobny transport weryfikuje manifest/nagłówki przed buforowaniem, dokładne rozmiary i SHA, wariant/owner/version, świeże puste 204 i błędy JSON do 32768 bajtów. Brak przekierowań/cache/cookies/credential storage, cztery aktywne odczyty, zwalnianie slotów, kontrola anulowania i domyślnego wyłączenia. Dane eksportu rzeczywistego readera/policy/rejestru/checkpoint i Wasm przechodzą przez klienta/URLSession/ImageIO; konta i Apple są modelowane. Usunięcie porównania URL w kontroli negatywnej oblało test; przywrócono dokładny source przed pełnym przebiegiem.
+
+Podczas walidacji poprawiono inicjalizację throws i zagnieżdżone makro w testach; rozdzielono odrzucenie nieprawidłowego GatewaySecret od odrzucenia kształtu tokenu przez klienta. Odmówiony redirect w URLProtocol może zakończyć się błędem Foundation przed dostarczeniem 307; test wymaga błędu i dokładnie jednego żądania na właściwy host. Nie uznaje tego za działający endpoint HTTPS. [Kontrakt i granice](NATYWNY_TRANSPORT_AVATAROW.md), [dowody/SHA](evidence/avatar-native-http-local-tests.json).
+
+Bez UI i nowego runtime/HTTP po stronie serwera; brak cache/sterownika odbiorcy, zmian usług/schema/ról/sekretów, opłat, operacji SDK/Production/Firebase lub odbioru prawdziwego providera/Free/A-B. Ordinary entry nadal Firebase, flagi i aktywacje niezmienione. Źródła gateway/Core, zależności i projekt identyczne; ich pełnych testów nie powtarzano. Zachowano zastaną zmianę project.pbxproj. Dalej CK-04e.3h cache per odbiorca i usuwanie, potem pozostały pełny plan.

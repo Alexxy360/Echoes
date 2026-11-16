@@ -1,0 +1,154 @@
+{
+  "stage": "CK-04e.3g",
+  "observedAtUTC": "2026-11-16T18:04:52.850903+00:00",
+  "baselineCommit": "553a5af6a4542d04e64297eada624c005bc0e65f",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 246,
+      "failed": 0,
+      "new": 24,
+      "newAPIAndContract": 16,
+      "newNativeURLSession": 8
+    },
+    "focusedAvatarTests": 38,
+    "strictSwiftFormat": {
+      "files": 3,
+      "passed": true
+    },
+    "fixtureExportNode": "22.23.5",
+    "newScriptSyntaxPassed": true,
+    "UIRepeated": false,
+    "reasonNoUI": "No view, app flow or runtime composition changes",
+    "gatewayAndCoreFullSuitesRepeated": false,
+    "existingGatewayCoreSourcesDependenciesCIProjectUnchanged": true
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newSourceCompiled": true,
+      "activationAbsentInInfoPlist": true,
+      "binarySHA256": {
+        "Echoes": "6e9fc8a0d06d6aee07ca46500a994ed567c30e4847b52e75a74964df08365324",
+        "Echoes.debug.dylib": "d2aa6d6a586aeede04206823faf95fa9ea003f23d61ad1ae82f8150a9ab47545"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newSourceCompiled": true,
+      "activationAbsentInInfoPlist": true,
+      "binarySHA256": {
+        "Echoes": "a8da63d2a3b6287ff4d10f8fb9a67f7ee904e3546a9de5601248ae7f1035d9f6"
+      }
+    }
+  },
+  "implemented": [
+    "closed typed selection with explicit canonical HTTPS origin and prepared POST /v1/community/avatar/read",
+    "default disabled activation checked before and after await and before success; cancellation fences",
+    "dedicated ephemeral URLSession without cookie/credential storage or URL cache, no redirects, exact response URL",
+    "bounded ASCII manifest and closed identity/version/variant/dimensions, cache-control/nosniff/length/encoding/range checked before application buffering",
+    "200 exact bytes and SHA/JPEG boundary validation; actual ImageIO still mandatory before rendering",
+    "204 requires matching known hash and empty body with no framing/type; no offline authorization fallback",
+    "up to four active sends per shared transport instance and slot release after errors/cancellation",
+    "bounded versioned JSON errors and sanitized retry/auth mapping; diagnostic descriptions/Mirror redacted"
+  ],
+  "bounds": {
+    "manifestBytes": 2048,
+    "imageBytes": 256000,
+    "thumbnailBytes": 32000,
+    "errorJSONBytes": 32768,
+    "concurrentPerTransportInstance": 4,
+    "configuredRequestTimeoutSeconds": 15,
+    "configuredResourceTimeoutSeconds": 20,
+    "maximumRetryAfterSeconds": 86400
+  },
+  "fixture": {
+    "producerScript": "gateway/scripts/export-avatar-read-native-fixture.mjs",
+    "actualComponents": [
+      "CloudKitAvatarReader",
+      "SQL policy and registry",
+      "checkpoint",
+      "Wasm JPEG decode/reencode",
+      "native URLSession via in-process URLProtocol",
+      "ImageIO JPEG pixel decode"
+    ],
+    "modeledComponents": [
+      "synthetic sessions/accounts",
+      "Apple records/files and gateway transport protocol"
+    ],
+    "exported": [
+      "two synthetic JPEGs",
+      "safe 200/204 headers",
+      "synthetic owner/version/coordinates"
+    ],
+    "secretsOrReceiptsOrProviderURLsExported": false,
+    "bothVariants200And204Passed": true,
+    "realHTTPSGatewayOrCloudKitAcceptance": false,
+    "regeneration": "Synthetic UUIDs change on regeneration; JPEG content is codec-produced."
+  },
+  "negativeControl": {
+    "mutation": "replace exact response URL equality by true in owned staged new source",
+    "test": "nativeAvatarURLSessionRejectsResponseOriginSubstitution",
+    "exitCode": 1,
+    "failedTests": 1,
+    "expectedFailure": "an error was expected but none was thrown",
+    "exactSourceRestoredBeforeFullTests": true
+  },
+  "resolvedDuringValidation": [
+    "new test initializers required try; nested require macro split into two statements",
+    "malformed GatewaySecret construction and malformed token shape use distinct existing/new typed errors",
+    "Foundation refused URLProtocol redirect may fail before delivering 307; test requires a typed failure and exactly one original-host request",
+    "all final 246 tests and Debug/Release pass on restored source"
+  ],
+  "notPerformed": [
+    "persistent viewer-scoped cache and erasure, native account/visibility/version image driver",
+    "server binary HTTP admission/route/runtime and native upload/journal/UI integration",
+    "actual operator moderation/content inspection/photo reporting",
+    "real Apple CKAsset/schema/roles, protected SIWA flow or ordinary account A/B",
+    "hosted Cloudflare Workers Free CPU/bandwidth/capacity acceptance",
+    "new cloud activation, service/key/secret/role/schema changes or SDK test window",
+    "user photos, Production, TestFlight distribution, fees or Firebase deletion"
+  ],
+  "knownLimits": [
+    "API reply must be decoded by ImageIO and fenced against viewer/visibility/version changes by the upcoming client; HTTP alone does not provide these guards",
+    "204 revalidates this request only and must be matched against the complete validated cached manifest",
+    "application-level buffering is bounded; URLSession/OS internal buffers are not a physical zeroization guarantee",
+    "four-send limit is per transport instance, so composition must share one instance",
+    "timers are URLSession settings, not a hosted latency or billing proof",
+    "server range check uses client-declared coordinates, not proof of physical GPS location",
+    "owner still has only one real iCloud account; ordinary A/B remains open"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarAPI.swift": "426e16d5f8fdb89fee4945f67c6694749122265d7a2a48eb2c1e4725515619cd",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarTests.swift": "da5e0c905e6793fef22f1798e8cb364ab1341d3af681585cd6b29f0b8ef20d14",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarTransportTests.swift": "da48b1b3e63bf9f06ce4e8919333457b510d08e3b8fe31581af5f9ae12ef8294",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-read/wire.json": "d7800575b176446a5628c7670b5d34c2bbff9009e5476998ce862f710edb34d5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-read/image.jpg": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-read/thumbnail.jpg": "84aad523b28cba93e1a3c25c1ef82b997acae2c3ff3ed7ac29ce18131d0b6764",
+    "gateway/scripts/export-avatar-read-native-fixture.mjs": "5d1aa885af068f957135646245d2de743e95ad979921bdc975e497c6255a4139"
+  },
+  "documentationSHA256": {
+    "Docs/NATYWNY_TRANSPORT_AVATAROW.md": "47fe317fab21250cac444b9a8c0ec1562b1e50af73e2a3cd2bde4c0d0819c61f",
+    "Docs/AVATAR_ODBIOR_PLIKOW_IOS.md": "b4925dee97b62d6a2102be3841e60418a7fbfd916ede111d1a66e392b28b319b",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "709c0657917ba8e519912a704e4ba1a8483232ee04ba75845edcc4aea7583355",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "2a1aae48a0f991e2d28ae423507d41b8ac344da40fbaa31f499d27ec9812b363",
+    "Docs/DZIENNIK_ZMIAN.md": "bab427428b4f2a58666aa5148bb137da6b6fc9994da62255ff61d32d4148c879",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "bcfe20ecb1cbe34fe4fa40bad2d1998802b51f765eee2f134d2e7d280fb901b4",
+    "EchoesCloudKit/README.md": "8e25e9d4d3fd2df61dae138ccd882a57578b5c4dfdc09b9bd5cad81ce502efaf"
+  },
+  "logSHA256": {
+    "echoes-avatar-http-compile.log": "d94d07ce85bde536fd066090dfc40693d8063b0632b0bfdb4aeba9add6a2299b",
+    "echoes-avatar-http-first-tests.log": "1ef99d750f8c760ae2364490329ef77c3d220046752073333b233d5cb560f4f5",
+    "echoes-avatar-http-focused-tests.log": "ae77c9be41e8676866dc0151b7cd8177668978c6967ab93b6daf5b1d410038f9",
+    "echoes-avatar-http-focused-accepted.log": "26d666687cdded34c5387d4e20624429a77aa2b04cac24421a140ab9eac8d767",
+    "echoes-avatar-http-negative-control.log": "a8317b10cb757660a3681b5e3f59a3833b004cf67e89a14d4e3f9f94ba9f5c45",
+    "echoes-avatar-http-full-tests.log": "4462016890fa22b0cd12b95bf5ac9eb94d0496f27eeba7a654528a43ed59a8ef",
+    "echoes-avatar-http-debug-build.log": "70e0ba7b3edd8fa0102ae9a0003ebfcc1e15cd6e7eb9b5eea9c55ed0ad4cb106",
+    "echoes-avatar-http-release-build.log": "0ad199072a2cfeb15fa5fbc5c0037548cf41b5d9962918f069c6ff15b98a135a"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

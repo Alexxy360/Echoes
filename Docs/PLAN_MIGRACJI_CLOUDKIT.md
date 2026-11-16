@@ -101,6 +101,8 @@ Postęp CK-04e.3e: trwała zgoda/source hash i serwerowy opis plików przed uplo
 
 Postęp CK-04e.3f: chroniony odczyt aktualnej wersji z moderacją/zgodą, peer presence/blokadami/3 km, zamkniętym GET, bounded SHA/JPEG i finalizerem po checkpoint. Jednorazowe Response200 i świeże cache204; read-only commitments nie odnawiają mutacji autora. 380/380 Node22/24 (27 nowych), syntax 85 MJS, pełny lokalny workerd/SQLite/auth/policy/signatures z modelami providera i negatywna kontrola zasięgu. Bez HTTP/iOS/aktywacji; następnie natywny transport/cache, host/admission/UI/operator/retencja i rzeczywisty odbiór. [Kontrakt](CHRONIONY_ODCZYT_AVATAROW.md), [dowody](evidence/avatar-read-local-tests.json).
 
+Postęp CK-04e.3g: osobny natywny transport URLSession chronionych zdjęć, zamknięty POST do przygotowanej trasy, kontrola manifestu przed body, hash/długość po strumieniu oraz świeże 204. Brak cookies/credentials/cache/przekierowań, 4 odczyty na instancję, wyłączenie/anulowanie i zamknięte błędy. Rzeczywisty serwerowy fixture 200/204 obu wariantów przechodzi przez URLSession i ImageIO. 246/246 Swift (24 nowe), Debug/Release, negatywna kontrola URL. Domyślnie nieaktywny, bez serwerowej trasy/hosta/UI/cache lub usług. Następny CK-04e.3h: trwały viewer-scoped cache i erasure, świeża rewalidacja i odcięcie późnych wyników; dalej admission/upload/UI/operator/retencja i rzeczywisty odbiór. [Kontrakt](NATYWNY_TRANSPORT_AVATAROW.md), [dowody](evidence/avatar-native-http-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

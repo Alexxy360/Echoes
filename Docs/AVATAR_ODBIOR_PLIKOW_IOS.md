@@ -15,7 +15,7 @@ Dekoder ma działać poza aktorem UI. Używa `kCGImageSourceShouldCacheImmediate
 
 ## Granice dostępu i następna integracja
 
-Skrót potwierdza zgodność bajtów, **nie uprawnienia**. Właściciel/wersja w manifeście nie zastępują kontroli sesji, obszaru, blokad i statusu właściciela. Przyszły HTTP musi ograniczać strumień przed buforowaniem, pobierać bajty tylko przez gateway i ponownie weryfikować politykę. Odbiorca musi odcinać późne wyniki po zmianie konta, wylogowaniu, blokadzie, zamknięciu widoku lub zmianie wersji; nie może traktować cache jako samodzielnej zgody na odczyt. Nie dodano cache ani fikcyjnie działającego transportu.
+Skrót potwierdza zgodność bajtów, **nie uprawnienia**. Właściciel/wersja w manifeście nie zastępują kontroli sesji, obszaru, blokad i statusu właściciela. Przyszły HTTP musi ograniczać strumień przed buforowaniem, pobierać bajty tylko przez gateway i ponownie weryfikować politykę. Odbiorca musi odcinać późne wyniki po zmianie konta, wylogowaniu, blokadzie, zamknięciu widoku lub zmianie wersji; nie może traktować cache jako samodzielnej zgody na odczyt. W CK-04e.3a nie dodano cache ani transportu. CK-04e.3g uzupełnia rzeczywisty, domyślnie nieaktywny transport URLSession z kontrolą nagłówków i body; nadal bez cache/UI i serwerowej trasy HTTP. [Zakres i dowody](NATYWNY_TRANSPORT_AVATAROW.md).
 
 Następny etap zdjęć to serwerowa walidacja rzeczywistych bajtów i pomiar CPU/pamięci na Free, ograniczony upload CKAsset, trwała rezerwacja oraz moderacja, CAS wskazania zdjęcia, kontrolowany odczyt i retencja. [Pełny plan zdjęć](PLAN_AVATAROW_CLOUDKIT.md). Nie udostępniamy surowych upload/download URLs ani nie aktywujemy płatnego procesora obrazów.
 

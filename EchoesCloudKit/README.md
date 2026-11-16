@@ -44,3 +44,8 @@ KeychainGatewayDeletionStorage i GatewayDeletionController zapisują osobny dzie
 GatewayDeletionHost łączy świeżą natywną tożsamość, jednorazowe potwierdzenie, chronione wskazówki oraz sterownik. GatewaySignInHost/GatewaySessionController zamykają selektywnie pasujące konto, a GatewayLocalAccountData ogranicza lease/pliki/cache do jednej przestrzeni. Izolowana kompozycja Debug korzysta z realnych zależności wyłącznie po aktywacji; jawny podgląd UI ma modele w pamięci i banner. Zwykły AppServices nadal Firebase. 151/151 Swift i 9/9 UI, kompilacje Debug/Release; bez odbioru dostawców. [Przepływ, pliki i pozostałe wymagania](../Docs/NATYWNE_USUWANIE_UI.md).
 
 CK-02p dodaje świadome lokalne usuwanie ukończonych potwierdzeń: snapshot/attemptID, kontrola właściciela i atomowe zachowanie pozostałych wpisów. Bez nowego dowodu Apple, wywołań gateway lub automatycznego TTL. 162/162 Swift i 10/10 UI. [Zasady i ograniczenia](../Docs/LOKALNE_POTWIERDZENIA_USUWANIA.md).
+
+
+## Transport zdjęć (CK-04e.3g)
+
+GatewayAvatarHTTPClient/NativeGatewayAvatarTransport mają osobną granicę binarnego JPEG i świeżej rewalidacji204, weryfikację nagłówków przed body, hash/limity i odmowę przekierowań. Domyślnie nieaktywne; brak połączenia z UI/cache i serwerowego endpointu. Kontrakt serwera/modeli przechodzi przez rzeczywisty URLSession/ImageIO; 246/246 testów pakietu i Debug/Release. [Granice i dalsze wymagania](../Docs/NATYWNY_TRANSPORT_AVATAROW.md).
