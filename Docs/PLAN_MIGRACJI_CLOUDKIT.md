@@ -87,6 +87,8 @@ Postęp CK-04e.1: prywatny pseudonim podłączony do kontrolowanego Runtime/onbo
 
 Postęp CK-04e.2a: gotowa nieaktywna diagnostyka prawdziwego SDK na telefonie, z podpisaną konfiguracją dwóch konkretnych losowych stref, wspólnym ograniczeniem czasu, trwałym claim i dokładnym cleanup. 212/212 Swift, 2/2 UI, podpisany Debug Development i Release; brak instalacji lub operacji SDK. Świeży konkretny zakres zgody przygotowany i zgłoszony; nie zaliczono rzeczywistego profilu/CAS/guarda ani A/B. [Zakres](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md), [dowody](evidence/private-profile-sdk-preparation.json). Następnie ograniczona próba po zgodzie oraz zdjęcia zgodnie z planem, bez blokowania niezależnej pracy lokalnej.
 
+Postęp CK-04e.3a: podczas oczekiwania na zgodę testu telefonu przygotowano natywną walidację zdjęć do przyszłego chronionego odczytu. Zamknięty manifest owner/version/wariant, SHA/rozmiar i ImageIO przed renderowaniem, anulowanie; 221/221 Swift (9 nowych), Debug/Release. Bez połączenia z HTTP/UI i bez operacji usług; upload/rejestr/moderacja/CAS/cache/retencja i Free/A-B pozostają otwarte. [Kontrakt](AVATAR_ODBIOR_PLIKOW_IOS.md), [dowody](evidence/avatar-payload-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

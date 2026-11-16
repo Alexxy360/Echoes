@@ -189,3 +189,8 @@ Strict format 10 Swift, pakiety bez aktywacji/test resources, Release bez debug 
 212/212 Swift (8 nowych), 8/8 powtórzonych po zmianie dwóch nazw testów; 2/2 UI (1 nowy) i obejrzany ekran nieaktywnego testu na zatwierdzonym Simulatorze. Debug Simulator, podpisany Debug dla istniejącego telefonu oraz Release bez podpisywania zielone. Odczyt podpisu i embedded profile potwierdził Development/kontener/zespół; bez aktualizacji profilu i bez instalacji. Release nie zawiera markerów nowej diagnostyki, pakiety bez konfiguracji aktywacji. Strict lint 7 Swift. [Raport ze źródłami/SHA i wcześniejszą poprawką podpisywania](evidence/private-profile-sdk-preparation.json).
 
 Przygotowano [konkretny zakres próby](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md): własne dwie strefy, syntetyczny profil, SDK conflict/guard i exact cleanup. Bez nowej zgody test nie został uruchomiony. Lokalne testy i właściwy podpis nie dowodzą rzeczywistego SDK, ról, dwóch kont ani ukończenia migracji. Gateway/Core i usługi niezmienione.
+
+
+## CK-04e.3a — natywna granica renderowania zdjęć
+
+221/221 Swift (9 nowych), strict lint 2 plików, Debug ad-hoc Simulator i Release bez podpisywania. Rzeczywiste kodowanie i dekodowanie ImageIO z lokalnymi JPEG/PNG, wyniki AvatarPreparer, błędne manifesty/wersje/wymiary/hashe i anulowanie. Brak zmiany UI, transportu lub Gateway/Core, więc ich testów nie ponawiano. Pakiety bez aktywacji. Nie pobierano zdjęć przez sieć, nie wykonywano CKAsset/SDK, nie mierzono Free i nie zaliczono ról/A-B. [Kontrakt i wymagania integracji](AVATAR_ODBIOR_PLIKOW_IOS.md), [raport i SHA](evidence/avatar-payload-local-tests.json). Zgłoszona zgoda SDK jest nadal odrębną sprawą; migrowana aplikacja nie jest gotowa do TestFlight.

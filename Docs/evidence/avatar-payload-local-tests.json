@@ -1,0 +1,90 @@
+{
+  "stage": "CK-04e.3a bounded native avatar payload validation",
+  "observedAt": "2026-11-16T12:38:54.114615+01:00",
+  "baselineCommit": "6194b711b7a300fd7ab2535b56348cb238aa563a",
+  "tests": {
+    "EchoesCloudKit": {
+      "passed": 221,
+      "failed": 0,
+      "new": 9,
+      "execution": "macOS package with actual ImageIO encode/decode, synthetic UUID/manifests and real pixels; no networking"
+    },
+    "strictSwiftFormat": {
+      "passed": true,
+      "files": 2
+    },
+    "XCTestUI": {
+      "runThisStage": false,
+      "reason": "no UI or app flow changed",
+      "lastPassed": 2
+    },
+    "gatewayAndCore": {
+      "runThisStage": false,
+      "sourceEqualsBaseline": true
+    }
+  },
+  "builds": {
+    "DebugAdHocIOSSimulator": "passed",
+    "ReleaseUnsignedIOS": "passed"
+  },
+  "artifacts": {
+    "Debug": {
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "cf8e894ce28c86e1b6f54eda6595065356f05c2d85bc50dd7df549dc93693dcb",
+        "Echoes.debug.dylib": "e000c6a371fcd4af53638600ed487f6e8d00ad43b546598ca539a8d1e30d6fd7"
+      }
+    },
+    "Release": {
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "05df1e8ea57600ac7649aa1e0a2bb8c6e2a0cfb3634eb3d9bb69207dccfe1f38"
+      }
+    }
+  },
+  "contract": {
+    "serverEmitsManifest": false,
+    "nativeTransportConnected": false,
+    "maximumManifestBytes": 2048,
+    "image": {
+      "bytes": 256000,
+      "pixelsPerEdge": 512
+    },
+    "thumbnail": {
+      "bytes": 32000,
+      "pixelsPerEdge": 128
+    },
+    "digestIsAuthorization": false,
+    "output": "CGImage and validated manifest, no original file metadata/URL"
+  },
+  "resolvedDuringValidation": [
+    "first eight-test implementation passed 220 total; final cancellation check adds ninth test and replaces generic image-error assertion with exact errors; 221 total passed"
+  ],
+  "notPerformed": [
+    "HTTP image transfer and runtime UI",
+    "CKAsset upload/download or schema/rule changes",
+    "Workers Free CPU/memory acceptance and server-side image validation",
+    "phone install/run or real CloudKit mutation",
+    "two ordinary iCloud accounts, Production or payments"
+  ],
+  "knownLimits": [
+    "caller must bound HTTP streaming before buffering and freshly authorize each read",
+    "caller must fence late results on identity, policy, view and version changes; not implemented by pure decoder",
+    "synchronous ImageIO operation cannot be interrupted mid-call; cancellation checked before and after",
+    "does not prove remote file metadata removal or server moderation",
+    "upload, publication, immutable registry, CAS and physical retention remain to implement"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/AvatarPayload.swift": "0b6e83c144f0b4ee45cbb8fff7f00d012005d494f5b77e0057f0dcc3f0b57d70",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/AvatarPayloadTests.swift": "82badb7a36783cce061ca66bd23e172c0b6fe57fc05737344596e044b192ac41"
+  },
+  "logSHA256": {
+    "/private/tmp/echoes-avatar-payload-final-tests.log": "f1d6492558a96ac695e2e4dca173934f17e3795b905569dbbbd8f1c309cd8759",
+    "/private/tmp/echoes-avatar-payload-debug-build.log": "72734dbcc5019f73f81c27db897603336537f8d84247a5e5fd0d4e5d35e7523b",
+    "/private/tmp/echoes-avatar-payload-release-build.log": "12d9167bfabe1b339a67cb059f6317b2f242f20d37ce9ed60370ad73314d21f8"
+  },
+  "projectPreservation": {
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  }
+}
