@@ -3,10 +3,13 @@ import { GatewayLimitError } from "./gateway-limits.mjs";
 import { CommunityError } from "./community-domain.mjs";
 import { PublicRecordError } from "./public-record-schema.mjs";
 import { communityActions } from "./community-coordinator.mjs";
+import { AvatarReadError } from "./cloudkit-avatar-reader.mjs";
+import { avatarReadPath, avatarReadInputLimit, avatarReadBody, avatarHTTPDeadline } from "./gateway-avatar-http.mjs";
 
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
   "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
 for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
+gatewayPaths.add(avatarReadPath);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -17,6 +20,11 @@ export class GatewayHTTPError extends Error {
   constructor(code = "INVALID_REQUEST", status = 400) { super("Gateway request could not be processed."); this.code = code; this.status = status; }
 }
 export function gatewayFailure(error) {
+  if (error instanceof AvatarReadError) {
+    const status = { AVATAR_READ_INPUT: 400, AVATAR_READ_NOT_FOUND: 404, AVATAR_READ_STALE: 401,
+      AVATAR_READ_LIMIT: 429, AVATAR_READ_RESPONSE: 503, AVATAR_READ_UNAVAILABLE: 503 }[error.code] ?? 503;
+    return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
+  }
   if (error instanceof CommunityError || error instanceof PublicRecordError) {
     const status = { COMMUNITY_INPUT: 400, COMMUNITY_STALE: 409, COMMUNITY_NOT_FOUND: 404, COMMUNITY_RATE_LIMITED: 429,
       COMMUNITY_CAPACITY: 429, COMMUNITY_TEXT_REJECTED: 400, COMMUNITY_CURSOR: 400,
@@ -62,29 +70,35 @@ function bearer(request, maximum) {
   if (typeof header !== "string" || header.length > maximum + 7 || !/^Bearer [\x21-\x7e]+$/.test(header)) throw new GatewayHTTPError("INVALID_SESSION", 401);
   return header.slice(7);
 }
-async function objectBody(request, maximum, timeout) {
+async function objectBody(request, maximum, timeout, signal = request.signal) {
   if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers.get("Content-Type") ?? "") ||
       (request.headers.has("Content-Encoding") && request.headers.get("Content-Encoding") !== "identity")) throw new GatewayHTTPError("UNSUPPORTED_MEDIA_TYPE", 415);
   const length = request.headers.get("Content-Length");
-  if (length !== null && (!/^\d+$/.test(length) || Number(length) > maximum)) throw new GatewayHTTPError("BODY_TOO_LARGE", 413);
+  if (length !== null && (!/^\d{1,7}$/.test(length) || Number(length) > maximum)) throw new GatewayHTTPError("BODY_TOO_LARGE", 413);
   if (!request.body) throw new GatewayHTTPError();
-  const reader = request.body.getReader(); let timer, total = 0; const chunks = [];
-  const deadline = new Promise((_, reject) => { timer = setTimeout(() => reject(new GatewayHTTPError("REQUEST_TIMEOUT", 408)), timeout); });
+  const reader = request.body.getReader(); let timer, total = 0, reject; const chunks = [], started = Date.now();
+  const cancelled = new Promise((_, fail) => { reject = fail; }); void cancelled.catch(() => {});
+  const abort = () => reject(new GatewayHTTPError("REQUEST_TIMEOUT", 408));
+  if (signal?.aborted) abort(); else signal?.addEventListener("abort", abort, { once: true });
+  timer = setTimeout(abort, timeout);
+  const check = () => { if (signal?.aborted || Date.now() - started >= timeout || Date.now() < started) throw new GatewayHTTPError("REQUEST_TIMEOUT", 408); };
   try {
     while (true) {
-      const { value, done } = await Promise.race([reader.read(), deadline]);
-      if (done) break; total += value.byteLength;
-      if (total > maximum) throw new GatewayHTTPError("BODY_TOO_LARGE", 413);
-      chunks.push(value);
+      check(); const { value, done } = await Promise.race([reader.read(), cancelled]); if (done) break;
+      if (!(value instanceof Uint8Array) || value.byteLength === 0 || chunks.length >= 128) throw new GatewayHTTPError();
+      total += value.byteLength; if (total > maximum) throw new GatewayHTTPError("BODY_TOO_LARGE", 413);
+      chunks.push(value.slice());
     }
+    check(); if (length !== null && total !== Number(length)) throw new GatewayHTTPError();
     const bytes = new Uint8Array(total); let offset = 0;
     for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
     const body = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     fields(body, [], Object.keys(body ?? {})); return body;
   } catch (error) { throw error instanceof GatewayHTTPError ? error : new GatewayHTTPError(); }
   finally {
-    clearTimeout(timer); void reader.cancel().catch(() => {});
+    clearTimeout(timer); signal?.removeEventListener("abort", abort); void reader.cancel().catch(() => {});
     try { reader.releaseLock(); } catch { /* Input cancellation must not change the public error. */ }
+    for (const chunk of chunks) chunk.fill(0);
   }
 }
 function sessionResponse(value) {
@@ -115,26 +129,57 @@ function deletionResponse(value, status = 200, recovered = false) {
 
 /** Closed native API. serverBudgetHash is supplied by the trusted edge/authority, never taken from JSON. */
 export function createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
-  deletionEnabled = false, community, isCommunityEnabled = () => false, limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000 } = {}) {
+  deletionEnabled = false, community, isCommunityEnabled = () => false, avatarReader, isAvatarReadEnabled = () => false,
+  limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
+  let activeAvatar = 0;
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
       typeof sessionReset?.reset !== "function" ||
       (checkpoint !== undefined && (typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function")) ||
       typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" || typeof isCommunityEnabled !== "function" ||
+      typeof isAvatarReadEnabled !== "function" || !Number.isInteger(avatarTimeoutMilliseconds) || avatarTimeoutMilliseconds < 1 || avatarTimeoutMilliseconds > 12000 ||
       typeof deletionEnabled !== "boolean" || !Number.isInteger(inputTimeoutMilliseconds) || inputTimeoutMilliseconds < 1 || inputTimeoutMilliseconds > 3000 ||
       (deletionEnabled && (typeof deletions?.status !== "function" || typeof deletionCoordinator?.request !== "function" || typeof deletionCoordinator?.recover !== "function"))) throw new Error("Gateway dependencies are unavailable.");
   return async (request, serverBudgetHash) => {
+    let avatarDeadline, avatarClaimed = false;
     try {
       const { path } = inspectGatewayRequest(request);
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
-      const social = path.startsWith("/v1/community/");
+      const avatar = path === avatarReadPath, social = !avatar && path.startsWith("/v1/community/");
+      if (avatar) {
+        if (isAvatarReadEnabled() !== true || typeof avatarReader?.prepare !== "function" || typeof limits.consumeAvatarRead !== "function") return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+        if (activeAvatar >= 4) throw new AvatarReadError("AVATAR_READ_LIMIT");
+        activeAvatar++; avatarClaimed = true;
+        avatarDeadline = avatarHTTPDeadline(request.signal, avatarTimeoutMilliseconds);
+      }
+      const awaited = async action => avatarDeadline ? avatarDeadline.run(action) : action();
+      const checkAvatar = () => {
+        if (!avatar) return;
+        avatarDeadline.check();
+        if (isEnabled() !== true || isAvatarReadEnabled() !== true) throw new GatewayHTTPError("FEATURE_DISABLED", 503);
+      };
       if (social && (isCommunityEnabled() !== true || typeof community?.prepare !== "function")) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
-      const heavy = social || ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover"].includes(path);
-      await limits.consume(serverBudgetHash, { heavy });
-      const body = await objectBody(request, social ? 49152 : heavy ? 16384 : 256, inputTimeoutMilliseconds);
-      // Budget/body limits precede any checkpoint network traffic, including malformed input.
-      await checkpoint?.verify({ signal: request.signal });
+      const heavy = avatar || social || ["/v1/auth/login", "/v1/auth/renew", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover"].includes(path);
+      await awaited(() => limits.consume(serverBudgetHash, { heavy })); checkAvatar();
+      const body = await awaited(() => objectBody(request, avatar ? avatarReadInputLimit : social ? 49152 : heavy ? 16384 : 256, inputTimeoutMilliseconds, avatarDeadline?.signal ?? request.signal));
+      let photo;
+      if (avatar) {
+        checkAvatar(); const selection = avatarReadBody(body), accessToken = bearer(request, 80);
+        if (accessToken.length !== 80 || !uuid.test(accessToken.slice(0, 36)) || !/^\.[A-Za-z0-9_-]{43}$/.test(accessToken.slice(36))) throw new GatewayHTTPError("INVALID_SESSION", 401);
+        const identity = authentication.authorize(accessToken);
+        if (identity && typeof identity.then === "function") { void identity.catch?.(() => {}); throw new GatewayHTTPError("INVALID_SESSION", 401); }
+        if (!identity || typeof identity.accountID !== "string" || !uuid.test(identity.accountID)) throw new GatewayHTTPError("INVALID_SESSION", 401);
+        await awaited(() => limits.consumeAvatarRead(identity.accountID, { variant: selection.variant })); checkAvatar();
+        photo = { ...selection, accessToken, signal: avatarDeadline.signal };
+      }
+      // Budget, bounded body, closed avatar input/session/account limits precede checkpoint IO.
+      await awaited(() => checkpoint?.verify({ signal: avatarDeadline?.signal ?? request.signal })); checkAvatar();
       const dispatch = async () => {
+        if (avatar) {
+          checkAvatar(); const finalize = await avatarReader.prepare(photo); checkAvatar();
+          if (typeof finalize !== "function") throw new Error();
+          return finalize;
+        }
         if (social) {
           const finalize = await community.prepare(path.slice("/v1/community/".length), body, { accessToken: bearer(request, 80), signal: request.signal });
           if (typeof finalize !== "function") throw new Error();
@@ -202,12 +247,23 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
         return deletionResponse(deletions.status({ ...body, statusToken }));
       };
       let response;
-      try { response = await dispatch(); }
-      catch (error) { await checkpoint?.advance({ signal: request.signal }); throw error; }
-      await checkpoint?.advance({ signal: request.signal });
+      try { response = await awaited(dispatch); }
+      catch (error) { checkAvatar(); await awaited(() => checkpoint?.advance({ signal: avatarDeadline?.signal ?? request.signal })); throw error; }
+      await awaited(() => checkpoint?.advance({ signal: avatarDeadline?.signal ?? request.signal })); checkAvatar();
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
       if (social && isCommunityEnabled() !== true) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
-      return typeof response === "function" ? response() : response;
+      const result = typeof response === "function" ? response() : response;
+      if (avatar && !(result instanceof Response)) {
+        void result?.catch?.(() => {}); throw new AvatarReadError("AVATAR_READ_RESPONSE");
+      }
+      return result;
     } catch (error) { return gatewayFailure(error); }
+    finally {
+      avatarDeadline?.close();
+      if (avatarClaimed) {
+        if (request.body && !request.body.locked) void request.body.cancel().catch(() => {});
+        activeAvatar--;
+      }
+    }
   };
 }

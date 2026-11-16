@@ -19,6 +19,9 @@ import { CloudKitPublicRepository } from "./public-record-repository.mjs";
 import { PublicRegistryCheckpoint } from "./public-registry-checkpoint.mjs";
 import { CommunityState } from "./community-state.mjs";
 import { CommunityCoordinator } from "./community-coordinator.mjs";
+import { AvatarPolicyState } from "./avatar-policy-state.mjs";
+import { CloudKitAvatarReader } from "./cloudkit-avatar-reader.mjs";
+import { avatarReadPath, avatarReadInputLimit, avatarDownloadHosts, avatarHTTPDeadline, avatarEdgeResponse, avatarEdgeErrorResponse } from "./gateway-avatar-http.mjs";
 
 export const authorityName = "echoes-auth-authority-development-v1";
 export function activeGatewayConfiguration(env, now = Date.now()) {
@@ -27,6 +30,8 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
       !["0", "1"].includes(env.ACCOUNT_DELETION_ENABLED) ||
       !["0", "1"].includes(env.PUBLIC_RECORDS_ENABLED ?? "0") ||
       !["0", "1"].includes(env.COMMUNITY_ENABLED ?? "0") ||
+      !["0", "1"].includes(env.AVATAR_READ_ENABLED ?? "0") ||
+      env.AVATAR_READ_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       env.COMMUNITY_ENABLED === "1" && env.PUBLIC_RECORDS_ENABLED !== "1" ||
       env.PUBLIC_RECORDS_ENABLED === "1" && env.ACCOUNT_DELETION_ENABLED !== "1" ||
       !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/.test(env.GATEWAY_EXPIRES_AT ?? "")) return null;
@@ -34,7 +39,9 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
   if (!Number.isSafeInteger(deadline) || deadline <= now || deadline > now + 7 * 86400000) return null;
   const canonical = new Date(deadline).toISOString();
   if (env.GATEWAY_EXPIRES_AT !== canonical && env.GATEWAY_EXPIRES_AT !== canonical.replace(".000Z", "Z")) return null;
-  return Object.freeze({ deadline, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
+  let hosts = Object.freeze([]);
+  try { if (env.AVATAR_READ_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON); } catch { return null; }
+  return Object.freeze({ deadline, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
     publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
 }
 function keyMap(json) {
@@ -75,7 +82,11 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: providerFetch });
     const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: providerFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
-    let publicRecords, community, communityState;
+    let publicRecords, community, communityState, avatarReader;
+    const isAvatarReadEnabled = () => {
+      const active = activeGatewayConfiguration(env, clock());
+      return active?.avatarReadEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
+    };
     if (config.publicRecordsEnabled) {
       const registry = new PublicRecordRegistry(storage, { clock });
       const client = new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
@@ -86,6 +97,9 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       if (config.communityEnabled || storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").toArray().length) communityState = new CommunityState(storage, { clock });
       if (config.communityEnabled) community = new CommunityCoordinator({ state: communityState, authentication, repository: publicRecords,
         clock, cursorSecret: env.REQUEST_BUDGET_KEY, phrasesJSON: env.COMMUNITY_BLOCKED_PHRASES_JSON ?? "[]", supportURL: env.COMMUNITY_SUPPORT_URL ?? "" });
+      if (config.avatarReadEnabled) avatarReader = new CloudKitAvatarReader({ authentication, communityState,
+        avatarPolicy: new AvatarPolicyState(storage, { registry, clock }), profileRepository: publicRecords, registry, client, checkpoint,
+        clock, isEnabled: isAvatarReadEnabled, verifiedDownloadHosts: config.avatarDownloadHosts, fetchImplementation: guardedFetch });
     }
     const limits = new GatewayLimits(storage, { clock });
     const deletions = new AccountDeletionState(storage, { clock });
@@ -119,6 +133,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     } } : localProcessor;
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
+      avatarReader, isAvatarReadEnabled,
       community, isCommunityEnabled: () => activeGatewayConfiguration(env, clock())?.communityEnabled === true,
       isEnabled: () => activeGatewayConfiguration(env, clock()) !== null && (checkpoint !== undefined || !hasRegistryCheckpoint(storage)) });
     return Object.freeze({ handle, maintenance, processor, publicRecords });
@@ -143,10 +158,19 @@ export function handleAuthorityRequest(request, { runtime, env, objectID, clock 
 
 /** Thin public edge: only this boundary reads the platform client IP. All accounts use one private authority. */
 export async function forwardGatewayRequest(request, env, { clock = Date.now } = {}) {
+  let avatarDeadline;
   try {
     const { path } = inspectGatewayRequest(request);
     if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
-    if (!activeGatewayConfiguration(env, clock())) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+    const config = activeGatewayConfiguration(env, clock());
+    if (!config) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+    const avatar = path === avatarReadPath;
+    if (avatar && !config.avatarReadEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+    if (avatar) {
+      const length = request.headers.get("Content-Length");
+      if (length !== null && (!/^\d{1,7}$/.test(length) || Number(length) > avatarReadInputLimit)) return gatewayJSON({ error: "BODY_TOO_LARGE" }, 413);
+      avatarDeadline = avatarHTTPDeadline(request.signal, 15000);
+    }
     if (!request.cf || typeof request.cf.colo !== "string" || !/^[A-Z]{3}$/.test(request.cf.colo)) throw new Error();
     const budget = edgeBudgetHash(request.headers.get("CF-Connecting-IP"), env.REQUEST_BUDGET_KEY, clock());
     const headers = new Headers();
@@ -156,9 +180,26 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     headers.set("X-Echoes-Request-Budget", budget);
     const forwarded = new Request("https://echoes-authority.internal" + path, {
       method: request.method, headers, body: request.body, redirect: "manual", duplex: "half",
+      ...(avatar ? { signal: avatarDeadline.signal } : {}),
     });
     const id = env.COMMUNITY_AUTHORITY.idFromName(authorityName);
-    const response = await env.COMMUNITY_AUTHORITY.get(id).fetch(forwarded);
+    const fetchAuthority = () => env.COMMUNITY_AUTHORITY.get(id).fetch(forwarded);
+    const response = avatar ? await avatarDeadline.run(fetchAuthority) : await fetchAuthority();
+    if (avatar) {
+      const active = activeGatewayConfiguration(env, clock());
+      if (!active?.avatarReadEnabled || active.avatarDownloadHosts.join() !== config.avatarDownloadHosts.join()) {
+        void response?.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      }
+      {
+        const result = [200, 204].includes(response?.status)
+          ? await avatarEdgeResponse(response, avatarDeadline) : await avatarEdgeErrorResponse(response, avatarDeadline);
+        const latest = activeGatewayConfiguration(env, clock());
+        if (!latest?.avatarReadEnabled || latest.avatarDownloadHosts.join() !== config.avatarDownloadHosts.join()) {
+          void result.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+        }
+        avatarDeadline.check(); return result;
+      }
+    }
     if (!(response instanceof Response) || ![200, 202, 204, 400, 401, 403, 404, 405, 408, 409, 413, 415, 429, 503].includes(response.status) ||
         (response.status !== 204 && !/^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? ""))) throw new Error();
     const safe = new Headers({ "Cache-Control": "no-store", Pragma: "no-cache", "X-Content-Type-Options": "nosniff" });
@@ -167,4 +208,5 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     if (response.headers.get("Allow") === "POST") safe.set("Allow", "POST");
     return new Response(response.body, { status: response.status, headers: safe });
   } catch (error) { return gatewayFailure(error); }
+  finally { avatarDeadline?.close(); }
 }

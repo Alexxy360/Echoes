@@ -35,6 +35,7 @@ export class AvatarCodecTestAuthority extends DurableObject {
     try {
       if (request.method !== "POST") return new Response(null, { status: 405 });
       if (new URL(request.url).pathname === "/read-proof") return await avatarReadWorkerdProof(request, this.ctx.storage);
+      if (new URL(request.url).pathname === "/http-proof") return await avatarReadWorkerdProof(request, this.ctx.storage, { http: true });
       if (new URL(request.url).pathname === "/policy") return await this.#policyProof();
       // The fixture server is loopback-only; this is not the production binary intake endpoint.
       const bytes = new Uint8Array(await request.arrayBuffer());

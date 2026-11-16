@@ -107,3 +107,8 @@ AvatarPolicyState/AvatarPublicationCoordinator łączą trwałą zgodę i source
 ## Chroniony odczyt (CK-04e.3f)
 
 CloudKitAvatarReader wiąże bieżącą publikację i tagi z polityką odbiorcy, zamkniętym download GET oraz bounded JPEG/SHA. Jednorazowy finalizer zwraca 200 binary z X-Echoes-Avatar-Manifest/no-store albo 204 po świeżej rewalidacji knownSHA256. Nie przekazuje URL/receipts i nie jest generic proxy. Do czterech przygotowanych odpowiedzi na singleton, termin do 8 sekund. Rzeczywisty lokalny workerd/SQL/auth/policy/signatures sprawdził oba warianty i blokadę z modelami providera. 380/380 obu Node. Brak publicznego HTTP, natywnego cache i aktywacji; host musi stosować admission przed prepare i finalizer po ostatnim await. [Kontrakt i granice](../Docs/CHRONIONY_ODCZYT_AVATAROW.md).
+
+
+## Chroniony avatar HTTP (CK-04e.3i.1)
+
+POST `/v1/community/avatar/read` w konkretnym Runtime łączy sesję, trwałe global/IP/account admission i Reader z bezpiecznymi JPEG200/fresh204. Bounded body/deadline/safe headers/edge TypedArray oraz własna ograniczona kopia zamkniętego błędu JSON przed abort; cztery aktywne żądania i jawny enable_request_signal. AVATAR_READ_ENABLED=0 i AVATAR_DOWNLOAD_HOSTS_JSON=[] pozostają domyślne, bez wdrożenia. 406/406 Node22/24 i rzeczywisty lokalny workerd z modelami dostawców. [Kontrakt, limity i otwarte bramki](../Docs/HTTP_AVATAROW_GATEWAY.md).

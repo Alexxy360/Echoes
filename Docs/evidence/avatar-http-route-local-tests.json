@@ -1,0 +1,212 @@
+{
+  "stage": "CK-04e.3i.1",
+  "observedAtUTC": "2026-11-16T20:22:56.103734+00:00",
+  "baselineCommit": "38a62450034369f4cd2fbb94e4a637982abacbce",
+  "checks": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 406,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 406,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newHTTPAndAdmissionTests": 25,
+    "newLocalWorkerdTests": 1,
+    "newTotal": 26,
+    "syntaxMJS": 90,
+    "JSON": [
+      "gateway/package.json",
+      "gateway/package-lock.json",
+      "gateway/wrangler.community.jsonc",
+      "gateway/wrangler.jsonc"
+    ],
+    "SwiftCoreUIProjectDependenciesCIUnchanged": true,
+    "SwiftBuildUIOrSDKRepeated": false,
+    "unchangedDependencyAuditRepeated": false
+  },
+  "implemented": [
+    "separate disabled avatar flag/verified exact host configuration and captured-host drift guard",
+    "concrete singleton CloudKitAvatarReader composition in Runtime with authentication/community/policy/repository/registry/checkpoint",
+    "closed native POST /v1/community/avatar/read with full bearer and <=2048-byte closed selection JSON",
+    "persistent global/IP heavy and authenticated-account/variant admission before checkpoint/provider IO",
+    "four authority active requests including budget/body/prepare/finalizer and request-scoped total deadline/cancellation",
+    "shared body parser bounded nonempty fragments, actual/announced length, fatal UTF8, deadline and proper cancellation cleanup",
+    "synchronous Response finalizer after last authority checkpoint/flag check, reject hidden async/non-Response finalizer",
+    "separate edge binary/204 boundary with safe whitelist, bounded manifest/size/bytes/SHA and fixed TypedArray Content-Length",
+    "bounded closed JSON error copy before upstream abort, retaining readable 401 body after request cleanup",
+    "four shared success/error copy slots per edge instance, total edge deadline, flags checked before and after body copy",
+    "explicit enable_request_signal configured and recognized by pinned local workerd; signal forwarded through request chain"
+  ],
+  "bounds": {
+    "authorityPendingAvatarRequests": 4,
+    "authorityTotalMilliseconds": 12000,
+    "inputMilliseconds": 3000,
+    "inputBytes": 2048,
+    "maximumInputParts": 128,
+    "maximumBinaryParts": 128,
+    "maximumErrorParts": 128,
+    "maximumErrorBytes": 32768,
+    "imageBytes": 256000,
+    "thumbnailBytes": 32000,
+    "manifestHeaderASCIICharacters": 2048,
+    "edgeCopySlotsPerInstance": 4,
+    "edgeTotalMilliseconds": 15000,
+    "allRequestsPerUTCDay": 2000,
+    "heavyRequestsPerUTCDay": 300,
+    "networkRequestsPerMinute": 120,
+    "heavyRequestsPerNetworkMinute": 12,
+    "avatarReadsPerAccountMinute": 12,
+    "fullImagesPerAccountMinute": 4,
+    "cache204Counted": true,
+    "absoluteFreeScaleGuarantee": false
+  },
+  "localWorkerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "flags": [
+      "nodejs_compat",
+      "enable_request_signal"
+    ],
+    "actualComponents": [
+      "native DurableObject SQL/localDisk transactionSync/sync",
+      "AuthenticationState, CommunityState and AvatarPolicyState",
+      "GatewayLimits and request/account SQL admission",
+      "createGatewayRuntime and private authority/edge function chain",
+      "CloudKitPublicClient signatures, repository/registry/checkpoint and reader",
+      "actual loopback HTTP200 Content-Length and bytes, 204 with no body/GET, block404 with no GET"
+    ],
+    "modeledComponents": [
+      "Apple records/files responses",
+      "CF metadata and fixed binding facade inside actual local authority",
+      "synthetic sessions/accounts, ephemeral CloudKit and separate Apple-signin key"
+    ],
+    "independentECDSASignaturesVerified": true,
+    "outboundIPv4IPv6Unix": "deny all; loopback harness only",
+    "newHostedCloudServiceOrPermissions": false,
+    "realCloudflareDisconnectOrCPUOrFreeAcceptance": false
+  },
+  "negativeControl": {
+    "mutation": "remove authenticated account consumeAvatarRead before checkpoint",
+    "test": "per-account avatar limits survive reconstruction and IP rotation, with a separate full-image ceiling",
+    "exitCode": 1,
+    "failedTests": 1,
+    "realSourceRestoredBeforeFullSuites": true
+  },
+  "errorCopyNegativeControl": {
+    "mutation": "replace bounded avatar error copy with original Response passthrough",
+    "test": "edge owns the completed error body before aborting upstream request scope",
+    "exitCode": 1,
+    "failedTests": 1,
+    "observedFailure": "PRIVATE-ABORTED-STREAM",
+    "realSourceRestoredBeforeFullSuites": true
+  },
+  "coverage": [
+    "real handler and concrete runtime/edge JPEG200 and fresh204 both variants",
+    "separate disabled route before budgets/body/provider, activation dependencies/host exactness/drift/expiry",
+    "closed owner/version/variant/coordinate/hash and no supplied URL/accessToken/budget; wrong session/media/encoding/length/stream rejected before checkpoint",
+    "zero/129+ tiny input chunks cannot starve timer; source buffers canceled",
+    "IP-rotating cache hits still consume durable account cap, restart retains counter, full-image and global daily caps before IO",
+    "own approved image without GPS/presence; peer block denies matching cache hash with no asset GET",
+    "feature disable at durable admission and after last checkpoint prevents response; prepared buffer canceled/slot released",
+    "four authority pending input requests; cancellation/absolute deadline free logical slots and close body",
+    "async/non-Response finalizer rejected rather than awaited after guard",
+    "edge strips private headers and rejects browser origin, wrong metadata/MIME/cache/range/encoding/status/length/hash/oversize",
+    "edge no-body204 requirements, zero/129+ binary chunks, cancellation, four copy slots and reuse",
+    "error 401 JSON body remains readable after upstream cleanup; reject private extra fields, unknown code, protocol2, HTML, status202 and oversize",
+    "edge last flag check after buffered body prevents public pixels following disable"
+  ],
+  "resolvedDuringValidation": [
+    "initial existing 28 HTTP tests passed",
+    "first new quota test expected200 on knownSHA hit; corrected assertion to204, no production behavior change",
+    "expanded cancellation test exposed unconsumed body not canceled and parser retaining own timer after total deadline",
+    "shared parser now receives request-scope signal and handler cancels unconsumed body; 48 then51 focused tests pass",
+    "local full runtime/edge workerd passed; explicit request signal flag also recognized and both old/new workerd read proofs passed",
+    "final review found upstream abort could cancel passthrough error stream; bounded owned error JSON added; focused53/53 and negative stream control fails as expected; sources restored; final406/406 on both runtimes and90MJS/4JSON syntax passed"
+  ],
+  "compatibilityConfiguration": {
+    "productionTargetCompatibilityDate": "2026-11-14",
+    "explicitRequestSignal": true,
+    "allActivationFlagsRemainZero": true,
+    "downloadHostsDefaultEmpty": true,
+    "workersDevFalse": true,
+    "deployed": false
+  },
+  "knownLimits": [
+    "limits are conservative controlled-Development ceilings, not validated public scale or provider pricing/CPU/bandwidth capacity",
+    "logical request/slot timeout and abort do not prove physical termination of arbitrary injected IO that ignores signal",
+    "authority authorizes before emission; trusted edge processes already released bytes and does not revoke copies delivered downstream",
+    "range uses client-declared coordinates, not physical GPS attestation",
+    "fixed-length loopback proof does not replace hosted HTTP2/mobile/header/latency/cold-start acceptance",
+    "real client disconnect behavior still requires hosted acceptance even though flag recognized and manual signals/deadlines tested",
+    "asset hosts are deployment-only and must be confirmed from real Apple behavior; [] remains configured",
+    "only one real iCloud account exists; ordinary account roles/A-B/SIWA remain unverified",
+    "profile/feed photo references, uploader/journal/UI/moderator/report/contact/physical retention remain incomplete"
+  ],
+  "notPerformed": [
+    "remote Worker/DO/CloudKit deployment/activation/schema/role/key/secret changes",
+    "actual Apple asset download/host/rule or SIWA and ordinary-account A-B",
+    "hosted Free CPU/duration/SQL/bandwidth/disconnect acceptance",
+    "native/UI changes, device install/SDK or hardware file-protection test",
+    "production/TestFlight publication, new fees or Firebase operations"
+  ],
+  "sourcesVerifiedForImplementation": [
+    {
+      "url": "https://developers.cloudflare.com/workers/runtime-apis/response/",
+      "supports": "Content-Length requires fixed-length body; bounded TypedArray used"
+    },
+    {
+      "url": "https://developers.cloudflare.com/changelog/post/2026-11-02-request-signal-default/",
+      "supports": "disconnect request.signal default is2026-11-17; explicit flag under prior compatibility date"
+    }
+  ],
+  "sourceSHA256": {
+    "gateway/src/gateway-avatar-http.mjs": "0845153285f7fc92d981b8439781872a2758a1978c08dd62ee7be84cfc5c47ba",
+    "gateway/src/gateway-http.mjs": "e1ab0295cb2374ffb38b215a7e824c3332b3a59dd8e5b257a39eef0e6c2510be",
+    "gateway/src/gateway-limits.mjs": "aa2db2da4bde604a918e51119ab6106c0a4b3ec1e81c511e8a3139b85fea569b",
+    "gateway/src/gateway-runtime.mjs": "6e581f267ce7c64416c73f15f029356734e7759188ac770098bf673e23987274",
+    "gateway/wrangler.community.jsonc": "60568725bc475afafbcdbdf2d9f553bb7d04641d9965e283d8051ca56a78b403",
+    "gateway/test/avatar-http.test.mjs": "1772f6802a6895072429b917851f7182cf07da914df4cebab0056b105ca92b11",
+    "gateway/test/avatar-http-workerd.test.mjs": "84dece396b22d8d7cafff3d32b5e0a3159e4d49121d47b9766f771dc949a0b60",
+    "gateway/test/support/avatar-http-fixture.mjs": "1dfe48f794aca269e8ff4f9e7156e40217563131dfa863ee1fedbab1299626cd",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "ca3fd9e50493b5302fd46d0c25d411192a18302a67dba7fb7792b8317d444d2d",
+    "gateway/test/support/avatar-read-workerd-proof.mjs": "975f90653d6ecf1f3abe3e3c5e16aa3dc9d9a9cd7cc926a42bea078f39629083",
+    "gateway/test/support/workerd-image-harness.mjs": "bc5658859d29d918926758c7b17029010168f096e5544e60cd27db2a555f5be4"
+  },
+  "documentationSHA256": {
+    "Docs/HTTP_AVATAROW_GATEWAY.md": "31ab571ad3bac08082a2d34c8599ea77778862cdac7f5fa33bbc1391d844e542",
+    "Docs/CHRONIONY_ODCZYT_AVATAROW.md": "7247363df7b4684313795fb42681517344609b804bcf323a05c8f171a57c2eca",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "853b4ec79faabfe6c61dbbb98c9317dc7cebacaf93365c9f3086a3588ffef9df",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "0cca358702cf314cfe312d443cc0c9715dfdf969db680e8a41488bd206ae8b4b",
+    "Docs/DZIENNIK_ZMIAN.md": "365f82375c7301cd499ece88cfa974724128255c98b5d375fb121db1ed6791a2",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "1f65a5046cb48ea7878816a97cae59842f3495995f68d8120edaf6edaaad16af",
+    "gateway/README.md": "d2258ecfaa8d1595c09a2f5555a0672fe5ca90c24d992a5e687f7665c1f3c53a"
+  },
+  "logSHA256": {
+    "echoes-avatar-http-route-existing-tests.log": "fbc5b2d56ce1ff1e2d9803a7d9ccda840044174f743f89cb902e2c4a4603219c",
+    "echoes-avatar-http-route-first-tests.log": "540b27c467d1f11a20473bd3cdbdce088e86c73a9e70f15dbe1b74a051f98b96",
+    "echoes-avatar-http-route-expanded-tests.log": "605f52bcac1c208fa61d0b84d49c15a152152db8e089e923c42b04f019de2d6e",
+    "echoes-avatar-http-route-expanded-accepted.log": "e853ed9521ab5152f6542320dffcbdcc75cfc3e61d38d07342ae03811bc9109b",
+    "echoes-avatar-http-route-final-focused.log": "5825dc2522be38df74d11cc831c8b30bd620e6fd3a172449d485482aa6c8dfe7",
+    "echoes-avatar-http-route-workerd-first.log": "8179e093d4731c79d574f8b3877acc720e14000ba884584dce53a3c4446442bf",
+    "echoes-avatar-http-route-workerd-signal.log": "8486072365e6dceab4f526cdf70aa67791c8af08a565f808e537d56642e1e1b5",
+    "echoes-avatar-http-route-negative-control.log": "4a823caab0a10841f6509e53bd991f9eeebf09f413a8d3c529f3952b445a8f1c",
+    "echoes-avatar-http-route-node22.log": "920371b10b4d8246123846243ba111c2a8ad1c82cc19d1d6a6981f4beef077cc",
+    "echoes-avatar-http-route-node24.log": "75376f7c9fd973cab5a88dc05849f8dc4414056e220ee4c8ac5c53942864231e",
+    "echoes-avatar-http-route-static.json": "9cdbdb8ce6a87a272bfa41106bcc70b408388a0cecb27de7d38db129d4b6b953",
+    "echoes-avatar-http-route-owned-errors-focused.log": "f3be72a47fdae52432ff9d823a5ec09459f0a24df0bad4ea92902a929217b212",
+    "echoes-avatar-http-route-error-copy-negative.log": "9f370540f2dc0beed468495e8fb0cf5e0e8fcafdb8fd432c0171f7d2abb4a525",
+    "echoes-avatar-http-route-node22-before-error-copy.log": "365b440f2e951d1d2a29a781d66fc82f6ca4736bee8d9c5e36ada3bb764febf6",
+    "echoes-avatar-http-route-node24-before-error-copy.log": "64f9b4dbc6f184c8387474f13d52611e067ad46430bd29ddbda1360ff27466d3"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

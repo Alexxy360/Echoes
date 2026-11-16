@@ -42,7 +42,7 @@ const config :Workerd.Config = (
     (name = "entry.mjs", esModule = embed "entry.mjs"),
     (name = "jpeg_decoder.wasm", wasm = embed "decoder.wasm"),
     (name = "jpeg_encoder.wasm", wasm = embed "encoder.wasm")
-   ], compatibilityDate = "2026-07-30", compatibilityFlags = ["nodejs_compat"],
+   ], compatibilityDate = "2026-07-30", compatibilityFlags = ["nodejs_compat", "enable_request_signal"],
    globalOutbound = "deny", bindings = [(name = "CODEC", durableObjectNamespace = "AvatarCodecTestAuthority")],
    durableObjectNamespaces = [(className = "AvatarCodecTestAuthority", uniqueKey = "echoes-synthetic-codec-test", enableSql = true)],
    durableObjectStorage = (localDisk = "storage")

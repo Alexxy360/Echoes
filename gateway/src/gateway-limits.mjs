@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, createHash } from "node:crypto";
 import { isIP } from "node:net";
 import { base64URLBytes } from "./apple-public-keys.mjs";
 
@@ -69,6 +69,21 @@ export class GatewayLimits {
       if (heavy) {
         const allowed = this.#rows("UPDATE gateway_daily_v1 SET heavy=heavy+1 WHERE day=? AND heavy<300 RETURNING heavy", day);
         if (!allowed.length) return new GatewayLimitError("RATE_LIMITED", Math.max(1, Math.ceil(((day + 1) * 86400000 - now) / 1000)));
+      }
+    });
+    await this.#sync(); if (outcome) throw outcome;
+  }
+  /** The account comes only from synchronous server authentication, never client JSON/IP. */
+  async consumeAvatarRead(accountID, { variant } = {}) {
+    if (typeof accountID !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(accountID) ||
+        !["image", "thumbnail"].includes(variant)) throw new GatewayLimitError();
+    const now = this.#now(), minute = Math.floor(now / 60000) * 60000;
+    const key = createHash("sha256").update("echoes/avatar-read-budget/v1\0" + accountID).digest("hex");
+    const outcome = this.#tx(() => {
+      for (const [kind, ceiling] of variant === "image" ? [["avatar-account", 12], ["avatar-image", 4]] : [["avatar-account", 12]]) {
+        const allowed = this.#rows(`INSERT INTO gateway_windows_v1(kind,key_hash,window_start,count) VALUES (?,?,?,1)
+          ON CONFLICT(kind,key_hash,window_start) DO UPDATE SET count=count+1 WHERE count<? RETURNING count`, kind, key, minute, ceiling);
+        if (!allowed.length) return new GatewayLimitError("RATE_LIMITED", Math.max(1, Math.ceil((minute + 60000 - now) / 1000)));
       }
     });
     await this.#sync(); if (outcome) throw outcome;
