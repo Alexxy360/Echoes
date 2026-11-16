@@ -56,3 +56,8 @@ Aktualizacja CK-04c: [funkcje i zamknięte HTTP](FUNKCJE_SPOLECZNOSCIOWE_GATEWAY
 
 
 Aktualizacja CK-04e.3b: rejestr i dokładny eraser rozpoznają także szósty rodzaj `avatar` / EchoesAvatarV1. Jego niemodyfikowalne wersje mają osobny trwały claim transferu, a erasure czyści assety i metadane transferu w jednej transakcji. Generic write/read nie publikuje tych rekordów; [wewnętrzny transport](UPLOAD_AVATAROW_GATEWAY.md) nie jest jeszcze połączony z runtime/HTTP. Nowy typ/również jego role wymagają odrębnego rzeczywistego odbioru, nie zostały utworzone w Apple. 286/286 Node22/24. Opis wcześniejszych pięciu typów powyżej zachowuje swój historyczny zakres; nie oznacza gotowego przechowywania zdjęć.
+
+
+## CK-04e.3d — metadane avatarów i zaszyfrowane receipts
+
+Rejestr dodaje asset_claims (atomowy ślad obu claimów) oraz hash fileChecksum, krótko używaną zaszyfrowaną kopertę i jej termin. Koperta nie zawiera plaintext w SQL i jest czyszczona przy settled/erasure; limitowane wygasanie nie zwalnia zużytego uploadu. Legacy NULL nie autoryzuje ponownej próby. Generic repo/read nadal nie publikuje avatarów: specjalny CloudKitAvatarRepository sprawdza właściciela, payload, oba uploady i dokładny rekord przed wynikiem staged. [Kontrakt i dowody](REKORD_AVATARA_I_ODZYSKIWANIE.md).

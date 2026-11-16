@@ -11,7 +11,7 @@ npm --prefix gateway ci --ignore-scripts
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska ani nie łączą się z usługami Apple/Cloudflare. Testy HTTP korzystają z 127.0.0.1. Bieżący zestaw: 301 testów lokalnych na Node 22.23.5 oraz 24.22.1, obejmujących auth, sesje, SQLite/checkpoint, usuwanie, funkcje społecznościowe i assety. Test kodeka uruchamia rzeczywisty lokalny workerd z DO/SQLite; to nie jest hosted Free acceptance. Nowe zależności wymagają npm ci z lockfile przed testami.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska ani nie łączą się z usługami Apple/Cloudflare. Testy HTTP korzystają z 127.0.0.1. Bieżący zestaw: 329 testów lokalnych na Node 22.23.5 oraz 24.22.1, obejmujących auth, sesje, SQLite/checkpoint, usuwanie, funkcje społecznościowe i assety. Test kodeka uruchamia rzeczywisty lokalny workerd z DO/SQLite; to nie jest hosted Free acceptance. Nowe zależności wymagają npm ci z lockfile przed testami.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -92,3 +92,8 @@ CloudKitAvatarAssets i claim SQLite dla niemodyfikowalnego `avatar` przygotowuj�
 ## Normalizacja avatarów (CK-04e.3c)
 
 Rzeczywisty Wasm decode/reencode JPEG i miniatury, zamknięty baseline do 512 px/256 000 bajtów, nowe metadane JFIF bez danych źródła, manifesty i uchwyt związane z właścicielem/wersją/request. Statyczny adapter przeznaczony dla CommunityAuthority, bez importu do runtime/HTTP. Nowe 15 testów obejmuje faktyczne workerd/DO/SQLite i powrót po błędach natywnego dekodera; dodatkowy test Swift sprawdza wynik przez ImageIO. Licencje są w [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Benchmark: `node gateway/scripts/benchmark-avatar-normalizer.mjs` (lokalny wall/process CPU, bez dowodu hosted CPU). [Kontrakt i pełne granice](../Docs/SERWEROWA_NORMALIZACJA_AVATAROW.md).
+
+
+## Rekord wersji i recovery (CK-04e.3d)
+
+CloudKitAvatarRepository łączy rzeczywisty uchwyt normalizatora z trwałymi transferami i create-only rekordem. Przed settled sprawdza lookup metadanych i obu assetów. AvatarReceiptVault szyfruje krótkotrwałe receipts osobnym kluczem HKDF/AES-GCM; rejestr przechowuje ciphertext/commitments i atomic claim mask. Jawne recover nie powtarza grantów/uploadów, może odtworzyć create tej samej nazwy albo potwierdzić już istniejący rekord. Stan staged/pending moderation nie publikuje zdjęcia ani nie zmienia profilu. Brak importu do runtime/HTTP lub aktywacji. 329 testów na obu Node, w tym lokalny workerd/DO/SQLite/HKDF/AES-GCM. [Kontrakt, retencja i ograniczenia](../Docs/REKORD_AVATARA_I_ODZYSKIWANIE.md).

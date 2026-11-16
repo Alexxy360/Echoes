@@ -7,10 +7,13 @@ import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
 import { PublicRegistryCheckpoint, checkpointRecordName } from "../../src/public-registry-checkpoint.mjs";
 import { AccountDeletionState } from "../../src/account-deletion-state.mjs";
 import { AccountDeletionCoordinator, AccountDeletionProcessor } from "../../src/account-deletion.mjs";
+import { AvatarReceiptVault } from "../../src/avatar-receipt-vault.mjs";
 import { distanceMeters } from "../../src/community-geo.mjs";
 
 const pair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const pem = pair.privateKey.export({ type: "pkcs8", format: "pem" });
+const receiptKeys = { "synthetic-avatar-v1": randomBytes(32).toString("base64url") };
+export function syntheticAvatarReceiptVault() { return new AvatarReceiptVault({ activeKeyID: "synthetic-avatar-v1", keys: receiptKeys }); }
 export function syntheticPublicKeyConfiguration() {
   return { CLOUDKIT_KEY_ID: "synthetic-public-v1", CLOUDKIT_PRIVATE_KEY: pem };
 }

@@ -5,6 +5,7 @@ import { encodeJpeg, WasmColorType, WasmSamplingFactor } from "jpeg-encoder-wasm
 import { createHash } from "node:crypto";
 import { PublicRecordError, plain, publicUUID, recordIdentity } from "./public-record-schema.mjs";
 import { inspectAvatarJPEG } from "./avatar-jpeg.mjs";
+import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
 
 const prepared = new WeakMap();
 const hash = value => createHash("sha256").update(value).digest("hex");
@@ -37,8 +38,8 @@ export function normalizedAvatarUpload(handle, context, kind) {
 }
 export function normalizedAvatarPayloadHash(handle) {
   const { value } = item(handle, "image");
-  return hash(JSON.stringify({ normalizationVersion: 1, image: normalizedAvatarManifest(handle, "image"),
-    thumbnail: normalizedAvatarManifest(handle, "thumbnail"), requestID: value.requestID }));
+  return avatarDescriptorHash(avatarDescriptor({ image: normalizedAvatarManifest(handle, "image"),
+    thumbnail: normalizedAvatarManifest(handle, "thumbnail"), requestID: value.requestID }, value.accountID));
 }
 function thumbnail(image) {
   const ratio = Math.min(1, 128 / Math.max(image.width, image.height));

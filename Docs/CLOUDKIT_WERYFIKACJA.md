@@ -217,3 +217,12 @@ Nowy moduł nie jest importowany przez runtime ani HTTP; lista rzeczywistych hos
 Lokalny workerd 1.20260730.1/compatibilityDate 2026-07-30 wykonał normalizację w DO z rzeczywistym lokalnym SQLite i zablokowanym outbound. Nie jest to hosted Free acceptance. CPU 10 ms dotyczy edge; kodek przeznaczony do istniejącego DO (domyślnie 30 s CPU). Pomiary Maca, ograniczenia pamięci/cancel i poprawione wcześniejsze próby opisuje [kontrakt](SERWEROWA_NORMALIZACJA_AVATAROW.md), [raport/SHA](evidence/avatar-normalizer-local-tests.json) oraz [benchmark](evidence/avatar-normalizer-local-benchmark.json).
 
 Moduł nadal bez importu z runtime/HTTP, hosty uploadu puste, flagi 0. Bez usług/schema/ról/sekretów/kosztów/Production lub ponawiania prywatnego SDK. Nie zmieniano produktu Swift/UI/Core/projektu i nie powtarzano ich buildów/UI. Pozostają receipt/recovery i rekord wersji, moderacja/CAS, produkcyjny bounded intake, chroniony odczyt/cache, retencja oraz realne Free/CloudKit/A-B; pełna migracja nadal trwa.
+
+
+## CK-04e.3d — wersje zdjęć i trwałe odzyskiwanie
+
+329/329 Node22.23.5 i Node24.22.1, 28 nowych (22 rekordu/recovery, 6 vault), końcowe pełne przebiegi po rozszerzeniu migracji i związaniu właściciela także w transporcie assetów. Rzeczywiste lokalne Wasm/SQLite/crypto/checkpoint, model Apple/tożsamości. Utworzenie niezmiennego rekordu wyłącznie create, odczyt i kontrola metadanych/obu assetów przed settled, bez publikacji profilu. Zaszyfrowane receipts AES-GCM/HKDF z ograniczonym terminem i AAD konta/operacji/pliku umożliwiają wznowienie przed create bez reuploadu. Atomic claim mask wykrywa utratę wiersza transferu; legacy pozostaje zużyte i erasable.
+
+Odebrano lokalnie lost ACK, restart, częściowy znany i nieznany upload, expiry, nową generację logowania, współbieżność i oba porządki erasure/create, sync failure oraz rollback. Negatywna kopia bez jednego porównania provider fileChecksum oblewa test. workerd/DO/SQLite dodatkowo wykonał HKDF/AES-GCM i round trip syntetycznej koperty. Syntax 76 MJS. [Kontrakt i granice](REKORD_AVATARA_I_ODZYSKIWANIE.md), [dowody/SHA](evidence/avatar-records-local-tests.json).
+
+Bez aktywacji HTTP/runtime/usługi/schema/ról/sekretów, realnego CKAsset/Free/A-B i zmian Swift/UI/Core/projektu/dependencies. Nie powtarzano iOS/SDK lub audytu niezmienionego lockfile. Rekord ma pending moderation, bez CAS profilu. Nadal potrzebne bounded intake, odczyt/cache, porzucenie nieznanej wersji, alarm retencji, odbiór chmury i pełna integracja produktu.

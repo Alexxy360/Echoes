@@ -14,7 +14,7 @@ test("real workerd Durable Object normalizes the same synthetic bytes as Node an
     const response = await fetch(server.origin, { method: "POST", body: bytes, headers: { Connection: "close" } });
     const value = await response.json();
     assert.equal(response.status, 200, JSON.stringify(value)); assert.equal(response.headers.get("cache-control"), "no-store");
-    assert.deepEqual(value, { image: normalizedAvatarManifest(handle, "image"), thumbnail: normalizedAvatarManifest(handle, "thumbnail"), sqlAvailable: true });
+    assert.deepEqual(value, { image: normalizedAvatarManifest(handle, "image"), thumbnail: normalizedAvatarManifest(handle, "thumbnail"), sqlAvailable: true, receiptCryptoAvailable: true });
     const invalid = await fetch(server.origin, { method: "POST", body: new Uint8Array([255, 216, 255, 217]), headers: { Connection: "close" } });
     assert.equal(invalid.status, 400); assert.deepEqual(await invalid.json(), { error: "PUBLIC_INPUT" });
     const scan = markerOffset(bytes, 0xda), end = scan + 2 + ((bytes[scan + 2] << 8) | bytes[scan + 3]);

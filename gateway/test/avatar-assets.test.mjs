@@ -4,7 +4,7 @@ import { createHash, generateKeyPairSync, randomUUID, verify } from "node:crypto
 import { CloudKitAvatarAssets } from "../src/cloudkit-avatar-assets.mjs";
 import { PublicRecordRegistry } from "../src/public-record-registry.mjs";
 import { normalizePublicInput, recordIdentity } from "../src/public-record-schema.mjs";
-import { publicFixture, publicCode } from "./support/public-record-fixture.mjs";
+import { publicFixture, publicCode, syntheticAvatarReceiptVault } from "./support/public-record-fixture.mjs";
 
 const pair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const pem = pair.privateKey.export({ type: "pkcs8", format: "pem" });
@@ -19,10 +19,10 @@ async function fixture(options = {}) {
   const f = await publicFixture(options), session = await f.session(), versionID = randomUUID(), requestID = randomUUID();
   const context = await f.registry.reserve({ accountID: session.accountID, kind: "avatar", logicalID: versionID,
     requestID, payloadHash: sha("synthetic normalized image + thumbnail metadata") });
-  const calls = [], authorizeMutation = () => { f.state.authorize(session.sessionToken); };
+  const calls = [], authorizeMutation = () => f.state.authorize(session.sessionToken);
   let fetchHook, enabled = true;
   const configuration = { container: "iCloud.mpvEcho.Echo", environment: "development", keyID: "synthetic-asset-key",
-    privateKeyPEM: pem, registry: f.registry, checkpoint: f.checkpoint, isEnabled: () => enabled, clock: f.clock,
+    privateKeyPEM: pem, receiptVault: syntheticAvatarReceiptVault(), registry: f.registry, checkpoint: f.checkpoint, isEnabled: () => enabled, clock: f.clock,
     verifiedUploadHosts: [host], fetchImplementation: async (request, options) => {
       const call = { request, signal: options.signal }; calls.push(call);
       const override = await fetchHook?.(call); if (override) return override;
@@ -127,9 +127,9 @@ test("each immutable version has separate full/thumbnail attempts and rejects re
     const a = await f.registry.claimAvatarTransfer(f.context, { variant: "image", sha256: sha(bytes), byteCount: bytes.length });
     const b = await f.registry.claimAvatarTransfer(f.context, { variant: "thumbnail", sha256: sha(bytes), byteCount: bytes.length });
     assert.notEqual(a.transferID, b.transferID);
-    await f.registry.acknowledgeAvatarTransfer(a, sha("receipt"));
-    await f.registry.acknowledgeAvatarTransfer(a, sha("receipt"));
-    await assert.rejects(() => f.registry.acknowledgeAvatarTransfer(a, sha("other")), publicCode("PUBLIC_CONFLICT"));
+    await f.registry.acknowledgeAvatarTransfer(a, sha("receipt"), sha("checksum"), { envelope: "synthetic-envelope", expiresAt: f.clock() + 120000 });
+    await f.registry.acknowledgeAvatarTransfer(a, sha("receipt"), sha("checksum"), { envelope: "synthetic-envelope", expiresAt: f.clock() + 120000 });
+    await assert.rejects(() => f.registry.acknowledgeAvatarTransfer(a, sha("other"), sha("checksum"), { envelope: "synthetic-envelope", expiresAt: f.clock() + 120000 }), publicCode("PUBLIC_CONFLICT"));
     await assert.rejects(() => f.registry.reserve({ accountID: f.signedIn.accountID, kind: "avatar", logicalID: f.versionID,
       requestID: randomUUID(), payloadHash: sha("changed"), expectedTag: "existing-tag" }), publicCode("PUBLIC_INPUT"));
     assert.throws(() => normalizePublicInput("avatar", { receipt: "client" }, f.clock()), publicCode("PUBLIC_INPUT"));
@@ -226,6 +226,8 @@ test("disabled or already aborted requests do not claim an attempt, including sy
     const controller = new AbortController(); controller.abort();
     await assert.rejects(() => f.client().upload(f.input({ signal: controller.signal })), publicCode("PUBLIC_UNAVAILABLE"));
     await assert.rejects(() => f.client().upload(f.input({ authorizeMutation: () => false })), publicCode("PUBLIC_SCOPE"));
+    await assert.rejects(() => f.client().upload(f.input({ authorizeMutation: () => {} })), publicCode("PUBLIC_SCOPE"));
+    await assert.rejects(() => f.client().upload(f.input({ authorizeMutation: () => ({ accountID: randomUUID() }) })), publicCode("PUBLIC_SCOPE"));
     await assert.rejects(() => f.client().upload(f.input({ authorizeMutation: async () => {} })), publicCode("PUBLIC_SCOPE"));
     f.disable(); await assert.rejects(() => f.client().upload(f.input()), publicCode("PUBLIC_UNAVAILABLE"));
     assert.equal(f.calls.length, 0); assert.equal(f.db.prepare("SELECT COUNT(*) AS n FROM avatar_asset_transfers_v1").get().n, 0);
@@ -244,7 +246,7 @@ test("deletion during grant fences the binary request and removes metadata witho
     assert.equal(f.calls.length, 1);
     const a = f.db.prepare("SELECT * FROM avatar_asset_transfers_v1 WHERE record_name=?").get(f.context.recordName);
     assert.deepEqual({ ...a }, { record_name: f.context.recordName, variant: "image", transfer_id: null, request_id: null, payload_hash: null,
-      generation: null, content_sha256: null, byte_count: null, phase: "erased", receipt_hash: null, started_at: 0 });
+      generation: null, content_sha256: null, byte_count: null, phase: "erased", receipt_hash: null, file_checksum_hash: null, receipt_envelope: null, receipt_expires_at: null, started_at: 0 });
     assert.equal(f.db.prepare("SELECT phase FROM avatar_asset_transfers_v1 WHERE record_name=?").get(b.recordName).phase, "claimed");
     const fence = f.model.records.get(f.context.recordName);
     assert.deepEqual(Object.keys(fence.fields).sort(), ["deletionKey", "erased", "ownerKey", "schemaVersion"]);
@@ -259,7 +261,7 @@ test("acknowledgement after account deletion or tampered transfer context fails 
     assert.throws(() => f.registry.assertAvatarTransferCurrent({ ...lease, variant: "thumbnail" }), publicCode("PUBLIC_SCOPE"));
     assert.throws(() => f.registry.assertAvatarTransferCurrent({ ...lease, transferID: randomUUID() }), publicCode("PUBLIC_SCOPE"));
     const ticket = await f.beginDeletion(f.signedIn); await f.erase(ticket);
-    await assert.rejects(() => f.registry.acknowledgeAvatarTransfer(lease, sha("late")), publicCode("PUBLIC_ERASED"));
+    await assert.rejects(() => f.registry.acknowledgeAvatarTransfer(lease, sha("late"), sha("checksum"), { envelope: "synthetic-envelope", expiresAt: f.clock() + 120000 }), publicCode("PUBLIC_ERASED"));
     assert.equal(f.db.prepare("SELECT phase FROM avatar_asset_transfers_v1").get().phase, "erased");
   } finally { f.close(); }
 });

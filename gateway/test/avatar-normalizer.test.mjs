@@ -131,7 +131,7 @@ test("client-defined settings, IDs or a missing auth source are not part of norm
 });
 
 test("a real normalized handle feeds durable scoped asset upload with the exact server digest and bytes", async () => {
-  const { publicFixture, syntheticPublicKeyConfiguration } = await import("./support/public-record-fixture.mjs");
+  const { publicFixture, syntheticPublicKeyConfiguration, syntheticAvatarReceiptVault } = await import("./support/public-record-fixture.mjs");
   const { CloudKitAvatarAssets } = await import("../src/cloudkit-avatar-assets.mjs");
   const f = await publicFixture();
   try {
@@ -142,7 +142,7 @@ test("a real normalized handle feeds durable scoped asset upload with the exact 
     const part = normalizedAvatarUpload(handle, c, "image"), manifest = normalizedAvatarManifest(handle, "image");
     const key = syntheticPublicKeyConfiguration(); let calls = 0;
     const assets = new CloudKitAvatarAssets({ container: "iCloud.mpvEcho.Echo", environment: "development", keyID: key.CLOUDKIT_KEY_ID,
-      privateKeyPEM: key.CLOUDKIT_PRIVATE_KEY, registry: f.registry, checkpoint: f.checkpoint, clock: f.clock, isEnabled: () => true,
+      privateKeyPEM: key.CLOUDKIT_PRIVATE_KEY, receiptVault: syntheticAvatarReceiptVault(), registry: f.registry, checkpoint: f.checkpoint, clock: f.clock, isEnabled: () => true,
       verifiedUploadHosts: ["synthetic-asset.icloud-content.com"], fetchImplementation: async req => {
         calls++;
         assert.equal(f.db.prepare("SELECT phase FROM avatar_asset_transfers_v1").get().phase, "claimed");

@@ -7,20 +7,23 @@ const schema = [
     record_name TEXT PRIMARY KEY,account_id TEXT NOT NULL,kind TEXT NOT NULL,logical_key TEXT,
     phase TEXT NOT NULL CHECK(phase IN ('pending','settled','erasing','erased')),
     request_id TEXT,payload_hash TEXT,expected_tag TEXT,record_tag TEXT,generation INTEGER NOT NULL,
-    created_at INTEGER NOT NULL,started_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL,started_at INTEGER NOT NULL,asset_claims INTEGER CHECK(asset_claims IS NULL OR asset_claims IN (0,1,2,3)),
     UNIQUE(account_id,kind,logical_key))`,
   `CREATE INDEX IF NOT EXISTS public_record_owner_v1 ON public_records_v1(account_id,phase,record_name)`,
   `CREATE TABLE IF NOT EXISTS avatar_asset_transfers_v1 (
     record_name TEXT NOT NULL,variant TEXT NOT NULL CHECK(variant IN ('image','thumbnail')),
     transfer_id TEXT,request_id TEXT,payload_hash TEXT,generation INTEGER,content_sha256 TEXT,byte_count INTEGER,
-    phase TEXT NOT NULL CHECK(phase IN ('claimed','acknowledged','erased')),receipt_hash TEXT,started_at INTEGER NOT NULL,
+    phase TEXT NOT NULL CHECK(phase IN ('claimed','acknowledged','erased')),receipt_hash TEXT,file_checksum_hash TEXT,
+    receipt_envelope TEXT,receipt_expires_at INTEGER,started_at INTEGER NOT NULL,
     PRIMARY KEY(record_name,variant))`,
   `CREATE TABLE IF NOT EXISTS public_record_counts_v1(scope TEXT PRIMARY KEY,value INTEGER NOT NULL CHECK(value>=0 AND value<=10000))`,
   `CREATE TABLE IF NOT EXISTS public_registry_checkpoint_v1(singleton INTEGER PRIMARY KEY CHECK(singleton=1),
     registry_id TEXT NOT NULL,initial_anchor TEXT NOT NULL,confirmed_value TEXT,confirmed_tag TEXT,
     pending_value TEXT,pending_expected_tag TEXT)`,
 ];
-/** Metadata only, in the SAME private SQLite authority as auth/jobs. No names, text or GPS in SQL. */
+/** Metadata and short-lived encrypted receipts in the SAME private SQLite authority as auth/jobs.
+ * No photo pixels, names, text, GPS or plaintext provider receipts in SQL.
+ */
 export class PublicRecordRegistry {
   #storage; #clock; #registryID;
   constructor(storage, { clock = Date.now } = {}) {
@@ -32,6 +35,17 @@ export class PublicRecordRegistry {
       if (existed && !this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='avatar_asset_transfers_v1'").length &&
           this.#rows("SELECT record_name FROM public_records_v1 WHERE kind='avatar' LIMIT 1").length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       for (const statement of schema) storage.sql.exec(statement);
+      if (!this.#rows("PRAGMA table_info(public_records_v1)").some(row => row.name === "asset_claims")) {
+        // NULL marks legacy avatar attempts: unknown claim history cannot safely authorize new uploads.
+        storage.sql.exec("ALTER TABLE public_records_v1 ADD COLUMN asset_claims INTEGER CHECK(asset_claims IS NULL OR asset_claims IN (0,1,2,3))");
+      }
+      // Existing attempts stay consumed. Legacy acknowledgements cannot prove a file checksum;
+      // they remain erasable, but cannot be attached/recovered by the new repository.
+      const columns = new Set(this.#rows("PRAGMA table_info(avatar_asset_transfers_v1)").map(row => row.name));
+      for (const [name, type] of [["file_checksum_hash", "TEXT"], ["receipt_envelope", "TEXT"], ["receipt_expires_at", "INTEGER"]]) {
+        if (!columns.has(name)) storage.sql.exec(`ALTER TABLE avatar_asset_transfers_v1 ADD COLUMN ${name} ${type}`);
+      }
+      storage.sql.exec("CREATE INDEX IF NOT EXISTS avatar_receipt_expiry_v1 ON avatar_asset_transfers_v1(receipt_expires_at) WHERE receipt_envelope IS NOT NULL");
       if (!this.#rows("SELECT scope FROM public_record_counts_v1 WHERE scope='*'").length) {
         storage.sql.exec("INSERT INTO public_record_counts_v1(scope,value) SELECT '*',COUNT(*) FROM public_records_v1");
         storage.sql.exec("INSERT INTO public_record_counts_v1(scope,value) SELECT account_id,COUNT(*) FROM public_records_v1 GROUP BY account_id");
@@ -50,6 +64,9 @@ export class PublicRecordRegistry {
       if (this.#rows(`SELECT t.record_name FROM avatar_asset_transfers_v1 t
         LEFT JOIN public_records_v1 p ON p.record_name=t.record_name WHERE p.record_name IS NULL OR p.kind!='avatar'
         OR (p.phase='erased')!=(t.phase='erased') LIMIT 1`).length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      if (this.#rows(`SELECT p.record_name FROM public_records_v1 p WHERE p.kind='avatar' AND p.phase!='erased' AND p.asset_claims IS NOT NULL
+        AND (((p.asset_claims & 1)!=0)!=EXISTS(SELECT 1 FROM avatar_asset_transfers_v1 t WHERE t.record_name=p.record_name AND t.variant='image')
+        OR ((p.asset_claims & 2)!=0)!=EXISTS(SELECT 1 FROM avatar_asset_transfers_v1 t WHERE t.record_name=p.record_name AND t.variant='thumbnail')) LIMIT 1`).length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
     });
   }
   #tx(action) {
@@ -166,7 +183,7 @@ export class PublicRecordRegistry {
         this.#storage.sql.exec(`INSERT INTO public_record_counts_v1(scope,value) VALUES(?,1)
           ON CONFLICT(scope) DO UPDATE SET value=value+1`, accountID);
         this.#storage.sql.exec(`INSERT INTO public_records_v1(record_name,account_id,kind,logical_key,phase,request_id,
-          payload_hash,expected_tag,record_tag,generation,created_at,started_at) VALUES(?,?,?,?,'pending',?,?,NULL,NULL,?,?,?)`,
+          payload_hash,expected_tag,record_tag,generation,created_at,started_at,asset_claims) VALUES(?,?,?,?,'pending',?,?,NULL,NULL,?,?,?,0)`,
         identity.recordName, accountID, kind, identity.logicalKey, requestID, payloadHash, generation, now, now);
       }
       return this.#context(this.#row(identity.recordName));
@@ -189,8 +206,12 @@ export class PublicRecordRegistry {
     const result = this.#tx(() => {
       const current = this.#mutation(context);
       if (current.kind !== "avatar" || current.phase !== "pending" || current.expectedTag !== null) throw new PublicRecordError("PUBLIC_SCOPE");
-      if (this.#rows("SELECT phase FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?", current.recordName, variant).length) throw new PublicRecordError("PUBLIC_PENDING");
+      const mask = this.#row(current.recordName).asset_claims, bit = variant === "image" ? 1 : 2;
+      const exists = this.#rows("SELECT phase FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?", current.recordName, variant).length > 0;
+      if (!Number.isInteger(mask) || mask < 0 || mask > 3 || Boolean(mask & bit) !== exists) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      if (exists) throw new PublicRecordError("PUBLIC_PENDING");
       const transferID = randomUUID();
+      this.#storage.sql.exec("UPDATE public_records_v1 SET asset_claims=? WHERE record_name=?", mask | bit, current.recordName);
       this.#storage.sql.exec(`INSERT INTO avatar_asset_transfers_v1(record_name,variant,transfer_id,request_id,
         payload_hash,generation,content_sha256,byte_count,phase,receipt_hash,started_at) VALUES(?,?,?,?,?,?,?,?,'claimed',NULL,?)`,
       current.recordName, variant, transferID, current.requestID, current.payloadHash, current.generation, sha256, byteCount, this.#now());
@@ -209,18 +230,81 @@ export class PublicRecordRegistry {
         !/^[a-f0-9]{64}$/.test(row.content_sha256 ?? "") || !Number.isSafeInteger(row.byte_count) || row.byte_count < 1 ||
         row.byte_count > (lease.variant === "image" ? 256000 : 32000) ||
         !Number.isSafeInteger(row.started_at) || row.started_at < current.createdAt ||
-        (row.phase === "claimed" ? row.receipt_hash !== null : !/^[a-f0-9]{64}$/.test(row.receipt_hash ?? ""))) throw new PublicRecordError("PUBLIC_SCOPE");
+        (row.phase === "claimed" ? row.receipt_hash !== null || row.file_checksum_hash !== null :
+          !/^[a-f0-9]{64}$/.test(row.receipt_hash ?? "") || !/^[a-f0-9]{64}$/.test(row.file_checksum_hash ?? ""))) throw new PublicRecordError("PUBLIC_SCOPE");
     return row;
   }
   assertAvatarTransferCurrent(lease) { this.#tx(() => this.#assetTransfer(lease)); }
-  async acknowledgeAvatarTransfer(lease, receiptHash) {
-    if (typeof receiptHash !== "string" || !/^[a-f0-9]{64}$/.test(receiptHash)) throw new PublicRecordError("PUBLIC_INPUT");
+  async acknowledgeAvatarTransfer(lease, receiptHash, fileChecksumHash, { envelope, expiresAt } = {}) {
+    const now = this.#now();
+    if ([receiptHash, fileChecksumHash].some(value => typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value)) ||
+        typeof envelope !== "string" || envelope.length < 1 || envelope.length > 24000 ||
+        !Number.isSafeInteger(expiresAt) || expiresAt <= now || expiresAt > now + 120000) throw new PublicRecordError("PUBLIC_INPUT");
     this.#tx(() => {
       const row = this.#assetTransfer(lease);
-      if (row.phase === "acknowledged" && row.receipt_hash !== receiptHash) throw new PublicRecordError("PUBLIC_CONFLICT");
-      this.#storage.sql.exec("UPDATE avatar_asset_transfers_v1 SET phase='acknowledged',receipt_hash=? WHERE record_name=? AND variant=?", receiptHash, row.record_name, row.variant);
+      if (row.phase === "acknowledged" && (row.receipt_hash !== receiptHash || row.file_checksum_hash !== fileChecksumHash)) throw new PublicRecordError("PUBLIC_CONFLICT");
+      if (row.phase === "acknowledged") return;
+      this.#storage.sql.exec(`UPDATE avatar_asset_transfers_v1 SET phase='acknowledged',receipt_hash=?,file_checksum_hash=?,
+        receipt_envelope=?,receipt_expires_at=? WHERE record_name=? AND variant=?`, receiptHash, fileChecksumHash, envelope, expiresAt, row.record_name, row.variant);
     });
     await this.#durable(); this.assertAvatarTransferCurrent(lease);
+  }
+  /** Metadata only. Both completed attempts are required; a new login may reconcile the SAME version.
+   * No raw provider receipt/checksum or photo bytes are retained in SQLite.
+   */
+  avatarTransferStatus(context, variant) {
+    return this.#tx(() => {
+      const current = this.#mutation(context);
+      if (current.kind !== "avatar" || current.expectedTag !== null || !["pending", "settled"].includes(current.phase) ||
+          !["image", "thumbnail"].includes(variant)) throw new PublicRecordError("PUBLIC_SCOPE");
+      const row = this.#rows("SELECT * FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?", current.recordName, variant)[0];
+      const mask = this.#row(current.recordName).asset_claims;
+      if (!Number.isInteger(mask) || mask < 0 || mask > 3 || Boolean(mask & (variant === "image" ? 1 : 2)) !== Boolean(row)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      if (!row) return null;
+      if (!["claimed", "acknowledged"].includes(row.phase) || row.request_id !== current.requestID || row.payload_hash !== current.payloadHash ||
+          !publicUUID.test(row.transfer_id ?? "") || !Number.isSafeInteger(row.generation) || row.generation < 0 || row.generation > current.generation ||
+          !Number.isSafeInteger(row.started_at) || row.started_at < current.createdAt || row.started_at > this.#now() ||
+          !/^[a-f0-9]{64}$/.test(row.content_sha256 ?? "") ||
+          !Number.isSafeInteger(row.byte_count) || row.byte_count < 1 || row.byte_count > (variant === "image" ? 256000 : 32000) ||
+          (row.phase === "claimed" ? row.receipt_hash !== null || row.file_checksum_hash !== null || row.receipt_envelope !== null || row.receipt_expires_at !== null :
+            [row.receipt_hash, row.file_checksum_hash].some(value => typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value)))) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      return Object.freeze({ phase: row.phase, sha256: row.content_sha256, byteCount: row.byte_count, fileChecksumHash: row.file_checksum_hash });
+    });
+  }
+  avatarAssetCommitments(context) {
+    const result = {};
+    for (const variant of ["image", "thumbnail"]) {
+      const value = this.avatarTransferStatus(context, variant);
+      if (value?.phase !== "acknowledged") throw new PublicRecordError("PUBLIC_PENDING");
+      result[variant] = value;
+    }
+    return Object.freeze(result);
+  }
+  avatarReceipt(context, variant) {
+    const commitment = this.avatarTransferStatus(context, variant);
+    if (commitment?.phase !== "acknowledged") throw new PublicRecordError("PUBLIC_PENDING");
+    return this.#tx(() => {
+      const current = this.#mutation(context), now = this.#now();
+      if (current.phase !== "pending" || !["image", "thumbnail"].includes(variant)) throw new PublicRecordError("PUBLIC_SCOPE");
+      const row = this.#rows("SELECT * FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?", current.recordName, variant)[0];
+      if (typeof row.receipt_envelope !== "string" || row.receipt_envelope.length < 1 || row.receipt_envelope.length > 24000 ||
+          !Number.isSafeInteger(row.receipt_expires_at) || row.receipt_expires_at <= now || row.started_at > now ||
+          row.receipt_expires_at > row.started_at + 128000) throw new PublicRecordError("PUBLIC_PENDING");
+      return Object.freeze({ lease: Object.freeze({ context: current, variant, transferID: row.transfer_id,
+        sha256: commitment.sha256, byteCount: commitment.byteCount }), envelope: row.receipt_envelope,
+      receiptHash: row.receipt_hash, fileChecksumHash: row.file_checksum_hash, expiresAt: row.receipt_expires_at });
+    });
+  }
+  /** Bounded secret cleanup only; never releases consumed attempts or changes upload identity. */
+  async expireAvatarReceipts(maximumRecords = 100) {
+    if (!Number.isInteger(maximumRecords) || maximumRecords < 1 || maximumRecords > 100) throw new PublicRecordError("PUBLIC_INPUT");
+    const count = this.#tx(() => {
+      const rows = this.#rows(`SELECT record_name,variant FROM avatar_asset_transfers_v1
+        WHERE receipt_envelope IS NOT NULL AND receipt_expires_at<=? ORDER BY receipt_expires_at LIMIT ?`, this.#now(), maximumRecords);
+      for (const row of rows) this.#storage.sql.exec("UPDATE avatar_asset_transfers_v1 SET receipt_envelope=NULL WHERE record_name=? AND variant=?", row.record_name, row.variant);
+      return rows.length;
+    });
+    await this.#durable(); return count;
   }
   /** A settled row is necessary for declassification. Unknown or incomplete content stays hidden. */
   readable(name, kind) {
@@ -272,6 +356,7 @@ export class PublicRecordRegistry {
       const row = this.#mutation(context);
       if (row.phase === "settled" && row.recordTag !== recordTag) throw new PublicRecordError("PUBLIC_CONFLICT");
       this.#storage.sql.exec("UPDATE public_records_v1 SET phase='settled',record_tag=? WHERE record_name=?", recordTag, row.recordName);
+      if (row.kind === "avatar") this.#storage.sql.exec("UPDATE avatar_asset_transfers_v1 SET receipt_envelope=NULL WHERE record_name=?", row.recordName);
     });
     await this.#durable();
     return this.assertMutationCurrent(context);
@@ -310,9 +395,9 @@ export class PublicRecordRegistry {
         if (row.accountID !== context.accountID || row.phase !== "erasing" || !validTag(tag)) throw new PublicRecordError("PUBLIC_SCOPE");
         if (row.kind === "avatar") this.#storage.sql.exec(`UPDATE avatar_asset_transfers_v1 SET phase='erased',
           transfer_id=NULL,request_id=NULL,payload_hash=NULL,generation=NULL,content_sha256=NULL,byte_count=NULL,
-          receipt_hash=NULL,started_at=0 WHERE record_name=?`, name);
+          receipt_hash=NULL,file_checksum_hash=NULL,receipt_envelope=NULL,receipt_expires_at=NULL,started_at=0 WHERE record_name=?`, name);
         this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
-          expected_tag=NULL,generation=0,created_at=0,started_at=0,record_tag=? WHERE record_name=?`, tag, name);
+          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=? WHERE record_name=?`, tag, name);
       }
     });
     await this.#durable();

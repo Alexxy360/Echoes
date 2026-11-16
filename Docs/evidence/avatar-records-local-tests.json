@@ -1,0 +1,182 @@
+{
+  "stage": "CK-04e.3d",
+  "observedAtUTC": "2026-11-16T13:56:36.663555+00:00",
+  "baselineCommit": "b6919274013e477e94643a586ec3c64117814545",
+  "tests": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 329,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 329,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "newTests": {
+      "avatarRecordAndRecovery": 22,
+      "receiptVault": 6,
+      "total": 28
+    },
+    "existingLocalWorkerdTestExtended": true,
+    "syntaxMJS": 76,
+    "staticSourceState": "after final owner-bound asset authorization and complete legacy fixture",
+    "swiftProductAndCoreAndUIUnchanged": true,
+    "swiftAndBuildAndUITestsRepeated": false,
+    "dependenciesAndCIUnchanged": true,
+    "npmAuditRepeated": false,
+    "priorAuditEvidence": "Docs/evidence/avatar-normalizer-local-tests.json"
+  },
+  "implemented": [
+    "closed canonical owner/version/request image+thumbnail descriptor; same normalizationVersion=1 hash contract",
+    "immutable create-only avatar record; exact fetched scalar metadata and both provider asset identities before settled",
+    "mandatory identity-bound synchronous consent/policy callback at repository and asset transport; repeat checks after awaits",
+    "AES-256-GCM random IV envelopes; purpose-specific HKDF-SHA256 derived keys; AAD binds container/environment/owner/record/request/transfer/variant/hash/size/keyID",
+    "receipt and provider-checksum hashes plus bounded encrypted envelope/expiry durably ACKed and checkpointed before create",
+    "explicit recovery reconciles existing records or retries only same-name create with unexpired acknowledged receipts; never reuploads consumed attempts",
+    "same-source stage can resume acknowledged first variant and unstarted second variant",
+    "atomic per-record claim bitmask crosschecks transfer rows and prevents missing metadata being treated as a fresh upload",
+    "settlement clears ciphertext in same SQL transaction; account erasure clears envelope/hash/expiry/claims metadata",
+    "bounded expired-envelope cleanup during stage/recover; no secret-retention alarm activated"
+  ],
+  "recoveryMatrix": {
+    "createCommittedAcknowledgementLost": "exact lookup settles; succeeds even after receipt expiry",
+    "bothUploadsAcknowledgedBeforeCreate": "unexpired envelopes reopen with same root keyring and AAD, create same name without photo bytes",
+    "imageAcknowledgedThumbnailNeverClaimed": "same normalized intent stages only missing first-time thumbnail",
+    "grantOrBinaryUploadOutcomeUnknown": "durable claimed attempt remains consumed; PUBLIC_PENDING, no repeat",
+    "receiptsExpiredParentNotFound": "no create or reupload; future explicit abandon/new-version flow required",
+    "parentSettledButMissingOrChangedTag": "PUBLIC_CONFLICT; no replacement or upload",
+    "newOwnerLoginGeneration": "same account+intent can reconcile prior receipts after current authorization; old session rejected"
+  },
+  "bounds": {
+    "envelopeCharacters": 24000,
+    "canonicalReceiptPlaintextBytes": 16384,
+    "keyringMaximumKeys": 3,
+    "ivBytes": 12,
+    "gcmTagBytes": 16,
+    "receiptUseMilliseconds": 120000,
+    "maxReceiptClaimToExpiryMilliseconds": 128000,
+    "cleanupMaximumRowsPerCall": 100,
+    "photoBytesStoredInSQLite": false,
+    "plaintextReceiptsStoredInSQLite": false
+  },
+  "migration": {
+    "additiveColumns": {
+      "public_records_v1": [
+        "asset_claims"
+      ],
+      "avatar_asset_transfers_v1": [
+        "file_checksum_hash",
+        "receipt_envelope",
+        "receipt_expires_at"
+      ]
+    },
+    "legacyNULLClaimHistory": "does not authorize new upload or recovery, remains erasable",
+    "freshClaim": "bit and transfer row in same transaction",
+    "missingMetadata": "detected on status/claim/reopen, never released for upload",
+    "cloudMigrationPerformed": false
+  },
+  "actualLocalRuntime": {
+    "workerd": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "durableObjectAndLocalDiskSQLite": true,
+    "actualWasmCodecs": true,
+    "actualHKDFAndAESGCM": true,
+    "syntheticEnvelopeStoredReadOpenedAndDeletedInSQLite": true,
+    "outbound": "IPv4/IPv6/Unix denied, loopback socket only",
+    "fullCoordinatorHostedOrAppleAcceptance": false,
+    "newCPUOrQuotaMeasurement": false
+  },
+  "negativeControl": {
+    "change": "remove one provider fileChecksum hash comparison in own temporary copy",
+    "expectedFailure": "Missing expected rejection for mismatched fetched asset identity",
+    "exitCode": 1,
+    "failedTests": 1,
+    "sourceUnchanged": true,
+    "temporaryCopyRemoved": true
+  },
+  "resolvedDuringValidation": [
+    "first targeted 47: 45 passed, two fixture failures: exact erased-row inventory omitted new null columns; independent checkpoint sequencers in concurrent reopen test correctly failed closed",
+    "fixture now includes all erased metadata; concurrent requests use one shared authority checkpoint sequencer; actual one-authority concurrency and in-flight create/recovery pass",
+    "53 targeted passed; initial full 325 passed; then expanded erasure/durability/PITR/claim-mask cases and full 329 passed on both runtimes",
+    "legacy-column scenario expanded and passed alone on both; final owner-bound primitive guard and expanded test assertions included in final complete 329/329 runs",
+    "no source or test edits after final accepted full suites; following edits only documentation/evidence"
+  ],
+  "activation": {
+    "runtimeImport": false,
+    "httpEndpoint": false,
+    "cloudDeployed": false,
+    "flagsRemainZero": true,
+    "realUploadHostsRemainEmpty": true,
+    "newSecretOrKeyOrServiceCreated": false,
+    "ProductionOrFirebaseChanges": false
+  },
+  "notPerformed": [
+    "real Apple grant/upload/asset attachment/lookup/download/retention",
+    "Cloudflare hosted full repository, Free CPU/SQL/duration/cold-start acceptance",
+    "SDK/device/simulator UI/build repetition; all product/Swift/fixture resources unchanged",
+    "schema/role/index changes, ordinary-account A/B or real SIWA/gateway flow",
+    "user photograph processing or user data operations",
+    "pending photo approval, public profile CAS, product HTTP/iOS upload/read/cache integration"
+  ],
+  "knownLimits": [
+    "receipt expiry is application policy, not a promise of provider receipt lifetime",
+    "idle ciphertext cleanup requires future bounded alarm and retention/backup acceptance; no physical deletion guarantee at exactly two minutes",
+    "unknown upload or expired unattached receipts need explicit bounded abandon/new-version UX, not automatic reupload",
+    "no actual cloud secrets used; future host must retain root keyring/old key IDs across restart and rotation",
+    "AEAD zeroing owned byte buffers does not erase every string/copy/backup",
+    "staged means pending moderation and no profile pointer publication",
+    "physical orphan asset collection and actual access roles require Development provider evidence",
+    "single ordinary iCloud account available, A/B unverified"
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-normalizer.mjs": "d170bb211c073ea1f218ba30486bcc6aba105f24310940a3a79a4806c57e1565",
+    "gateway/src/cloudkit-avatar-assets.mjs": "00fdd587c2f149f0e7f338df5ffc56cd0e66c795af7cb23157472fd63ab62469",
+    "gateway/src/public-record-registry.mjs": "5c3bb4159cc9be4ef4fa537ac2f6ac4fd1e67d184c3b731f6698c10f9b3bf899",
+    "gateway/src/avatar-record-schema.mjs": "c79b2cbe3f78cd9c65d7c518f43f16ffdc7246fe6c03a944f45635a4c4462d54",
+    "gateway/src/avatar-receipt-vault.mjs": "e1f7aa14f1159247d27202c875334c1f4753ee98df3299bc8c022d2af51510a8",
+    "gateway/src/cloudkit-avatar-repository.mjs": "cc182b0ff48c76371a7041c56c385d1eb43d68517083a72c9abfa9efc73c6ec9",
+    "gateway/test/avatar-assets.test.mjs": "d13eaa4c1dc69204f84887cd5fcea46bc37b2218895fef08673ffa4e58f6380a",
+    "gateway/test/avatar-normalizer.test.mjs": "d863457b34dec39d4ff28e8c5d38a0788a13b7a4609a6c8a65c2249598bda8b9",
+    "gateway/test/avatar-workerd.test.mjs": "6e422b46f7bb3291c6644795b6453c2fbc5f29d5ddb3257362f95f44bcd93d35",
+    "gateway/test/avatar-records.test.mjs": "539a2ebcdb50f0626d9d64ee4afab5b95afe71fa2e6d94dbeab004395f59040f",
+    "gateway/test/avatar-receipt-vault.test.mjs": "bcf4b1352dde994163223137a9e58e3147d75f38437370d7be2394ff5277787a",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "458f4874c552330d0bf63a26c819543f5da83961cd4fb244706c6b5a1b8d3ad6",
+    "gateway/test/support/public-record-fixture.mjs": "05df2df5e09698ee2ae21f1d9aeed26bb1e2c45838b8abf9be04748501bff352",
+    "gateway/test/support/avatar-record-fixture.mjs": "cdc4136f181f4b0d65e65a8a31f28564a310b00dfd443913ae76b1aa885f7d24"
+  },
+  "documentationSHA256": {
+    "Docs/REKORD_AVATARA_I_ODZYSKIWANIE.md": "1cb83c1c6fab703b49483e4aa22f7d15186f530d6f1364553172d0ffebf6bab6",
+    "Docs/DZIENNIK_ZMIAN.md": "bf17519c0ce16d3d57a0cdb55abe06bc32e0388655dfe33e5c297be1572c2c95",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "50b9412a2542d4319b1ae75550cdb45170390f522294a7ae2a3db55d67ddaf6a",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "464b93fca6d900818ba76c270e06ea761ecba305e008170335429c3fd43e49d3",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "ab11651b525c23f14d886b4227c67f37557fa2ad75d5588acea18b689edbf996",
+    "Docs/UPLOAD_AVATAROW_GATEWAY.md": "e418346af577a449077b204fa144f357ff289ad349a2a0e043f5550b7cbdd71a",
+    "Docs/SERWEROWY_ADAPTER_DANYCH.md": "fa090238fa13f8e7e7492fc3163ea033e753490042f327ea730e9e738d30c31d",
+    "gateway/README.md": "f63c0c421a4ec4b7541045eec4de3287bcbfa741a1eb2ee241a69cda183c9236"
+  },
+  "logSHA256": {
+    "echoes-avatar-records-first.log": "ad0f37cc78628b3171904885ffbf29420fc507b4983fd3e634355e608b3b6ca6",
+    "echoes-avatar-records-second.log": "3eab30a6fb8cb051226247c5e4108ea12cbd567fdbb8c5da415b9014de5e9378",
+    "echoes-avatar-records-targeted-final.log": "c84b7b9cca89f9daf5bca67dbe07896fb05cec2d08c1d77cb093ac41e7be51a6",
+    "echoes-avatar-records-node22-initial-full.log": "ea08d2855aed2a4ef50e8ed867e75de97b666032f86cf3a5bf78472a6291dade",
+    "echoes-avatar-records-node22-final.log": "0b91c7c13f8b808301dfdb694a3a66dcb291968a09367b0194514212a1c6d820",
+    "echoes-avatar-records-node24-final.log": "73006431258510d4cd22837bfb8f1435722f8824cda5825d3e5cdaa84d902aa2",
+    "echoes-avatar-records-legacy-node22.log": "2b701d1030b351ba7cb28ffd9bde7eaf9adb52dce1fc0f01abe8501cc8000e7b",
+    "echoes-avatar-records-legacy-node24.log": "518a307c1e86540e887640551fec400c68915002df115a167cf86f74a3200803",
+    "echoes-avatar-records-node22-accepted.log": "0961c9df990576762fe1442dad9bb11e919085586490570cc4451c045ad4c485",
+    "echoes-avatar-records-node24-accepted.log": "279256934640084e3c8172da7a1053c84130dfd463b825198fdb470f5009e3f5",
+    "echoes-avatar-records-negative-control.log": "a54ee5846fc3200e4290d6cb2a1c93f22bd3b0986861912f8c5c2a611371049f",
+    "echoes-avatar-records-static-accepted.json": "ae44ad7e4e88d60f0f91d4e1bac7b0e8468686173d4de9382efef167220161fe"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedProjectStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

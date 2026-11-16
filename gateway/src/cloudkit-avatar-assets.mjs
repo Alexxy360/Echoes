@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
 import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
-import { PublicRecordError, plain, publicRecordName, publicRecordTypes } from "./public-record-schema.mjs";
+import { PublicRecordError, plain, publicRecordName, publicRecordTypes, publicUUID } from "./public-record-schema.mjs";
+import { avatarReceipt } from "./avatar-receipt-vault.mjs";
 
 const responseLimit = 16 * 1024;
 const appleDomains = ["icloud-content.com", "icloud.com", "apple-cloudkit.com"];
 const digest = bytes => createHash("sha256").update(bytes).digest("hex");
-const opaque = value => typeof value === "string" && /^[\x21-\x7e]{1,8192}$/.test(value);
 const exact = (value, names) => plain(value) && Object.keys(value).sort().join("|") === [...names].sort().join("|");
 class UploadedAvatarAsset {
   toJSON() { return "<uploaded-avatar-asset>"; }
@@ -17,12 +17,13 @@ class UploadedAvatarAsset {
  * Runtime integration stays disabled until server normalization, moderation and provider acceptance.
  */
 export class CloudKitAvatarAssets {
-  #signer; #fetch; #registry; #checkpoint; #enabled; #clock; #timeout; #hosts; #handles = new WeakMap();
-  constructor({ container, environment, keyID, privateKeyPEM, registry, checkpoint,
+  #signer; #fetch; #registry; #checkpoint; #enabled; #clock; #timeout; #hosts; #vault; #handles = new WeakMap();
+  constructor({ container, environment, keyID, privateKeyPEM, registry, checkpoint, receiptVault,
     verifiedUploadHosts = [], fetchImplementation = fetch, isEnabled, clock = Date.now, timeoutMilliseconds = 8000 } = {}) {
     if (container !== "iCloud.mpvEcho.Echo" || environment !== "development" ||
         typeof registry?.claimAvatarTransfer !== "function" || typeof registry.assertAvatarTransferCurrent !== "function" ||
-        typeof registry.acknowledgeAvatarTransfer !== "function" || typeof checkpoint?.verify !== "function" ||
+        typeof registry.acknowledgeAvatarTransfer !== "function" || typeof registry.avatarReceipt !== "function" ||
+        typeof receiptVault?.seal !== "function" || typeof receiptVault.open !== "function" || typeof checkpoint?.verify !== "function" ||
         typeof checkpoint.advance !== "function" || typeof fetchImplementation !== "function" || typeof isEnabled !== "function" ||
         typeof clock !== "function" || !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000 ||
         !Array.isArray(verifiedUploadHosts) || verifiedUploadHosts.length < 1 || verifiedUploadHosts.length > 8 ||
@@ -33,6 +34,7 @@ export class CloudKitAvatarAssets {
     catch { throw new PublicRecordError(); }
     this.#registry = registry; this.#checkpoint = checkpoint; this.#fetch = fetchImplementation;
     this.#enabled = isEnabled; this.#clock = clock; this.#timeout = timeoutMilliseconds;
+    this.#vault = receiptVault;
     this.#hosts = new Set(verifiedUploadHosts);
   }
   #now() {
@@ -41,10 +43,13 @@ export class CloudKitAvatarAssets {
     if (!Number.isSafeInteger(now) || now < 0) throw new PublicRecordError();
     return now;
   }
-  #check(signal, authorize, lease) {
+  #check(signal, authorize, lease, accountID = lease?.context.accountID) {
     if (signal?.aborted || this.#enabled() !== true) throw new PublicRecordError();
     const result = authorize();
-    if (result === false || result && typeof result.then === "function") {
+    if (signal?.aborted || this.#enabled() !== true) {
+      void result?.catch?.(() => {}); throw new PublicRecordError();
+    }
+    if (typeof accountID !== "string" || !publicUUID.test(accountID) || result?.accountID !== accountID || result && typeof result.then === "function") {
       void result?.catch?.(() => {}); throw new PublicRecordError("PUBLIC_SCOPE");
     }
     if (lease) this.#registry.assertAvatarTransferCurrent(lease);
@@ -90,13 +95,8 @@ export class CloudKitAvatarAssets {
     }
   }
   #receipt(body, size) {
-    if (!exact(body, ["singleFile"]) || !plain(body.singleFile)) throw new PublicRecordError("PUBLIC_RESPONSE");
-    const file = body.singleFile, required = ["fileChecksum", "size", "receipt"], optional = ["referenceChecksum", "wrappingKey"];
-    if (required.some(key => !Object.hasOwn(file, key)) || Object.keys(file).some(key => ![...required, ...optional].includes(key)) ||
-        file.size !== size || !opaque(file.fileChecksum) || !opaque(file.receipt) || optional.some(key =>
-          Object.hasOwn(file, key) && !opaque(file[key]))) throw new PublicRecordError("PUBLIC_RESPONSE");
-    // Canonical inventory; a signed download URL is never part of an upload receipt.
-    return Object.freeze(Object.fromEntries([...required, ...optional].filter(key => Object.hasOwn(file, key)).map(key => [key, file[key]])));
+    if (!exact(body, ["singleFile"])) throw new PublicRecordError("PUBLIC_RESPONSE");
+    return avatarReceipt(body.singleFile, size);
   }
   async upload({ context, variant, bytes, sha256, authorizeMutation, signal } = {}) {
     if (typeof authorizeMutation !== "function" || context?.kind !== "avatar" || context.recordType !== publicRecordTypes.avatar ||
@@ -117,7 +117,7 @@ export class CloudKitAvatarAssets {
     };
     const check = () => {
       transportCheck();
-      this.#check(controller.signal, authorizeMutation, lease);
+      this.#check(controller.signal, authorizeMutation, lease, context.accountID);
       transportCheck();
     };
     try {
@@ -141,7 +141,8 @@ export class CloudKitAvatarAssets {
         check();
         const body = await this.#json(await this.#fetch(upload, { signal: controller.signal }), controller.signal, transportCheck); check();
         const receipt = this.#receipt(body, snapshot.byteLength);
-        await this.#registry.acknowledgeAvatarTransfer(lease, digest(JSON.stringify(receipt))); check();
+        const envelope = this.#vault.seal(receipt, lease), expiresAt = this.#now() + 120000;
+        await this.#registry.acknowledgeAvatarTransfer(lease, digest(JSON.stringify(receipt)), digest(receipt.fileChecksum), { envelope, expiresAt }); check();
         await this.#checkpoint.advance({ signal: controller.signal }); check();
         const handle = Object.freeze(new UploadedAvatarAsset());
         this.#handles.set(handle, { receipt, lease, createdAt: this.#now() });
@@ -150,6 +151,19 @@ export class CloudKitAvatarAssets {
       return await Promise.race([work, cancelled]);
     } catch (error) { throw error instanceof PublicRecordError ? error : new PublicRecordError(); }
     finally { clearTimeout(timer); controller.abort(); signal?.removeEventListener("abort", abort); }
+  }
+  /** Explicit restart recovery only. No grant or upload is repeated, and no caller supplies receipt. */
+  resumedRecordField({ context, variant, authorizeMutation, signal } = {}) {
+    try {
+      if (typeof authorizeMutation !== "function") throw new PublicRecordError("PUBLIC_INPUT");
+      this.#check(signal, authorizeMutation, undefined, context?.accountID);
+      const stored = this.#registry.avatarReceipt(context, variant), receipt = this.#vault.open(stored.envelope, stored.lease);
+      if (digest(JSON.stringify(receipt)) !== stored.receiptHash || digest(receipt.fileChecksum) !== stored.fileChecksumHash) throw new PublicRecordError("PUBLIC_SCOPE");
+      this.#check(signal, authorizeMutation, undefined, context?.accountID);
+      const current = this.#registry.avatarReceipt(context, variant);
+      if (current.envelope !== stored.envelope || current.receiptHash !== stored.receiptHash) throw new PublicRecordError("PUBLIC_SCOPE");
+      return { type: "ASSET", value: { ...receipt } };
+    } catch (error) { throw error instanceof PublicRecordError ? error : new PublicRecordError(); }
   }
   /** Trusted record builder only. No raw handle/receipt may enter an HTTP response or logs. */
   recordField(handle, { context, variant, authorizeMutation, signal } = {}) {
