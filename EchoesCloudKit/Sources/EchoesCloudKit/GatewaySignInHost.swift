@@ -20,7 +20,7 @@ private final class GatewayIdentityObservers: @unchecked Sendable {
 /// Owns the UI authentication boundary. Domain clients must obtain access through this host, so a
 /// background/identity event closes the boundary synchronously, before the session actor is reached.
 @MainActor @Observable
-public final class GatewaySignInHost: GatewayCommunityAuthorizationSource {
+public final class GatewaySignInHost: GatewayAvatarAuthorizationSource {
     public enum Phase: Equatable {
         case suspended, checking, signedOut, signingIn, signingOut, resettingSessions, ready, unavailable
     }

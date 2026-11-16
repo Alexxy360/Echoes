@@ -3,13 +3,15 @@ import EchoesCore
 import Foundation
 
 public enum GatewayAvatarFailure: Error, Equatable, Sendable, LocalizedError {
-    case invalidInput, invalidResponse, notFound, unavailable
+    case invalidInput, invalidResponse, notFound, unavailable, superseded, busy
     case limited(retryAfterSeconds: Int?)
     public var errorDescription: String? {
         switch self {
         case .invalidInput, .invalidResponse, .unavailable:
             "Nie udało się pobrać zdjęcia. Spróbuj ponownie."
         case .notFound: "To zdjęcie nie jest teraz dostępne."
+        case .superseded: "Zdjęcie lub jego dostępność się zmieniły. Odśwież widok."
+        case .busy: "Poczekaj na zakończenie bieżącego pobierania zdjęć."
         case .limited: "Odczekaj chwilę przed ponownym pobraniem zdjęcia."
         }
     }

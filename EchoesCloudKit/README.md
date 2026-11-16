@@ -54,3 +54,8 @@ GatewayAvatarHTTPClient/NativeGatewayAvatarTransport mają osobną granicę bina
 ## Cache odbiorcy (CK-04e.3h.1)
 
 GatewayAvatarCache jest trwałym, bounded magazynem kandydatów per konto/iCloud/native/origin. SHA/ImageIO, atomic IO, local erasure/fence i kontrolowane Runtime przed private ACK. Nie daje uprawnień do offline; sterownik i świeża rewalidacja są kolejnym etapem. 266 testów zaliczonych na Macu i symulatorze, 1 jawnie pominięty test wymagający fizycznego iOS; Debug/Release poprawne. [Granice ochrony i retencji](../Docs/NATYWNY_CACHE_AVATAROW.md).
+
+
+## Natywny sterownik zdjęć (CK-04e.3h.2)
+
+GatewayAvatarClient łączy native/private scope, cache, świeży token/HTTP per load i ImageIO poza UI. Opaque uchwyty, render/await fences, brak offline fallback, bounded pending/piksele i automatyczne wygaśnięcie do 30 s. 303 testy zaliczone + 1 jawny sprzętowy skip na Macu i symulatorze, Debug/Release. Przed serwerową trasą/admission i UI; brak aktywacji. [Kontrakt i wymagania hosta](../Docs/NATYWNY_STEROWNIK_AVATAROW.md).

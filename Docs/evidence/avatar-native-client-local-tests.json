@@ -1,0 +1,197 @@
+{
+  "stage": "CK-04e.3h.2",
+  "observedAtUTC": "2026-11-16T19:14:41.774893+00:00",
+  "baselineCommit": "6ba1d686541cd3ebecbe4f0ffcc0825fa5c111f9",
+  "checks": {
+    "definedTests": 304,
+    "newPassedTests": 37,
+    "macOS": {
+      "passed": 303,
+      "skipped": 1,
+      "failed": 0
+    },
+    "iOSSimulator": {
+      "passed": 303,
+      "skipped": 1,
+      "failed": 0,
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "B3AA0604-82FF-470B-946A-A79E2D2C75F6",
+        "deviceName": "iPhone 17 Pro",
+        "modelName": "iPhone 17 Pro",
+        "osBuildNumber": "23B86",
+        "osVersion": "26.1",
+        "platform": "iOS Simulator"
+      }
+    },
+    "strictSwiftFormat": {
+      "files": 4,
+      "passed": true
+    },
+    "xcresultSummaryVerified": true,
+    "newViewsOrUIFlow": false,
+    "XCTestUIRepeated": false,
+    "gatewayCoreProjectDependenciesCIUnchanged": true,
+    "gatewayCoreFullSuitesOrAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newClientSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "c90a7d7c2747e9157dcbaa1245932e79ace8ef701e3fdfd95b879f20d8155fd0",
+        "Echoes.debug.dylib": "72346ac28dcb41dc672b1c2af68bf3f0ca2e88ccafbe36be6168ae3337cea6da"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newClientSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "a66087a8d0752a5a6a6c0730191a395d229456b1cfd44ddc84bec273599964e3"
+      }
+    }
+  },
+  "implemented": [
+    "explicit origin/Development/activation and mandatory current reference visibility predicate",
+    "GatewayAvatarAuthorizationSource implemented by existing GatewaySignInHost methods without additional native calls",
+    "connect snapshot + current private iCloud scope + exact cache lease; stale connect cannot overlap new acquisition in one client",
+    "fresh native token and server request per load, no caller-provided cache hash or reuse of previous authorization",
+    "cache manifest/reference/variant/bytes and ImageIO verified before knownSHA; full 204 manifest equality required",
+    "fresh download identity/variant/size + ImageIO before optional cache and presentation; invalid cache may miss, lost lease closes context",
+    "native account/revision/private scope, visibility/selection epoch/predicate, activation/cancellation/deadline guards after every await and at render",
+    "opaque redacted handle without bytes/pixels/token, observable render revision, synchronous native/visibility/version invalidation",
+    "late 401 only rejects matching native snapshot and cannot close newer viewer",
+    "four unsettled loads retained after cancellation, one connect acquisition slot, bounded decoded presentations",
+    "monotonic request-start lifetime and actual automatic observable expiry/reschedule; invalid clock cannot create invalid timer",
+    "unknown native/network errors mapped to closed local failure, no raw dependency detail escapes"
+  ],
+  "bounds": {
+    "pendingLoads": 4,
+    "pendingConnectPerClient": 1,
+    "decodedPresentations": 32,
+    "managedCGImageRasterBytes": 8388608,
+    "maximumPresentationSecondsFromRequestStart": 30,
+    "timerAutomaticallyIssuesRPC": false,
+    "diskHitStillRequiresFreshRPC": true,
+    "offlineAuthorization": false,
+    "RSSOrSystemBufferBoundClaim": false
+  },
+  "actualComponents": [
+    "GatewayAvatarClient",
+    "GatewayAvatarHTTPClient with actual server-generated wire fixture",
+    "GatewayAvatarCache and Darwin filesystem",
+    "NativeGatewayAvatarDecoder and ImageIO",
+    "Swift Observation and actual monotonic expiry timer on both platforms",
+    "GatewaySignInHost source conformance compiled in app"
+  ],
+  "modeledComponents": [
+    "native Apple/iCloud identity and gateway token source",
+    "provider/API response and cancellation gates",
+    "in-process HTTP transport for full client bridge; prior stage separately tests actual URLSession",
+    "synthetic JPEG and account/reference data; no real user photographs"
+  ],
+  "coverage": [
+    "fresh 200 then freshly authorized 204 per display, token/RPC counts, no old-handle reuse",
+    "viewer scope switch isolates disk candidate and old handles; iCloud changes checked even with identical gateway snapshot",
+    "204 without candidate/wrong complete manifest and wrong/corrupt 200 rejected",
+    "not-found/network failure clear earlier variants, no offline fallback; session rejected only for matching source",
+    "cache unavailable remains optional; lost read/store lease closes whole context",
+    "expiry from request start, late response cannot renew, total deadline, invalid clock and bounded 32/8MiB decoded memory",
+    "background/visibility/owner/global invalidation and native revision/visibility ABA",
+    "controlled old results after cache read, token read, HTTP, cached/fresh decode and cache write",
+    "old success/401 after new viewer connect cannot populate or clear new viewer",
+    "cancelled tasks ignoring cancel keep four slots until settled; late connect lease is fenced before new connect",
+    "corrupt/foreign cache candidate is not sent as knownSHA256",
+    "actual server wire -> native HTTP -> persistent cache -> detached ImageIO -> guarded handle",
+    "render observation tracks native/background and explicit revision changes",
+    "real 30-second expiry and rescheduled second expiry observed without getter/refresh polling",
+    "caller/native decoder cancellation before dispatch and sanitized native/network NSError"
+  ],
+  "automaticExpiry": {
+    "actualRealClockTest": true,
+    "twoImagesStartedOneSecondApart": true,
+    "observableExpiryWithoutManualRefresh": true,
+    "secondTimerRescheduleObservedMacOS": true,
+    "secondTimerRescheduleObservedSimulator": true,
+    "marker": "ECHOES_AVATAR_CLIENT_EXPIRY_RESCHEDULE=observed"
+  },
+  "negativeControl": {
+    "mutation": "remove private iCloud scope equality from current(context)",
+    "test": "avatarClientPrivateICloudScopeChangeCutsLateBytesEvenWithSameGatewaySnapshot",
+    "exitCode": 1,
+    "failedTests": 1,
+    "issues": 2,
+    "observedFailures": [
+      "late handle unexpectedly returned",
+      "cache unexpectedly written"
+    ],
+    "sourceRestoredBeforeFinalSuites": true,
+    "laterFinalReviewChange": "sanitize unknown native/network errors and add its test; full suites and builds repeated after change"
+  },
+  "skippedGate": {
+    "test": "avatarDiskCachePhysicalFileProtectionIsComplete",
+    "reason": "Requires physical iOS device; Simulator previously returned nil attribute",
+    "physicalProtectionOrLockedDeviceAcceptance": false
+  },
+  "knownLimits": [
+    "client is prepared but not instantiated by runtime/UI; binary HTTP route/admission and avatar version references are not composed",
+    "host must share one foreground client/cache and synchronously invalidate lifecycle/domain/area/blocks/selected-version changes",
+    "current predicate/source are trusted dependencies; a false-to-true visibility transition needs explicit epoch invalidation",
+    "30-second bound is local presentation eligibility, not immediate server-side revocation of already delivered/copied pixels",
+    "consumer must render through current handle resolution and not retain independent CGImage copies after invalidation",
+    "8MiB is sum of managed CGImage raster bytes, not RSS or ImageIO/network/view-copy peak",
+    "cancelled uncooperative dependencies retain bounded slots until they settle; logical deadline alone does not terminate arbitrary hanging dependency",
+    "UI refresh cadence and real hosted RPC/CPU/bandwidth/free capacity still require measurement; no automatic unbounded refresh",
+    "native identity/API models are not actual SIWA/CloudKit/roles/A-B acceptance",
+    "distance uses declared coordinates in server policy; client adds no physical GPS attestation"
+  ],
+  "notPerformed": [
+    "UI renderer/uploader/journal/profile-feed version references or runtime client creation",
+    "public binary HTTP/admission route or cloud activation/deployment",
+    "physical phone install/cache protection/CloudKit SDK operations",
+    "real gateway SIWA/key/roles/hosted Free or ordinary iCloud A-B",
+    "moderator/content inspection/photo reports/contact/physical retention and rest of migration",
+    "new permissions/keys/secrets/services/fees, Production/TestFlight publication or Firebase deletion"
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarClient.swift": "777a03d8a985faec2605092804e6f5cc1e01e90c0694e90c6d76438990c8fb29",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarAPI.swift": "d6aa09377ad34b0e3b532253cf1cf6c8007f283c85cba7281d0fc889a09bbaff",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewaySignInHost.swift": "faec55bbdbd1590726591c4a16f1427d655aeb386fc8bd849bb82402b0d51ebe",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarClientTests.swift": "7523caf09313aeb14d4b66bd73a02801c0b698d1f9394db8995cfb1c96e77fa8"
+  },
+  "documentationSHA256": {
+    "Docs/NATYWNY_STEROWNIK_AVATAROW.md": "73500491925bff24516c00bc68e9237748edc52af2d98e5359f7787d54c7b15e",
+    "Docs/NATYWNY_CACHE_AVATAROW.md": "5c7c0374a6369e959ac967780f5117c298f3c0ff5594aa2ba43337c32b731d9f",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "0cc14330f215eac5134ec72f4b684f7e7d2d21b8c75470eddefecc50d11e04fd",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "2b97577d24fd90eae5344f5dfed04abc7f8496c527f5318a0a35bc66741786a2",
+    "Docs/DZIENNIK_ZMIAN.md": "cc0d33457639741985042338a0b06c7edb6d9350c3804f08b44a646a6e856c9d",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "0920c0bcf68570aa9c1834bac1de347465c8f1225c49c16eb5bb1e61ad25ab12",
+    "EchoesCloudKit/README.md": "5f30e8fd56b3d3783dbc815d36dbe71390ac9dca69bb8dee4c5c9636e1b022d0"
+  },
+  "logSHA256": {
+    "echoes-avatar-client-first-compile.log": "270cfb35a876a06f2587bb444bcb9e155b4d5cc8e9b90f93f72b0a0459f1c7fe",
+    "echoes-avatar-client-first-tests.log": "72a519f2e998aea7864e85194ac05e91ddcb8360efeb201c1356bb39f8496cd9",
+    "echoes-avatar-client-expanded-tests.log": "9921047dd0539059233bda6569d7f23cc373d72acb7197c7a397ee31dee4a262",
+    "echoes-avatar-client-expanded-memory-tests.log": "3a987b66dac10dc0c0ce5015c5ee9cfcfeaec7b10e4debf05e36ef568c114952",
+    "echoes-avatar-client-expanded-final-tests.log": "6fff9f4378ac70eea15e16f701ed68b4703756adce967a1d05ae0517737bd882",
+    "echoes-avatar-client-negative-control.log": "a24346937c24e109859f7e38ff6caae9e0c8d57d27c409fc29e82488d26c22ec",
+    "echoes-avatar-client-sanitized-test.log": "b76616c4804e18f40451f66a8c0a201b941391e782791fb93621488b2779b7a7",
+    "echoes-avatar-client-full-before-error-guard.log": "1dc9b822a6309b90dbf12bffa03a7499bbb47c244cd219cf4c7f7b319b896f41",
+    "echoes-avatar-client-simulator-before-error-guard.log": "90c38365ce6b743eb98fabb1edc92abf8c88ff3361d50f7f44b90e7942544423",
+    "echoes-avatar-client-debug-before-error-guard.log": "35565307c49bcee7624a521eb357a6d39c1bbbbceccae8befdbddbb298b9a4d0",
+    "echoes-avatar-client-release-before-error-guard.log": "2faa0308f7487583822d11c4444dbba3bc8d473f57c5c15758cfda3c4cda6ca0",
+    "echoes-avatar-client-full-accepted.log": "9bbc8a372dd28cf55e1c62d9145f20458a09a0ac69e146772e4b42f26aa6d66c",
+    "echoes-avatar-client-simulator-accepted.log": "22acc00df3986726278c1b664f44cbc4e85e4defc0a8d99951fec75f79dec359",
+    "echoes-avatar-client-debug-accepted.log": "7a51beb7aff2eb559ad02ba6339abb969e6ef3250baab4e947f10a74e7980138",
+    "echoes-avatar-client-release-accepted.log": "7ea2211f0004b0ede93e9eb40fff157fdc959d7cfd8c94c7a73a6ec282d8185e",
+    "echoes-avatar-client-simulator-summary.json": "90ac0d7150a5e1ea06a9f8fa525d0a05f038f339b679a7abef8d9563ffa682f3"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

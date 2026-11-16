@@ -27,3 +27,6 @@ Nowa aktywacja zastępuje lease. Fence starego lease nie zamyka nowszego; fence 
 `GatewayDevelopmentRuntime` ma jedną instancję cache. Jego kontrolowany proces usuwania zamyka pasujący binding i czyści cache przed zapisem localDataDeleted i private ACK. Test rzeczywistego GatewayDeletionController z realnym lokalnym cache potwierdza: nieznany plik daje 0 ACK, nie ustawia checkpointu lokalnego i odcina późny zapis; po usunięciu przeszkody scoped retry kończy proces bez powtórzenia prywatnego cleanera. To dowód lokalnego przepływu z modelami API/CloudKit, nie zdalnego usunięcia danych.
 
 Wyniki, hashe i ograniczenia: [dowody](evidence/avatar-native-cache-local-tests.json). Dalej CK-04e.3h.2 — sterownik i uchwyty prezentacji, pełna świeża rewalidacja i native/visibility/version fences. Następnie serwerowy admission/HTTP, upload/journal/UI, operator/zgłoszenia/retencja oraz rzeczywiste Development/Free/A-B i przygotowanie TestFlight. Zwykła ścieżka nadal Firebase, aktywacje wyłączone; brak nowych usług, kluczy, opłat i zmian Production.
+
+
+CK-04e.3h.2 uzupełnia [natywny sterownik](NATYWNY_STEROWNIK_AVATAROW.md): świeży token/HTTP i ImageIO per load, całe 204, uchwyty z render/native/visibility/version fences oraz bounded expiry/pamięć. Nadal przed UI, trasy/admission serwera i rzeczywistym odbiorem.
