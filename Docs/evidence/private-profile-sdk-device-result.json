@@ -1,0 +1,16 @@
+{
+  "accountAvailable" : true,
+  "changeTagsPresent" : true,
+  "cleanedZoneCount" : 2,
+  "cleanupVerified" : true,
+  "codes" : [
+    14
+  ],
+  "createdAndRestored" : true,
+  "deletionGuardEnforced" : true,
+  "namespacesInitiallyAbsent" : true,
+  "runID" : "b658e6a1-959d-4661-8ef4-bd85358641ab",
+  "sameICloudNamespacesIsolated" : true,
+  "staleWriteRejectedByServer" : true,
+  "startedAt" : "2026-11-16T11:56:30Z"
+}

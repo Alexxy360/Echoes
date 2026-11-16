@@ -1,0 +1,136 @@
+{
+  "stage": "CK-04e.2b actual private CloudKit SDK acceptance for synthetic profile",
+  "observedAtUTC": "2026-11-16T12:04:26.286664+00:00",
+  "baselineCommit": "429826b64247fbc0e0727f8a02982f03b34a15ea",
+  "authorization": {
+    "userApproved": true,
+    "maximumAttempts": 3,
+    "maximumCommonWindowSeconds": 1800,
+    "notBeforeUTC": "2026-11-16T11:53:20Z",
+    "expiresAtUTC": "2026-11-16T12:23:20Z",
+    "attemptsUsed": 1,
+    "seriesClosedEarly": true,
+    "runID": "b658e6a1-959d-4661-8ef4-bd85358641ab",
+    "accountNamespaces": [
+      "bc120294-655a-4148-88cc-c0f304739070",
+      "b6f773c8-b5ba-424d-9be0-6bfccc3ec2a8"
+    ]
+  },
+  "target": {
+    "model": "iPhone 15 Pro",
+    "productType": "iPhone16,1",
+    "iOS": "26.7.1",
+    "bundleID": "mpvEcho.Echo",
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "Development",
+    "database": "private",
+    "existingProvisioningProfile": true,
+    "newProfileOrKey": false,
+    "codesignAndEmbeddedProfilePreflight": "passed"
+  },
+  "result": {
+    "file": "Docs/evidence/private-profile-sdk-device-result.json",
+    "SHA256": "d53d5f808f6d9e0ec199fe4d62c90ecd47423d6de608bc1f6bf4a8e40c47cffc",
+    "matchesConsole": true,
+    "copiedFromProtectedAppFile": true,
+    "SDKReport": {
+      "namespacesInitiallyAbsent": true,
+      "accountAvailable": true,
+      "createdAndRestored": true,
+      "changeTagsPresent": true,
+      "cleanedZoneCount": 2,
+      "deletionGuardEnforced": true,
+      "cleanupVerified": true,
+      "startedAt": "2026-11-16T11:56:30Z",
+      "runID": "b658e6a1-959d-4661-8ef4-bd85358641ab",
+      "staleWriteRejectedByServer": true,
+      "sameICloudNamespacesIsolated": true,
+      "codes": [
+        14
+      ]
+    }
+  },
+  "interpretation": {
+    "newStoreRestoredFromActualSDK": true,
+    "actualStaleCKRecordRejectedWithServerRecordChanged": true,
+    "actualScopedCleanerAndDeletionGuard": true,
+    "exactTwoTestZonesAbsenceRechecked": true,
+    "twoEchoesUUIDsOneICloudAccount": true,
+    "twoOrdinaryAppleAccountsAccepted": false,
+    "realGatewayAuthorizationAccepted": false,
+    "processRestartPersistenceAccepted": false,
+    "schemaTypesAcceptedBySDK": [
+      "EchoesPrivateProfileV1",
+      "EchoesPrivateScopeV1"
+    ],
+    "schemaConsoleAndACLIndependentlyInspected": false
+  },
+  "deactivation": {
+    "inactiveSignedBuildInstalled": true,
+    "activationAbsent": true,
+    "notLaunched": true,
+    "protectedReportCopiedBeforeReplacement": true,
+    "postReplacementProtectedReportCopy": "failed: remote openat EPERM; retention after replacement not verified",
+    "claimAfterReplacementVerified": false,
+    "binarySHA256": {
+      "Echoes": "73983b6f3cb614aad188333dcc619c4ae7480c315e7ae6525d88e9d16ab4bffa",
+      "Echoes.debug.dylib": "79227dba8091b91be90b635a8645efdf4387aa27bb01e1a4efd02997cc948d10"
+    },
+    "localActiveBuildResourceRemoved": true,
+    "temporaryActivePlanRemoved": true
+  },
+  "localTests": {
+    "runThisStage": false,
+    "reason": "native sources unchanged from accepted local preparation and avatar decoder milestones",
+    "previousCloudKitPassed": 221,
+    "previousProbeUIPassed": 2
+  },
+  "notes": [
+    "first preparation script stopped before build because ignored resource directory did not exist; created directory without changing shared expiry; no SDK attempt consumed",
+    "console capture deliberately interrupted after success report; exit 1 is capture shutdown, not SDK failure",
+    "protected report copied and matched console before inactive replacement; later file copy failed with remote openat EPERM, so retention/marker after replacement is not asserted"
+  ],
+  "notPerformed": [
+    "Production schema/data/publication",
+    "new Cloudflare or credential changes",
+    "GPS, Music or existing profile fields",
+    "other user data, default-zone record deletion, zone enumeration",
+    "second or third diagnostic attempt",
+    "assets/avatars/provider role A/B or Workers CPU/SQL acceptance"
+  ],
+  "remaining": [
+    "second ordinary iCloud account, changed account and real restart/lock/reboot acceptance",
+    "real gateway authorization and accepted deletion ticket/ACK",
+    "CKAsset/server validation/moderation/CAS/retention and controlled reads",
+    "SIWA, separate service identity, role tests, Free resource limits and remaining TestFlight plan"
+  ],
+  "sourceSHA256": {
+    "Echo/Services/PrivateProfileSDKProbe.swift": "45805e81863e5e8ab47c96d72354e4d33da3e029535a01ca8d078ac18e1d3009",
+    "Echo/Views/PrivateProfileSDKProbeView.swift": "8fd257123a3312ade5c6571a71d08c4a78c4644eaa2b975a5ba8c41204ec55d3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileProbePlan.swift": "198d572b0fc4e26e77afcfcb2764fad0d3e97a4700b114f99b82f276df80895a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileProbeClaim.swift": "69a426cbe524ab14c16d9005bb270677dc89dec3113176bd4927d030bdd7abcc",
+    "EchoesCloudKit/Sources/EchoesCloudKit/ScopedPrivateProfileDatabase.swift": "efe6d03ddf9c80edc7370d1e8202fda6871042389f86c73a3259f9b523e4d9f5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateZoneTransport.swift": "62b037c034a5fd3e5ee3fda9dd0dc51e51e841a4bafcdac36687387bde677098",
+    "EchoesCloudKit/Sources/EchoesCloudKit/PrivateProfileStore.swift": "9aa868d7122ea4b78891e617881a31646c6805a9e7cad29aa314d9d35d6a4bf9",
+    "Echo/Echo-Debug.entitlements": "a7e914f22439ebfb75e296413417446d1f74be86fc7da7604093ddfbb86a15fb"
+  },
+  "activeBuildSHA256": {
+    "Echoes": "b903bf3dba13cceb85e06cb254bc1c1df32f32def9c09d3fc2515adb4f68e406",
+    "Echoes.debug.dylib": "d39553b3809fdd4645f336bed4bf86d74f3769b5f0bdcb1608f433470f9b4571"
+  },
+  "configSHA256": "54343bdd1618dbcdf8f139829c0c7e3c6b19ba95d3a317aa94b519ccd7387099",
+  "logSHA256": {
+    "/private/tmp/echoes-private-profile-sdk-attempt-1-build.log": "913a60707a5fb46237d34fdf31983f310e990e5b4ddafd9b90895b48ed3b6c95",
+    "/private/tmp/echoes-private-profile-sdk-attempt-1-console.log": "bee8ab91ab20ff8141f3a9695305fd4ea7f74b40890d1dba71214b7e2ae9d21c",
+    "/private/tmp/echoes-private-profile-sdk-attempt-1-install.log": "aee97ef6e7fe769a3b65535feb0bd25f6d5d095731cd09533bdcedd38bd808df",
+    "/private/tmp/echoes-private-profile-sdk-attempt-1-copy.log": "97e39692b36a1107a0ecfa31b9cbb9a17fd1c8f3d14a8700b54c53fd30b38fab",
+    "/private/tmp/echoes-private-profile-sdk-inactive-build.log": "a418b8e6e4a212099480ea5e685ba05afcc193b7fc3d730a57c18af9ae4d94e2",
+    "/private/tmp/echoes-private-profile-sdk-inactive-install.log": "ad521b39fb64d4833bd59154b8d9e21bead712898245afb569ca54c682e23c25",
+    "/private/tmp/echoes-private-profile-sdk-retained.json.log": "837164452a500a0ae9cc5a60b8e4dc21f0def014a6b2787542ca35da1d8f73e5"
+  },
+  "projectPreservation": {
+    "preExistingDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingCommittedSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

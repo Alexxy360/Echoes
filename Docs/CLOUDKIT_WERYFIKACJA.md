@@ -194,3 +194,10 @@ Przygotowano [konkretny zakres próby](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md): wła
 ## CK-04e.3a — natywna granica renderowania zdjęć
 
 221/221 Swift (9 nowych), strict lint 2 plików, Debug ad-hoc Simulator i Release bez podpisywania. Rzeczywiste kodowanie i dekodowanie ImageIO z lokalnymi JPEG/PNG, wyniki AvatarPreparer, błędne manifesty/wersje/wymiary/hashe i anulowanie. Brak zmiany UI, transportu lub Gateway/Core, więc ich testów nie ponawiano. Pakiety bez aktywacji. Nie pobierano zdjęć przez sieć, nie wykonywano CKAsset/SDK, nie mierzono Free i nie zaliczono ról/A-B. [Kontrakt i wymagania integracji](AVATAR_ODBIOR_PLIKOW_IOS.md), [raport i SHA](evidence/avatar-payload-local-tests.json). Zgłoszona zgoda SDK jest nadal odrębną sprawą; migrowana aplikacja nie jest gotowa do TestFlight.
+
+
+## CK-04e.2b — rzeczywisty prywatny profil/konflikt/cleaner
+
+Zatwierdzony iPhone 15 Pro/iOS26.7.1, Development/private, pierwszy runID `b658e6a1-959d-4661-8ef4-bd85358641ab`, start 11:56:30 UTC. SDK potwierdziło zapis/odtworzenie przez nowy Store, change tag, `serverRecordChanged` (14) przy starej kopii, rozdział dwóch własnych przestrzeni na jednym iCloud, cleaner i guard. Obie nowe strefy usunięte i nieobecność sprawdzona SDK. [Raport pobrany z chronionego pliku](evidence/private-profile-sdk-device-result.json) zgodny z konsolą; [podpisy, SHA, deaktywacja i granice](evidence/private-profile-sdk-device-verification.json). Nie uruchamiano drugiej/trzeciej próby. Po wyniku zainstalowano czysty podpisany pakiet bez aktywacji i nie uruchamiano go. Brak nowych kluczy/profili, usług, kosztów i Production. Źródła natywne niezmienione, lokalnych testów nie ponawiano.
+
+Odczyt pliku po wymianie aplikacji zwrócił EPERM; nie zaliczono retencji/markera po reinstalacji. Nie jest to dowód restartu procesu, A/B zwykłych kont, prawdziwej sesji gateway/biletu/ACK ani CKAsset/Free/ról. Definicje typów zaakceptowane przez SDK, bez osobnego przeglądu konsoli. Pełny cel nadal w toku.

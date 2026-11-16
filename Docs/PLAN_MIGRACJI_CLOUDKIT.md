@@ -89,6 +89,8 @@ Postęp CK-04e.2a: gotowa nieaktywna diagnostyka prawdziwego SDK na telefonie, z
 
 Postęp CK-04e.3a: podczas oczekiwania na zgodę testu telefonu przygotowano natywną walidację zdjęć do przyszłego chronionego odczytu. Zamknięty manifest owner/version/wariant, SHA/rozmiar i ImageIO przed renderowaniem, anulowanie; 221/221 Swift (9 nowych), Debug/Release. Bez połączenia z HTTP/UI i bez operacji usług; upload/rejestr/moderacja/CAS/cache/retencja i Free/A-B pozostają otwarte. [Kontrakt](AVATAR_ODBIOR_PLIKOW_IOS.md), [dowody](evidence/avatar-payload-local-tests.json).
 
+Postęp CK-04e.2b: po konkretnej zgodzie pierwsza rzeczywista próba SDK na iPhonie 15 Pro przeszła: zapis/odtworzenie przez nowy Store, change tag i serwerowy konflikt 14, cleaner/guard oraz potwierdzona nieobecność obu nowych stref po sprzątaniu. Użyto jednego z trzech zakresów we wspólnym oknie, zakończono serię i zainstalowano pakiet bez aktywacji. Raport skopiowany przed wymianą; odczytu po wymianie nie zaliczono (EPERM). Dwa UUID na tym samym iCloud nie zastępują A/B lub prawdziwego gateway i biletu/ACK. [Wynik i granice](PRIVATE_PROFILE_SDK_DIAGNOSTYKA.md), [dowody](evidence/private-profile-sdk-device-verification.json). Następnie dalszy chroniony przepływ zdjęć i pozostały pełny plan.
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |
