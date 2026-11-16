@@ -39,3 +39,8 @@ Pole asset_claims w rekordzie rejestru jest atomowo ustawiane razem z pierwszym 
 Testy obejmują utratę ACK create, restart przed create, częściowy znany upload, nieznany upload, expiry, rotację/cross-purpose, generację konta, równoległe create/recover, niepoprawne metadane/assety, błąd sync bez false ACK, dwa porządki erasure/create oraz spójny rollback SQLite. Kontrola negatywna w własnej kopii /tmp usuwa pojedyncze porównanie provider fileChecksum do trwałego hasha: właściwy test odrzucenia uszkodzonego assetu wtedy rzeczywiście upada. Źródła właściwe niezmienione. [Raport, wcześniejsze poprawki fixture i SHA](evidence/avatar-records-local-tests.json).
 
 Swift, Core, UI, projekt, zależności i CI nie zmieniły się. Ich kompilacji/UI/SDK ani niezmienionego audytu zależności nie powtarzano; wcześniejsze wyniki pozostają historycznymi dowodami. Brak zmian usług/schema/ról/sekretów, danych użytkowników, opłat, Production lub Firebase. Kolejne kroki: zgoda i rzeczywista moderacja/CAS profilu, bounded HTTP intake, chroniony odczyt/cache, porzucanie niepewnych wersji, alarm retencji oraz rzeczywiste Development/Free/A-B i integracja iOS. Pełny cel nie jest ukończony.
+
+
+## Integracja CK-04e.3e
+
+Repozytorium nadal potrzebuje kanonicznego descriptor do recovery. Nowy koordynator zapisuje go w prywatnej SQLite i checkpointuje przed dispatch assetów; aplikacja nie musi znać serwerowych manifestów po utracie pierwszej odpowiedzi. Wznowienie z warstwy produktu przyjmuje tylko requestID i nie przyjmuje receipt lub URL od klienta. Zgoda/CAS/moderacja i wskazanie profilu są opisane w [kolejnym etapie](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md); nie zmienia to ograniczeń nieznanego uploadu, wygasłych receipts i retencji.

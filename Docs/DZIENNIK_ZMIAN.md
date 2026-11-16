@@ -583,3 +583,12 @@ Moduł nadal bez importu z runtime/HTTP, hosty uploadu puste, flagi 0. Bez usłu
 Odebrano lokalnie lost ACK, restart, częściowy znany i nieznany upload, expiry, nową generację logowania, współbieżność i oba porządki erasure/create, sync failure oraz rollback. Negatywna kopia bez jednego porównania provider fileChecksum oblewa test. workerd/DO/SQLite dodatkowo wykonał HKDF/AES-GCM i round trip syntetycznej koperty. Syntax 76 MJS. [Kontrakt i granice](REKORD_AVATARA_I_ODZYSKIWANIE.md), [dowody/SHA](evidence/avatar-records-local-tests.json).
 
 Bez aktywacji HTTP/runtime/usługi/schema/ról/sekretów, realnego CKAsset/Free/A-B i zmian Swift/UI/Core/projektu/dependencies. Nie powtarzano iOS/SDK lub audytu niezmienionego lockfile. Rekord ma pending moderation, bez CAS profilu. Nadal potrzebne bounded intake, odczyt/cache, porzucenie nieznanej wersji, alarm retencji, odbiór chmury i pełna integracja produktu.
+
+
+## CK-04e.3e — zgoda, decyzja moderacji i CAS zdjęcia
+
+353/353 Node22.23.5 i Node24.22.1 (24 nowe), syntax 80 MJS. Rzeczywisty lokalny normalizator/SQLite/crypto/checkpoint, modele Apple/tożsamości/operatora. Zgoda na konkretną wersję przed kodekiem, source hash i trwały serwerowy opis plików przed uploadem; recovery tylko po requestID. Oddzielny proponowany singleton CloudKit EchoesAvatarProfileV1 chroni zdjęcie przed edycją nazwy. CAS generacji, latest intent/CloudKit tag, pending-review, role hook i moderation revision blokują stare ACK oraz approve→reject→approve. Clear ukrywa od razu i zachowuje ukrycie po utracie odpowiedzi.
+
+Testy obejmują zgodę/idempotencję/obce konto, trzy wybory w stałym oknie i 1000 wpisów bez blokowania clear, awarie SQL/sync, mutable source, finalizery, oba porządki clear/RPC, utratę ACK, erasure i rollback. Lokalne workerd/DO/SQLite wykonało nowe schema/transaction/sync/select/clear/erase bez outbound; negatywna kopia bez guard CAS clear oblewa test. Pierwszy błąd wygasłej modelowej sesji poprawiono świeżym logowaniem. [Kontrakt i otwarte bramki](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md), [dowody/SHA](evidence/avatar-publication-local-tests.json).
+
+Bez nowego HTTP/aktywacji/usług/schema/ról/sekretów, realnego CloudKit/Free/A-B, zmian Swift/UI/Core/projektu/zależności i powtarzania ich testów. To mechanika decyzji; panel/operator, rzeczywisty przegląd zdjęć i zgłoszenia pozostają otwarte. Chroniony odczyt/cache, intake, iOS/journal, retencja i rzeczywisty odbiór nadal w pełnym zakresie migracji.

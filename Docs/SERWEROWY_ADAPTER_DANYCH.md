@@ -61,3 +61,8 @@ Aktualizacja CK-04e.3b: rejestr i dokładny eraser rozpoznają także szósty ro
 ## CK-04e.3d — metadane avatarów i zaszyfrowane receipts
 
 Rejestr dodaje asset_claims (atomowy ślad obu claimów) oraz hash fileChecksum, krótko używaną zaszyfrowaną kopertę i jej termin. Koperta nie zawiera plaintext w SQL i jest czyszczona przy settled/erasure; limitowane wygasanie nie zwalnia zużytego uploadu. Legacy NULL nie autoryzuje ponownej próby. Generic repo/read nadal nie publikuje avatarów: specjalny CloudKitAvatarRepository sprawdza właściciela, payload, oba uploady i dokładny rekord przed wynikiem staged. [Kontrakt i dowody](REKORD_AVATARA_I_ODZYSKIWANIE.md).
+
+
+## CK-04e.3e — komponent wskazania zdjęcia
+
+Nowy proponowany EchoesAvatarProfileV1 / kind avatarprofile jest singletonem właściciela, z versionID i generation oraz standardową metryką operacji. Używa writeLatest i rejestru/eraser, pozostając niezależny od tekstowego profilu. Wyłącznie AvatarPublicationCoordinator sprawdza zgodę/approval i najnowszą generację przed oraz po zapisach. Generic HTTP nie wystawia tego kind, a sam odczyt surowego wskazania nie uprawnia do zdjęcia. Nie utworzono typu ani ról w Apple; [kompozycja, bramki i dowody](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md).

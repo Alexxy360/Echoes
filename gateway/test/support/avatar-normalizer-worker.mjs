@@ -4,13 +4,36 @@ import { createWorkerAvatarNormalizer } from "../../src/avatar-codecs-workerd.mj
 import { AvatarReceiptVault } from "../../src/avatar-receipt-vault.mjs";
 import { recordIdentity, digest } from "../../src/public-record-schema.mjs";
 import { randomBytes } from "node:crypto";
+import { CommunityState } from "../../src/community-state.mjs";
+import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
+import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
 
 // Local integration harness only. No gateway secrets, publication, Apple fetch or user identity.
 export class AvatarCodecTestAuthority extends DurableObject {
   #normalizer = createWorkerAvatarNormalizer(() => true);
+  async #policyProof() {
+    const accountID = "64000000-0000-4000-8000-000000000001";
+    const sql = this.ctx.storage.sql;
+    sql.exec("CREATE TABLE IF NOT EXISTS auth_accounts_v1(account_id TEXT PRIMARY KEY,generation INTEGER NOT NULL,disabled INTEGER NOT NULL)");
+    sql.exec("INSERT OR REPLACE INTO auth_accounts_v1 VALUES(?,0,0)", accountID);
+    const social = new CommunityState(this.ctx.storage);
+    const registry = new PublicRecordRegistry(this.ctx.storage);
+    const policy = new AvatarPolicyState(this.ctx.storage, { registry });
+    const selection = await policy.select({ accountID, requestID: "64000000-0000-4000-8000-000000000003",
+      versionID: "64000000-0000-4000-8000-000000000002", expectedGeneration: 0, sourceHash: digest("synthetic-policy-only"), consentVersion: 1 });
+    await policy.clear({ accountID, requestID: "64000000-0000-4000-8000-000000000004", expectedGeneration: 1 });
+    const clearHidden = policy.snapshot(accountID).publishedVersionID === null;
+    sql.exec("UPDATE auth_accounts_v1 SET disabled=1 WHERE account_id=?", accountID);
+    await social.eraseOwner(accountID);
+    const erased = sql.exec("SELECT COUNT(*) AS n FROM avatar_jobs_v1").toArray()[0].n === 0 &&
+      sql.exec("SELECT COUNT(*) AS n FROM avatar_profiles_v1").toArray()[0].n === 0;
+    sql.exec("DELETE FROM auth_accounts_v1 WHERE account_id=?", accountID);
+    return Response.json({ selectedGeneration: selection.generation, clearHidden, erased });
+  }
   async fetch(request) {
     try {
       if (request.method !== "POST") return new Response(null, { status: 405 });
+      if (new URL(request.url).pathname === "/policy") return await this.#policyProof();
       // The fixture server is loopback-only; this is not the production binary intake endpoint.
       const bytes = new Uint8Array(await request.arrayBuffer());
       const result = await this.#normalizer.prepare({ bytes,

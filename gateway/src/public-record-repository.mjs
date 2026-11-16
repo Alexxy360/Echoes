@@ -28,7 +28,7 @@ export class CloudKitPublicRepository {
     return identity;
   }
   writeLatest(value) {
-    if (!["presence", "block"].includes(value?.kind) || typeof value.authorizeMutation !== "function") throw new PublicRecordError("PUBLIC_INPUT");
+    if (!["presence", "block", "avatarprofile"].includes(value?.kind) || typeof value.authorizeMutation !== "function") throw new PublicRecordError("PUBLIC_INPUT");
     return this.#write(value, true);
   }
   write(value) { return this.#write(value, false); }
@@ -123,7 +123,7 @@ export class CloudKitPublicRepository {
     const values = Object.fromEntries(Object.entries(record.fields).map(([key, field]) => [key, field?.value]));
     const inventories = { profile: ["name"], presence: values.active === 0 ? ["active", "generation"] :
       ["name", "latitude", "longitude", "song", "songID", "generation"], message: ["name", "text", "latitude", "longitude"],
-    block: ["targetID", "blocked"], report: ["messageID", "reason"] };
+    block: ["targetID", "blocked"], report: ["messageID", "reason"], avatarprofile: ["versionID", "generation"] };
     // Avatar bytes require their separate authorization/validation path; never generic declassification.
     if (!Object.hasOwn(inventories, context.kind)) throw new PublicRecordError("PUBLIC_INPUT");
     const raw = Object.fromEntries(inventories[context.kind].map(key => [key, values[key]]));

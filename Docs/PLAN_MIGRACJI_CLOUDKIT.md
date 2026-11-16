@@ -97,6 +97,8 @@ Postęp CK-04e.3c: rzeczywisty Wasm decode/reencode JPEG i miniatury, zamknięte
 
 Postęp CK-04e.3d: wewnętrzny rekord wersji assetów, zaszyfrowane krótkotrwałe receipts i jawne recovery bez reuploadu; dokładny lookup przed settled, create-only, atomic claim mask i erasure. 329/329 Node22/24 (28 nowych), syntax 76 MJS, kontrola negatywna i rzeczywisty lokalny workerd/DO/SQLite/HKDF/AES-GCM. Bez aktywacji lub zmian iOS/usług; moderacja/CAS profilu, intake/odczyt/cache/retencja i rzeczywiste Development/Free/A-B nadal otwarte. [Kontrakt](REKORD_AVATARA_I_ODZYSKIWANIE.md), [dowody](evidence/avatar-records-local-tests.json).
 
+Postęp CK-04e.3e: trwała zgoda/source hash i serwerowy opis plików przed uploadem (recovery po requestID), osobny singleton CloudKit wskazania zdjęcia, CAS generacji/latest intent i moderacji, natychmiastowy clear oraz erasure metadanych. 353/353 Node22/24 (24 nowe), syntax 80 MJS; rzeczywiste lokalne workerd/DO/SQLite i negatywna kontrola CAS. Brak HTTP/iOS/aktywacji; operator/UI/oglądanie i zgłaszanie zdjęć, odczyt/cache/intake/retencja i Development/Free/A-B nadal otwarte. [Kontrakt i zmiana kompozycji profilu](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md), [dowody](evidence/avatar-publication-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

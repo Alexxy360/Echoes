@@ -325,7 +325,7 @@ export class PublicRecordRegistry {
   }
   /** Trusted latest-intent slots only. Immutable content and profiles keep strict explicit CAS. */
   async reserveLatest(value) {
-    if (!["presence", "block"].includes(value?.kind)) throw new PublicRecordError("PUBLIC_INPUT");
+    if (!["presence", "block", "avatarprofile"].includes(value?.kind)) throw new PublicRecordError("PUBLIC_INPUT");
     const identity = recordIdentity(value.accountID, value.kind, value.logicalID);
     const old = this.#tx(() => {
       this.#active(value.accountID);

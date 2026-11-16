@@ -1,4 +1,5 @@
 import { CommunityError, communityUUID } from "./community-domain.mjs";
+import { avatarPolicySchema, eraseAvatarPolicy } from "./avatar-policy-state.mjs";
 
 const schema = [
   `CREATE TABLE IF NOT EXISTS community_accounts_v1(account_id TEXT PRIMARY KEY,generation INTEGER NOT NULL DEFAULT 0,
@@ -15,7 +16,7 @@ export class CommunityState {
   constructor(storage, { clock = Date.now } = {}) {
     if (typeof storage?.transactionSync !== "function" || typeof storage?.sync !== "function" || typeof storage?.sql?.exec !== "function") throw new CommunityError();
     this.#storage = storage; this.#clock = clock;
-    this.#tx(() => { for (const sql of schema) storage.sql.exec(sql); });
+    this.#tx(() => { for (const sql of [...schema, ...avatarPolicySchema]) storage.sql.exec(sql); });
   }
   #rows(sql, ...args) { return this.#storage.sql.exec(sql, ...args).toArray(); }
   #tx(action) { try { return this.#storage.transactionSync(action); } catch (error) { throw error instanceof CommunityError ? error : new CommunityError(); } }
@@ -140,6 +141,7 @@ export class CommunityState {
     communityUUID(accountID);
     this.#tx(() => {
       if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=1", accountID).length) throw new CommunityError("COMMUNITY_STALE");
+      eraseAvatarPolicy(this.#storage, accountID);
       this.#storage.sql.exec("DELETE FROM community_intents_v1 WHERE account_id=?", accountID);
       this.#storage.sql.exec("DELETE FROM community_accounts_v1 WHERE account_id=?", accountID);
     }); await this.#durable();

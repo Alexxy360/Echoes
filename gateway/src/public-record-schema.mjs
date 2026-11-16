@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { approximateLocation } from "./community-geo.mjs";
 
 export const publicRecordTypes = Object.freeze({ profile: "EchoesPublicProfileV1", presence: "EchoesPresenceV1",
-  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1", avatar: "EchoesAvatarV1" });
+  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1", avatar: "EchoesAvatarV1", avatarprofile: "EchoesAvatarProfileV1" });
 export const publicUUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-export const publicRecordName = /^community-v1-(profile|presence|message|block|report|avatar)-[a-f0-9]{64}$/;
+export const publicRecordName = /^community-v1-(profile|presence|message|block|report|avatar|avatarprofile)-[a-f0-9]{64}$/;
 const codes = new Set(["PUBLIC_UNAVAILABLE", "PUBLIC_INPUT", "PUBLIC_CONFLICT", "PUBLIC_LIMIT", "PUBLIC_ERASED",
   "PUBLIC_PENDING", "PUBLIC_RESPONSE", "PUBLIC_THROTTLED", "PUBLIC_SCOPE", "PUBLIC_REGISTRY_UNVERIFIED"]);
 export class PublicRecordError extends Error {
@@ -17,7 +17,7 @@ export function ownerKey(accountID) {
   return digest("echoes/public-owner/v1\0" + accountID);
 }
 export function recordIdentity(accountID, kind, logicalID) {
-  if (!Object.hasOwn(publicRecordTypes, kind) || (kind === "profile" || kind === "presence"
+  if (!Object.hasOwn(publicRecordTypes, kind) || (["profile", "presence", "avatarprofile"].includes(kind)
     ? logicalID !== "singleton" : typeof logicalID !== "string" || !publicUUID.test(logicalID))) throw new PublicRecordError("PUBLIC_INPUT");
   return recordIdentityFromKey(accountID, kind, digest("echoes/public-logical/v1\0" + logicalID));
 }
@@ -44,6 +44,11 @@ function coordinate(latitude, longitude) {
 export function normalizePublicInput(kind, value, now) {
   if (!Number.isSafeInteger(now) || now < 0) throw new PublicRecordError();
   switch (kind) {
+  case "avatarprofile":
+    keys(value, ["versionID", "generation"]);
+    if (typeof value.versionID !== "string" || value.versionID !== "" && !publicUUID.test(value.versionID) ||
+        !Number.isSafeInteger(value.generation) || value.generation < 1) throw new PublicRecordError("PUBLIC_INPUT");
+    return { versionID: value.versionID, generation: value.generation };
   case "profile": keys(value, ["name"]); return { name: text(value.name, 40) };
   case "presence": {
     if (value?.active === false) {

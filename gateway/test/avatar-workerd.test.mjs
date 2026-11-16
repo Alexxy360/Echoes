@@ -7,6 +7,10 @@ import { avatarWorker } from "./support/workerd-image-harness.mjs";
 test("real workerd Durable Object normalizes the same synthetic bytes as Node and rejects corrupt input", { timeout: 30000 }, async () => {
   const server = await avatarWorker();
   try {
+    const policy = await fetch(new URL("/policy", server.origin), { method: "POST", headers: { Connection: "close" } });
+    const proof = await policy.json();
+    assert.equal(policy.status, 200, JSON.stringify(proof));
+    assert.deepEqual(proof, { selectedGeneration: 1, clearHidden: true, erased: true });
     const bytes = withAvatarMetadata(await avatarImage({ width: 256, height: 128 }));
     const n = new AvatarNormalizer({ ...await avatarCodecs(), isEnabled: () => true });
     const handle = await n.prepare({ bytes, versionID: "64000000-0000-4000-8000-000000000002",

@@ -1,0 +1,188 @@
+{
+  "stage": "CK-04e.3e",
+  "observedAtUTC": "2026-11-16T14:53:51.702742+00:00",
+  "baselineCommit": "479f603aba63577b2f755de9ba9d9f883011d9b7",
+  "tests": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 353,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 353,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "newPublicationTests": 24,
+    "syntaxMJS": 80,
+    "productSwiftCoreUIAndCIUnchanged": true,
+    "dependenciesUnchanged": true,
+    "iOSBuildsUITestsSDKOrAuditRepeated": false
+  },
+  "implemented": [
+    "owner/session/current-policy-bound consent and source digest durably accepted before normalization and asset dispatch",
+    "canonical server descriptor stored/checkpointed before uploading; product recovery only needs requestID, never client server-manifests or provider receipts",
+    "closed coordinator options, input snapshot before first await, owned buffer zeroed without retaining raw bytes in returned finalizer",
+    "separate proposed CloudKit EchoesAvatarProfileV1 singleton with versionID/generation and standard live metadata, preserving text-profile edits",
+    "optimistic generation CAS plus existing latest-intent CloudKit create/conditional replace, final identity/policy checks after checkpoints",
+    "pending-review state and distinct trusted operator callback, decision ID/revision idempotence, moderation ABA protection; no public role-minting HTTP",
+    "explicit owner publication after current approval, no auto-publish on upload; clear hides before remote pointer write and remains hidden after unknown reply",
+    "bounded selection history/rate; clear exempt from upload quota and does not reset it",
+    "CommunityState same-transaction owner erasure now includes avatar consent/descriptors/review/selection; new record kind uses existing public registry/eraser"
+  ],
+  "bounds": {
+    "inputBytes": 256000,
+    "newSelectionsPerFixedTenMinuteWindow": 3,
+    "maximumVersionHistoryPerAccount": 1000,
+    "clearBlockedByUploadQuotaOrHistory": false,
+    "descriptorJSONStringCharacters": 2048,
+    "generations": "safe nonnegative integer, increasing per owner selection/clear",
+    "newPhotoBytesOrURLsInPolicySQL": false
+  },
+  "schemaProposal": {
+    "cloudKitRecordType": "EchoesAvatarProfileV1",
+    "kind": "avatarprofile",
+    "logicalID": "singleton",
+    "fields": [
+      "versionID",
+      "generation",
+      "schemaVersion",
+      "ownerKey",
+      "erased",
+      "accountID",
+      "mutationKey",
+      "payloadHash",
+      "createdAt",
+      "updatedAt"
+    ],
+    "erasedFenceFields": [
+      "schemaVersion",
+      "ownerKey",
+      "erased",
+      "deletionKey"
+    ],
+    "iOSExistingTextProfileContractChanged": false,
+    "actualCloudSchemaOrRolesCreated": false,
+    "localSQLiteTables": [
+      "avatar_profiles_v1",
+      "avatar_jobs_v1"
+    ]
+  },
+  "localWorkerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "actualLocalDurableObjectSQLite": true,
+    "policyProof": [
+      "construct real CommunityState/PublicRecordRegistry/AvatarPolicyState using DO storage",
+      "SQL transactions and storage.sync select generation 1",
+      "clear generation 2 with hidden projection",
+      "disabled-owner same-transaction erasure and empty policy tables"
+    ],
+    "syntheticOwnAuthRowRemoved": true,
+    "externalNetwork": "IPv4/IPv6/Unix outbound denied; loopback only",
+    "actualHostedOrFullProviderAcceptance": false,
+    "newCPUQuotaOrCostMeasurement": false
+  },
+  "negativeControl": {
+    "mutation": "remove one clear expectedGeneration comparison in own temporary copy",
+    "test": "a stale editor cannot clear a newer generation",
+    "expectedFailure": "Missing expected rejection",
+    "exitCode": 1,
+    "failedTests": 1,
+    "realSourceUnchanged": true,
+    "temporaryCopyRemoved": true
+  },
+  "coverage": [
+    "explicit missing/invalid consent and closed fields",
+    "same operation/source/version idempotence and stale consent CAS",
+    "new selection immediately hides old, late approval/publish rejected",
+    "clear before/after in-flight CloudKit pointer mutation",
+    "approval rejection/reapproval ABA while old publication in flight",
+    "exact decision retry and removed/asynchronous/foreign operator scope",
+    "late operator error redaction in finalizer",
+    "lost staging response recovered with requestID only after object reopen",
+    "lost pointer and clear replies recovered without reupload",
+    "changed source after await, caller buffer not zeroed, no pixels in status",
+    "foreign synthetic account cannot target owner intent",
+    "suspension, auth generation, cancellation and activation invalidate results",
+    "three-selection fixed window and 1000-row real-state boundary, clear still allowed",
+    "SQL consent rollback and uncertain sync without false result",
+    "all policy rows removed on owner erasure, old finalizer rejected",
+    "consistent SQLite rollback rejected by remote checkpoint"
+  ],
+  "resolvedDuringValidation": [
+    "initial 16 tests: 15 passed, rate fixture advanced clock ten minutes beyond synthetic session lifetime; fresh synthetic login corrected the fixture, no weakening of auth",
+    "expanded 24 targeted passed; local actual workerd policy proof passed",
+    "complete final 353/353 passed on Node22 and Node24, all 80 MJS syntax checked",
+    "no source/test changes after accepted full suites; following changes only documentation/evidence"
+  ],
+  "activation": {
+    "coordinatorImportedByGatewayRuntime": false,
+    "publicPhotoHTTPOrNativeUIConnected": false,
+    "operatorHTTPOrUIImplemented": false,
+    "localPolicySchemaImportedByCommunityStateForErasure": true,
+    "newKeySecretServiceOrRole": false,
+    "cloudDeployed": false,
+    "ProductionOrFirebaseChanges": false
+  },
+  "notPerformed": [
+    "real CloudKit AvatarProfile schema/write/read/CAS or ordinary-account A/B",
+    "actual operator login/role separation/content inspection/queue/UI or photo reports",
+    "protected avatar file fetch/cache/renderer integration or proximity/block checks for file download",
+    "bounded binary HTTP intake and native photo consent/journal/UI integration",
+    "Cloudflare hosted limits/CPU/SQL/duration or physical file/orphan retention",
+    "iOS builds/device/simulator UI/SDK or repeated audit of unchanged dependency lockfile",
+    "user photograph processing, live permissions/schema/secret changes, paid plans, Production or Firebase operations"
+  ],
+  "knownLimits": [
+    "coordinator and policy tested locally with explicit provider/identity/operator models; not a finished photo feature",
+    "manual operator hooks are not an operational moderation process; contact and actual inspection/reporting still needed",
+    "publication after approval currently requires owner app contact, no server background auto-publication",
+    "future protected reader must enforce current selection/decision plus viewer blocks/proximity and recheck after network; raw CloudKit pointer is not authorization",
+    "unknown upload, absent server descriptor or expired receipts still require explicit source resend or bounded abandon/new-version UX",
+    "old metadata/unused asset retention and alarm integration still open",
+    "0 extra services budget retained; free hosted capacity unmeasured, controlled limits are not final production scale",
+    "only one real iCloud account available, ordinary-account A/B unverified"
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-policy-state.mjs": "49a0e5303c945126a4e7fe366fa61e1588ed2f8da4bf2c61399350545b591e5b",
+    "gateway/src/avatar-publication-coordinator.mjs": "8b0c4d922253b4eb307a3e42afbfd33903a6b44ceebd1a79a543048ddba5fa9b",
+    "gateway/src/community-state.mjs": "f9ed9bf0b538e0f5b0e5d4a53144a9806c78c6cf7cd3e5c84fdc167ff3c3666e",
+    "gateway/src/public-record-registry.mjs": "b76ac43b1b9a6f206ca98256cec559e682fdf9e3421184e77d4a56e6ddc4f619",
+    "gateway/src/public-record-repository.mjs": "e41b094e7e7fa0633507cc4192a428ff379e57ae5bb8fe3d81c2f84e144f2ab4",
+    "gateway/src/public-record-schema.mjs": "d6795030bf4bf904f8b9c1274de53419f4df1701bcf3d524d3ef2e081828845e",
+    "gateway/test/avatar-publication.test.mjs": "fdd1cc8998922594aa4bc1108cd4972630701a6b782f6e28f80bc97b721552c1",
+    "gateway/test/avatar-workerd.test.mjs": "99cec5efe35526d19354a20347f7135d457aa45af3a220d728897cee6f78738a",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "00370e7bc043132a2bcdc2fc7cefcfe00effd40b3d529aa02e4537e168fd9554",
+    "gateway/test/support/avatar-publication-fixture.mjs": "9469b6dda456b83c6b735ecc3ac30062c7ba2d2785e24ea5e6d0f223f41cade4"
+  },
+  "documentationSHA256": {
+    "Docs/ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md": "9ba69b40bf168908e2d3f176febcab2698b83c64a26f1774ebc4549bf256c353",
+    "Docs/DZIENNIK_ZMIAN.md": "f874eefb2c258e583e3524340d67097b28d80fafb5782740563655fb340ab8ca",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "63754729dddda9c604629da9410b2a0384a79b4e15ed95058aa50eaf3f81d380",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "1384711e2ce280318c03d9f75ddde27174d01fc745fd67908311f8bb955ad986",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "d9cb748d528462f83695ee42168366be1563b10d618fd048980e385ccbe39c92",
+    "Docs/SERWEROWY_ADAPTER_DANYCH.md": "db38f9fdaa9a4530ae372ccbee7b7b6d5cf7618a88dbbfa74570eff48224388e",
+    "Docs/REKORD_AVATARA_I_ODZYSKIWANIE.md": "9c4900aac49e43dec84d3d37d55651701d67d501ee0172f26bae529405dddfef",
+    "gateway/README.md": "d6f513d85ca5350e9eee56feae6e2bdc93fe3510d359974d42d1ec2271cf5445"
+  },
+  "logSHA256": {
+    "echoes-avatar-publication-first.log": "5ee08877f058beba59f31d93d2214fbb223a4c9247cde9c78edd07900f4cdce9",
+    "echoes-avatar-publication-second.log": "f5ad1807363ffe726e2a24212462c4d1668819c1292f817b53d80060672a3d4e",
+    "echoes-avatar-publication-targeted.log": "e67ee745f768bb847e862b8fb19ef1ce5d108b7ed1a1f6505df53620d60c44bc",
+    "echoes-avatar-publication-workerd.log": "ea7b32a3828b9da1d29d402f9436ff7a221e74e1be320cad31e4ee16f20f4e8f",
+    "echoes-avatar-publication-node22.log": "03b7b9bdb15f39874a41a494e2c77d2c0e52e93e297f014fc8d2fa1624e80ffb",
+    "echoes-avatar-publication-node24.log": "05c9c0aeda123dc88b7ef7fc9d7d65984c7a47a308bd82bd56c18a9874abf752",
+    "echoes-avatar-publication-negative-control.log": "038b6fbae64259be84e3f41e2f607a4861ac4b3bcc6c8120079376324373f40f"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}
