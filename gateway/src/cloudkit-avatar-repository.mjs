@@ -1,12 +1,11 @@
-import { PublicRecordError, plain, publicUUID, digest, validTag, matchesFields } from "./public-record-schema.mjs";
+import { PublicRecordError, plain, publicUUID } from "./public-record-schema.mjs";
 import { normalizedAvatarManifest, normalizedAvatarUpload, normalizedAvatarPayloadHash } from "./avatar-normalizer.mjs";
-import { avatarDescriptor, avatarDescriptorHash, avatarMetadata } from "./avatar-record-schema.mjs";
+import { avatarDescriptor, avatarDescriptorHash, avatarMetadata, validateAvatarRecord } from "./avatar-record-schema.mjs";
 
 function failure(record) {
   return new PublicRecordError(["EXISTS", "CONFLICT", "NOT_FOUND"].includes(record?.serverErrorCode) ? "PUBLIC_CONFLICT" :
     record?.serverErrorCode === "THROTTLED" ? "PUBLIC_THROTTLED" : "PUBLIC_UNAVAILABLE");
 }
-const opaque = value => typeof value === "string" && /^[\x21-\x7e]{1,8192}$/.test(value);
 /** Internal immutable version staging, NOT profile publication or a generic HTTP/asset proxy.
  * Trust boundary: a real normalized handle for initial writes; exact existing commitments for recovery.
  */
@@ -49,23 +48,7 @@ export class CloudKitAvatarRepository {
     return values;
   }
   #record(record, context, descriptor) {
-    if (!plain(record) || record.recordName !== context.recordName || record.recordType !== context.recordType || !validTag(record.recordChangeTag) ||
-        !plain(record.fields) || record.fields.schemaVersion?.value !== 1 || record.fields.ownerKey?.value !== context.ownerKey) throw new PublicRecordError("PUBLIC_SCOPE");
-    if (record.fields.erased?.value === 1) throw new PublicRecordError("PUBLIC_ERASED");
-    const metadata = Object.fromEntries(Object.entries(record.fields).filter(([key]) => !["image", "thumbnail"].includes(key)));
-    if (!matchesFields(metadata, avatarMetadata(context, descriptor))) throw new PublicRecordError("PUBLIC_CONFLICT");
-    const commitments = this.#commitments(context, descriptor);
-    for (const variant of ["image", "thumbnail"]) {
-      const field = record.fields[variant], value = field?.value;
-      if (!plain(field) || Object.keys(field).some(key => !["value", "type"].includes(key)) ||
-          field.type !== undefined && field.type !== "ASSET" || !plain(value) ||
-          Object.keys(value).some(key => !["fileChecksum", "size", "receipt", "referenceChecksum", "wrappingKey", "downloadURL"].includes(key)) ||
-          value.size !== commitments[variant].byteCount || !opaque(value.fileChecksum) ||
-          digest(value.fileChecksum) !== commitments[variant].fileChecksumHash ||
-          ["receipt", "referenceChecksum", "wrappingKey", "downloadURL"].some(key => Object.hasOwn(value, key) && !opaque(value[key]))) throw new PublicRecordError("PUBLIC_RESPONSE");
-    }
-    if (context.phase === "settled" && context.recordTag !== record.recordChangeTag) throw new PublicRecordError("PUBLIC_CONFLICT");
-    return record.recordChangeTag;
+    return validateAvatarRecord(record, context, descriptor, this.#commitments(context, descriptor)).tag;
   }
   async #lookup(options, context, descriptor) {
     this.#current(options, context);

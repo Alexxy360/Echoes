@@ -44,3 +44,8 @@ Swift, Core, UI, projekt, zależności i CI nie zmieniły się. Ich kompilacji/U
 ## Integracja CK-04e.3e
 
 Repozytorium nadal potrzebuje kanonicznego descriptor do recovery. Nowy koordynator zapisuje go w prywatnej SQLite i checkpointuje przed dispatch assetów; aplikacja nie musi znać serwerowych manifestów po utracie pierwszej odpowiedzi. Wznowienie z warstwy produktu przyjmuje tylko requestID i nie przyjmuje receipt lub URL od klienta. Zgoda/CAS/moderacja i wskazanie profilu są opisane w [kolejnym etapie](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md); nie zmienia to ograniczeń nieznanego uploadu, wygasłych receipts i retencji.
+
+
+## Odczyt CK-04e.3f
+
+Walidacja record metadata/Asset dictionaries została współdzielona z Reader. Zapis nadal potwierdza oba pliki i dokładny tag przed settled; odczyt używa osobnej ścieżki metadanych bez odnowienia mutacji autora, weryfikuje raw JPEG/SHA i ponawia politykę odbiorcy po sieci. Podpisany downloadURL i receipts nie są nagłówkiem/DTO klienta. [Kontrakt i cache revalidation](CHRONIONY_ODCZYT_AVATAROW.md).

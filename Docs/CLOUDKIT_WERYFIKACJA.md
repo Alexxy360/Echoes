@@ -235,3 +235,12 @@ Bez aktywacji HTTP/runtime/usługi/schema/ról/sekretów, realnego CKAsset/Free/
 Testy obejmują zgodę/idempotencję/obce konto, trzy wybory w stałym oknie i 1000 wpisów bez blokowania clear, awarie SQL/sync, mutable source, finalizery, oba porządki clear/RPC, utratę ACK, erasure i rollback. Lokalne workerd/DO/SQLite wykonało nowe schema/transaction/sync/select/clear/erase bez outbound; negatywna kopia bez guard CAS clear oblewa test. Pierwszy błąd wygasłej modelowej sesji poprawiono świeżym logowaniem. [Kontrakt i otwarte bramki](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md), [dowody/SHA](evidence/avatar-publication-local-tests.json).
 
 Bez nowego HTTP/aktywacji/usług/schema/ról/sekretów, realnego CloudKit/Free/A-B, zmian Swift/UI/Core/projektu/zależności i powtarzania ich testów. To mechanika decyzji; panel/operator, rzeczywisty przegląd zdjęć i zgłoszenia pozostają otwarte. Chroniony odczyt/cache, intake, iOS/journal, retencja i rzeczywisty odbiór nadal w pełnym zakresie migracji.
+
+
+## CK-04e.3f — chroniony JPEG i rewalidacja cache
+
+380/380 Node22.23.5 i Node24.22.1 (27 nowych: 26 reader + 1 rzeczywistego workerd), syntax 85 MJS. Odczyt wiąże bieżącą zgodę/wersję/moderację z potwierdzonym wskazaniem i assetami; dla obcego odbiorcy aktywna obecność, expiry, obie blokady i 3 km od zadeklarowanej pozycji. Kontrole po sieci i ostatnim checkpoint/finalizerze. Nowy GET z zamkniętym hostem i bez sekretów, bounded body/SHA/wymiary, 4 aktywne bilety/do 8 s i jednorazowe Response. knownSHA256 daje świeżo autoryzowane 204 bez GET; nie stanowi zapamiętanego uprawnienia.
+
+Workerd/SQLite/auth/policy/rejestr/podpisy rzeczywiście obsłużyły binarny 200, cache 204 i odmowę po bloku; Apple/tożsamości są modelowane. Wykryto brak Request.credentials w runtime, skorygowano tylko fixture i usunięto diagnostykę; świeże nagłówki nadal sprawdzane. Negatywna kopia bez guard 3 km oblewa test. Odczyt nie odnawia generacji mutacji autora po zmianie jego sesji. [Kontrakt](CHRONIONY_ODCZYT_AVATAROW.md), [dowody/SHA](evidence/avatar-read-local-tests.json).
+
+Bez nowego HTTP/runtime aktywacji, usług/schema/ról/sekretów, realnego providera/Free/A-B, zmian Swift/UI/Core/projektu/zależności lub powtarzania ich testów. Natywny cache/transport, intake/admission/UI/operator/zgłoszenia/retencja i realny odbiór nadal wymagane.

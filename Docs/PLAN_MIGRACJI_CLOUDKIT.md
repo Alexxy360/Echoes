@@ -99,6 +99,8 @@ Postęp CK-04e.3d: wewnętrzny rekord wersji assetów, zaszyfrowane krótkotrwa�
 
 Postęp CK-04e.3e: trwała zgoda/source hash i serwerowy opis plików przed uploadem (recovery po requestID), osobny singleton CloudKit wskazania zdjęcia, CAS generacji/latest intent i moderacji, natychmiastowy clear oraz erasure metadanych. 353/353 Node22/24 (24 nowe), syntax 80 MJS; rzeczywiste lokalne workerd/DO/SQLite i negatywna kontrola CAS. Brak HTTP/iOS/aktywacji; operator/UI/oglądanie i zgłaszanie zdjęć, odczyt/cache/intake/retencja i Development/Free/A-B nadal otwarte. [Kontrakt i zmiana kompozycji profilu](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md), [dowody](evidence/avatar-publication-local-tests.json).
 
+Postęp CK-04e.3f: chroniony odczyt aktualnej wersji z moderacją/zgodą, peer presence/blokadami/3 km, zamkniętym GET, bounded SHA/JPEG i finalizerem po checkpoint. Jednorazowe Response200 i świeże cache204; read-only commitments nie odnawiają mutacji autora. 380/380 Node22/24 (27 nowych), syntax 85 MJS, pełny lokalny workerd/SQLite/auth/policy/signatures z modelami providera i negatywna kontrola zasięgu. Bez HTTP/iOS/aktywacji; następnie natywny transport/cache, host/admission/UI/operator/retencja i rzeczywisty odbiór. [Kontrakt](CHRONIONY_ODCZYT_AVATAROW.md), [dowody](evidence/avatar-read-local-tests.json).
+
 Projekt roboczy do potwierdzenia w CK-01:
 
 | Dane | Proponowane miejsce | Zasada |

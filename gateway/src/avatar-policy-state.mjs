@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { plain, publicUUID, digest, inputHash, validTag } from "./public-record-schema.mjs";
+import { plain, publicUUID, digest, inputHash, validTag, recordIdentity } from "./public-record-schema.mjs";
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
 
 const codes = new Set(["AVATAR_INPUT", "AVATAR_STALE", "AVATAR_PENDING", "AVATAR_REJECTED", "AVATAR_RATE", "AVATAR_CAPACITY", "AVATAR_SCOPE", "AVATAR_UNAVAILABLE"]);
@@ -27,7 +27,7 @@ export class AvatarPolicyState {
   #storage; #registry; #clock;
   constructor(storage, { registry, clock = Date.now } = {}) {
     if (typeof storage?.transactionSync !== "function" || typeof storage.sync !== "function" || typeof storage.sql?.exec !== "function" ||
-        typeof registry?.owned !== "function" || typeof clock !== "function") throw new AvatarPolicyError();
+        typeof registry?.owned !== "function" || typeof registry.readable !== "function" || typeof clock !== "function") throw new AvatarPolicyError();
     this.#storage = storage; this.#registry = registry; this.#clock = clock;
     this.#tx(() => {
       if (!this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").length) throw new AvatarPolicyError();
@@ -181,6 +181,26 @@ export class AvatarPolicyState {
       this.#storage.sql.exec("UPDATE avatar_profiles_v1 SET ready=1,pointer_tag=? WHERE account_id=?", pointer.recordTag, intent.accountID);
     });
     await this.#durable(); this.assertCurrent(intent); if (intent.kind === "select") this.assertPublishCurrent(intent);
+  }
+  /** Internal author-publication proof only. The caller still must authorize the viewer/area. */
+  readPublication(accountID) {
+    const value = this.#tx(() => {
+      this.#active(accountID); const profile = this.#profile(accountID);
+      if (!profile?.ready || profile.version_id === null) throw new AvatarPolicyError("AVATAR_STALE");
+      const lease = this.#publishLease(this.#lease(accountID));
+      return { ...lease, descriptor: this.#descriptor(lease), pointerTag: profile.pointer_tag };
+    });
+    const avatar = this.#registry.readable(recordIdentity(accountID, "avatar", value.versionID).recordName, "avatar");
+    const pointer = this.#registry.readable(recordIdentity(accountID, "avatarprofile", "singleton").recordName, "avatarprofile");
+    if (!avatar || !pointer || avatar.requestID !== value.requestID || avatar.recordTag !== value.stagedTag || avatar.payloadHash !== value.payloadHash ||
+        pointer.requestID !== value.requestID || pointer.recordTag !== value.pointerTag ||
+        pointer.payloadHash !== inputHash({ versionID: value.versionID, generation: value.generation })) throw new AvatarPolicyError("AVATAR_STALE");
+    return Object.freeze({ ...value, avatar, pointer });
+  }
+  assertReadPublication(value) {
+    const current = this.readPublication(value?.accountID);
+    if (["requestID", "versionID", "generation", "reviewRevision", "payloadHash", "stagedTag", "pointerTag"].some(key => current[key] !== value[key])) throw new AvatarPolicyError("AVATAR_STALE");
+    return current;
   }
   snapshot(accountID) { return this.#tx(() => {
     this.#active(accountID); const p = this.#profile(accountID);

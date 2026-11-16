@@ -66,3 +66,8 @@ Rejestr dodaje asset_claims (atomowy ślad obu claimów) oraz hash fileChecksum,
 ## CK-04e.3e — komponent wskazania zdjęcia
 
 Nowy proponowany EchoesAvatarProfileV1 / kind avatarprofile jest singletonem właściciela, z versionID i generation oraz standardową metryką operacji. Używa writeLatest i rejestru/eraser, pozostając niezależny od tekstowego profilu. Wyłącznie AvatarPublicationCoordinator sprawdza zgodę/approval i najnowszą generację przed oraz po zapisach. Generic HTTP nie wystawia tego kind, a sam odczyt surowego wskazania nie uprawnia do zdjęcia. Nie utworzono typu ani ról w Apple; [kompozycja, bramki i dowody](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md).
+
+
+## CK-04e.3f — odczyt metadanych assetu bez mutacji autora
+
+readAvatarAssetCommitments odczytuje wyłącznie settled avatar i oba zgodne ACK/claim mask, przy aktywnym właścicielu. Weryfikuje hashe/rozmiary i historię generacji, ale nie rezerwuje ani nie odnawia lease na cudze konto. Publikacja pozostaje czytelna po resecie sesji autora; jego stary zapis nadal jest blokowany. Wspólny validateAvatarRecord zamyka projekcję metadanych/assetów; surowe URL pozostają tylko wewnątrz [chronionego Reader](CHRONIONY_ODCZYT_AVATAROW.md).

@@ -39,3 +39,8 @@ CommunityState tworzy tabele avatarów i usuwa ich wszystkie wiersze tego samego
 Pierwsze 16 testów miało jeden błąd fixture: po przesunięciu zegara o dziesięć minut wygasła modelowa sesja; po świeżym syntetycznym logowaniu test limitu przeszedł. Rozszerzony końcowy zestaw obejmuje także utratę ACK obu rekordów, źródło zmienione po await, dwa porządki clear/RPC, moderation ABA, obce konto, quota/capacity bez blokowania clear, SQL/sync, erasure i rollback. To nie jest rzeczywisty provider, iCloud A/B ani hosting Free.
 
 Swift/UI/Core, projekt i zależności/CI nie zmieniły się, ich buildów/UI/SDK i audytu lockfile nie powtarzano. Bez usług, schema/ról/sekretów, danych użytkowników, opłat, Production lub Firebase. Następnie: chroniony odczyt/cache, ograniczony intake/HTTP i natywne UI/journal, prawdziwa obsługa operatora/zgłoszeń, retencja oraz Development/Free/A-B i pełny plan. Pełna migracja pozostaje w toku.
+
+
+## Czytelność CK-04e.3f
+
+readPublication/assertReadPublication łączą aktualną zgodę/wybór/decision revision i gotowość z dokładnymi tagami/payloadami avatar oraz avatarprofile w rejestrze. To dowód autora do wewnętrznego Reader, nie uprawnienie odbiorcy. Reader dodaje sesję, obecność autora, blokady/zasięg i sprawdzenia po pobraniu/ostatnim checkpoint; [odczyt i przyszły cache iOS](CHRONIONY_ODCZYT_AVATAROW.md). Nie powstał jeszcze publiczny endpoint lub panel operatora.

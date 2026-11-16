@@ -280,6 +280,28 @@ export class PublicRecordRegistry {
     }
     return Object.freeze(result);
   }
+  /** Read-only access to a settled immutable avatar. Logout/reset must not erase its publication;
+   * no mutation lease is renewed on behalf of the author by a reader.
+   */
+  readAvatarAssetCommitments(context) {
+    return this.#tx(() => {
+      const current = this.#context(this.#row(context?.recordName)), generation = this.#active(current.accountID);
+      if (current.kind !== "avatar" || current.phase !== "settled" ||
+          ["accountID", "requestID", "payloadHash", "recordTag"].some(key => current[key] !== context[key]) ||
+          this.#row(current.recordName).asset_claims !== 3) throw new PublicRecordError("PUBLIC_SCOPE");
+      const result = {};
+      for (const variant of ["image", "thumbnail"]) {
+        const row = this.#rows("SELECT * FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?", current.recordName, variant)[0];
+        if (!row || row.phase !== "acknowledged" || row.request_id !== current.requestID || row.payload_hash !== current.payloadHash ||
+            !publicUUID.test(row.transfer_id ?? "") || !Number.isSafeInteger(row.generation) || row.generation < 0 || row.generation > generation ||
+            !Number.isSafeInteger(row.started_at) || row.started_at < current.createdAt || row.started_at > this.#now() ||
+            [row.content_sha256, row.receipt_hash, row.file_checksum_hash].some(value => typeof value !== "string" || !/^[a-f0-9]{64}$/.test(value)) ||
+            !Number.isSafeInteger(row.byte_count) || row.byte_count < 1 || row.byte_count > (variant === "image" ? 256000 : 32000)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        result[variant] = Object.freeze({ sha256: row.content_sha256, byteCount: row.byte_count, fileChecksumHash: row.file_checksum_hash });
+      }
+      return Object.freeze(result);
+    });
+  }
   avatarReceipt(context, variant) {
     const commitment = this.avatarTransferStatus(context, variant);
     if (commitment?.phase !== "acknowledged") throw new PublicRecordError("PUBLIC_PENDING");

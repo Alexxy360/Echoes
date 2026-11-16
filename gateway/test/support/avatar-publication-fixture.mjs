@@ -16,7 +16,7 @@ import { digest } from "../../src/public-record-schema.mjs";
 export async function avatarPublicationFixture(options = {}) {
   const f = await publicFixture(options), social = new CommunityState(f.storage, { clock: f.clock }), sourceBytes = await avatarImage();
   let session = await f.session(), enabled = true, operatorEnabled = true, assetHook, recordHook;
-  const operatorID = randomUUID(), key = syntheticPublicKeyConfiguration(), grants = new Map(), assetCalls = [];
+  const operatorID = randomUUID(), key = syntheticPublicKeyConfiguration(), grants = new Map(), assetCalls = [], uploadedBytes = new Map();
   const normalizer = new AvatarNormalizer({ ...await avatarCodecs(), isEnabled: () => enabled });
   const assetFetch = async (request, opts) => {
     const phase = new URL(request.url).hostname === "api.apple-cloudkit.com" ? "grant" : "upload";
@@ -31,6 +31,7 @@ export async function avatarPublicationFixture(options = {}) {
       const bytes = new Uint8Array(await request.clone().arrayBuffer());
       const transfer = f.db.prepare("SELECT * FROM avatar_asset_transfers_v1 WHERE record_name=? AND variant=?").get(recordName, variant);
       assert.equal(transfer.phase, "claimed"); assert.equal(transfer.content_sha256, digest(bytes));
+      uploadedBytes.set(recordName + "/" + variant, bytes.slice());
       assert.deepEqual([...request.headers.keys()].sort(), ["cache-control", "content-type"]);
       payload = { singleFile: { fileChecksum: "SYNTHETIC-CHECKSUM-" + digest(bytes), size: bytes.length, receipt: "SYNTHETIC-PRIVATE-" + variant } };
     }
@@ -41,7 +42,7 @@ export async function avatarPublicationFixture(options = {}) {
     for (const record of f.model.records.values()) for (const variant of ["image", "thumbnail"]) {
       const v = record.fields[variant]?.value;
       if (v?.receipt) record.fields[variant].value = { fileChecksum: v.fileChecksum, size: v.size,
-        downloadURL: "https://synthetic-avatar.icloud-content.com/private/" + variant + "?SYNTHETIC-URL" };
+        downloadURL: "https://synthetic-avatar.icloud-content.com/private/" + record.recordName + "/" + variant + "?SYNTHETIC-URL" };
     }
     return await recordHook?.(call);
   };
@@ -59,7 +60,7 @@ export async function avatarPublicationFixture(options = {}) {
     return { policy, coordinator, registry, checkpoint, profiles };
   };
   const initial = make();
-  return { ...f, ...initial, social, sourceBytes, assetCalls, make, operatorID,
+  return { ...f, ...initial, social, sourceBytes, assetCalls, uploadedBytes, make, operatorID,
     get signedIn() { return session; },
     upload(changes = {}) { return { accessToken: session.sessionToken, requestID: randomUUID(), versionID: randomUUID(), bytes: sourceBytes,
       expectedGeneration: initial.policy.snapshot(session.accountID).generation, consentVersion: 1, ...changes }; },

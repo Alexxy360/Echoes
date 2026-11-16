@@ -1,4 +1,4 @@
-import { PublicRecordError, plain, publicUUID, recordIdentity, liveFields, digest } from "./public-record-schema.mjs";
+import { PublicRecordError, plain, publicUUID, recordIdentity, liveFields, digest, validTag, matchesFields } from "./public-record-schema.mjs";
 
 const exact = (value, keys) => plain(value) && Object.keys(value).sort().join("|") === [...keys].sort().join("|");
 const manifestKeys = ["schemaVersion", "ownerID", "versionID", "variant", "byteCount", "width", "height", "sha256"];
@@ -35,4 +35,27 @@ export function avatarMetadata(context, descriptor) {
     input[variant + key[0].toUpperCase() + key.slice(1)] = descriptor[variant][key];
   }
   return liveFields(context, input);
+}
+/** Provider projection stays internal. downloadURL is neither an application DTO nor authorization. */
+export function validateAvatarRecord(record, context, descriptor, commitments) {
+  const opaque = value => typeof value === "string" && /^[\x21-\x7e]{1,8192}$/.test(value);
+  if (!plain(record) || record.deleted || record.serverErrorCode || record.recordName !== context.recordName || record.recordType !== context.recordType ||
+      !validTag(record.recordChangeTag) || !plain(record.fields) || record.fields.schemaVersion?.value !== 1 ||
+      record.fields.ownerKey?.value !== context.ownerKey) throw new PublicRecordError("PUBLIC_SCOPE");
+  if (record.fields.erased?.value === 1) throw new PublicRecordError("PUBLIC_ERASED");
+  const metadata = Object.fromEntries(Object.entries(record.fields).filter(([key]) => !["image", "thumbnail"].includes(key)));
+  if (!matchesFields(metadata, avatarMetadata(context, descriptor))) throw new PublicRecordError("PUBLIC_CONFLICT");
+  const assets = {};
+  for (const variant of ["image", "thumbnail"]) {
+    const field = record.fields[variant], value = field?.value, expected = commitments?.[variant];
+    if (!expected || expected.sha256 !== descriptor[variant].sha256 || expected.byteCount !== descriptor[variant].byteCount ||
+        !plain(field) || Object.keys(field).some(key => !["value", "type"].includes(key)) ||
+        field.type !== undefined && field.type !== "ASSET" || !plain(value) ||
+        Object.keys(value).some(key => !["fileChecksum", "size", "receipt", "referenceChecksum", "wrappingKey", "downloadURL"].includes(key)) ||
+        value.size !== expected.byteCount || !opaque(value.fileChecksum) || digest(value.fileChecksum) !== expected.fileChecksumHash ||
+        ["receipt", "referenceChecksum", "wrappingKey", "downloadURL"].some(key => Object.hasOwn(value, key) && !opaque(value[key]))) throw new PublicRecordError("PUBLIC_RESPONSE");
+    assets[variant] = Object.freeze({ ...value });
+  }
+  if (context.phase === "settled" && context.recordTag !== record.recordChangeTag) throw new PublicRecordError("PUBLIC_CONFLICT");
+  return Object.freeze({ tag: record.recordChangeTag, assets: Object.freeze(assets) });
 }

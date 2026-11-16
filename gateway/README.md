@@ -11,7 +11,7 @@ npm --prefix gateway ci --ignore-scripts
 node --test gateway/test/*.test.mjs
 ```
 
-Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska ani nie łączą się z usługami Apple/Cloudflare. Testy HTTP korzystają z 127.0.0.1. Bieżący zestaw: 353 testy lokalne na Node 22.23.5 oraz 24.22.1, obejmujących auth, sesje, SQLite/checkpoint, usuwanie, funkcje społecznościowe i assety. Test kodeka uruchamia rzeczywisty lokalny workerd z DO/SQLite; to nie jest hosted Free acceptance. Nowe zależności wymagają npm ci z lockfile przed testami.
+Testy generują efemeryczne klucze w pamięci i sprawdzają podpis niezależnym verify(). Nie odczytują sekretów środowiska ani nie łączą się z usługami Apple/Cloudflare. Testy HTTP korzystają z 127.0.0.1. Bieżący zestaw: 380 testów lokalnych na Node 22.23.5 oraz 24.22.1, obejmujących auth, sesje, SQLite/checkpoint, usuwanie, funkcje społecznościowe i assety. Test kodeka uruchamia rzeczywisty lokalny workerd z DO/SQLite; to nie jest hosted Free acceptance. Nowe zależności wymagają npm ci z lockfile przed testami.
 
 Podpisywanie korzysta z node:crypto; wdrożenie ma jawne nodejs_compat. Workers nie obsługuje redirect:error, dlatego używamy manual i odrzucamy odpowiedzi non-2xx bez podążania za Location. Test na dwóch serwerach loopback potwierdza brak przekazania podpisanych nagłówków do celu przekierowania. Zapis/odczyt/usunięcie jednego rekordu przez Workers zaliczono. Metryki małego ruchu diagnostycznego nie wykazały przekroczenia CPU; pomiar docelowego obciążenia i samego DO pozostaje przed odbiorem produktu. Konfiguracja wrangler.jsonc jest domyślnie wyłączona i nie publikuje workers.dev/preview URL; nie ma celu CloudKit Production ani automatycznego deploy. Usługa diagnostyczna posiada adres workers.dev utworzony przez panel; aktualnie próba jest wyłączona. [Zakres prototypu i stan weryfikacji](../Docs/WORKERS_DIAGNOSTYKA.md).
 
@@ -102,3 +102,8 @@ CloudKitAvatarRepository łączy rzeczywisty uchwyt normalizatora z trwałymi tr
 ## Zgoda i wskazanie zdjęcia (CK-04e.3e)
 
 AvatarPolicyState/AvatarPublicationCoordinator łączą trwałą zgodę i source hash przed kodekiem, kanoniczny descriptor przed siecią (recovery po requestID), approval z osobnym hookiem operatora i CloudKit avatarprofile singleton przez CAS/latest intent. Zmiana nazwy nie nadpisuje wskazania; clear ukrywa zdjęcie przed RPC, a moderation revision unieważnia stare publish leases. Erasure polityki obejmuje nowe tabele także po wyłączeniu flagi. 353/353 na obu Node, 24 nowe; rzeczywisty lokalny workerd/SQLite wykonał select/clear/erase. Bez HTTP/runtime koordynatora, panelu operatora lub aktywacji. [Dokładny kontrakt i pozostałe bramki](../Docs/ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md).
+
+
+## Chroniony odczyt (CK-04e.3f)
+
+CloudKitAvatarReader wiąże bieżącą publikację i tagi z polityką odbiorcy, zamkniętym download GET oraz bounded JPEG/SHA. Jednorazowy finalizer zwraca 200 binary z X-Echoes-Avatar-Manifest/no-store albo 204 po świeżej rewalidacji knownSHA256. Nie przekazuje URL/receipts i nie jest generic proxy. Do czterech przygotowanych odpowiedzi na singleton, termin do 8 sekund. Rzeczywisty lokalny workerd/SQL/auth/policy/signatures sprawdził oba warianty i blokadę z modelami providera. 380/380 obu Node. Brak publicznego HTTP, natywnego cache i aktywacji; host musi stosować admission przed prepare i finalizer po ostatnim await. [Kontrakt i granice](../Docs/CHRONIONY_ODCZYT_AVATAROW.md).

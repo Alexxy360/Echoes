@@ -1,0 +1,202 @@
+{
+  "stage": "CK-04e.3f",
+  "observedAtUTC": "2026-11-16T15:34:32.584915+00:00",
+  "baselineCommit": "93ce7ebf55bf6f558ba6082f66d9c9fe8daecdb6",
+  "tests": {
+    "node22": {
+      "version": "22.23.5",
+      "passed": 380,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "node24": {
+      "version": "24.22.1",
+      "passed": 380,
+      "failed": 0,
+      "skipped": 0,
+      "exitCode": 0
+    },
+    "newTests": {
+      "reader": 26,
+      "fullLocalWorkerdRead": 1,
+      "total": 27
+    },
+    "syntaxMJS": 85,
+    "productSwiftCoreUIProjectDependenciesCIUnchanged": true,
+    "buildUITestSDKOrAuditRepeated": false
+  },
+  "implemented": [
+    "closed owner/version/variant selection, optional coordinate/knownSHA256, no client URL/record field/receipt",
+    "fresh viewer session/community identity and current author consent/selection/moderation revision linked to exact avatar+pointer registry tags and payloads",
+    "peer active/ready/nonhidden/nonexpired presence, both blocks and 3km from declared viewer coordinate; owner published read works without GPS/presence",
+    "repeat authorization after network/checkpoint and one-shot final Response, exact version/decision/pointer/presence identity prevents stale or ABA disclosure",
+    "shared closed record/asset validation and provider checksum commitments; settled readonly asset metadata survives author login generation without renewing writes",
+    "exact verified HTTPS host GET, manual redirects, fresh Accept/Cache-Control only, no S2S/bearer/Cookie copied",
+    "bounded body then normalized SHA-256, structural/canonical JPEG and dimension checks before delivery",
+    "private no-store JPEG200 and exact native-schema manifest header; fresh knownSHA256 revalidation204 without a file GET",
+    "four active request-local buffers/tickets per singleton, total deadline/cancellation, one use and owned buffer zeroing/disposal"
+  ],
+  "bounds": {
+    "fullJPEGBytes": 256000,
+    "thumbnailBytes": 32000,
+    "maximumNonemptyStreamParts": 128,
+    "maximumConcurrentPerInstance": 4,
+    "totalReadAndFinalizerMilliseconds": 8000,
+    "exactVerifiedHosts": {
+      "default": [],
+      "maximum": 8
+    },
+    "publicPresenceRadiusMeters": 3000,
+    "sharedCacheOrCDNOrPersistentServerPixels": false
+  },
+  "wireContract": {
+    "manifestHeader": "X-Echoes-Avatar-Manifest",
+    "manifestEncoding": "ASCII JSON",
+    "fields": [
+      "schemaVersion",
+      "ownerID",
+      "versionID",
+      "variant",
+      "byteCount",
+      "width",
+      "height",
+      "sha256"
+    ],
+    "status200": "JPEG with image/jpeg and exact length",
+    "status204": "freshly authorized matching knownSHA256; empty body, no Content-Length, same manifest",
+    "commonHeaders": {
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff"
+    },
+    "providerSecretsOrURLReturned": false,
+    "nativeHeaderParserAndCacheImplemented": false
+  },
+  "localWorkerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "actualComponents": [
+      "AuthenticationState session SQL",
+      "native Durable Object localDisk SQLite transactions/sync",
+      "CommunityState and AvatarPolicyState",
+      "PublicRecordRegistry and checkpoint",
+      "CloudKitPublicClient signatures and repository",
+      "CloudKitAvatarReader and actual loopback HTTP Response headers/body"
+    ],
+    "modeledComponents": [
+      "Apple record/file responses",
+      "synthetic user sessions and public records",
+      "ephemeral EC key, never registered with Apple",
+      "synthetic normalized JPEG generated with pinned real Wasm codecs"
+    ],
+    "independentECDSASignaturesVerified": true,
+    "observedResults": [
+      "JPEG200 correct manifest/hash and one asset GET",
+      "matching-cache204 with no body and zero asset GET",
+      "blocked reader denied matching-cache revalidation with zero asset GET"
+    ],
+    "outbound": "deny IPv4/IPv6/Unix; loopback only",
+    "testDataTransport": "owned synthetic SQLite snapshots/models/ephemeral key over local loopback; no real account/key/photo material",
+    "productionRuntimeOrHostingAcceptance": false
+  },
+  "negativeControl": {
+    "mutation": "remove one peer distance comparison from owned temporary copy",
+    "test": "far coordinates cannot fetch an asset",
+    "exitCode": 1,
+    "failedTests": 1,
+    "expectedFailure": "Missing expected rejection",
+    "realSourceUnchanged": true,
+    "temporaryCopyRemoved": true
+  },
+  "coverage": [
+    "exact full/thumbnail JPEG and safe manifest/no-store headers",
+    "fresh cache hit and wrong-hash miss, cache denied after withdrawal and viewer revocation",
+    "owner read without map/GPS, peer missing/far coordinates, stale version",
+    "block in both directions, author suspension, presence stop/expiry, account deletion during file retrieval",
+    "moderation rejection/reapproval and republish invalidate captured responses",
+    "block activated during last remote checkpoint prevents even fully fetched image from leaving",
+    "author auth generation change preserves reads and rejects old mutation; no registry rewrite",
+    "URL host/protocol/port/credentials/fragment and response redirect/partial/encoding/length/format/oversize failures",
+    "same-size corruption SHA mismatch, altered asset identity/fields/transfer commitment",
+    "request four-buffer backpressure, single use, deadline before/during stream/frozen-clock ignored fetch, cancellation and slot recovery",
+    "consistent SQLite rollback cannot authorize cached image against older consent state"
+  ],
+  "resolvedDuringValidation": [
+    "17 initial reader tests passed; expanded 26 passed",
+    "first full local workerd proof failed after one model download because fixture assumed Request.credentials existed",
+    "temporary diagnostic contained only GET/manual/property absence and header names; pinned workerd exposes no credentials property",
+    "only local model accepts undefined credentials property; still requires GET/manual/exact accept+cache-control; production reader still explicitly requests omit and never forwards credentials",
+    "temporary diagnostic removed; workerd proof passes JPEG200/cache204/blocked-cache paths",
+    "complete final 380/380 passed on both Node runtimes and 85 MJS syntax checked; no source/test changes after full accepted suites"
+  ],
+  "activation": {
+    "readerImportedIntoGatewayRuntime": false,
+    "newPublicHTTPRoute": false,
+    "nativeCacheOrUIConnected": false,
+    "realDownloadHostConfigured": false,
+    "newCloudKeySecretServiceRole": false,
+    "cloudDeployed": false,
+    "ProductionOrFirebaseChanges": false
+  },
+  "notPerformed": [
+    "real CloudKit file URL/header/bytes/roles acceptance or ordinary iCloud A/B",
+    "Cloudflare hosted CPU/SQL/duration/egress/cold-start or production free capacity",
+    "native HTTP/header transport, viewer-scoped cache/ImageIO/render and UI integration",
+    "public binary route admission/IP/daily/rate binding",
+    "actual moderator login/content inspection/queue/photo reports",
+    "physical asset/orphan/old metadata retention and alarm integration",
+    "iOS builds/device/SDK or repeated audit of unchanged lockfile",
+    "live schema/permission/secret changes, user photographs, paid services, Production or Firebase operations"
+  ],
+  "knownLimits": [
+    "distance is evaluated from client-declared coordinates and approximate stored author presence, not physical GPS attestation",
+    "host must keep singleton and enforce request admission before prepare; it must invoke finalizer after its last await",
+    "bytes already delivered to an authorized recipient cannot be revoked or prevented from being copied",
+    "204 only supports future native cache; client must bind viewer/owner/version/variant and validate cached bytes plus fresh authorization",
+    "read checks exact normalized hash/structure, not a second entropy decode; upload already performs actual decode/reencode, native renderer still needs ImageIO",
+    "owned buffer zeroing is not proof every VM/string/network/backup copy is physically erased",
+    "real provider host/content behavior/latency and free limits still require separately scoped Development acceptance",
+    "only one real iCloud account exists for the owner; ordinary-account A/B remains unverified"
+  ],
+  "sourceSHA256": {
+    "gateway/src/cloudkit-avatar-reader.mjs": "46816ab1d6847afed973fd0ba9b123e5f5adba5338a6484505bebbbe56de520f",
+    "gateway/src/avatar-policy-state.mjs": "9c5123b1dc63724bc3166b114f1e2f4217b9dcd875f3785685762437d9747a68",
+    "gateway/src/avatar-record-schema.mjs": "8c5f925c1440307085ab8417bab52b071382858ccf0eef68bef8d470b404de70",
+    "gateway/src/cloudkit-avatar-repository.mjs": "2d6a53b85c9e9de191a668c8da2bdf3c1341d1d7a2118641e349c38e2aa42fc2",
+    "gateway/src/public-record-registry.mjs": "f440f5bf989e61c571e543e3bd145be841b2d9e42a74ca946d421ca24286340d",
+    "gateway/test/avatar-read.test.mjs": "404effbdb79704d793a1104502114d91b6ff1b1acd6a255f0d3874fdcf193adc",
+    "gateway/test/avatar-read-workerd.test.mjs": "ec98301d9073ecb5e0e42faf867984d5a683881938e554af0657fcb8f2b7b76d",
+    "gateway/test/support/avatar-read-fixture.mjs": "c4fd43d7b416a57c76cab4c85b88715b0fbab58d0d75ef45d29c1c31472794a8",
+    "gateway/test/support/avatar-read-workerd-proof.mjs": "3d0f5557e42ed49da3aae0a223918ac85636bc417d0f7f12c3f5692af99ad69f",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "31e90a556cd464f80f02867783aa09b1046ea2dda81404eabfc951d54069c7f6",
+    "gateway/test/support/avatar-publication-fixture.mjs": "a607623719a316c857841a7baf468f68a7663ab708db251fe7b5c041f4685dbb"
+  },
+  "documentationSHA256": {
+    "Docs/CHRONIONY_ODCZYT_AVATAROW.md": "980779b8f838276cbc07848e0ce789eee4b78f77fc65cb5ff2cddf70b6c43aff",
+    "Docs/DZIENNIK_ZMIAN.md": "b8ce4bbc81e123bd8e8a3fee415690f48bd7d04d8e8a7b9a1a7190fee093292b",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "89efe44a841197615ba4ff664ee27bb3594b03ef9238a72bc7261e53ef7dbce2",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "1bb5f77ead4e26bcfdf891e17deca9a4193ae7f90aa114fc3a3c131a4c7ad0d3",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "50fddd58281d721ed9f7d2816a9f7bb4ee8dfba24999622dfa54edda26de39b8",
+    "Docs/SERWEROWY_ADAPTER_DANYCH.md": "f554a0f34c11ec9e83e7a51cea6e6b1a05079f2076113b62594f5841ef1b96d7",
+    "Docs/REKORD_AVATARA_I_ODZYSKIWANIE.md": "31c58e8a76c189b1d1eaf12023a1eb08948cfe62edfec82e6e6e1d95f2e4d9e6",
+    "Docs/ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md": "346a846d60f6de49408876b291f4f527f22996ebf091e7448f380b1fe30025e8",
+    "gateway/README.md": "27e2c6e3828b4568f868d23dcd33e1131def616a2db412465955fe09230444f0"
+  },
+  "logSHA256": {
+    "echoes-avatar-read-first.log": "183f0f276c3a8081010e53da705a315ff65395eade5b7e654e62b07d1e46a592",
+    "echoes-avatar-read-expanded.log": "0a81f636f493a7ca924791646986ba17ee4c613b0fc103e699417179769a8ad0",
+    "echoes-avatar-read-workerd-first.log": "12adef93df481c564d67f3560c69f882e218101fec1489ead73e0a92c4a24f41",
+    "echoes-avatar-read-workerd-diagnostic.log": "5387d0b6a38ef870259b2253d1ff1e705c488d742a311e52ea5389686d7df0db",
+    "echoes-avatar-read-workerd-accepted.log": "3ab7ffcbc2db64d865c4031586c53d130c104bb59d803b9d972458f55c9feb7d",
+    "echoes-avatar-read-node22.log": "7341b32d586b922c0775275e1f54011f24741dfe3f59099a60dd330b72bd8279",
+    "echoes-avatar-read-node24.log": "540e8a3d83eb230c3f8928f89f2ccf8c4c86e65d2ca63f8598e8db0ca025303d",
+    "echoes-avatar-read-negative-control.log": "bd10e75007066c1bca6a5f2ffd802c670f82e44e463d46e468f98630e8c200d2",
+    "echoes-avatar-read-static.json": "8a4f8f85c510e4fa913626d2acb35bd446442159353dcdf392e7f43bf7689e72"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "committedStageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}
