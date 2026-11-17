@@ -11,8 +11,10 @@
         weak var services: AppServices?
         weak var avatarEditor: GatewayAvatarEditorHost?
         weak var avatars: GatewayCommunityAvatarHost?
+        weak var avatarReviews: GatewayAvatarReviewHost?
         func clearServices() {
             avatarEditor?.invalidate()
+            avatarReviews?.invalidate()
             services?.invalidateNativePresentation()
         }
     }
@@ -26,6 +28,8 @@
         let avatarOwner: GatewayAvatarOwnerController
         let avatarEditor: GatewayAvatarEditorHost
         let avatars: GatewayCommunityAvatarHost
+        let avatarReviewJournal: GatewayAvatarReviewJournal
+        let avatarReviews: GatewayAvatarReviewHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private let relay: GatewayCommunityInvalidationRelay
@@ -127,6 +131,16 @@
                 configuration: activation.configuration, cloudKit: activation.cloudKit,
                 authorization: auth, cache: avatarCache, isEnabled: { activation.isActive() })
             relay.avatars = avatars
+            let reviewJournal = GatewayAvatarReviewJournal(
+                storage: KeychainGatewayAvatarReviewJournalStorage())
+            avatarReviewJournal = reviewJournal
+            let reviews = try GatewayAvatarReviewHost(
+                api: GatewayAvatarReviewHTTPClient(
+                    configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, journal: reviewJournal, isEnabled: { activation.isActive() })
+            avatarReviews = reviews
+            relay.avatarReviews = reviews
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),
@@ -156,6 +170,8 @@
                         api: deletionAPI, storage: storage, account: account, cleanup: database,
                         isEnabled: { activation.isActive() },
                         fenceLocalAccess: { binding, accountID in
+                            reviews.invalidate()
+                            try reviewJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             do {
                                 try await auth.prepareForAccountDeletion(
                                     binding: binding, accountID: accountID)
@@ -175,6 +191,7 @@
                             try await local.erase(scope: scope)
                             try await avatarCache.erase(scope: scope)
                             try await avatarUploads.erase(scope: scope)
+                            try await reviewJournal.erase(owner: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )

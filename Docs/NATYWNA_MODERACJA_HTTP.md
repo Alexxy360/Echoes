@@ -25,3 +25,7 @@ Następny3c.2: host z native/private/foreground/session scope, trwałą intencj�
 ## Odczyt wyniku3c.2a
 
 Dodano osobny odczyt recover: stan bieżącej dokładnej decyzji można sprawdzić po expiry receipt i nowej sesji tego samego uprawnionego konta. Nie odnawia to podglądu i nie wykonuje decyzji. superseded nie jest potwierdzeniem historycznego sukcesu lub porażki. Trwały host/UI nadal kolejne; pełna semantyka i dowody: [odzyskiwanie](ODZYSKIWANIE_DECYZJI_MODERACJI.md).
+
+## Magazyn i host3c.2b
+
+Dodano trwały metadata journal, obserwowalny host z native/private/foreground fencing, exact recovery po restarcie i świadomym rozliczeniem wyniku oraz połączenie z Debug Runtime/erasure. Security IO jest poza MainActor. Ekran i faktyczne acknowledgeDisplay pozostają następnym3c.3; [pełny zakres](MAGAZYN_I_HOST_MODERACJI_IOS.md).

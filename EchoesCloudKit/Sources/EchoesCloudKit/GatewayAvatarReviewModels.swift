@@ -54,6 +54,9 @@ public struct GatewayAvatarReviewReceipt: Equatable, Sendable, CustomStringConve
         guard self.origin == origin, sessionFingerprint == Self.fingerprint(token) else {
             throw GatewayAvatarReviewFailure.invalidInput
         }
+        try validateTime(stamp)
+    }
+    func validateTime(_ stamp: AvatarReviewStamp) throws {
         guard stamp.milliseconds >= observedAtMilliseconds,
             stamp.milliseconds < expiresAtMilliseconds, stamp.uptime >= observedUptime,
             (stamp.uptime - observedUptime) * 1000
