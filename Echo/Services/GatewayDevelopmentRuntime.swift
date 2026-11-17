@@ -17,6 +17,7 @@
         let deletion: GatewayDeletionHost
         let community: GatewayCommunityHost
         let avatarCache: GatewayAvatarCache
+        let avatarUploads: GatewayAvatarUploadJournal
         let avatars: GatewayCommunityAvatarHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
@@ -98,6 +99,10 @@
             let local = try GatewayLocalAccountData(root: cachesRoot)
             let avatarCache = try GatewayAvatarCache(root: cachesRoot)
             self.avatarCache = avatarCache
+            let supportRoot = try FileManager.default.url(
+                for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let avatarUploads = try GatewayAvatarUploadJournal(root: supportRoot)
+            self.avatarUploads = avatarUploads
             avatars = try GatewayCommunityAvatarHost(
                 api: GatewayAvatarHTTPClient(
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),
@@ -138,14 +143,19 @@
                             } catch {
                                 await local.fence(binding: binding, accountID: accountID)
                                 await avatarCache.fence(binding: binding, accountID: accountID)
+                                try await avatarUploads.fenceForAccountDeletion(
+                                    binding: binding, accountID: accountID)
                                 throw error
                             }
                             await local.fence(binding: binding, accountID: accountID)
                             await avatarCache.fence(binding: binding, accountID: accountID)
+                            try await avatarUploads.fenceForAccountDeletion(
+                                binding: binding, accountID: accountID)
                         },
                         clearLocalData: { scope in
                             try await local.erase(scope: scope)
                             try await avatarCache.erase(scope: scope)
+                            try await avatarUploads.erase(scope: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )

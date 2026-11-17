@@ -181,6 +181,7 @@ final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
     var enabled = true, failFence = false, failLocalCleanup = false
     var fences = 0, localClears = 0
     var localHook: (() async throws -> Void)?
+    var fenceHook: ((GatewayIdentityBinding, String?) async throws -> Void)?
     init(
         storage: DeletionJournalMemory = .init(), appleID: String = "native-apple-A",
         cloudName: String = "owner-A"
@@ -195,9 +196,10 @@ final class DeletionJournalMemory: GatewayDeletionStorage, @unchecked Sendable {
         let controller = GatewayDeletionController(
             configuration: config, binding: binding, api: api, storage: storage,
             account: account, cleanup: cleaner ?? cleanup, isEnabled: { [self] in enabled }, now: { flowNow },
-            fenceLocalAccess: { [self] context, _ in
+            fenceLocalAccess: { [self] context, accountID in
                 #expect(context == binding)
                 fences += 1
+                try await fenceHook?(context, accountID)
                 if failFence { throw GatewayFailure.storageUnavailable }
             },
             clearLocalData: { [self] scope in
