@@ -10,6 +10,9 @@ final class AppServices {
     let session: CommunitySession
     let privateProfile: PrivateProfileStore?
     let avatars: GatewayCommunityAvatarBinding?
+    private let avatarEditorHost: GatewayAvatarEditorHost?
+    let avatarPreviewSelection: (@Sendable () async throws -> PreparedAvatar)?
+    @ObservationIgnored private weak var activeAvatarEditor: GatewayAvatarEditorSession?
     private(set) var isUpdatingName = false
     let location = LocationService()
     let music = MusicService()
@@ -27,6 +30,8 @@ final class AppServices {
     ) {
         privateProfile = nil
         avatars = nil
+        avatarEditorHost = nil
+        avatarPreviewSelection = nil
         self.preferences = preferences
         self.demo = demo
         isGatewayDevelopment = false
@@ -41,12 +46,16 @@ final class AppServices {
     init(
         nativeSession: CommunitySession, privateProfile: PrivateProfileStore? = nil,
         avatars: GatewayCommunityAvatarBinding? = nil,
+        avatarEditorHost: GatewayAvatarEditorHost? = nil,
+        avatarPreviewSelection: (@Sendable () async throws -> PreparedAvatar)? = nil,
         simulatedCoordinate: Coordinate? = nil,
         isCurrent: @escaping @MainActor () -> Bool
     ) {
         session = nativeSession
         self.privateProfile = privateProfile
         self.avatars = avatars
+        self.avatarEditorHost = avatarEditorHost
+        self.avatarPreviewSelection = avatarPreviewSelection
         preferences = nil
         demo = simulatedCoordinate != nil
         self.simulatedCoordinate = simulatedCoordinate
@@ -59,6 +68,8 @@ final class AppServices {
     func invalidateNativePresentation() {
         guard isGatewayDevelopment else { return }
         avatars?.invalidate()
+        activeAvatarEditor?.close()
+        activeAvatarEditor = nil
         hasPreparedProfile = true
         privateProfile?.clearCache()
         isUpdatingName = false
@@ -71,6 +82,13 @@ final class AppServices {
     var canEnterProfile: Bool {
         isCurrent() && !isUpdatingName && (privateProfile?.didLoad ?? true)
             && !(privateProfile?.isBusy ?? false)
+    }
+    var canEditAvatar: Bool { isCurrent() && avatarEditorHost != nil }
+    func openAvatarEditor() throws -> GatewayAvatarEditorSession {
+        guard canEditAvatar, let avatarEditorHost else { throw GatewayFailure.signInRequired }
+        let session = try avatarEditorHost.open(isCurrent: isCurrent)
+        activeAvatarEditor = session
+        return session
     }
     func prepareProfile(force: Bool = false) async {
         guard isCurrent(), let privateProfile, !Task.isCancelled else { return }
@@ -118,6 +136,7 @@ final class AppServices {
     }
 
     func deactivate() async {
+        activeAvatarEditor?.close()
         location.pause()
         guard isCurrent() else { return }
         await session.setForeground(false)

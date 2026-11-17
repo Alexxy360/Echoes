@@ -46,6 +46,7 @@
                             Button("Zmień konto testowe") { Task { await fixture?.changeAccount() } }
                             Button("Zamknij sesję testową") { fixture?.invalidate() }
                             Button("Zakończ opóźniony odczyt") { fixture?.releaseProfileRead() }
+                            Button("Zwolnij wysyłkę zdjęcia") { Task { await fixture?.releaseOwnerUpload() } }
                             if fixture?.hasAvatars == true {
                                 Button("Ukryj zdjęcie testowe") { Task { await fixture?.clearAvatar() } }
                                 Button("Przywróć zdjęcie testowe") { Task { await fixture?.restoreAvatar() } }

@@ -7,13 +7,13 @@ import Testing
 private let ownerFlowA = "6b000000-0000-4000-8000-000000000001"
 private let ownerFlowB = "6b000000-0000-4000-8000-000000000002"
 
-private final class OwnerFlowClock: @unchecked Sendable {
+final class OwnerFlowClock: @unchecked Sendable {
     let lock = NSLock()
     private var time = Date().timeIntervalSince1970
     func now() -> Date { lock.withLock { Date(timeIntervalSince1970: time) } }
     func advance(_ value: Double) { lock.withLock { time += value } }
 }
-private actor OwnerFlowJournal: GatewayAvatarUploadJournaling {
+actor OwnerFlowJournal: GatewayAvatarUploadJournaling {
     let real: GatewayAvatarUploadJournal
     let opening = PhotoGate(), preparing = PhotoGate(), transitioning = PhotoGate(), removing = PhotoGate()
     var lease: GatewayAvatarUploadJournalLease?
@@ -85,7 +85,7 @@ private func ownerSnapshot(
             "status": status.rawValue,
         ]))
 }
-private actor OwnerFlowAPI: GatewayAvatarMutationAPI {
+actor OwnerFlowAPI: GatewayAvatarMutationAPI {
     nonisolated let origin = "https://owner-flow.example.invalid"
     enum Fault: Sendable { case lostReply, beforeAccept, denied, unknown, wrongVersion, wrongGeneration }
     struct Call: Sendable {
@@ -167,8 +167,8 @@ private actor OwnerFlowAPI: GatewayAvatarMutationAPI {
         return result
     }
 }
-@MainActor @Observable private final class OwnerFlowFlags { var enabled = true }
-@MainActor private struct OwnerFlowFixture {
+@MainActor @Observable final class OwnerFlowFlags { var enabled = true }
+@MainActor struct OwnerFlowFixture {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(
         "echoes-owner-flow-" + UUID().uuidString)
     let flags = OwnerFlowFlags(), clock = OwnerFlowClock()

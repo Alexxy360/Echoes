@@ -1,0 +1,211 @@
+{
+  "stage": "CK-04e.3j.2d.1",
+  "observedAtUTC": "2026-11-17T15:32:31.737755+00:00",
+  "baselineCommit": "362829fc3bf142019c72110542d1464fc6a283c8",
+  "checks": {
+    "CloudKit": {
+      "definedTests": 410,
+      "macOS": {
+        "passed": 408,
+        "skipped": 2,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 408,
+        "skipped": 2,
+        "failed": 0
+      }
+    },
+    "newPassedPackageTestFunctions": 17,
+    "newPassedUITestFunctions": 7,
+    "uiFinalCohort": {
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0
+    },
+    "uiEarlierCohort": {
+      "passed": 30,
+      "failed": 0,
+      "unchangedRegressionTestsRetained": 23,
+      "beforeFinalConfirmationNavigationFix": true
+    },
+    "singleFinal30TestRunClaimed": false,
+    "strictSwiftFormatFiles": 17,
+    "xcresultCountsVerified": true,
+    "allNewPackageIndividualCompletionsVerified": true,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "coreGatewayProjectDependenciesCIUnchanged": true
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "finalNavigationAndPrivacyIncluded": true,
+      "activationAbsent": true,
+      "privacySHA256": "6ade1c8638c278305ecc87570eaaddd5e42668c7da9d63fcbc2661556aaffe06",
+      "binarySHA256": {
+        "Echoes": "2ba9a78afc4e1d97dc926a6b7ede6df1263d782827a19d2db2aa8b1425609f77",
+        "Echoes.debug.dylib": "85ba85353c579db8490c58ab3cbf12f15daf5c513125f64ac07b2bac0d1121f2"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "finalNavigationAndPrivacyIncluded": true,
+      "activationAbsent": true,
+      "privacySHA256": "6ade1c8638c278305ecc87570eaaddd5e42668c7da9d63fcbc2661556aaffe06",
+      "binarySHA256": {
+        "Echoes": "647653fbf743f2028b5ddf83eac13df45ee9a9c1949b16f21c0ea0c5f8c4e395"
+      }
+    }
+  },
+  "implemented": [
+    "controlled AppServices and one Runtime host/session for photo selection/consent/owner actions",
+    "PhotosPicker FileRepresentation consumes provider file before importer returns, no raw URL or original bytes passed to view",
+    "8MB original bound before read, regular file/no-follow/nonblocking, chunked count/stat/cancel checks",
+    "off-main ImageIO preparation and bounded thumbnail header before preview decode",
+    "one global unsettled slot retained until real dependency settles across cancel/close/new account",
+    "native revision/private scope/domain/editor UUID guard every getter and awaited result",
+    "consent tied to exact prepared draft, direct upload method rechecks consent",
+    "manual status/recover/retry/publish/withdraw/discard; no automatic publication or retry loop",
+    "confirmation in same navigation stack; root lifecycle closes editor without closing on confirmation push",
+    "background/account/domain close removes unsent preview/consent; old screen cannot close new session",
+    "privacy manifest photos linked for functionality; file metadata C617.1/3B52.1 and local elapsed time35F9.1"
+  ],
+  "actualComponents": [
+    "filesystem, ImageIO, durable journal, owner controller/editor MainActor Observation",
+    "native SwiftUI editor and simulator PhotosPicker opening/cancellation",
+    "final app Debug Simulator/Release device compilation and bundled privacy manifest",
+    "synthetic JPEG file flows through real file preparer and journal"
+  ],
+  "modeledComponents": [
+    "Apple/iCloud/gateway identities and server moderation/lost replies",
+    "selected image in UI supplied by explicit synthetic sample, not real PhotosPicker item",
+    "account switching is a model; not two real ordinary iCloud accounts"
+  ],
+  "negativeControl": {
+    "copyOnly": true,
+    "mutation": "remove consent requirement from editor submit",
+    "test": "avatarEditorCurrentAndConsentAreRecheckedWhenUploadIsRequestedDirectly",
+    "failedTests": 1,
+    "issues": 3,
+    "exitCode": 1,
+    "actualSourceSHA256Unchanged": true,
+    "observed": "removing consent permits modeled upload; test detects it"
+  },
+  "firstPassHistory": [
+    "fixture compile rejected access to internal GatewaySecret.value; fixed fake to explicit synthetic owner without secret exposure",
+    "test compile required try on four #require calls",
+    "UI corrected switch-thumb tap, lazy Form existence and excessive scroll which dismissed sheet",
+    "earlier30 tests passed but largest-text system confirmation popover failed visual acceptance",
+    "replacement nested sheet failed2 tests/7 issues because Form.onDisappear closed editor",
+    "final navigation destination plus lifecycle on root passed2 focused and all7 editor tests",
+    "temporary escalation rejection due Codex usage limit was respected; output/test work resumed after availability returned"
+  ],
+  "runtimeWarnings": {
+    "finalUI": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "location": "largest accessibility text test; xcresult no source location",
+    "sourceEstablished": false,
+    "visualAndInteractionChecked": true,
+    "resolutionRequiredBeforeTestFlightAcceptance": true
+  },
+  "knownLimits": [
+    "current published own-image raster without GPS and immediate own-image invalidation elsewhere on mutation are next2d.2",
+    "system PhotosPicker opened/cancelled; full selected item/iCloud Photos import on physical device not proved",
+    "reopen UI test is same process sheet close/reopen, not app restart",
+    "provider may create temporary files; no physical erasure/native decode interruption/RAM zeroization guarantee",
+    "two physical-only FileProtection tests skipped; locked-device remains required",
+    "operator review/reports/contact/retention/orphans remain",
+    "real schema/roles/asset hosts/SIWA/separate service identity/hosted Free/two ordinary accounts not accepted",
+    "standard entry remains Firebase; controlled runtime not activated or TestFlight ready"
+  ],
+  "notPerformed": [
+    "unchanged full gateway/Core/dependency audits",
+    "phone install/new SDK window",
+    "remote deployment/activation/schema/roles/keys/secrets/paid plans",
+    "Production/TestFlight/Firebase operations",
+    "App Store Connect privacy publication"
+  ],
+  "newPackageTestNames": [
+    "avatarFileImportPreparesBoundedCopiesWithoutChangingTheProviderFile",
+    "avatarFileImportRejectsSparseOversizedInputBeforeDecoding",
+    "avatarFileImportDoesNotFollowSymlinksOrBlockOnFIFOOrReadDirectories",
+    "avatarFileImportCancellationPrecedesOpeningAndNeverCopiesOriginal",
+    "avatarFileImportRejectsEmptyAndMalformedImagesWithoutExposingFilePaths",
+    "avatarFileImportAcceptsAnImageAtTheExactOriginalByteLimit",
+    "avatarEditorSelectionDoesNotUploadAndConsentIsBoundToTheExactDraft",
+    "avatarEditorOldSheetCannotReadOrCloseANewerSheet",
+    "avatarEditorDomainAndICloudChangeHideDraftImmediatelyBeforeExplicitClose",
+    "avatarEditorUnsettledPreparationKeepsGlobalSlotAndCannotPopulateANewAccount",
+    "avatarEditorCancellationAndUnknownProviderFailureNeverExposePrivateDetails",
+    "avatarEditorCurrentAndConsentAreRecheckedWhenUploadIsRequestedDirectly",
+    "avatarEditorLateNetworkReplyCannotRestoreAnotherEditorsDraftOrSnapshot",
+    "avatarEditorUnknownWriteConsumesDraftButPreservesRecoverableJournal",
+    "avatarEditorInvalidThumbnailCannotBecomeAPreviewOrConsentTarget",
+    "avatarEditorDefaultInactiveHostDoesNotInvalidateAnAlreadyConnectedController",
+    "avatarEditorClosingAndReopeningDropsConsentButRestoresThePendingOperation"
+  ],
+  "newUITestNames": [
+    "testSelectionRequiresExplicitConsentAndDoesNotAutomaticallyPublish",
+    "testApprovedPhotoStillRequiresPublishAndClearRequiresConfirmation",
+    "testClosingDraftDropsItsPreviewAndConsentOnReopen",
+    "testLostReplyIsRecoveredAfterReopeningEditorWithoutRechoosingPhoto",
+    "testBackgroundDropsUnsentPreviewAndClosesItsDomain",
+    "testSystemPhotoPickerCanBeCancelledWithoutUploadingOrClosingTheEditor",
+    "testConsentAndSubmitAreReachableWithLargestAccessibilityText"
+  ],
+  "sourceDocsAndScreenshotsSHA256": {
+    "Echo/Services/AppServices.swift": "74ccc96c7f6bd0e5abb0920e87396545085c31a95dcd3c5e6483e630034ba066",
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "00c3c0cab89dbc7080b99e95c7b533b988487d96761a2624e3b90c971be49c7d",
+    "Echo/Services/AvatarPhotoTransfer.swift": "5838b7781243570d32ff127dd2e956ffc57609d7dfbb895e7b03589d9102b916",
+    "Echo/Services/CommunityPreviewFixture.swift": "c4b1521f32dd5b4c13046a82981654ebc87749bf782697bc99bb94c0976f82df",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "54061fd4c228b8fa9f2a43b64c5c9e015ce55d133b2c5eb753c003f913efd330",
+    "Echo/Views/AvatarEditorActionsSection.swift": "ca249284cd6a40db174d3b050befa57479c81148f5057a84680b9d781c000b28",
+    "Echo/Views/AvatarEditorConfirmationView.swift": "38dc587ae780bfb0f9379fbdd84a2a81bbf5f4f512ffaf043f13391aa87b0695",
+    "Echo/Views/AvatarEditorSelectionSection.swift": "8806a1c0310fdcf50c7fc41dbe5d62917007391971ec4a53012aff3677f81f66",
+    "Echo/Views/AvatarEditorView.swift": "57b743af83342884f00fcec26a4b3db2d3bde48937c6cf48432bcdd16bcabb01",
+    "Echo/Views/GatewayCommunityPreviewView.swift": "82ca59e7b96fc264d528d81f0044bac7583889ed7296394a9f7db98d8f197e27",
+    "Echo/Views/SettingsView.swift": "fe5d58721141f9eccbb1663f315163d08c741bcd0a8f6c2a1235fd21201b926f",
+    "EchoesCloudKit/Sources/EchoesCloudKit/AvatarFilePreparer.swift": "4737901ecb883301bce56d69b29296dbed48944dca371da93b6268a4380bc0aa",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "cd5a1f56ac7151fcd311843cefbfd46d0e6d715e1e23a61b82ef9a7c562da564",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/AvatarFilePreparerTests.swift": "8a49ec1d3186010dd227ab8dfc899962403c1c932742a5d09d94a52d8f1696e0",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarEditorTests.swift": "e9f7b263fb8fbcdb048458c7876e015ae08f54ad2625fe1bd8de9f0c8a3bbf79",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "cfe11bee7cde4578ca2e99bb1384c515b282c90bb3cc5c65211c540308c57513",
+    "EchoesUITests/GatewayAvatarEditorUITests.swift": "460d8df097e3b89ce25173c3f74371a228485518ea448503a12fbeb21120e34f",
+    "Echo/PrivacyInfo.xcprivacy": "6ade1c8638c278305ecc87570eaaddd5e42668c7da9d63fcbc2661556aaffe06",
+    "Docs/EDYTOR_WLASNEGO_ZDJECIA_IOS.md": "d8477963fa3397268d753d69a8bc7af210e91bde95033076838b9e524e4f8a50",
+    "Docs/NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md": "e9c5054d659a1345f9b996eb505a2fe2b20d112bb2f392a8c7457e3a50624a43",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "d882418543b3eacab91c4a7238b7d91eb858b9c4a846acbdd2353c0215dbde84",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "0a49b3b7a004dc6ba21e237aeb81530a7c00d167c7cd0f74784b5a05ccfab681",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "5e7b837224d736e6256a1fce02628a68b798a239f63f8b1bd8bebb60872bfe8d",
+    "Docs/DZIENNIK_ZMIAN.md": "b65b43bd4868c1aed1f5e1da1433a38687781820567e8a05df815ca41d035443",
+    "Docs/evidence/avatar-editor-ui/consent.png": "613204da94e7fd16f2ae746ba4d9a07205c1213de82a33fe149372fc72e41e01",
+    "Docs/evidence/avatar-editor-ui/pending.png": "2d2979c1cd351fa8cb494fbec6a46f54c8ecc843d52b6f09325f2ac62ca2e4d7",
+    "Docs/evidence/avatar-editor-ui/published.png": "1e9212791c807644e8c3ede3ceba2e7e92717eb2b29ff05cdaed35aa94950506",
+    "Docs/evidence/avatar-editor-ui/withdrawn.png": "1cc6c681ac28066b0741e8e5c5b08da40462a181b23bc47ab2de509d06c19896",
+    "Docs/evidence/avatar-editor-ui/large-text.png": "e2432640c0d6f21e5c9bf14cbb6ab0c0f7ff06209050a2658a3acc411082ea3d",
+    "Docs/evidence/avatar-editor-ui/recovered.png": "2e37780f40f30851390b5ecafe168877d890b78deebcf13ecffd08c8b482e2c7"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-editor-full-mac.log": "9924fceaa8b16db2352c78ffb6f89086e2a69c340ac125e271318b918766ff01",
+    "echoes-avatar-editor-full-simulator.log": "eca5ae2e2e59dbeef7c6553c194b376ee79dfd33b4c885df2a23af769e24dc09",
+    "echoes-avatar-editor-simulator-summary.json": "f160d096082d784db00c63686027cc7943a43108390deacb62f81214fb9906d0",
+    "echoes-avatar-editor-focused.log": "dd6571fde799b7d12cca330792ecd98ed1a8d0b1568de3c86256d69c62ec99eb",
+    "echoes-avatar-editor-negative.log": "b0218c7920f796704373313bbf75fa634f873d8966339e8b95dc37cfd8a5f999",
+    "echoes-avatar-editor-negative-result.json": "a9866d667a711fa0509a7301f521ab1a173f21d41f2e738cd239f96a0befb134",
+    "echoes-avatar-editor-ui-regression.log": "3742b1016987aab686e59299e3867cbff5de60be8ecc872e1ddb56047bdaeb61",
+    "echoes-avatar-editor-ui-summary.json": "23f7f69ffafe631df7e62e8e6ad2df6515fe3f2bdebc0a7343ab0a679e270d23",
+    "echoes-avatar-editor-ui-sheet.log": "7a3ce4014f493d21397be9b23cf048f3c1738d849adfab18a50df4b53849302a",
+    "echoes-avatar-editor-ui-navigation.log": "37c0224e5c92b7f63bebb19571783b182bdec1983419bf4920a37b58097593c1",
+    "echoes-avatar-editor-ui-accepted.log": "430fdd0e3e9dd47e7b6efd1376b564c9b847fc168efd38837e5a7d4b08bca070",
+    "echoes-avatar-editor-ui-accepted-summary.json": "6aedabc0ea5e47a5e892df8a0959fc80e32757d5283ac40dff5fd85dfde13960",
+    "echoes-avatar-editor-debug-accepted.log": "d8f4f1337635d6585cf01db138d64c3ce8f667f418cd99e69575385f2af10876",
+    "echoes-avatar-editor-release-accepted.log": "ea0861015ee97c72e62b2143c3019bc4d26d710556fc6a6986ed37a9e42586d4",
+    "echoes-avatar-editor-format-accepted.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

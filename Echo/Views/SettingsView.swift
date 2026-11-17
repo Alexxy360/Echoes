@@ -11,6 +11,8 @@ struct SettingsView: View {
     @State private var musicBusy = false
     @State private var confirmDeletion = false
     @State private var deleting = false
+    @State private var avatarEditor: GatewayAvatarEditorSession?
+    @State private var avatarError: String?
     @FocusState private var nameFocused: Bool
     var body: some View {
         NavigationStack {
@@ -39,6 +41,16 @@ struct SettingsView: View {
                     Text("Nazwa nie jest unikalna. Widoczność włączasz osobno na mapie.").font(.caption)
                     Text("Używany pseudonim: " + services.session.name).font(.caption)
                         .accessibilityIdentifier("settings.currentName")
+                }
+                if services.canEditAvatar {
+                    Section("Zdjęcie profilu") {
+                        Button("Zarządzaj swoim zdjęciem", action: openAvatar)
+                            .accessibilityIdentifier("settings.avatar")
+                        if let avatarError { Text(avatarError).foregroundStyle(Color.meddleCoral) }
+                        Text(
+                            "Zdjęcie wybierasz i wysyłasz osobno. Publikacja wymaga sprawdzenia przez obsługę i Twojego potwierdzenia."
+                        ).font(.caption)
+                    }
                 }
                 Section("Muzyka") {
                     Toggle(
@@ -113,6 +125,10 @@ struct SettingsView: View {
                 }
             }
             .onAppear { name = services.session.name }
+            .sheet(item: $avatarEditor) { session in
+                AvatarEditorView(session: session, previewSelection: services.avatarPreviewSelection)
+                    .presentationDetents([.large])
+            }
             .confirmationDialog(
                 "Usunąć Twoje konto, profil i wiadomości?", isPresented: $confirmDeletion,
                 titleVisibility: .visible
@@ -139,6 +155,12 @@ struct SettingsView: View {
             await services.music.enable()
             musicBusy = false
         }
+    }
+    private func openAvatar() {
+        do {
+            avatarEditor = try services.openAvatarEditor()
+            avatarError = nil
+        } catch { avatarError = "Nie udało się otworzyć edytora zdjęcia. Sprawdź logowanie." }
     }
     private func deleteData() {
         deleting = true

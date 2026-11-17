@@ -9,9 +9,9 @@
     @MainActor private final class GatewayCommunityInvalidationRelay {
         weak var host: GatewayCommunityHost?
         weak var services: AppServices?
-        weak var avatarOwner: GatewayAvatarOwnerController?
+        weak var avatarEditor: GatewayAvatarEditorHost?
         func clearServices() {
-            avatarOwner?.invalidate()
+            avatarEditor?.invalidate()
             services?.invalidateNativePresentation()
         }
     }
@@ -23,6 +23,7 @@
         let avatarCache: GatewayAvatarCache
         let avatarUploads: GatewayAvatarUploadJournal
         let avatarOwner: GatewayAvatarOwnerController
+        let avatarEditor: GatewayAvatarEditorHost
         let avatars: GatewayCommunityAvatarHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
@@ -61,7 +62,8 @@
             }
             let services = AppServices(
                 nativeSession: presentation.domain.session,
-                privateProfile: profile, avatars: avatarBinding, isCurrent: current)
+                privateProfile: profile, avatars: avatarBinding, avatarEditorHost: avatarEditor,
+                isCurrent: current)
             relay.services = services
             communityServices = services
             communityPresentationID = id
@@ -113,7 +115,10 @@
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),
                 configuration: activation.configuration, cloudKit: activation.cloudKit,
                 authorization: auth, journal: avatarUploads, isEnabled: { activation.isActive() })
-            relay.avatarOwner = avatarOwner
+            avatarEditor = try GatewayAvatarEditorHost(
+                controller: avatarOwner, cloudKit: activation.cloudKit, authorization: auth,
+                isEnabled: { activation.isActive() })
+            relay.avatarEditor = avatarEditor
             avatars = try GatewayCommunityAvatarHost(
                 api: GatewayAvatarHTTPClient(
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),

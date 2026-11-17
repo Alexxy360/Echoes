@@ -14,6 +14,7 @@
         private let api: CommunityPreviewAPI
         private let avatarAPI: CommunityAvatarPreviewAPI?
         private let avatarHost: GatewayCommunityAvatarHost?
+        private let ownerPhotos: AvatarEditorPreviewFixture?
         private let cloud = CommunityPreviewProfileCloud()
         private let profileDatabase = CommunityPreviewProfileDatabase()
         private let profileConfiguration: CloudKitConfiguration
@@ -27,6 +28,7 @@
                     "happy", "pending", "profile-onboarding", "profile-offline", "profile-conflict",
                     "profile-unknown", "profile-delayed", "profile-empty",
                     "avatars", "avatars-denied", "avatars-corrupt", "avatars-delayed",
+                    "avatar-owner", "avatar-owner-approved", "avatar-owner-lost", "avatar-owner-delayed",
                 ].contains(mode)
             else { throw GatewayFailure.configuration }
             self.mode = mode
@@ -35,6 +37,10 @@
             profileConfiguration = try .init(
                 containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development)
             profileAccount = CloudKitAccountSession(source: cloud)
+            ownerPhotos =
+                mode.hasPrefix("avatar-owner")
+                ? try AvatarEditorPreviewFixture(mode: mode, source: source, cloudKit: profileConfiguration)
+                : nil
             if mode.hasPrefix("avatars") {
                 let photoAPI = CommunityAvatarPreviewAPI.make(mode: mode)
                 avatarAPI = photoAPI
@@ -70,6 +76,8 @@
             do {
                 await api.selectOwner(
                     source.isSecond ? CommunityPreviewAPI.ownerB : CommunityPreviewAPI.ownerA)
+                await ownerPhotos?.api.selectOwner(
+                    source.isSecond ? CommunityPreviewAPI.ownerB : CommunityPreviewAPI.ownerA)
                 cloud.name = source.isSecond ? "synthetic-cloud-B" : "synthetic-cloud-A"
                 await profileAccount.refresh()
                 guard let native = source.communityAuthorization else { throw GatewayFailure.signInRequired }
@@ -90,6 +98,7 @@
                 let current = AppServices(
                     nativeSession: presentation.domain.session, privateProfile: profile,
                     avatars: try avatarHost?.bind(session: presentation.domain.session, isCurrent: gate),
+                    avatarEditorHost: ownerPhotos?.host, avatarPreviewSelection: ownerPhotos?.selection,
                     simulatedCoordinate: PreviewCommunityClient.center, isCurrent: gate)
                 services = current
                 await current.prepareProfile()
@@ -133,6 +142,7 @@
         }
         func repairAvatar() async { await avatarAPI?.repair() }
         func releaseAvatarRead() async { await avatarAPI?.release() }
+        func releaseOwnerUpload() async { await ownerPhotos?.api.release() }
         func releaseProfileRead() { profileDatabase.release() }
         func close(_ id: UUID) async {
             services?.invalidateNativePresentation()
@@ -140,10 +150,12 @@
             await host.close(id)
         }
         func invalidate() {
+            ownerPhotos?.host.invalidate()
             host.invalidate()
             services?.invalidateNativePresentation()
             services = nil
             Task { await avatarAPI?.release() }
+            Task { await ownerPhotos?.api.release() }
         }
         func changeAccount() async {
             invalidate()
