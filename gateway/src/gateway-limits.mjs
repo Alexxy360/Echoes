@@ -88,6 +88,20 @@ export class GatewayLimits {
     });
     await this.#sync(); if (outcome) throw outcome;
   }
+  /** Counts attempted bodies too; selected-intent limits remain separately enforced by policy. */
+  async consumeAvatarMutation(accountID, { upload = false } = {}) {
+    if (typeof accountID !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(accountID) || typeof upload !== "boolean") throw new GatewayLimitError();
+    const now = this.#now(), minute = Math.floor(now / 60000) * 60000;
+    const key = createHash("sha256").update("echoes/avatar-mutation-budget/v1\0" + accountID).digest("hex");
+    const outcome = this.#tx(() => {
+      for (const [kind, ceiling] of upload ? [["avatar-mutation", 12], ["avatar-upload", 3]] : [["avatar-mutation", 12]]) {
+        const rows = this.#rows(`INSERT INTO gateway_windows_v1(kind,key_hash,window_start,count) VALUES (?,?,?,1)
+          ON CONFLICT(kind,key_hash,window_start) DO UPDATE SET count=count+1 WHERE count<? RETURNING count`, kind, key, minute, ceiling);
+        if (!rows.length) return new GatewayLimitError("RATE_LIMITED", Math.max(1, Math.ceil((minute + 60000 - now) / 1000)));
+      }
+    });
+    await this.#sync(); if (outcome) throw outcome;
+  }
   async purgeExpired() {
     const now = this.#now(), day = Math.floor(now / 86400000), minute = Math.floor(now / 60000) * 60000;
     this.#tx(() => {

@@ -23,6 +23,12 @@ import { AvatarPolicyState } from "./avatar-policy-state.mjs";
 import { CommunityAvatarReferences } from "./community-avatar-references.mjs";
 import { CloudKitAvatarReader } from "./cloudkit-avatar-reader.mjs";
 import { avatarReadPath, avatarReadInputLimit, avatarDownloadHosts, avatarHTTPDeadline, avatarEdgeResponse, avatarEdgeErrorResponse } from "./gateway-avatar-http.mjs";
+import { AvatarReceiptVault } from "./avatar-receipt-vault.mjs";
+import { CloudKitAvatarAssets } from "./cloudkit-avatar-assets.mjs";
+import { CloudKitAvatarRepository } from "./cloudkit-avatar-repository.mjs";
+import { AvatarPublicationCoordinator } from "./avatar-publication-coordinator.mjs";
+import { avatarMutationPaths, avatarIntentHeader, avatarMutationHeaders, avatarMutationDeadline,
+  avatarMutationAdmission, avatarMutationEdgeResponse } from "./avatar-upload-http.mjs";
 
 export const authorityName = "echoes-auth-authority-development-v1";
 export function activeGatewayConfiguration(env, now = Date.now()) {
@@ -32,6 +38,8 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
       !["0", "1"].includes(env.PUBLIC_RECORDS_ENABLED ?? "0") ||
       !["0", "1"].includes(env.COMMUNITY_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_READ_ENABLED ?? "0") ||
+      !["0", "1"].includes(env.AVATAR_UPLOAD_ENABLED ?? "0") ||
+      env.AVATAR_UPLOAD_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       env.AVATAR_READ_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       env.COMMUNITY_ENABLED === "1" && env.PUBLIC_RECORDS_ENABLED !== "1" ||
       env.PUBLIC_RECORDS_ENABLED === "1" && env.ACCOUNT_DELETION_ENABLED !== "1" ||
@@ -40,9 +48,13 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
   if (!Number.isSafeInteger(deadline) || deadline <= now || deadline > now + 7 * 86400000) return null;
   const canonical = new Date(deadline).toISOString();
   if (env.GATEWAY_EXPIRES_AT !== canonical && env.GATEWAY_EXPIRES_AT !== canonical.replace(".000Z", "Z")) return null;
-  let hosts = Object.freeze([]);
-  try { if (env.AVATAR_READ_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON); } catch { return null; }
-  return Object.freeze({ deadline, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
+  let hosts = Object.freeze([]), uploadHosts = Object.freeze([]);
+  try {
+    if (env.AVATAR_READ_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON);
+    if (env.AVATAR_UPLOAD_ENABLED === "1") uploadHosts = avatarDownloadHosts(env.AVATAR_UPLOAD_HOSTS_JSON);
+  } catch { return null; }
+  return Object.freeze({ deadline, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
+    avatarUploadEnabled: env.AVATAR_UPLOAD_ENABLED === "1", avatarUploadHosts: uploadHosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
     publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
 }
 function keyMap(json) {
@@ -57,7 +69,7 @@ function hasRegistryCheckpoint(storage) {
 }
 
 /** Concrete composition for the Development target. No fake Apple exchange, key or data-erasure fallback. */
-export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImplementation = (request, options) => fetch(request, options), erasePublicDataBatch } = {}) {
+export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImplementation = (request, options) => fetch(request, options), erasePublicDataBatch, avatarNormalizerFactory } = {}) {
   try {
     const config = activeGatewayConfiguration(env, clock());
     if (!config || (config.deletionEnabled && !config.publicRecordsEnabled && typeof erasePublicDataBatch !== "function")) throw new Error();
@@ -83,11 +95,16 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: providerFetch });
     const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: providerFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
-    let publicRecords, community, communityState, avatarReader;
+    let publicRecords, community, communityState, avatarReader, avatarPublication, avatarWithdrawal;
     const isAvatarReadEnabled = () => {
       const active = activeGatewayConfiguration(env, clock());
       return active?.avatarReadEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
     };
+    const isAvatarUploadEnabled = () => {
+      const active = activeGatewayConfiguration(env, clock());
+      return active?.avatarUploadEnabled === true && active.avatarUploadHosts.join() === config.avatarUploadHosts.join();
+    };
+    const isAvatarWithdrawalEnabled = () => isAvatarReadEnabled() || isAvatarUploadEnabled();
     if (config.publicRecordsEnabled) {
       const registry = new PublicRecordRegistry(storage, { clock });
       const client = new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
@@ -96,13 +113,26 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       checkpoint = new PublicRegistryCheckpoint({ registry, client });
       publicRecords = new CloudKitPublicRepository({ authentication, clock, registry, client, checkpoint });
       if (config.communityEnabled || storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").toArray().length) communityState = new CommunityState(storage, { clock });
-      const avatarPolicy = config.avatarReadEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
+      const avatarPolicy = config.avatarReadEnabled || config.avatarUploadEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
+      if (avatarPolicy) avatarWithdrawal = new AvatarPublicationCoordinator({ state: avatarPolicy, authentication, communityState,
+        profileRepository: publicRecords, checkpoint, isEnabled: isAvatarWithdrawalEnabled, withdrawalOnly: true });
       const avatarReferences = config.avatarReadEnabled ? new CommunityAvatarReferences({ avatarPolicy, communityState, clock, isEnabled: isAvatarReadEnabled }) : undefined;
       if (config.communityEnabled) community = new CommunityCoordinator({ state: communityState, authentication, repository: publicRecords, avatarReferences,
         clock, cursorSecret: env.REQUEST_BUDGET_KEY, phrasesJSON: env.COMMUNITY_BLOCKED_PHRASES_JSON ?? "[]", supportURL: env.COMMUNITY_SUPPORT_URL ?? "" });
       if (config.avatarReadEnabled) avatarReader = new CloudKitAvatarReader({ authentication, communityState,
         avatarPolicy, profileRepository: publicRecords, registry, client, checkpoint,
         clock, isEnabled: isAvatarReadEnabled, verifiedDownloadHosts: config.avatarDownloadHosts, fetchImplementation: guardedFetch });
+      if (config.avatarUploadEnabled) {
+        if (typeof avatarNormalizerFactory !== "function") throw new Error();
+        const normalizer = avatarNormalizerFactory(isAvatarUploadEnabled);
+        const assets = new CloudKitAvatarAssets({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
+          keyID: env.CLOUDKIT_KEY_ID, privateKeyPEM: env.CLOUDKIT_PRIVATE_KEY, registry, checkpoint, clock,
+          receiptVault: new AvatarReceiptVault({ activeKeyID: env.REFRESH_ACTIVE_KEY_ID, keys: refreshKeys }),
+          verifiedUploadHosts: config.avatarUploadHosts, isEnabled: isAvatarUploadEnabled, fetchImplementation: guardedFetch });
+        const avatars = new CloudKitAvatarRepository({ registry, checkpoint, assets, client, authentication, isEnabled: isAvatarUploadEnabled });
+        avatarPublication = new AvatarPublicationCoordinator({ state: avatarPolicy, authentication, communityState, normalizer,
+          avatarRepository: avatars, profileRepository: publicRecords, checkpoint, isEnabled: isAvatarUploadEnabled });
+      }
     }
     const limits = new GatewayLimits(storage, { clock });
     const deletions = new AccountDeletionState(storage, { clock });
@@ -137,6 +167,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
       avatarReader, isAvatarReadEnabled,
+      avatarPublication, isAvatarUploadEnabled, avatarWithdrawal, isAvatarWithdrawalEnabled,
       community, isCommunityEnabled: () => activeGatewayConfiguration(env, clock())?.communityEnabled === true,
       isEnabled: () => activeGatewayConfiguration(env, clock()) !== null && (checkpoint !== undefined || !hasRegistryCheckpoint(storage)) });
     return Object.freeze({ handle, maintenance, processor, publicRecords });
@@ -160,14 +191,23 @@ export function handleAuthorityRequest(request, { runtime, env, objectID, clock 
 }
 
 /** Thin public edge: only this boundary reads the platform client IP. All accounts use one private authority. */
+const claimAvatarMutationEdge = avatarMutationAdmission();
 export async function forwardGatewayRequest(request, env, { clock = Date.now } = {}) {
-  let avatarDeadline;
+  let avatarDeadline, mutationDeadline, mutationAdmission;
   try {
     const { path } = inspectGatewayRequest(request);
     if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
     const config = activeGatewayConfiguration(env, clock());
     if (!config) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
     const avatar = path === avatarReadPath;
+    const mutation = avatarMutationPaths.get(path);
+    const withdrawal = mutation === "status" || mutation === "clear";
+    if (mutation) {
+      if (!(config.avatarUploadEnabled || withdrawal && config.avatarReadEnabled)) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      avatarMutationHeaders(request, mutation);
+      mutationAdmission = claimAvatarMutationEdge(mutation);
+      mutationDeadline = avatarMutationDeadline(request.signal, 25000);
+    }
     if (avatar && !config.avatarReadEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
     if (avatar) {
       const length = request.headers.get("Content-Length");
@@ -180,14 +220,26 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     for (const name of ["Content-Type", "Content-Length", "Content-Encoding", "Authorization"]) {
       if (request.headers.has(name)) headers.set(name, request.headers.get(name));
     }
+    if (mutation === "upload") headers.set(avatarIntentHeader, request.headers.get(avatarIntentHeader));
     headers.set("X-Echoes-Request-Budget", budget);
     const forwarded = new Request("https://echoes-authority.internal" + path, {
       method: request.method, headers, body: request.body, redirect: "manual", duplex: "half",
-      ...(avatar ? { signal: avatarDeadline.signal } : {}),
+      ...(avatar || mutation ? { signal: avatarDeadline?.signal ?? mutationDeadline.signal } : {}),
     });
     const id = env.COMMUNITY_AUTHORITY.idFromName(authorityName);
     const fetchAuthority = () => env.COMMUNITY_AUTHORITY.get(id).fetch(forwarded);
-    const response = avatar ? await avatarDeadline.run(fetchAuthority) : await fetchAuthority();
+    const response = mutation ? await mutationAdmission.run(mutationDeadline, fetchAuthority) : avatar ? await avatarDeadline.run(fetchAuthority) : await fetchAuthority();
+    if (mutation) {
+      const enabled = () => {
+        const current = activeGatewayConfiguration(env, clock());
+        return current?.avatarUploadEnabled && current.avatarUploadHosts.join() === config.avatarUploadHosts.join() ||
+          withdrawal && current?.avatarReadEnabled && current.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
+      };
+      if (!enabled()) { void response?.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503); }
+      const result = await mutationAdmission.run(mutationDeadline, () => avatarMutationEdgeResponse(response, mutationDeadline));
+      if (!enabled()) { void result.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503); }
+      mutationDeadline.check(); return result;
+    }
     if (avatar) {
       const active = activeGatewayConfiguration(env, clock());
       if (!active?.avatarReadEnabled || active.avatarDownloadHosts.join() !== config.avatarDownloadHosts.join()) {
@@ -211,5 +263,5 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     if (response.headers.get("Allow") === "POST") safe.set("Allow", "POST");
     return new Response(response.body, { status: response.status, headers: safe });
   } catch (error) { return gatewayFailure(error); }
-  finally { avatarDeadline?.close(); }
+  finally { avatarDeadline?.close(); mutationDeadline?.close(); mutationAdmission?.close(); }
 }

@@ -7,7 +7,7 @@ import { once } from "node:events";
 import { build } from "esbuild";
 const require = createRequire(import.meta.url), runtime = require("workerd");
 
-export async function avatarWorker() {
+export async function avatarWorker({ communityEntry = false } = {}) {
   const directory = await mkdtemp(join(tmpdir(), "echoes-codec-workerd-"));
   let child, stderr = "";
   const stop = async () => {
@@ -21,7 +21,10 @@ export async function avatarWorker() {
   try {
     const bundle = join(directory, "entry.mjs");
     await mkdir(join(directory, "state"));
-    await build({ entryPoints: [new URL("./avatar-normalizer-worker.mjs", import.meta.url).pathname], outfile: bundle,
+    const entry = communityEntry ? "./community-disabled-worker.mjs" : "./avatar-normalizer-worker.mjs";
+    const objectClass = communityEntry ? "CommunityAuthority" : "AvatarCodecTestAuthority";
+    const objectBinding = communityEntry ? "COMMUNITY_AUTHORITY" : "CODEC";
+    await build({ entryPoints: [new URL(entry, import.meta.url).pathname], outfile: bundle,
       bundle: true, format: "esm", platform: "node", target: "es2022", external: ["node:*", "cloudflare:*"],
       plugins: [{ name: "static-avatar-wasm", setup(builder) {
         builder.onResolve({ filter: /\.wasm$/ }, args => {
@@ -43,8 +46,8 @@ const config :Workerd.Config = (
     (name = "jpeg_decoder.wasm", wasm = embed "decoder.wasm"),
     (name = "jpeg_encoder.wasm", wasm = embed "encoder.wasm")
    ], compatibilityDate = "2026-07-30", compatibilityFlags = ["nodejs_compat", "enable_request_signal"],
-   globalOutbound = "deny", bindings = [(name = "CODEC", durableObjectNamespace = "AvatarCodecTestAuthority")],
-   durableObjectNamespaces = [(className = "AvatarCodecTestAuthority", uniqueKey = "echoes-synthetic-codec-test", enableSql = true)],
+   globalOutbound = "deny", bindings = [(name = "${objectBinding}", durableObjectNamespace = "${objectClass}")],
+   durableObjectNamespaces = [(className = "${objectClass}", uniqueKey = "echoes-synthetic-codec-test", enableSql = true)],
    durableObjectStorage = (localDisk = "storage")
   )),
   (name = "storage", disk = (path = ${JSON.stringify(join(directory, "state"))}, writable = true)),

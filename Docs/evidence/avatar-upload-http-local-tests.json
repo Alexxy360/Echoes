@@ -1,0 +1,207 @@
+{
+  "stage": "CK-04e.3j.1",
+  "observedAtUTC": "2026-11-17T04:11:46.921969+00:00",
+  "baselineCommit": "22c5170b02dc7401432f65aea9b5b5e83db37feb",
+  "checks": {
+    "Node22.23.5": {
+      "defined": 455,
+      "passed": 455,
+      "failed": 0,
+      "skipped": 0
+    },
+    "Node24.22.1": {
+      "defined": 455,
+      "passed": 455,
+      "failed": 0,
+      "skipped": 0
+    },
+    "newTests": 28,
+    "newHTTPTests": 26,
+    "newWorkerdTests": 2,
+    "focusedPassed": 28,
+    "MJSCheckedOnBothVersions": 100,
+    "JSONParsed": 4,
+    "nativeCoreSwiftUIProjectLockfilesDependenciesCIUnchanged": true,
+    "nativeBuildsAndUnchangedDependencyAuditRepeated": false,
+    "deploymentFlagsAllDisabled": true,
+    "uploadHostsEmpty": true,
+    "readHostsEmpty": true
+  },
+  "implemented": [
+    "closed JPEG upload with four-field ASCII intent header, no owner/provider metadata, separate 512B control JSON",
+    "owner recover/publish/clear/status, no public review route or trusted-role payload",
+    "global/IP heavy before body; synchronous session plus durable account12/min/upload3/min before checkpoint/file",
+    "authentication repeated after admission; Promise sources denied at both checks without unhandled rejections",
+    "one unfinished upload and four controls on Authority and edge; canceled/expired ignoring operations retain slots until actual settlement",
+    "256000B JPEG/512B JSON, 128 nonempty byte chunks, body3s/Authority20s/edge25s, declared-length consistency",
+    "shared concrete Runtime policy/coordinator/normalizer/assets/vault/repository; static Wasm factory passed by CommunityAuthority",
+    "existing refresh master ring reused via existing avatar-specific HKDF, no new secret configured",
+    "flag and exact upload-host activation independent from photo read; absent codec factory fails closed",
+    "status/clear use a real withdrawalOnly coordinator whenever upload or read is active, even with upload disabled and no codec/assets",
+    "withdrawalOnly explicitly rejects upload/recover/publish/review; full coordinator retains upload-specific gates",
+    "synchronous closed snapshot after last checkpoint; pending moderation never implies publication",
+    "safe owned success JSON and errors before upstream abort, header whitelist and final feature/host check",
+    "request-only recovery does not repeat an uncertain asset transfer; no automatic retries"
+  ],
+  "bounds": {
+    "inputJPEGBytes": 256000,
+    "controlJSONBytes": 512,
+    "intentASCIICharacters": 512,
+    "nonemptyInputChunks": 128,
+    "bodySeconds": 3,
+    "authorityTotalSeconds": 20,
+    "edgeTotalSeconds": 25,
+    "unfinishedUploadSlots": 1,
+    "unfinishedControlSlots": 4,
+    "accountOperationsPerMinute": 12,
+    "accountUploadAttemptsPerMinute": 3,
+    "existingPolicyNewSelectionsPerTenMinutes": 3,
+    "successJSONBytesAtEdge": 2048,
+    "errorJSONBytesAtEdge": 32768,
+    "newBackgroundJobsOrServices": false
+  },
+  "actualComponents": [
+    "local workerd/DO/SQLite",
+    "full Runtime/Authority/edge and authentication state",
+    "actual Wasm JPEG decode/encode",
+    "real HKDF/AES-GCM and HMAC",
+    "independently verified ECDSA signatures",
+    "record registry/checkpoint and request-only recovery"
+  ],
+  "modeledComponents": [
+    "Apple account/OAuth provider identities",
+    "CloudKit record/grant/upload replies",
+    "HTTPS and Cloudflare platform metadata on loopback",
+    "unregistered ephemeral S2S/SignIn keys",
+    "trusted operator review in Node model test, not a content-inspection workflow"
+  ],
+  "workerdProof": {
+    "outboundDenied": [
+      "0.0.0.0/0",
+      "::/0",
+      "unix"
+    ],
+    "uploadVariants": 2,
+    "recoveryRetransmissions": 0,
+    "clearedGeneration": 2,
+    "actualEntryModuleLoadedWithStaticWasm": true,
+    "entryTransportHTTPSModeledInTestWrapper": true,
+    "inactiveEntryUploadDenied": true,
+    "hostedCPUOrRSSOrFreeCapacityProven": false
+  },
+  "negativeControl": {
+    "copyOnly": true,
+    "mutation": "remove consumeAvatarMutation before body",
+    "test": "persisted account attempt quota survives reconstruction and network rotation while clear remains available",
+    "expected": "429 before reading file",
+    "observed": "503 after body timeout",
+    "failedTests": 1,
+    "exitCode": 1,
+    "actualSourceSHA256Unchanged": true
+  },
+  "resolvedDuringValidation": [
+    "first focused20 had15 pass/5 fail: extra recordType in modeled grant and wrong expected403 instead of actual401",
+    "fixed grant model to exact3 fields, no production schema relaxation; focused20 pass",
+    "entry test initially used plain loopback HTTP and got400 from correct HTTPS guard; HTTPS model added only in harness",
+    "review added second authentication Promise guard and tests for both sources, sync durability failure and empty/nonbyte chunks",
+    "final review found withdrawal blocked by upload disable; real withdrawalOnly capability plus3 regressions added",
+    "final focused28, full455 both Node, negative control and syntax100/4 passed"
+  ],
+  "knownLimits": [
+    "no actual CloudKit/hosted Cloudflare/SIWA/service identity/schema/role/host acceptance",
+    "local wall-clock tests do not measure hosted CPU/RSS/startup/subrequests/SQL/transfer or free public scale",
+    "shared edge/Authority bundle includes static Wasm; hosted startup/resource acceptance still required",
+    "body chunk and admission bounds are conservative Development policy, not public capacity guarantees",
+    "clear revokes the selection but does not physically erase retained/orphan asset versions",
+    "native upload transport/journal/owner photo UI and operator/content review/reports/contact/retention remain incomplete",
+    "one real iCloud account available; no ordinary A/B acceptance; physical FileProtection remains open",
+    "ordinary app entry remains Firebase, gateway activation absent, not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote activation/deploy/new services/schema/roles/keys/secrets",
+    "paid plan or CPU limit activation",
+    "phone SDK/install attempt",
+    "Production/TestFlight publication or Firebase deletion/change",
+    "unchanged native/Core/UI build/test repeat and dependency audit"
+  ],
+  "referencesCheckedAt": "2026-11-17",
+  "primaryReferences": [
+    "https://developers.cloudflare.com/workers/platform/limits/",
+    "https://developers.cloudflare.com/durable-objects/platform/limits/"
+  ],
+  "newTestNames": {
+    "gateway/test/avatar-upload-http.test.mjs": [
+      "binary upload normalizes source on the server and returns pending moderation without provider metadata",
+      "concrete runtime and fixed edge upload, recover, publish after trusted review and clear with shared durable policy",
+      "lost record ACK recovers the same upload over HTTP without uploading files again",
+      "unknown asset ACK remains pending and neither recovery nor exact replay reuploads that file",
+      "upload feature denies before budget, body or checkpoint and cancels the unread stream",
+      "runtime upload activation requires community, exact server hosts and an actual codec factory",
+      "closed intent headers reject owner, URL, receipt, consent and generation attacks before file consumption",
+      "media, encoding, token and declared size fail before reading a body or checkpoint",
+      "revoked session is rejected before file body and invalidation after durable quota is rechecked",
+      "persisted account attempt quota survives reconstruction and network rotation while clear remains available",
+      "binary intake admits only one held body while bounded control operations remain independent",
+      "absolute timeout retains admission until an ignoring coordinator settles",
+      "body deadline cancels stalled input before any provider operation",
+      "actual byte overflow, mismatched length and pathological chunks cannot reach the codec",
+      "control input is closed, fatal UTF8, at most 512 bytes and cannot carry intent metadata",
+      "last checkpoint feature switch and changed intent prevent a stale successful upload response",
+      "async or private-field finalizers are never presented as successful mutation snapshots",
+      "fixed edge forwards intent but removes spoofed cookie, budget and provider response headers",
+      "edge owns error JSON before request abort and rejects private success fields",
+      "control admission is bounded to four held requests and operator review has no public route",
+      "asynchronous authentication is rejected at both pre-body checks without unhandled rejections",
+      "failed account admission durability cannot consume any file bytes or reach a checkpoint",
+      "empty or non-byte chunks fail immediately instead of starving input timers",
+      "disabling new uploads preserves status and withdrawal while existing photo reads remain enabled",
+      "read-only runtime constructs real status and withdrawal without a codec or asset-upload capability",
+      "withdrawal-only coordinator cannot upload, recover, publish or acquire operator review"
+    ],
+    "gateway/test/avatar-upload-workerd.test.mjs": [
+      "actual CommunityAuthority entry bundles static Wasm and stays disabled without activation or secrets",
+      "actual local workerd composes binary intake, edge, auth, SQLite, Wasm, encrypted assets and request-only recovery"
+    ]
+  },
+  "sourceAndDocsSHA256": {
+    "gateway/src/avatar-upload-http.mjs": "ee859ed6e5b9e90e3fd4b0ce81488e3963929ee3d2eca0b5a833870a6471b163",
+    "gateway/src/gateway-avatar-upload.mjs": "9b9e6c739c83a87d7447d59df29b01a66fbd432ea619d56a099e8a1378a60200",
+    "gateway/src/avatar-codecs-workerd.mjs": "78f602b65590df0c3798779aa83d13d6db6fdb92dd74ee6f0a58affee938b5c7",
+    "gateway/src/avatar-publication-coordinator.mjs": "eb65aaa3b0d4c2fdd861afd9c12a8f24807883653ca4de092f83f32509ad312e",
+    "gateway/src/community-worker.mjs": "ab40b6ed2dadfd10839990c6d8b60c0819d65e7c34754a1e6f72467cb7628a92",
+    "gateway/src/gateway-avatar-http.mjs": "49e23f783f5cd7deb957f51315390c15a1149e57ef0b6191b1fac60124804d79",
+    "gateway/src/gateway-http.mjs": "d01909003e8b4c16659420eaf9887b7ed24652facae6342573b0b8e2dd44f989",
+    "gateway/src/gateway-limits.mjs": "cd4b95f78f3253ac7d26cf6bfd95eefc0c6077342bbf5c0b514313e8eadef0d3",
+    "gateway/src/gateway-runtime.mjs": "8b5f67d86b9394678c486ca6acef5ea34623c8b9d69272fc96d177c2cc8d4cc5",
+    "gateway/wrangler.community.jsonc": "cbeb48057ee55caa1a209d749cac003536d106dd10315ddbe9094d0f1f1514d7",
+    "gateway/test/avatar-upload-http.test.mjs": "7ef58016f0711f1b59cec70ca76532f32fbbd2f2ae37e07b7c742ad0870d6fbc",
+    "gateway/test/avatar-upload-workerd.test.mjs": "0bda8627f8628d52b64cfad509663d189a625e91c0b1b10f1c5c02ecdfd87f56",
+    "gateway/test/support/avatar-upload-http-fixture.mjs": "3bb6f96f15f3b7e18a85c50867d1f6b55707d67ec81fd49347c2e7870eff5fc8",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "80bc581e583ec045e747765a4af939b853c0bad0b41f7da40509ac58f7cbfd51",
+    "gateway/test/support/community-disabled-worker.mjs": "5f59822faf57c781832d1d824e54e7a27b9fa1c31bd8a6c568ebb0616dad3671",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "6959db78b9d2cfac44633835baf002e1af94df108e8bb21120356dfcf858df1a",
+    "gateway/test/support/workerd-image-harness.mjs": "3feb64119a6328a21a40c42de6e091dc71a9c1cfa4d9b7a0fcacb227582e6b1d",
+    "Docs/HTTP_UPLOAD_AVATAROW.md": "119d8d92cbf34400b807b4afdd3f7210013ccfb6418b6a63292cb82c9ef1439e",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "756e3fe97b974fa9b293fa691a57202bea05b78c2a71ba1fd1e80e11de46d30a",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "1e23f4892e004ac3c1697b8d94bc1f87300cb4c5dfad3e2a118c25725403c2cd",
+    "Docs/DZIENNIK_ZMIAN.md": "10b64586ba351a5018ee8c5f8e2a9a9f4acdf2c015c152731d5a003682d7f555",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "d0902d886e6cacd6d46b66e0861d2cbf6f98dfda674d7b5072f5654053c98b3f",
+    "Docs/ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md": "f7680e074f238db5ef4ae1bd73b01621648254982ec0749deeafee74e8d0ef05"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-upload-regression-first.log": "916d1edc5f93c118a620adbcb1f76dabc35409bfee2aff4eeee9771391cc2b18",
+    "echoes-avatar-upload-focused-first.log": "f447dd3d6f7988ace9db7731ea76f5eaa0349cdab39b8ce49560fa1b6be49fa1",
+    "echoes-avatar-upload-focused.log": "8fe3f398bd8bb6e43eaaeac5ab24894a532af1c344e192b476a069ca62495d4d",
+    "echoes-avatar-upload-workerd-first.log": "67344d77c8c2949ba38cfc9608dae0206ec78ddd2929195a0ce8e5d7c8825d27",
+    "echoes-avatar-upload-accepted-focused.log": "28e482cbb99b8fe48bcc497a4f534b6fba90efe1c33cdc1a8eccea4a750f8e8b",
+    "echoes-avatar-upload-withdrawal-focused.log": "5b9068a8a6641a68f118292b53301ff246fc2a55332ee86891e9a983b4e77fef",
+    "echoes-avatar-upload-full-node22.log": "bdd7186eaf600a8848f72132a1cce1e785a8d455a1f46a5330fe7663b1e73f33",
+    "echoes-avatar-upload-full-node24.log": "b10cf41d10c352b64731149be8c4910bfb7d20ebd0f70abaf9db3091a5894f49",
+    "echoes-avatar-upload-pre-withdrawal-full-node22.log": "92cf189a228b90746d807a2929cdab7e7286d0d8295ee3e678b2b9445b109a7d",
+    "echoes-avatar-upload-pre-withdrawal-full-node24.log": "f51b5103b6c8c55b9b5342537c8b04e0e180bba74a68cb3c7a4ba0eab4bcfcd9",
+    "echoes-avatar-upload-negative.log": "cb41752db00e1d153d62639d669d7c054add560455e20c1ff4195e983c5cf0a5",
+    "echoes-avatar-upload-negative-result.json": "1855c36ac38d4352402f55eef9c897109934931b250194c98f62b63de880486a",
+    "echoes-avatar-upload-syntax.json": "9fb1c589ab9c3d0956d5d3a1eac6d3d205a598394a01eab1c6458aaa5efd5e45"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+}

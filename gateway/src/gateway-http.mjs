@@ -5,11 +5,15 @@ import { PublicRecordError } from "./public-record-schema.mjs";
 import { communityActions } from "./community-coordinator.mjs";
 import { AvatarReadError } from "./cloudkit-avatar-reader.mjs";
 import { avatarReadPath, avatarReadInputLimit, avatarReadBody, avatarHTTPDeadline } from "./gateway-avatar-http.mjs";
+import { AvatarPolicyError } from "./avatar-policy-state.mjs";
+import { AvatarIntakeError, avatarMutationPaths } from "./avatar-upload-http.mjs";
+import { createAvatarUploadHandler } from "./gateway-avatar-upload.mjs";
 
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
   "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
 for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
 gatewayPaths.add(avatarReadPath);
+for (const path of avatarMutationPaths.keys()) gatewayPaths.add(path);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -20,6 +24,12 @@ export class GatewayHTTPError extends Error {
   constructor(code = "INVALID_REQUEST", status = 400) { super("Gateway request could not be processed."); this.code = code; this.status = status; }
 }
 export function gatewayFailure(error) {
+  if (error instanceof AvatarPolicyError || error instanceof AvatarIntakeError) {
+    const status = { AVATAR_INPUT: 400, AVATAR_STALE: 409, AVATAR_PENDING: 409, AVATAR_REJECTED: 409,
+      AVATAR_SCOPE: 403, AVATAR_RATE: 429, AVATAR_CAPACITY: 429, AVATAR_RESPONSE: 503, AVATAR_UNAVAILABLE: 503,
+      BODY_TOO_LARGE: 413, UNSUPPORTED_MEDIA_TYPE: 415, INVALID_SESSION: 401, FEATURE_DISABLED: 503 }[error.code] ?? 503;
+    return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
+  }
   if (error instanceof AvatarReadError) {
     const status = { AVATAR_READ_INPUT: 400, AVATAR_READ_NOT_FOUND: 404, AVATAR_READ_STALE: 401,
       AVATAR_READ_LIMIT: 429, AVATAR_READ_RESPONSE: 503, AVATAR_READ_UNAVAILABLE: 503 }[error.code] ?? 503;
@@ -130,21 +140,26 @@ function deletionResponse(value, status = 200, recovered = false) {
 /** Closed native API. serverBudgetHash is supplied by the trusted edge/authority, never taken from JSON. */
 export function createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
   deletionEnabled = false, community, isCommunityEnabled = () => false, avatarReader, isAvatarReadEnabled = () => false,
+  avatarPublication, isAvatarUploadEnabled = () => false, avatarUploadTimeoutMilliseconds = 20000,
+  avatarWithdrawal = avatarPublication, isAvatarWithdrawalEnabled = isAvatarUploadEnabled,
   limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
   let activeAvatar = 0;
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
       typeof sessionReset?.reset !== "function" ||
       (checkpoint !== undefined && (typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function")) ||
       typeof limits?.consume !== "function" || typeof scheduleMaintenance !== "function" || typeof isEnabled !== "function" || typeof isCommunityEnabled !== "function" ||
-      typeof isAvatarReadEnabled !== "function" || !Number.isInteger(avatarTimeoutMilliseconds) || avatarTimeoutMilliseconds < 1 || avatarTimeoutMilliseconds > 12000 ||
+      typeof isAvatarWithdrawalEnabled !== "function" || typeof isAvatarUploadEnabled !== "function" || typeof isAvatarReadEnabled !== "function" || !Number.isInteger(avatarTimeoutMilliseconds) || avatarTimeoutMilliseconds < 1 || avatarTimeoutMilliseconds > 12000 ||
       typeof deletionEnabled !== "boolean" || !Number.isInteger(inputTimeoutMilliseconds) || inputTimeoutMilliseconds < 1 || inputTimeoutMilliseconds > 3000 ||
       (deletionEnabled && (typeof deletions?.status !== "function" || typeof deletionCoordinator?.request !== "function" || typeof deletionCoordinator?.recover !== "function"))) throw new Error("Gateway dependencies are unavailable.");
+  const uploadHandler = createAvatarUploadHandler({ authentication, limits, checkpoint, avatarPublication, isEnabled,
+    isAvatarUploadEnabled, avatarWithdrawal, isAvatarWithdrawalEnabled, avatarUploadTimeoutMilliseconds, inputTimeoutMilliseconds });
   return async (request, serverBudgetHash) => {
     let avatarDeadline, avatarClaimed = false;
     try {
       const { path } = inspectGatewayRequest(request);
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+      if (avatarMutationPaths.has(path)) return await uploadHandler(request, serverBudgetHash, avatarMutationPaths.get(path));
       const avatar = path === avatarReadPath, social = !avatar && path.startsWith("/v1/community/");
       if (avatar) {
         if (isAvatarReadEnabled() !== true || typeof avatarReader?.prepare !== "function" || typeof limits.consumeAvatarRead !== "function") return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);

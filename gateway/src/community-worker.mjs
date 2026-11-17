@@ -1,6 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 import { activeGatewayConfiguration, createGatewayRuntime, createGatewayLocalMaintenance,
   forwardGatewayRequest, handleAuthorityRequest } from "./gateway-runtime.mjs";
+import { createWorkerAvatarNormalizer } from "./avatar-codecs-workerd.mjs";
 
 export default { fetch: forwardGatewayRequest };
 
@@ -12,7 +13,7 @@ export class CommunityAuthority extends DurableObject {
       if (!activeGatewayConfiguration(env)) return;
       try {
         // Public storage requires its separate flag and key; missing configuration fails closed.
-        this.#runtime = createGatewayRuntime(ctx.storage, env);
+        this.#runtime = createGatewayRuntime(ctx.storage, env, { avatarNormalizerFactory: createWorkerAvatarNormalizer });
         await this.#runtime.maintenance.schedule();
       } catch { this.#runtime = undefined; }
     });

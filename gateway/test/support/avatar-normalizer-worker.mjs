@@ -8,6 +8,7 @@ import { CommunityState } from "../../src/community-state.mjs";
 import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
 import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
 import { avatarReadWorkerdProof } from "./avatar-read-workerd-proof.mjs";
+import { avatarUploadWorkerdProof } from "./avatar-upload-workerd-proof.mjs";
 
 // Local integration harness only. No gateway secrets, publication, Apple fetch or user identity.
 export class AvatarCodecTestAuthority extends DurableObject {
@@ -36,6 +37,7 @@ export class AvatarCodecTestAuthority extends DurableObject {
       if (request.method !== "POST") return new Response(null, { status: 405 });
       if (new URL(request.url).pathname === "/read-proof") return await avatarReadWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/http-proof") return await avatarReadWorkerdProof(request, this.ctx.storage, { http: true });
+      if (new URL(request.url).pathname === "/upload-proof") return await avatarUploadWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/policy") return await this.#policyProof();
       // The fixture server is loopback-only; this is not the production binary intake endpoint.
       const bytes = new Uint8Array(await request.arrayBuffer());

@@ -6,15 +6,17 @@ import { normalizedAvatarManifest } from "./avatar-normalizer.mjs";
  * prepare methods return a synchronous finalizer for the host to call AFTER its last checkpoint.
  */
 export class AvatarPublicationCoordinator {
-  #state; #authentication; #community; #normalizer; #assets; #profiles; #checkpoint; #enabled; #operator;
-  constructor({ state, authentication, communityState, normalizer, avatarRepository, profileRepository, checkpoint, isEnabled, authorizeOperator } = {}) {
+  #state; #authentication; #community; #normalizer; #assets; #profiles; #checkpoint; #enabled; #operator; #withdrawalOnly;
+  constructor({ state, authentication, communityState, normalizer, avatarRepository, profileRepository, checkpoint, isEnabled, authorizeOperator, withdrawalOnly = false } = {}) {
     if (["select", "clear", "rememberDescriptor", "staged", "review", "snapshot"].some(key => typeof state?.[key] !== "function") ||
         typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
-        typeof normalizer?.prepare !== "function" || typeof avatarRepository?.stage !== "function" || typeof avatarRepository.recover !== "function" ||
+        typeof withdrawalOnly !== "boolean" || (withdrawalOnly ? normalizer !== undefined || avatarRepository !== undefined || authorizeOperator !== undefined :
+          typeof normalizer?.prepare !== "function" || typeof avatarRepository?.stage !== "function" || typeof avatarRepository.recover !== "function") ||
         typeof profileRepository?.writeLatest !== "function" || typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function" ||
         typeof isEnabled !== "function" || authorizeOperator !== undefined && typeof authorizeOperator !== "function") throw new AvatarPolicyError();
     this.#state = state; this.#authentication = authentication; this.#community = communityState; this.#normalizer = normalizer;
     this.#assets = avatarRepository; this.#profiles = profileRepository; this.#checkpoint = checkpoint; this.#enabled = isEnabled; this.#operator = authorizeOperator;
+    this.#withdrawalOnly = withdrawalOnly;
   }
   #options(value, names) {
     if (!plain(value) || Object.keys(value).some(key => !names.includes(key)) || value.signal !== undefined && !(value.signal instanceof AbortSignal)) throw new AvatarPolicyError("AVATAR_INPUT");
@@ -46,6 +48,7 @@ export class AvatarPublicationCoordinator {
   async prepareUpload(value = {}) {
     let bytes;
     try {
+      if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
       const o = this.#options(value, ["accessToken", "signal", "bytes", "versionID", "requestID", "expectedGeneration", "consentVersion"]);
       const credentials = Object.freeze({ accessToken: o.accessToken, signal: o.signal }), { accountID } = this.#identity(credentials);
       if (!(o.bytes instanceof Uint8Array) || typeof SharedArrayBuffer !== "undefined" && o.bytes.buffer instanceof SharedArrayBuffer ||
@@ -68,6 +71,7 @@ export class AvatarPublicationCoordinator {
   }
   async prepareRecovery(value = {}) {
     try {
+      if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
       const o = this.#options(value, ["accessToken", "signal", "requestID"]), { accountID } = this.#identity(o);
       await this.#checkpoint.verify({ signal: o.signal }); this.#identity(o, accountID);
       const intent = this.#state.intent(accountID, o.requestID), permit = () => this.#permit(o, intent);
@@ -91,6 +95,7 @@ export class AvatarPublicationCoordinator {
   }
   async preparePublish(value = {}) {
     try {
+      if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
       const o = this.#options(value, ["accessToken", "signal", "requestID"]), { accountID } = this.#identity(o);
       await this.#checkpoint.verify({ signal: o.signal }); this.#identity(o, accountID);
       return await this.#writePointer(o, this.#state.intent(accountID, o.requestID));
@@ -127,6 +132,7 @@ export class AvatarPublicationCoordinator {
    */
   async prepareReview(value = {}) {
     try {
+      if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
       const o = this.#options(value, ["accountID", "requestID", "decisionID", "expectedRevision", "verdict", "signal"]);
       const reviewerID = this.#operatorIdentity(o.signal);
       await this.#checkpoint.verify({ signal: o.signal });

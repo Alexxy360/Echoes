@@ -44,3 +44,10 @@ Swift/UI/Core, projekt i zależności/CI nie zmieniły się, ich buildów/UI/SDK
 ## Czytelność CK-04e.3f
 
 readPublication/assertReadPublication łączą aktualną zgodę/wybór/decision revision i gotowość z dokładnymi tagami/payloadami avatar oraz avatarprofile w rejestrze. To dowód autora do wewnętrznego Reader, nie uprawnienie odbiorcy. Reader dodaje sesję, obecność autora, blokady/zasięg i sprawdzenia po pobraniu/ostatnim checkpoint; [odczyt i przyszły cache iOS](CHRONIONY_ODCZYT_AVATAROW.md). Nie powstał jeszcze publiczny endpoint lub panel operatora.
+
+
+## Uzupełnienie CK-04e.3j.1
+
+Wewnętrzny koordynator jest już podłączony do [ograniczonego HTTP](HTTP_UPLOAD_AVATAROW.md) i konkretnego Runtime, z osobną domyślnie wyłączoną aktywacją. Upload/recover/publish/clear/status nie dają roli operatora. Rzeczywiste Wasm i lokalny workerd/SQLite przechodzą przygotowanie obu wariantów oraz request-only recovery; przy niepewnym transferze nie dochodzi do ponowienia pliku. Natywny upload/journal i rzeczywisty proces operatora/oglądania/zgłoszeń/retencji nadal są niegotowe; historyczny opis etapu3e powyżej pozostaje bez zmian.
+
+Status i cofnięcie pozostają dostępne przez jawny withdrawalOnly, gdy upload jest wyłączony, lecz odczyt zdjęć działa. Ten wariant nie może publikować, odzyskiwać uploadu ani nadawać decyzji operatora i nie wymaga codec/assetów.
