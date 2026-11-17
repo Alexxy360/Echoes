@@ -208,3 +208,6 @@ Profile tekstowe, zdjęcia i wiadomości mierzymy osobno. Awatary mają miniatur
 - [CKDatabase — wymóg iCloud przy zapisie](https://developer.apple.com/documentation/cloudkit/ckdatabase)
 - [CKAsset — zdjęcia i pliki](https://developer.apple.com/documentation/cloudkit/ckasset)
 - [Warunki członkostwa i CloudKit](https://developer.apple.com/programs/whats-included/)
+
+
+Postęp CK-04e.3i.3b (17 listopada 2026): wspólny renderer rejestruje opaque lease na mapie, w profilu i wiadomości; nie przechowuje pikseli w stanie. Klucz obejmuje referencję/powierzchnię/binding/scene i obserwowalną gotowość. Inicjał po odmowie/wygaśnięciu, jawny retry profilu, zwalnianie na lifecycle i duży przewijany panel. 23/23 końcowych UI (7 nowych), CloudKit320 zaliczonych+1 sprzętowy skip na Macu/Simulatorze, nowy test gotowości i strict format11. Release oraz Debug z końcowego UI poprawne; negatywna kontrola bez lease oblewa 3 asercje renderowania. Zrzuty rzeczywistego symulatora używają syntetycznych JPEG/tożsamości; brak realnego gateway/SIWA/iCloud A-B. Bez nowych aktywacji/usług/opłat lub SDK telefonu. Ordinary entry nadal Firebase. Dalej CK-04e.3j: serwerowy ograniczony intake, natywny upload/journal/własne zdjęcie, operator/zgłoszenia/retencja i pełny rzeczywisty odbiór. [Renderer i granice](RENDERER_AVATAROW_IOS.md), [dowody](evidence/avatar-ui-local-tests.json).

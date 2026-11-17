@@ -1,19 +1,19 @@
+import EchoesCloudKit
 import EchoesCore
 import SwiftUI
 
 struct MapProfileMarker: View {
     let user: NearbyProfile
+    var avatars: GatewayCommunityAvatarBinding? = nil
     var body: some View {
         VStack(spacing: 4) {
             if !user.lastSong.isEmpty {
                 Text(user.lastSong).font(.caption).lineLimit(1).frame(maxWidth: 140)
                     .padding(6).background(Color.meddleNavy, in: RoundedRectangle(cornerRadius: 8))
             }
-            Text(String(user.name.prefix(1)).uppercased()).font(.title3.bold()).frame(
-                minWidth: 44, minHeight: 44
-            )
-            .background(user.lastSong.isEmpty ? Color.gray : .meddleCoral, in: Circle()).foregroundStyle(
-                .white)
+            CommunityAvatarView(
+                avatars: avatars, reference: user.avatarReference, surface: .map,
+                name: user.name, size: 44, color: user.lastSong.isEmpty ? .gray : .meddleCoral)
         }
     }
 }

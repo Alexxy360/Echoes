@@ -54,13 +54,14 @@ struct ContentView: View {
                     Button {
                         sheet = .profile(user.id)
                     } label: {
-                        MapProfileMarker(user: user)
+                        MapProfileMarker(user: user, avatars: services.avatars)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(
                         "\(user.name). \(user.lastSong.isEmpty ? "Nie udostępnia muzyki" : user.lastSong)"
                     )
                     .accessibilityHint("Otwiera profil i opcje blokowania")
+                    .accessibilityIdentifier("map.profile." + user.id)
                 }
             }
         }
@@ -130,7 +131,7 @@ struct ContentView: View {
             VStack(spacing: 0) {
                 Group {
                     switch destination {
-                    case .chat: ChatView(session: services.session)
+                    case .chat: ChatView(session: services.session, avatars: services.avatars)
                     case .settings:
                         SettingsView(
                             services: services,
@@ -139,7 +140,8 @@ struct ContentView: View {
                                 : {
                                     requestedNativeAccount = true
                                 })
-                    case .profile(let id): UserProfileView(userID: id, session: services.session)
+                    case .profile(let id):
+                        UserProfileView(userID: id, session: services.session, avatars: services.avatars)
                     }
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 if let presentationNotice {

@@ -19,6 +19,8 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         self.id = id
         self.host = host
     }
+    /// Observable readiness for view registration; individual parents still require acquisition.
+    public var isAvailable: Bool { host?.isAvailable(binding: id) == true }
     public func acquire(reference: AvatarReference, surface: GatewayCommunityAvatarSurface) throws
         -> GatewayCommunityAvatarLease
     {
@@ -137,6 +139,10 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
             && privateScope != nil && source.privateDataScope(configuration: cloudKit) == privateScope
             && session?.phase == .ready && session?.isForeground == true
             && session?.userID == authorization?.identity.accountID && session?.usableCoordinate != nil
+    }
+    fileprivate func isAvailable(binding: UUID) -> Bool {
+        _ = presentationRevision
+        return context == binding && operational
     }
     public func communityPresentationDidChange(_ session: CommunitySession) {
         guard self.session === session else { return }

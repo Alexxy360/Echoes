@@ -1,5 +1,6 @@
 import EchoesCore
 import Foundation
+import Observation
 import Testing
 
 @testable import EchoesCloudKit
@@ -94,6 +95,60 @@ import Testing
         try await Task.sleep(for: .milliseconds(1))
     }
     throw GatewayAvatarFailure.unavailable
+}
+
+private final class HostObservationFlag: @unchecked Sendable {
+    private let lock = NSLock()
+    private var value = false
+    func set() { lock.withLock { value = true } }
+    func read() -> Bool { lock.withLock { value } }
+}
+
+@Test @MainActor func avatarHostReadinessIsObservableBeforeRegistrationAndCannotReviveAnOldBinding()
+    async throws
+{
+    let f = try await HostFixture()
+    defer { f.close() }
+    let cold = CommunitySession(client: f.data, now: { f.clock.date })
+    let newer = try f.host.bind(session: cold, isCurrent: { true })
+    defer { newer.invalidate() }
+    #expect(!f.binding.isAvailable && !newer.isAvailable)
+    #expect(throws: GatewayAvatarFailure.notFound) {
+        try newer.acquire(reference: f.photo.reference, surface: .map)
+    }
+    await cold.connect(name: "Maja")
+    await cold.setForeground(true)
+    let ready = HostObservationFlag()
+    withObservationTracking {
+        #expect(!newer.isAvailable)
+    } onChange: {
+        ready.set()
+    }
+    cold.updateLocation(.init(coordinate: f.position, accuracy: 10, measuredAt: f.clock.date))
+    #expect(ready.read() && newer.isAvailable && !f.binding.isAvailable)
+    #expect(f.photo.source.tokenCalls == 0)
+    await cold.refreshUsers()
+    let lease = try newer.acquire(reference: f.photo.reference, surface: .map)
+    try await hostEventually { newer.image(for: lease) != nil }
+    let background = HostObservationFlag()
+    withObservationTracking {
+        #expect(newer.isAvailable)
+    } onChange: {
+        background.set()
+    }
+    await cold.setForeground(false)
+    #expect(background.read() && !newer.isAvailable && newer.image(for: lease) == nil)
+    await cold.setForeground(true)
+    f.binding.invalidate()
+    #expect(newer.isAvailable && !f.binding.isAvailable)
+    let closed = HostObservationFlag()
+    withObservationTracking {
+        #expect(newer.isAvailable)
+    } onChange: {
+        closed.set()
+    }
+    newer.invalidate()
+    #expect(closed.read() && !newer.isAvailable && !f.binding.isAvailable)
 }
 
 @Test @MainActor func avatarHostDefersAllIOUntilAViewRegistersAndCoalescesOnlyPendingFreshReads() async throws

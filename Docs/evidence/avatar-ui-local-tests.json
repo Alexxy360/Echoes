@@ -1,0 +1,172 @@
+{
+  "stage": "CK-04e.3i.3b",
+  "baselineCommit": "6f0dcf991d179443e3619791092f12078488f894",
+  "observedAtUTC": "2026-11-17T01:15:41.048988+00:00",
+  "checks": {
+    "UITests": {
+      "defined": 23,
+      "passed": 23,
+      "failed": 0,
+      "newAvatarFunctions": 7,
+      "priorRegressionFunctions": 16
+    },
+    "CloudKit": {
+      "defined": 321,
+      "macOS": {
+        "passed": 320,
+        "skipped": 1,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 320,
+        "skipped": 1,
+        "failed": 0
+      },
+      "newReadinessFunction": 1
+    },
+    "strictSwiftFormatFiles": 11,
+    "xcresultCountsVerified": true,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "CoreGatewayConfigProjectLockfileDependenciesCIUnchanged": true,
+    "unchangedFullSuitesAndDependencyAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "debugBuiltByFinalUITest": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "243589d5750d646344c9ce89776a63f39ca97976bfcba3df99ded8e3574ee4c8",
+        "Echoes.debug.dylib": "ea901596a6f16016632ebec64b11aef0f9f4b52ec54e14f683180f567951f8cf"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "debugBuiltByFinalUITest": false,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "8fb724c0543cbc04d1f9c117ddab10377692391b8d8688967c5f55a522878ec1"
+      }
+    }
+  },
+  "newAvatarUITests": [
+    "testAvatarProfileAndChatRenderTheProtectedPresentation",
+    "testAvatarDenialShowsInitialAndExplicitRetry",
+    "testAvatarCorruptFileNeverRendersAndExplicitRetryRecovers",
+    "testAvatarDelayedReplyCannotRestoreWithdrawnPhoto",
+    "testAvatarAccountChangeAndBackgroundCloseOldPresentation",
+    "testAvatarProfileSupportsLargestTextAndBlocking",
+    "testAvatarExpiryRequiresFreshReadBeforePixelsReturn"
+  ],
+  "implemented": [
+    "shared CommunityAvatarView on map44pt/profile112pt/message36pt, variant/surface leases",
+    "state holds opaque lease and original binding, never Data/CGImage/UIImage",
+    "request key binds reference/surface/binding identity/scene foreground/observable host readiness; stale registration cannot render",
+    "release on disappearance/inactive through original binding; pixels resolved from current host on every render",
+    "explicit loading/retry on peer profile, initials on absent/denied/corrupt/expired, no automatic RPC loop",
+    "observable readiness before async AppServices.activate completes; stale binding remains unavailable",
+    "large profile sheet after observed clipped block button, large text scrolling, pending-block button disabled",
+    "Debug-only synthetic JPEG/provider with denied/corrupt-once/delayed modes, source moved out of view, pending continuations released on invalidation"
+  ],
+  "negativeControl": {
+    "mutation": "do not store acquired lease, release it instead",
+    "test": "testAvatarProfileAndChatRenderTheProtectedPresentation",
+    "observed": "real UI assertions for loaded map/profile/chat failed",
+    "failedTestFunctions": 1,
+    "assertionFailures": 3,
+    "sourceRestoredBeforeFinalReadinessCleanupAndFullRegression": true
+  },
+  "intermediateChecks": {
+    "firstSmokePassed": 1,
+    "expandedAvatarPassed": 7,
+    "preFinalReviewRegressionPassed": 23,
+    "buildOnlyFailures": [
+      "private GatewaySecret.value access removed without widening visibility",
+      "missing EchoesCloudKit import after fixture extraction"
+    ],
+    "sandboxToolStartFailures": [
+      "Swift compiler cache permission (no tests ran)",
+      "simctl/xcresult TestReport access"
+    ],
+    "finalAcceptedRunsAfterCorrections": true
+  },
+  "screenshots": {
+    "source": "final accepted XCTest run, original unedited PNGs",
+    "actualSimulator": true,
+    "syntheticJPEGAndAccounts": true,
+    "files": {
+      "Docs/evidence/avatar-ui/map.png": "5d2466d6e6e8173773c99054e6d538db2a74fc1a386049584215359b19dfaa4f",
+      "Docs/evidence/avatar-ui/profile.png": "25b45c62f2a7cd6f0f202c2be7c594bc653faaf8eb06026c7c917fe619246b2d",
+      "Docs/evidence/avatar-ui/chat.png": "df448d7ec574ad3d6188c9073d8d40e932c498072de80f13dc6c6b4228799690"
+    }
+  },
+  "actualComponents": [
+    "SwiftUI map/profile/chat",
+    "Core/host/client/persistent cache/ImageIO",
+    "UIKit-generated JPEG decoding",
+    "XCTest UI automation",
+    "automatic expiry/Observation package regression"
+  ],
+  "modeledComponents": [
+    "native account/iCloud/token source",
+    "community/photo API and location",
+    "JPEG person-symbol profile pictures"
+  ],
+  "knownLimits": [
+    "UI expiry scenario includes preview Core refresh ticks; isolated timer proof is the separate package test",
+    "account switching is a model, not real ordinary iCloud A/B",
+    "no real provider/hosted gateway/SIWA/schema/roles/service identity/Free capacity acceptance",
+    "physical FileProtection remains skipped and required",
+    "no owner upload UI/intake/native journal/operator reports/contact/retention acceptance yet",
+    "30-second policy leaves initial and requires explicit peer profile retry; product ergonomics/capacity remain to assess",
+    "privacySensitive/current render gating cannot revoke copies already captured by a recipient",
+    "ordinary Release entry still Firebase and controlled gateway activation absent; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "new phone SDK/install attempt",
+    "remote deployment/activation/schema/roles/keys/secrets",
+    "paid service activation",
+    "Production/TestFlight publication or Firebase changes",
+    "unchanged full Core/gateway/dependency audit repeat"
+  ],
+  "sourceAndDocsSHA256": {
+    "Echo/Views/CommunityAvatarView.swift": "916a66e3ee185a0a780cd036d9c3dd11090809114b67d978c04fb7e80af38fc0",
+    "Echo/Views/MapComponents.swift": "0bb747f7af1d1ea935ce82ef952d044b98de947a54c1672ea7c2bf9aeeb58f2f",
+    "Echo/Views/UserProfileView.swift": "fb6d88604332d1ae398244c413624bf847cdbb979c3e28de0c49aa88537ccbfa",
+    "Echo/ChatView.swift": "52a8036b5f700390bf4b7681410352d4daabc7f7400ba452e655a7d32728bcb1",
+    "Echo/ContentView.swift": "dae48d2d94419a71f7c203600bc63a704f9ae3f8e57b26db94b35a9c3e755d98",
+    "Echo/Services/CommunityAvatarPreviewAPI.swift": "471f462f9217af7d78a02ff338710efc2c358d63f0abd1f05a7ea698d4c33ffb",
+    "Echo/Services/CommunityPreviewFixture.swift": "31fbda7a007236052f6a27b2d8c3409f8daaaa317a5a7ddbadf6ff029acd5438",
+    "Echo/Views/GatewayCommunityPreviewView.swift": "01554d784c81a6234866a12ac59c58d7a425be1ae167bc40eb3af4f0abdb1881",
+    "EchoesUITests/GatewayAvatarUITests.swift": "8b52854c03fd35ddfd59a5603f90dede1b3008cf4ff518e78e831e63af2736d8",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "fb70025087b60dd1f8867eb0f9062df5915aab7b9fc788640f38e5ad40cbf945",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "46e445ba78d522030e7a2cb93be41a1ac03b9a70201eaef745c19c5426f4f2f5",
+    "Docs/RENDERER_AVATAROW_IOS.md": "90712e36579986ac46cb7f46d5f491874e8753d5c8b1aeb5d1c506b39f09c4fc",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "bf4e1732a978a6d0a4d700bca4df04d1491a629e2194d2c6dd3ea0632136f6ca",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "41b5a21144be577de35c0ce6a0dc51c55840f99edd6a6f0b216bfb6558fa3b16",
+    "Docs/DZIENNIK_ZMIAN.md": "571334513c2f122d884283e435a854682a4353608634fcb1341e6d33901a6a6b",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "fdc896c3196f7d4a91e646142b5787ea4bd56969ecb21713f0e5a440a0c93e47",
+    "Docs/HOST_ZDJEC_SPOLECZNOSCIOWYCH.md": "c0e04f4b67de7534dc12dacebebe71b9d2fa966ab6dbaf0656fd18b6bbeb715d"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-ui-component-build.log": "27861165ad9746e90f8ab82881aa7e3adb709ae0f08bf5d57599c57bbb44613c",
+    "echoes-avatar-ui-wiring-build.log": "58e0d4c3fb9a1e5a589ccb06875ad5dfd8fa5d24be6265c7a6fc5cdbe0353878",
+    "echoes-avatar-ui-wiring-fixed-build.log": "93d809ce89b40f5496fc1f48d0049640f3f60200bd3e4af942306b38903d30bb",
+    "echoes-avatar-ui-first-test.log": "9523ef6018733ae357c9c769b51a35b414c51a5f31608422cb0e5f29ea7d1225",
+    "echoes-avatar-ui-ready-build.log": "e691b11d874262f0f79bf1a0d7a4d00d5a18ab69837ff351ebd23cff8c35375b",
+    "echoes-avatar-ui-smoke.log": "ad18db63a7e599e00e708b4d6a7fffd8d4aed0ef89d97c9febce3069fa3541a5",
+    "echoes-avatar-ui-expanded.log": "907fb6716bda1c0834bb64bfd92da751770d30a1c91e0587a7e4f0f73cc69ca5",
+    "echoes-avatar-ui-negative.log": "b1a3b536c7e34b70436f9fc46b017b48c90ee6c5535276b1138dd4e2dc52b699",
+    "echoes-avatar-ui-regression.log": "fcc19e20f65defc6929c7f5ffef76425db0736d9f3728da6fb6301c375b26a66",
+    "echoes-avatar-ui-release.log": "16aec5c1b7234d1e2b1e5df27f5bf6604877c44069f6879d33a11bc398e0087e",
+    "echoes-avatar-ui-readiness.log": "acdeed28910c3fdba4223744d27505f43006da82f8bc905f4c9eab5f680251a6",
+    "echoes-avatar-ui-final-package-mac.log": "e5be64aceea00dad09330309235d6d0b825d9dd84095d0899683ce667f0df538",
+    "echoes-avatar-ui-final-package-simulator.log": "ab747066cf0bcec3c55a31b2abaf77430a179f22133b735f72919004fe9cbb81",
+    "echoes-avatar-ui-final-package-summary.json": "6a46b89f70f359a37b6d6b82fe5741ba2572502519887f41e9ab1206f1cae5da",
+    "echoes-avatar-ui-final-release.log": "82d498afb0f58b5268ec866dc754d4c24914aee24801886f69b0b73998741686",
+    "echoes-avatar-ui-final.log": "f036fc0387cf21e45565f03f71b46fde75ee2b284c9502d967e33714182a8795",
+    "echoes-avatar-ui-final-summary.json": "dfe8b9379c6e0348dc345f156f34a1eb0241b4dbe3abe8943596d24f0f5cadfb",
+    "echoes-avatar-ui-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+}

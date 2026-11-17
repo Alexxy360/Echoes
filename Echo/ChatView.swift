@@ -1,3 +1,4 @@
+import EchoesCloudKit
 import EchoesCore
 import SwiftUI
 
@@ -5,6 +6,7 @@ struct ChatView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Bindable var session: CommunitySession
+    var avatars: GatewayCommunityAvatarBinding? = nil
     @FocusState private var inputFocused: Bool
     @State private var atBottom = true
     @State private var reportID: String?
@@ -37,7 +39,10 @@ struct ChatView: View {
                                     description: Text("Możesz wysłać pierwszą wiadomość."))
                             }
                             ForEach(session.messages) { message in
-                                MessageRow(message: message, own: message.senderID == session.userID).id(
+                                MessageRow(
+                                    message: message, own: message.senderID == session.userID,
+                                    avatars: avatars
+                                ).id(
                                     message.id
                                 )
                                 .contextMenu {
@@ -135,9 +140,15 @@ struct ChatView: View {
 private struct MessageRow: View {
     let message: ChatMessage
     let own: Bool
+    let avatars: GatewayCommunityAvatarBinding?
     var body: some View {
         HStack {
             if own { Spacer(minLength: 35) }
+            if !own, let avatars, message.avatarReference != nil {
+                CommunityAvatarView(
+                    avatars: avatars, reference: message.avatarReference, surface: .message(message.id),
+                    name: message.senderName, size: 36, color: .meddleTeal)
+            }
             VStack(alignment: .leading, spacing: 5) {
                 Text(own ? "Ty" : message.senderName).font(.caption.bold()).foregroundStyle(
                     Color.meddleTeal)
@@ -148,6 +159,11 @@ private struct MessageRow: View {
             .padding(12).background(
                 own ? Color.meddleCoral.opacity(0.25) : Color.white.opacity(0.08),
                 in: RoundedRectangle(cornerRadius: 16))
+            if own, let avatars, message.avatarReference != nil {
+                CommunityAvatarView(
+                    avatars: avatars, reference: message.avatarReference, surface: .message(message.id),
+                    name: message.senderName, size: 36)
+            }
             if !own { Spacer(minLength: 35) }
         }.accessibilityElement(children: .combine)
     }

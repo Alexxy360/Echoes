@@ -1,3 +1,4 @@
+import EchoesCloudKit
 import EchoesCore
 import SwiftUI
 
@@ -5,14 +6,21 @@ struct UserProfileView: View {
     @Environment(\.dismiss) private var dismiss
     let userID: String
     let session: CommunitySession
+    var avatars: GatewayCommunityAvatarBinding? = nil
     private var user: NearbyProfile? { session.users.first { $0.id == userID } }
     var body: some View {
         NavigationStack {
             ScrollView {
                 if let user {
                     VStack(spacing: 20) {
-                        Image(systemName: "person.crop.circle.fill").font(.largeTitle).foregroundStyle(
-                            Color.meddleCoral)
+                        if let avatars {
+                            CommunityAvatarView(
+                                avatars: avatars, reference: user.avatarReference, surface: .profile,
+                                name: user.name, size: 112)
+                        } else {
+                            Image(systemName: "person.crop.circle.fill").font(.largeTitle).foregroundStyle(
+                                Color.meddleCoral)
+                        }
                         Text(user.name).font(.title2.bold())
                         Text(user.lastSong.isEmpty ? "Nie udostępnia teraz muzyki" : user.lastSong)
                             .multilineTextAlignment(.center)
@@ -26,6 +34,7 @@ struct UserProfileView: View {
                                 if session.blockedIDs.contains(userID) { dismiss() }
                             }
                         }
+                        .disabled(session.blockingUserIDs.contains(userID))
                     }.padding(24).frame(maxWidth: .infinity)
                 } else {
                     ContentUnavailableView(
@@ -36,6 +45,6 @@ struct UserProfileView: View {
             .navigationTitle("Profil").navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Zamknij") { dismiss() } } }
         }
-        .presentationDetents([.medium, .large])
+        .presentationDetents(avatars == nil ? [.medium, .large] : [.large])
     }
 }

@@ -21,3 +21,8 @@ Testy obejmują współdzielenie oczekującego odczytu, nowego odbiorcę po zako
 Rejestrację/zwalnianie odbiorców zmieniono na przyrostową po wolnym teście 320 wpisów; focused10 funkcji spadło z około5,3s do0,18s na tym Macu. To obserwacja lokalnych modeli, nie pomiar płynności UI lub hostowanego obciążenia. Sprzętowy FileProtection pozostaje pominięty.
 
 Renderer i rejestrowanie lease w rzeczywistych widokach są następnym CK-04e.3i.3b. Bez nich ten etap nie pokazuje jeszcze zdjęć w aplikacji i nie wykonuje ich sieciowego odczytu. Nie powtarzano niezmienionych UI testów ani SDK na telefonie. Nie zmieniono gateway, lockfile, projektu, konfiguracji, zależności i CI; nie powtarzano ich pełnych testów/audytu. Brak deploy/aktywacji, nowych usług/kluczy/sekretów/opłat i zmian Production/Firebase/TestFlight. Realne schema/role/hosty/SIWA/service identity/Free/A-B, uploader/journal/operator/zgłoszenia/retencja i reszta planu nadal otwarte.
+
+
+## Uzupełnienie CK-04e.3i.3b
+
+Widoki mapy, profilu i czatu rejestrują już lease przez [wspólny renderer](RENDERER_AVATAROW_IOS.md). Getter binding.isAvailable obserwuje rewizję i bieżące bramki operacyjne, aby montowanie przed activate nie zgubiło rejestracji. Nie zastępuje kontroli rodzica w acquire/render. Nowy test obejmuje zimną sesję, foreground, rebind i invalidate bez odzyskania starego bindingu; brak IO przed rejestracją. Końcowa regresja pakietu: 320 zaliczonych+1 sprzętowy skip na Macu i Simulatorze, 23/23 UI oraz Release. Dowód dotyczy syntetycznego podglądu, nie realnego providera lub darmowej skali. Historyczne wyniki etapu 3a powyżej pozostają bez zmian.
