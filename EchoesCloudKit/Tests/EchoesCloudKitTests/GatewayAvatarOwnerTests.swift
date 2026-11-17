@@ -181,7 +181,9 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
     let real: GatewayAvatarUploadJournal
     let controller: GatewayAvatarOwnerController
     let avatar: PreparedAvatar
-    init() throws {
+    init(
+        presentationChanged: @escaping @MainActor (String, GatewayAvatarOwnerSnapshot?) -> Void = { _, _ in }
+    ) throws {
         authorization = try .init()
         try authorization.select(ownerFlowA)
         configuration = try .init(origin: URL(string: "https://owner-flow.example.invalid")!)
@@ -196,7 +198,8 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
         journal = .init(real)
         controller = try .init(
             api: api, configuration: configuration, cloudKit: cloudKit, authorization: authorization,
-            journal: journal, isEnabled: { [flags] in flags.enabled })
+            journal: journal, isEnabled: { [flags] in flags.enabled },
+            presentationChanged: presentationChanged)
     }
     func cleanup() {
         controller.invalidate()
@@ -776,4 +779,63 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
     #expect(controller.snapshot?.status == .published && controller.pendingOperation == nil)
     #expect(await transport.sent == ["recover", "status", "publish"])
     #expect(try await f.journal.read() == nil)
+}
+
+@MainActor private final class OwnerPresentationEvents {
+    var values: [(String, GatewayAvatarOwnerSnapshot?)] = []
+    func record(_ owner: String, _ snapshot: GatewayAvatarOwnerSnapshot?) { values.append((owner, snapshot)) }
+}
+
+@Test @MainActor func avatarOwnerPresentationFencesBeforeAwaitAndOnlyRestoresVerifiedPublishedState()
+    async throws
+{
+    let events = OwnerPresentationEvents()
+    let f = try OwnerFlowFixture(presentationChanged: { events.record($0, $1) })
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    await f.api.beforeEach { _ in
+        await MainActor.run { #expect(events.values.last?.1?.status != .published) }
+    }
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    #expect(events.values.last?.1?.status == .pendingReview)
+    try await f.api.review(.approved)
+    try await f.controller.refresh()
+    #expect(events.values.last?.1?.status == .approved)
+    try await f.controller.publish()
+    #expect(events.values.last?.1?.status == .published)
+    let count = events.values.count
+    // Closing a successful editor does not itself revoke the public selection.
+    f.controller.invalidate()
+    #expect(events.values.count == count)
+    try await f.controller.connect()
+    await f.api.pause("status")
+    let clear = Task { try await f.controller.clear() }
+    try await f.api.gate.wait()
+    #expect(events.values.last?.1 == nil)
+    #expect(events.values.allSatisfy { $0.0 == f.scope.privateScope.accountID })
+    await f.api.gate.release()
+    try await clear.value
+    #expect(events.values.last?.1?.status == GatewayAvatarOwnerStatus.none)
+}
+
+@Test @MainActor func avatarOwnerLateOrUnknownResultNeverNotifiesPublishedSelection() async throws {
+    let events = OwnerPresentationEvents()
+    let f = try OwnerFlowFixture(presentationChanged: { events.record($0, $1) })
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    await f.api.fail("publish", .lostReply)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    #expect(events.values.last?.1?.status != .published)
+    try await f.controller.refresh()
+    #expect(events.values.last?.1?.status == .published)
+    await f.api.pause("status")
+    let read = Task { try await f.controller.refresh() }
+    try await f.api.gate.wait()
+    let count = events.values.count
+    f.authorization.cloudName = "different-private-cloud"
+    await f.api.gate.release()
+    await #expect(throws: GatewayAvatarOwnerFailure.superseded) { try await read.value }
+    #expect(events.values.count == count && events.values.last?.1 == nil)
 }

@@ -100,6 +100,10 @@ import XCTest
         status(app, contains: "zatwierdzone")
         tap(app, "avatar.editor.publish")
         status(app, contains: "jest opublikowane")
+        let published = element(app, "community.avatar.ownerEditor")
+        let loaded = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Wczytane"), object: published)
+        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 10), .completed)
         attach(app, "owner-photo-published")
         tap(app, "avatar.editor.clear")
         XCTAssertTrue(app.staticTexts["Wycofać zdjęcie i zgodę?"].waitForExistence(timeout: 5))
@@ -155,6 +159,29 @@ import XCTest
         XCTAssertFalse(element(app, "avatar.editor.preview").exists)
         XCTAssertFalse(app.switches["avatar.editor.consent"].exists)
         attach(app, "owner-photo-after-background")
+    }
+    func testPublishedOwnPhotoReloadsWithoutLocationOrAnUnsentDraft() {
+        let app = application("avatar-owner-no-location")
+        open(app)
+        choose(app)
+        acceptAndSend(app)
+        status(app, contains: "zatwierdzone")
+        tap(app, "avatar.editor.publish")
+        status(app, contains: "jest opublikowane")
+        closeEditor(app)
+        tap(app, "settings.avatar")
+        status(app, contains: "jest opublikowane")
+        let image = element(app, "community.avatar.ownerEditor")
+        let loaded = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Wczytane"), object: image)
+        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 10), .completed)
+        XCTAssertFalse(element(app, "avatar.editor.preview").exists)
+        attach(app, "owner-published-without-location")
+        tap(app, "avatar.editor.clear")
+        app.buttons["avatar.editor.confirm"].tap()
+        status(app, contains: "Brak opublikowanego")
+        XCTAssertFalse(image.exists)
+        attach(app, "owner-withdrawn-without-location")
     }
     func testSystemPhotoPickerCanBeCancelledWithoutUploadingOrClosingTheEditor() {
         let app = application()

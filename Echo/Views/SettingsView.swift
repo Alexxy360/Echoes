@@ -126,8 +126,11 @@ struct SettingsView: View {
             }
             .onAppear { name = services.session.name }
             .sheet(item: $avatarEditor) { session in
-                AvatarEditorView(session: session, previewSelection: services.avatarPreviewSelection)
-                    .presentationDetents([.large])
+                AvatarEditorView(
+                    session: session, avatars: services.avatars,
+                    previewSelection: services.avatarPreviewSelection
+                )
+                .presentationDetents([.large])
             }
             .confirmationDialog(
                 "Usunąć Twoje konto, profil i wiadomości?", isPresented: $confirmDeletion,

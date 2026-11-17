@@ -6,6 +6,7 @@ struct AvatarEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
     let session: GatewayAvatarEditorSession
+    var avatars: GatewayCommunityAvatarBinding? = nil
     var previewSelection: (@Sendable () async throws -> PreparedAvatar)? = nil
     @State private var photo: PhotosPickerItem?
     @State private var confirmation: AvatarEditorConfirmation?
@@ -22,6 +23,15 @@ struct AvatarEditorView: View {
                 #endif
                 if session.isCurrent {
                     AvatarEditorStatusSection(session: session)
+                    if let reference = session.publishedReference {
+                        Section("Opublikowane zdjęcie") {
+                            CommunityAvatarView(
+                                avatars: avatars, reference: reference, surface: .ownerEditor,
+                                name: "", size: 120)
+                            Text("Podgląd sprawdza aktualny dostęp. Nie wymaga włączenia lokalizacji.")
+                                .font(.caption)
+                        }
+                    }
                     AvatarEditorSelectionSection(
                         session: session, photo: $photo, previewSelection: previewSelection)
                     AvatarEditorActionsSection(session: session) { confirmation = $0 }

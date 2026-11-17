@@ -27,7 +27,9 @@ struct CommunityAvatarView: View {
     private var request: Request {
         .init(
             binding: avatars.map(ObjectIdentifier.init), reference: reference, surface: surface,
-            foreground: scenePhase == .active, available: avatars?.isAvailable == true)
+            foreground: scenePhase == .active,
+            available: surface == .ownerEditor
+                ? avatars?.isOwnerAvailable == true : avatars?.isAvailable == true)
     }
     private var current: Registration? {
         guard let registration, registration.request == request, scenePhase == .active else { return nil }
@@ -37,6 +39,7 @@ struct CommunityAvatarView: View {
         switch surface {
         case .map: "map"
         case .profile: "profile"
+        case .ownerEditor: "ownerEditor"
         case .message: "message"
         }
     }
@@ -62,7 +65,7 @@ struct CommunityAvatarView: View {
         .accessibilityValue(image == nil ? "Inicjał" : "Wczytane")
         .accessibilityIdentifier("community.avatar." + surfaceName)
         .overlay(alignment: .bottomTrailing) {
-            if surface == .profile, let value, image == nil {
+            if surface == .profile || surface == .ownerEditor, let value, image == nil {
                 if value.binding.isLoading(value.lease) {
                     ProgressView().padding(10).background(.regularMaterial, in: Circle())
                         .accessibilityIdentifier("community.avatar.loading")
@@ -82,7 +85,7 @@ struct CommunityAvatarView: View {
     }
     private func register() {
         release()
-        guard !Task.isCancelled, scenePhase == .active, let avatars, avatars.isAvailable, let reference
+        guard !Task.isCancelled, scenePhase == .active, let avatars, request.available, let reference
         else { return }
         do {
             let lease = try avatars.acquire(reference: reference, surface: surface)

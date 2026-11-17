@@ -58,6 +58,7 @@ public enum GatewayAvatarEditorAction: Sendable {
         // working deliberately stays occupied until the real provider/controller returns.
     }
     fileprivate func close(_ id: UUID) { if context?.id == id { invalidate() } }
+    fileprivate func ownerID(for id: UUID) -> String? { current(id) ? context?.owner.accountID : nil }
     fileprivate func current(_ id: UUID) -> Bool {
         guard let context, context.id == id else { return false }
         return isEnabled() && context.isCurrent() && source.communityAuthorization == context.native
@@ -174,6 +175,13 @@ private struct AvatarEditorDraft: Sendable {
     public var isConnected: Bool { isCurrent && host.controller.isConnected }
     public var needsRefresh: Bool { !isCurrent || host.controller.needsRefresh }
     public var snapshot: GatewayAvatarOwnerSnapshot? { isCurrent ? host.controller.snapshot : nil }
+    public var publishedReference: AvatarReference? {
+        guard isCurrent, let snapshot, snapshot.status == .published,
+            let version = snapshot.publishedVersionID,
+            let owner = host.ownerID(for: id)
+        else { return nil }
+        return try? AvatarReference(ownerID: owner, versionID: version)
+    }
     public var pendingOperation: GatewayAvatarUploadJournalEntry? {
         isCurrent ? host.controller.pendingOperation : nil
     }

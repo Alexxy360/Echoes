@@ -1,12 +1,15 @@
 #if DEBUG
     import EchoesCloudKit
+    import CryptoKit
     import Foundation
+    import ImageIO
     import UIKit
 
     /// Synthetic fixture only. The real editor, file preparer and durable journal are unchanged.
     @MainActor final class AvatarEditorPreviewFixture {
         let host: GatewayAvatarEditorHost
         let api: AvatarEditorPreviewAPI
+        let avatars: GatewayCommunityAvatarHost
         let selection: @Sendable () async throws -> PreparedAvatar
         init(mode: String, source: any GatewayAvatarAuthorizationSource, cloudKit: CloudKitConfiguration)
             throws
@@ -15,10 +18,15 @@
             let configuration = try GatewayConfiguration(origin: URL(string: api.origin)!)
             let root = FileManager.default.temporaryDirectory.appendingPathComponent(
                 "Echoes-owner-photo-preview-" + UUID().uuidString)
+            let avatars = try GatewayCommunityAvatarHost(
+                api: api, configuration: configuration, cloudKit: cloudKit, authorization: source,
+                cache: GatewayAvatarCache(root: root), isEnabled: { true })
+            self.avatars = avatars
             let controller = try GatewayAvatarOwnerController(
                 api: api, configuration: configuration,
                 cloudKit: cloudKit, authorization: source, journal: GatewayAvatarUploadJournal(root: root),
-                isEnabled: { true })
+                isEnabled: { true },
+                presentationChanged: { [weak avatars] in avatars?.observeOwner($0, snapshot: $1) })
             host = try GatewayAvatarEditorHost(
                 controller: controller, cloudKit: cloudKit, authorization: source, isEnabled: { true })
             let format = UIGraphicsImageRendererFormat()
@@ -47,17 +55,18 @@
             }
         }
     }
-    actor AvatarEditorPreviewAPI: GatewayAvatarMutationAPI {
+    actor AvatarEditorPreviewAPI: GatewayAvatarMutationAPI, GatewayAvatarReadAPI {
         nonisolated let origin = "https://community-preview.example.invalid"
         private let approved: Bool
         private var loseUpload: Bool
         private var delayed: Bool
         private var waiting: CheckedContinuation<Void, Never>?
         private var states: [String: GatewayAvatarOwnerSnapshot] = [:]
+        private var photos: [String: PreparedAvatar] = [:]
         private var selectedOwner = "11111111-1111-4111-8111-111111111111"
         func selectOwner(_ value: String) { selectedOwner = value }
         init(mode: String) {
-            approved = mode == "avatar-owner-approved"
+            approved = mode == "avatar-owner-approved" || mode == "avatar-owner-no-location"
             loseUpload = mode == "avatar-owner-lost"
             delayed = mode == "avatar-owner-delayed"
         }
@@ -86,13 +95,14 @@
             let value: GatewayAvatarOwnerSnapshot
             switch action {
             case .status: return old
-            case .upload(let intent, _):
+            case .upload(let intent, let image):
                 guard old.generation == intent.expectedGeneration || old.requestID == intent.requestID else {
                     throw GatewayAvatarMutationFailure.stale
                 }
                 value = try snapshot(
                     generation: intent.expectedGeneration + 1, request: intent.requestID,
                     version: intent.versionID, status: approved ? .approved : .pendingReview)
+                photos[owner] = try AvatarPreparer.prepare(image)
             case .recover(let id):
                 guard old.requestID == id else { throw GatewayAvatarMutationFailure.stale }
                 return old
@@ -116,6 +126,27 @@
                 }
             }
             return value
+        }
+        func read(_ query: GatewayAvatarQuery, token: GatewaySecret) async throws -> GatewayAvatarReply {
+            let owner = query.reference.ownerID
+            guard owner == selectedOwner, let state = states[owner], state.status == .published,
+                state.publishedVersionID == query.reference.versionID, let photo = photos[owner]
+            else { throw GatewayAvatarFailure.notFound }
+            let bytes = query.variant == .image ? photo.image : photo.thumbnail
+            guard let source = CGImageSourceCreateWithData(bytes as CFData, nil),
+                let fields = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                let width = fields[kCGImagePropertyPixelWidth] as? NSNumber,
+                let height = fields[kCGImagePropertyPixelHeight] as? NSNumber
+            else { throw GatewayAvatarFailure.invalidResponse }
+            let digest = SHA256.hash(data: bytes).map { String(format: "%02x", $0) }.joined()
+            let manifest = try AvatarManifest(
+                data: JSONSerialization.data(withJSONObject: [
+                    "schemaVersion": 1, "ownerID": owner, "versionID": query.reference.versionID,
+                    "variant": query.variant.rawValue, "byteCount": bytes.count, "sha256": digest,
+                    "width": width, "height": height,
+                ]), expected: query.reference, variant: query.variant)
+            return query.knownSHA256 == digest
+                ? .revalidated(manifest: manifest) : .downloaded(manifest: manifest, bytes: bytes)
         }
     }
     extension GatewayAvatarMutation {

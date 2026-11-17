@@ -2,7 +2,7 @@
 
 Kontrolowane AppServices udostępnia w ustawieniach osobny edytor zdjęcia. Nowe widoki używają rzeczywistego [sterownika właściciela](NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md), journala i natywnego Runtime. Legacy/preview bez jawnego hosta nie dostają przycisku ani pozornego fallbacku. Zwykłe wejście aplikacji nadal Firebase, a aktywacja gateway/uploadu nie została zmieniona.
 
-Ten podetap pokazuje lokalny podgląd wybranej kopii i stan operacji. Nie pobiera jeszcze rastra wcześniej opublikowanego własnego zdjęcia po ponownym otwarciu. CK-04e.3j.2d.2 ma dodać taki chroniony podgląd bez wymagania GPS, korzystając z istniejącego odczytu właściciela. Pozostaje częścią planu przed pełnym odbiorem UI i aktywacją.
+Ten podetap dodał lokalny podgląd wybranej kopii i stan operacji. Kolejny [CK-04e.3j.2d.2](PODGLAD_WLASNEGO_ZDJECIA_IOS.md) dodaje chroniony raster wcześniej opublikowanego własnego zdjęcia bez wymagania GPS oraz odcięcie starej lokalnej prezentacji przy operacji. Dowody tego dokumentu zachowują zakres wcześniejszego 2d.1; pełny odbiór dostawców i aktywacja nadal pozostają otwarte.
 
 ## Wybór pliku i przygotowanie
 
@@ -44,4 +44,4 @@ Końcowy pakiet: 410 zdefiniowanych, 408 zaliczonych i dwa jawne sprzętowe skip
 
 Końcowy xcresult zapisuje jedno ostrzeżenie „Invalid frame dimension (negative or non-finite)” przy największym tekście, bez lokalizacji źródłowej. W nowych widokach jawne wymiary są stałe 120×120 albo maxWidth infinity; nie wyliczają ujemnych rozmiarów. Przyciski i przewijanie sprawdzono testem i zrzutem. Źródło ostrzeżenia nie jest ustalone i wymaga diagnostyki przed odbiorem TestFlight; nie deklarujemy braku ostrzeżeń. W trakcie odczytu wcześniejszego raportu automatyczna kontrola zatrzymała eskalację z powodu limitu użycia Codex. Nie obchodzono blokady; odczyt i testy wznowiono po przywróceniu dostępności.
 
-Nadal wymagane są chroniony własny podgląd2d.2, operator/ogląd treści, zgłoszenia/kontakt, retencja/orphans, fizyczne FileProtection/locked-device/import z biblioteki, rzeczywiste schema/role/hosty/SIWA/service identity/hosted Free i dwa zwykłe konta. Nie włączono nowych usług, uprawnień, kluczy, sekretów lub opłat, nie instalowano diagnostyki na telefonie, nie zmieniano Production/Firebase/TestFlight. Cel migracji pozostaje aktywny.
+Chroniony własny podgląd ma osobne dowody 2d.2. Nadal wymagane są operator/ogląd treści, zgłoszenia/kontakt, retencja/orphans, fizyczne FileProtection/locked-device/import z biblioteki, rzeczywiste schema/role/hosty/SIWA/service identity/hosted Free i dwa zwykłe konta. Nie włączono nowych usług, uprawnień, kluczy, sekretów lub opłat, nie instalowano diagnostyki na telefonie, nie zmieniano Production/Firebase/TestFlight. Cel migracji pozostaje aktywny.

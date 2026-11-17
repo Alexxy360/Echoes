@@ -29,6 +29,7 @@
                     "profile-unknown", "profile-delayed", "profile-empty",
                     "avatars", "avatars-denied", "avatars-corrupt", "avatars-delayed",
                     "avatar-owner", "avatar-owner-approved", "avatar-owner-lost", "avatar-owner-delayed",
+                    "avatar-owner-no-location",
                 ].contains(mode)
             else { throw GatewayFailure.configuration }
             self.mode = mode
@@ -52,7 +53,7 @@
                     cache: GatewayAvatarCache(root: root), isEnabled: { true })
             } else {
                 avatarAPI = nil
-                avatarHost = nil
+                avatarHost = ownerPhotos?.avatars
             }
             if ["profile-onboarding", "profile-offline", "profile-delayed"].contains(mode) {
                 let scope = try PrivateAccountScope(
@@ -118,8 +119,10 @@
                 }
                 await current.activate()
                 current.session.updateLocation(
-                    .init(
-                        coordinate: PreviewCommunityClient.center, accuracy: 10, measuredAt: Date()))
+                    mode == "avatar-owner-no-location"
+                        ? nil
+                        : .init(
+                            coordinate: PreviewCommunityClient.center, accuracy: 10, measuredAt: Date()))
                 if mode == "pending", first {
                     first = false
                     await api.loseNextSend()

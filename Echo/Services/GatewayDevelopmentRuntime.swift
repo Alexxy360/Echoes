@@ -10,6 +10,7 @@
         weak var host: GatewayCommunityHost?
         weak var services: AppServices?
         weak var avatarEditor: GatewayAvatarEditorHost?
+        weak var avatars: GatewayCommunityAvatarHost?
         func clearServices() {
             avatarEditor?.invalidate()
             services?.invalidateNativePresentation()
@@ -114,7 +115,8 @@
                 api: GatewayAvatarMutationHTTPClient(
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),
                 configuration: activation.configuration, cloudKit: activation.cloudKit,
-                authorization: auth, journal: avatarUploads, isEnabled: { activation.isActive() })
+                authorization: auth, journal: avatarUploads, isEnabled: { activation.isActive() },
+                presentationChanged: { relay.avatars?.observeOwner($0, snapshot: $1) })
             avatarEditor = try GatewayAvatarEditorHost(
                 controller: avatarOwner, cloudKit: activation.cloudKit, authorization: auth,
                 isEnabled: { activation.isActive() })
@@ -124,6 +126,7 @@
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),
                 configuration: activation.configuration, cloudKit: activation.cloudKit,
                 authorization: auth, cache: avatarCache, isEnabled: { activation.isActive() })
+            relay.avatars = avatars
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),

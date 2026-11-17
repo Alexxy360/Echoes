@@ -43,6 +43,7 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
     private let authorization: any GatewayAvatarAuthorizationSource
     private let journal: any GatewayAvatarUploadJournaling
     private let isEnabled: @MainActor () -> Bool
+    private let presentationChanged: @MainActor (String, GatewayAvatarOwnerSnapshot?) -> Void
     @ObservationIgnored private var context: Context?
     @ObservationIgnored private var epoch = UUID()
     @ObservationIgnored private var slot: UUID?
@@ -76,7 +77,8 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         api: any GatewayAvatarMutationAPI, configuration: GatewayConfiguration,
         cloudKit: CloudKitConfiguration,
         authorization: any GatewayAvatarAuthorizationSource, journal: any GatewayAvatarUploadJournaling,
-        isEnabled: @escaping @MainActor () -> Bool = { false }
+        isEnabled: @escaping @MainActor () -> Bool = { false },
+        presentationChanged: @escaping @MainActor (String, GatewayAvatarOwnerSnapshot?) -> Void = { _, _ in }
     ) throws {
         guard api.origin == configuration.origin.absoluteString,
             cloudKit.containerIdentifier == "iCloud.mpvEcho.Echo", cloudKit.environment == .development
@@ -87,6 +89,7 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         self.authorization = authorization
         self.journal = journal
         self.isEnabled = isEnabled
+        self.presentationChanged = presentationChanged
     }
     private func reset() {
         let lease = context?.lease
@@ -131,6 +134,9 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         let id = UUID()
         let start = epoch
         slot = id
+        if let context, current(context) {
+            presentationChanged(context.scope.privateScope.accountID, nil)
+        }
         storedSnapshot = nil
         refreshRequired = true
         presentationRevision = UUID()
@@ -259,6 +265,7 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         try check(context)
         storedSnapshot = value
         refreshRequired = false
+        presentationChanged(context.scope.privateScope.accountID, value)
         presentationRevision = UUID()
     }
     /// A snapshot may complete/stage an exact operation; it never authorizes a new upload or publish.

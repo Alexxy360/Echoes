@@ -1,0 +1,207 @@
+{
+  "stage": "CK-04e.3j.2d.2",
+  "observedAtUTC": "2026-11-17T15:54:33.086472+00:00",
+  "baselineCommit": "eadb968eb874e579dd1692e0d0d546089d19699e",
+  "checks": {
+    "CloudKit": {
+      "definedTests": 416,
+      "macOS": {
+        "passed": 414,
+        "skipped": 2,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 414,
+        "skipped": 2,
+        "failed": 0
+      }
+    },
+    "newPassedPackageTestFunctions": 6,
+    "newPassedUITestFunctions": 1,
+    "finalUI": {
+      "passed": 31,
+      "failed": 0,
+      "skipped": 0,
+      "sameFinalSourceCohort": true
+    },
+    "strictSwiftFormatFiles": 12,
+    "xcresultCountsVerified": true,
+    "allNewPackageIndividualCompletionsVerified": true,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "coreGatewayProjectDependenciesCIUnchanged": true
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "DebugFromFullUITestBuild": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "fc642836c067613e3b4d0ff6d09a43958b8773cdaa86a32fb5248d06e7b5149b",
+        "Echoes.debug.dylib": "58599a3b016501787d878eb8c4f4821d0ffc2025a5f2408450bc4a0d04ad4536"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "DebugFromFullUITestBuild": false,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "ced480e97cf75dad1287ca45f283306ae8f47e7757c0bc24833fabb0e1a3e409"
+      }
+    }
+  },
+  "implemented": [
+    "ownerEditor surface uses common host/client/cache and full-size protected fresh read with coordinate nil",
+    "separate observable owner readiness requires native/private/domain/ready/foreground; peer readiness still requires GPS",
+    "publishedReference only from current published owner snapshot; draft never substitutes for published bytes",
+    "synchronous owner presentation callback fences all own surfaces before first awaited operation; observed verified state updates allowed version",
+    "own image/group invalidation and cancellation; old message/map/profile references cannot override own fence",
+    "generation cannot roll backward within binding; pending/approved/rejected/unknown have no own image",
+    "late results cannot match removed group/selection after own withdrawal or ABA",
+    "shared4 unsettled reads,12 reads/min,4 full images/min,30s presentation cap unchanged",
+    "renderer resolves opaque lease on each render and uses existing manual retry/loading/fallback",
+    "closing successful editor does not revoke published selection; identity/background still independently fence"
+  ],
+  "actualComponents": [
+    "filesystem/ImageIO/journal/owner controller/editor/host/renderer",
+    "iPhone17Pro Simulator native SwiftUI across full31 selected UI",
+    "Debug UI compilation and Release device compilation, unchanged privacy resource verified in both bundles"
+  ],
+  "modeledComponents": [
+    "Apple/iCloud/gateway identities/server policy/coordinates",
+    "synthetic JPEG, moderation and mutation/read API in explicit UI fixture",
+    "no real hosted endpoint/CloudKit or two ordinary iCloud accounts"
+  ],
+  "newPackageTestNames": [
+    "avatarHostOwnerEditorReadsOnlyPublishedOwnSelectionWithoutLocation",
+    "avatarHostOwnerFenceDropsMessagesAndOwnEditorButPreservesPeerPixels",
+    "avatarHostLateOwnReadCannotRestorePixelsAfterWithdrawalOrABA",
+    "avatarHostOwnEditorCannotBorrowForeignScopeOrReviveBackgroundBinding",
+    "avatarOwnerPresentationFencesBeforeAwaitAndOnlyRestoresVerifiedPublishedState",
+    "avatarOwnerLateOrUnknownResultNeverNotifiesPublishedSelection"
+  ],
+  "newUITestName": "testPublishedOwnPhotoReloadsWithoutLocationOrAnUnsentDraft",
+  "negativeControl": {
+    "copyOnly": true,
+    "mutation": "remove own-version fence from community surfaces",
+    "test": "avatarHostOwnerFenceDropsMessagesAndOwnEditorButPreservesPeerPixels",
+    "failedTests": 1,
+    "issues": 1,
+    "exitCode": 1,
+    "actualSourceSHA256Unchanged": true,
+    "observed": "old own-message reference was accepted after nil owner fence when version check removed"
+  },
+  "firstPassHistory": [
+    "49 existing host/owner/editor tests passed",
+    "four new host tests passed",
+    "first six-test cohort failed2 functions/3 assertions: expected nil instead of verified approved, and Optional.none instead of explicit enum none",
+    "corrected expectations to no published selection and explicit GatewayAvatarOwnerStatus.none; production guards unchanged",
+    "final six and both complete package platforms passed; UI acceptance recorded separately below"
+  ],
+  "runtimeWarnings": {
+    "finalUI": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "sourceEstablished": false,
+    "priorLargestTextFrameWarningStillOpen": true,
+    "resolutionRequiredBeforeTestFlightAcceptance": true
+  },
+  "knownLimits": [
+    "owner observations are local presentation fences, not network grants or continually fresh server state",
+    "conservative status/recovery also hides own image during checking; failure needs explicit refresh",
+    "background or account switch cancels presentation but cannot roll back already dispatched server work",
+    "UI close/reopen is same process; not app restart/real offline proof",
+    "physical FileProtection and locked-device/import from PhotosPicker/iCloud Photos still required",
+    "operator content inspection/reports/contact/retention/orphans remain next",
+    "real schema/roles/asset hosts/SIWA/separate service identity/hosted Free/two ordinary accounts not accepted",
+    "standard entry remains Firebase; controlled runtime not activated or TestFlight ready"
+  ],
+  "notPerformed": [
+    "unchanged full gateway/Core/dependency audit repeats",
+    "phone install/new SDK window",
+    "remote deployment/activation/schema/roles/keys/secrets/paid plans",
+    "Production/TestFlight/Firebase operations"
+  ],
+  "sourceDocsAndScreenshotsSHA256": {
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "296cfe9c34c26de72e8814a2f6ac08ba5d6e38ab7f7c81e27de9d1b576ed68cd",
+    "Echo/Services/CommunityPreviewFixture.swift": "53068024d101b887f51f6259ed5114bcf5050fe2883cec1563e6bdfb4208234d",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "39978daff33a90f841fb9258891473f32f8c1b518ec5d4f80676496644d0fcfc",
+    "Echo/Views/AvatarEditorView.swift": "7fe5213ffe43bed9dc97e36ce8359ef8beeac5404dde86a93db3eebfe8efcc09",
+    "Echo/Views/CommunityAvatarView.swift": "33c4f1f0426a845f49bbae6942ff305a8c04ebd6648e42f3d6dccb864f6ec8cd",
+    "Echo/Views/SettingsView.swift": "e01c7b04d7728638d24460fab392ff4482b2d81bbede1e4cd2692fb2863026b2",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "cd5d004756b21e3e175d670a30f037f6a0da90a36c7f8b1abb56673430bcb760",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "49762a627993f24da7cd4e3e66d9bfb6f0da9172a936e130380117ce28de627b",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "c1354f70cd116cf8864e5a34a46683f5eedff7db6f0a0474161c148f6e723561",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "9671456e3fdea0b397568cb16181ac5b3e59793534076ef5dcbc384c951c872b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "ae85552c615b3ff1ce2291860e583d7afbd67ce4e3b5f578f1b1edc0a3114e93",
+    "EchoesUITests/GatewayAvatarEditorUITests.swift": "7a9fcc7f3aa2fedd1412058f2252b00ac8f0736f66e5ad53f911024cc10b29fa",
+    "Docs/PODGLAD_WLASNEGO_ZDJECIA_IOS.md": "a53fb329b28ec8d5436932939b747d6400be400c3bc462f794e8f8599df32fcd",
+    "Docs/EDYTOR_WLASNEGO_ZDJECIA_IOS.md": "67fb0c4fee25d0e49e1d0b5b6ccc023772f109a3d79b8fbfb682d4a975d77b1d",
+    "Docs/NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md": "7b9abbab5be20064c8ddb25f0968455ca8c63dd77bf787134170e1b934d3c618",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "752fdd7cafa696bac24b1b40eaceaab51db1890c22795e3c9055f8b8cad4de82",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "6773b649679a85ce93dc6beb163f2a6df5ccec887f4d84e7192159a5fd5f850c",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "a381959f75577fd96b999a1fb61e136ff5fb310788995b18672d7f0c75d49800",
+    "Docs/DZIENNIK_ZMIAN.md": "01d4e6dbe8551a922999a32d29ed0829916fafc7f6e45eec490d7b0f445cfa17",
+    "Docs/evidence/avatar-own-presentation-ui/published-without-location.png": "f184d90edf657626154842973c65c3a2964b9d43caa5518abb4454dac251e4c5",
+    "Docs/evidence/avatar-own-presentation-ui/withdrawn-without-location.png": "00b580e403c6c0859c96598037197288f7ccb447bfb276443bdbc7e39447fdc6"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-own-presentation-first.log": "8e907388fdc6acf66617bb6d9e00b78fad46f047617b6e5e9d964ed5af842d4c",
+    "echoes-avatar-own-presentation-host-first.log": "17f345500548e71e1facadf65de8d5afe7408b992ab3a0c07f0c2955dd28bdf7",
+    "echoes-avatar-own-presentation-focused.log": "c7e486f2a0d36279014033d4c38087aec264ac8ba1bceae48c29d27ed2d979ec",
+    "echoes-avatar-own-presentation-focused-final.log": "a1239484945c64274d531acadae275e6215ef19c0a8f5928d52d7ab780ed4882",
+    "echoes-avatar-own-presentation-full-mac.log": "63fb0b456050a2740bfb6321afbb87b0d41e7706996a4a55bc58c8650146857f",
+    "echoes-avatar-own-presentation-full-simulator.log": "b46373cdf839c1baed86158a277a7780e24557f3d0652fb5dc1c64f9bc87ee37",
+    "echoes-avatar-own-presentation-simulator-summary.json": "a07898f1349661268c60d62b90238f2e27d803081e134d8990e36f5a9e0f0c9b",
+    "echoes-avatar-own-presentation-negative.log": "efc5eac35f8bcb59361592f4cc2e05dda5b5abf24a088f1f7e63d397eb295d8f",
+    "echoes-avatar-own-presentation-negative-result.json": "5a06bf569342a8e45a5835a5a1804e71f9697ad87cacbee885e30736adbdb423",
+    "echoes-avatar-own-presentation-ui.log": "9f4b23e3da506bafd6be086fdde87aadb3c451b8733186aaebd5206ebf5441bc",
+    "echoes-avatar-own-presentation-ui-summary.json": "f476811dd65160c930ad8cdb7c7da08989dd1dc108e3805d7dc8806cd98ed6d7",
+    "echoes-avatar-own-presentation-release.log": "34483a1dea3811245bc8908404458b5f7d80f6133911a61a7798abb25af2a2f7",
+    "echoes-avatar-own-presentation-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

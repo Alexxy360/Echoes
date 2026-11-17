@@ -4,7 +4,7 @@ import Foundation
 import Observation
 
 public enum GatewayCommunityAvatarSurface: Equatable, Sendable {
-    case map, profile
+    case map, profile, ownerEditor
     case message(String)
 }
 public struct GatewayCommunityAvatarLease: Equatable, Sendable {
@@ -21,6 +21,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     }
     /// Observable readiness for view registration; individual parents still require acquisition.
     public var isAvailable: Bool { host?.isAvailable(binding: id) == true }
+    public var isOwnerAvailable: Bool { host?.isOwnerAvailable(binding: id) == true }
     public func acquire(reference: AvatarReference, surface: GatewayCommunityAvatarSurface) throws
         -> GatewayCommunityAvatarLease
     {
@@ -54,7 +55,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     private struct Consumer {
         let reference: AvatarReference
         let surface: GatewayCommunityAvatarSurface
-        var variant: AvatarVariant { surface == .profile ? .image : .thumbnail }
+        var variant: AvatarVariant { surface == .profile || surface == .ownerEditor ? .image : .thumbnail }
         var key: Key { Key(reference, variant) }
     }
     private struct Group {
@@ -93,6 +94,9 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     @ObservationIgnored private var minute: Double = -1
     @ObservationIgnored private var reads = 0
     @ObservationIgnored private var images = 0
+    @ObservationIgnored private var ownerObserved = false
+    @ObservationIgnored private var ownerVersion: String?
+    @ObservationIgnored private var ownerGeneration: Int?
     public private(set) var presentationRevision = UUID()
 
     public init(
@@ -138,11 +142,36 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         context != nil && enabled() && current() && source.communityAuthorization == authorization
             && privateScope != nil && source.privateDataScope(configuration: cloudKit) == privateScope
             && session?.phase == .ready && session?.isForeground == true
-            && session?.userID == authorization?.identity.accountID && session?.usableCoordinate != nil
+            && session?.userID == authorization?.identity.accountID
     }
     fileprivate func isAvailable(binding: UUID) -> Bool {
         _ = presentationRevision
+        return context == binding && operational && session?.usableCoordinate != nil
+    }
+    fileprivate func isOwnerAvailable(binding: UUID) -> Bool {
+        _ = presentationRevision
         return context == binding && operational
+    }
+    /// Trusted owner-controller observation, never an authorization grant. A nil snapshot fences
+    /// every local surface immediately; only a fresh protected read may provide pixels again.
+    public func observeOwner(_ ownerID: String, snapshot: GatewayAvatarOwnerSnapshot?) {
+        guard context != nil, current(), enabled(), ownerID == authorization?.identity.accountID,
+            source.communityAuthorization == authorization, privateScope != nil,
+            source.privateDataScope(configuration: cloudKit) == privateScope
+        else { return }
+        ownerObserved = true
+        ownerVersion = nil
+        client.invalidate(ownerID: ownerID)
+        for (key, group) in groups where key.owner == ownerID {
+            discard(key, group)
+            groups.removeValue(forKey: key)
+        }
+        if let snapshot, snapshot.generation >= (ownerGeneration ?? 0) {
+            ownerGeneration = snapshot.generation
+            if snapshot.status == .published { ownerVersion = snapshot.publishedVersionID }
+        }
+        presentationRevision = UUID()
+        reconcile()
     }
     public func communityPresentationDidChange(_ session: CommunitySession) {
         guard self.session === session else { return }
@@ -155,6 +184,9 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         context = nil
         authorization = nil
         privateScope = nil
+        ownerObserved = false
+        ownerVersion = nil
+        ownerGeneration = nil
         current = { false }
         active = false
         connected = false
@@ -168,12 +200,24 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     }
     /// Parent eligibility is checked again at render time, including time passing without an event.
     private func eligibility(_ consumer: Consumer) -> Double? {
-        guard operational, let session, let coordinate = session.usableCoordinate,
+        guard operational, let session else { return nil }
+        let owner = consumer.reference.ownerID
+        if owner == authorization?.identity.accountID, ownerObserved,
+            ownerVersion != consumer.reference.versionID
+        {
+            return nil
+        }
+        if consumer.surface == .ownerEditor {
+            guard owner == authorization?.identity.accountID, ownerObserved,
+                ownerVersion == consumer.reference.versionID
+            else { return nil }
+            return session.serverDate.timeIntervalSince1970 * 1000 + 30000
+        }
+        guard let coordinate = session.usableCoordinate,
             !session.blockedIDs.contains(consumer.reference.ownerID),
             !session.blockingUserIDs.contains(consumer.reference.ownerID)
         else { return nil }
         let date = session.serverDate
-        let owner = consumer.reference.ownerID
         let map = session.users.first { $0.id == owner }
         if let map {
             guard map.isValid(at: date),
@@ -183,6 +227,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         }
         switch consumer.surface {
         case .map, .profile: return map?.expiresAt
+        case .ownerEditor: return nil  // Handled before peer/location policy above.
         case .message(let id):
             guard session.isChatOpen, let message = session.messages.first(where: { $0.id == id }),
                 message.isValid(at: date), message.avatarReference == consumer.reference
@@ -412,7 +457,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
                 continue
             }
             let operation = UUID()
-            let coordinate = session?.usableCoordinate
+            let coordinate = consumer.surface == .ownerEditor ? nil : session?.usableCoordinate
             let task = Task { [weak self, client] in
                 var handle: GatewayAvatarPresentation?
                 do {

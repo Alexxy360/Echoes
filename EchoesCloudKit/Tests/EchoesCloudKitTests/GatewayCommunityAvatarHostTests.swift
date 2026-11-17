@@ -391,3 +391,114 @@ private final class HostObservationFlag: @unchecked Sendable {
     try await hostEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == 1)
 }
+
+@MainActor private func hostOwnerSnapshot(
+    _ reference: AvatarReference, generation: Int = 1,
+    status: GatewayAvatarOwnerStatus = .published
+) throws -> GatewayAvatarOwnerSnapshot {
+    try .init(
+        data: JSONSerialization.data(withJSONObject: [
+            "protocolVersion": 1, "generation": generation,
+            "requestID": "67000000-0000-4000-8000-000000000088",
+            "versionID": reference.versionID, "status": status.rawValue,
+            "publishedVersionID": status == .published ? reference.versionID as Any : NSNull(),
+            "reviewRevision": "67000000-0000-4000-8000-000000000089",
+        ]))
+}
+@MainActor private func hostOwnReference(_ fixture: HostFixture) throws -> AvatarReference {
+    try .init(
+        ownerID: #require(fixture.photo.source.communityAuthorization).identity.accountID,
+        versionID: fixture.photo.reference.versionID)
+}
+
+@Test @MainActor func avatarHostOwnerEditorReadsOnlyPublishedOwnSelectionWithoutLocation() async throws {
+    let f = try await HostFixture()
+    defer { f.close() }
+    let own = try hostOwnReference(f)
+    f.session.updateLocation(nil)
+    #expect(!f.binding.isAvailable && f.binding.isOwnerAvailable)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, status: .approved))
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
+    #expect(await f.photo.api.captured().isEmpty)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    let lease = try f.acquire(own, surface: .ownerEditor)
+    try await hostEventually { f.binding.image(for: lease) != nil }
+    let query = try #require(await f.photo.api.captured().last?.query)
+    #expect(query.reference == own && query.variant == .image && query.coordinate == nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(surface: .ownerEditor) }
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
+    f.host.observeOwner(own.ownerID, snapshot: nil)
+    #expect(f.binding.image(for: lease) == nil)
+}
+
+@Test @MainActor func avatarHostOwnerFenceDropsMessagesAndOwnEditorButPreservesPeerPixels() async throws {
+    let f = try await HostFixture()
+    defer { f.close() }
+    let own = try hostOwnReference(f)
+    f.session.isChatOpen = true
+    f.data.page = .init(messages: [f.message(own, id: "own-message")], nextCursor: nil)
+    await f.session.refreshMessages()
+    let peer = try f.acquire()
+    let message = try f.acquire(own, surface: .message("own-message"))
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    let editor = try f.acquire(own, surface: .ownerEditor)
+    try await hostEventually {
+        f.binding.image(for: peer) != nil && f.binding.image(for: message) != nil
+            && f.binding.image(for: editor) != nil
+    }
+    let invalidated = HostObservationFlag()
+    withObservationTracking {
+        _ = f.binding.image(for: editor)
+    } onChange: {
+        invalidated.set()
+    }
+    f.host.observeOwner(own.ownerID, snapshot: nil)
+    #expect(invalidated.read())
+    #expect(f.binding.image(for: message) == nil && f.binding.image(for: editor) == nil)
+    #expect(f.binding.image(for: peer) != nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .message("own-message")) }
+    // Old community metadata alone cannot lift an owner fence.
+    await f.session.refreshMessages()
+    #expect(f.binding.image(for: message) == nil)
+}
+
+@Test @MainActor func avatarHostLateOwnReadCannotRestorePixelsAfterWithdrawalOrABA() async throws {
+    let f = try await HostFixture()
+    defer { f.close() }
+    let own = try hostOwnReference(f)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    await f.photo.api.gate.arm()
+    let lease = try f.acquire(own, surface: .ownerEditor)
+    try await f.photo.api.gate.wait()
+    f.host.observeOwner(own.ownerID, snapshot: nil)
+    #expect(f.binding.image(for: lease) == nil)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    await f.photo.api.gate.release()
+    try await hostEventually { f.binding.image(for: lease) != nil }
+    #expect(await f.photo.api.captured().count == 2)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 2, status: .rejected))
+    #expect(f.binding.image(for: lease) == nil)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 1))
+    #expect(f.binding.image(for: lease) == nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
+}
+
+@Test @MainActor func avatarHostOwnEditorCannotBorrowForeignScopeOrReviveBackgroundBinding() async throws {
+    let f = try await HostFixture()
+    defer { f.close() }
+    let own = try hostOwnReference(f)
+    f.host.observeOwner(f.photo.reference.ownerID, snapshot: try hostOwnerSnapshot(f.photo.reference))
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    let lease = try f.acquire(own, surface: .ownerEditor)
+    try await hostEventually { f.binding.image(for: lease) != nil }
+    await f.session.setForeground(false)
+    #expect(!f.binding.isOwnerAvailable && f.binding.image(for: lease) == nil)
+    await f.session.setForeground(true)
+    try await hostEventually { f.binding.image(for: lease) != nil }
+    f.photo.source.cloudName = "another-private-scope"
+    #expect(!f.binding.isOwnerAvailable && f.binding.image(for: lease) == nil)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    #expect(!f.binding.isOwnerAvailable)
+}
