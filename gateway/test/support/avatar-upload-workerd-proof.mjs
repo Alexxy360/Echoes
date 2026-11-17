@@ -9,11 +9,7 @@ import { AccountDeletionState } from "../../src/account-deletion-state.mjs";
 import { createGatewayRuntime, forwardGatewayRequest, handleAuthorityRequest, authorityName } from "../../src/gateway-runtime.mjs";
 import { createWorkerAvatarNormalizer } from "../../src/avatar-codecs-workerd.mjs";
 import { avatarIntentHeader } from "../../src/avatar-upload-http.mjs";
-import { AvatarReviewCoordinator, avatarReviewHeader } from "../../src/avatar-review-coordinator.mjs";
-import { AvatarReviewReceipts } from "../../src/avatar-review-state.mjs";
-import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
-import { CloudKitPublicClient } from "../../src/cloudkit-public-client.mjs";
-import { PublicRegistryCheckpoint } from "../../src/public-registry-checkpoint.mjs";
+import { avatarReviewHeader } from "../../src/avatar-review-coordinator.mjs";
 
 /** Loopback-only fixture with actual Worker/SQLite/Wasm and independently verified S2S signatures.
  * Provider, platform metadata and account proof are models. Never imported by production sources.
@@ -77,8 +73,11 @@ export async function avatarUploadWorkerdProof(request, storage) {
       records.set(saved.recordName, saved); return saved;
     }) });
   };
+  const reviewOperatorID = new AuthenticationState(storage, { clock, renewalProofs: proofs }).authorize(p.token).accountID;
   const env = { GATEWAY_ENABLED: "1", GATEWAY_ENVIRONMENT: "development", GATEWAY_EXPIRES_AT: new Date(p.now + 3600000).toISOString(),
     ACCOUNT_DELETION_ENABLED: "1", PUBLIC_RECORDS_ENABLED: "1", COMMUNITY_ENABLED: "1", AVATAR_UPLOAD_ENABLED: "1", AVATAR_UPLOAD_HOSTS_JSON: '["synthetic-avatar.icloud-content.com"]',
+    AVATAR_REVIEW_ENABLED: p.review === true ? "1" : "0", AVATAR_REVIEWER_IDS_JSON: JSON.stringify(p.review === true ? [reviewOperatorID] : []),
+    AVATAR_DOWNLOAD_HOSTS_JSON: p.review === true ? '["synthetic-avatar.icloud-content.com"]' : "[]",
     CLOUDKIT_CONTAINER: "iCloud.mpvEcho.Echo", CLOUDKIT_ENVIRONMENT: "development", CLOUDKIT_KEY_ID: "synthetic-public-v1", CLOUDKIT_PRIVATE_KEY: p.privateKeyPEM,
     APPLE_SIGNIN_KEY_ID: "TESTKEY123", APPLE_SIGNIN_PRIVATE_KEY: p.signInPrivateKeyPEM,
     REFRESH_ACTIVE_KEY_ID: "v1", RENEWAL_ACTIVE_KEY_ID: "v1", REFRESH_KEYS_JSON: JSON.stringify({ v1: secret() }), RENEWAL_KEYS_JSON: JSON.stringify({ v1: secret() }), REQUEST_BUDGET_KEY: secret() };
@@ -101,26 +100,27 @@ export async function avatarUploadWorkerdProof(request, storage) {
   if (uploads !== firstUploadCount) throw new Error("Recovery repeated a synthetic upload");
   let review;
   if (p.review === true) {
-    const registry = new PublicRecordRegistry(storage, { clock });
-    const client = new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: "development", keyID: env.CLOUDKIT_KEY_ID,
-      privateKeyPEM: p.privateKeyPEM, clock, fetchImplementation: provider, isEnabled: () => true });
-    const checkpoint = new PublicRegistryCheckpoint({ registry, client });
-    const auth = new AuthenticationState(storage, { clock, renewalProofs: proofs }), policy = new AvatarPolicyState(storage, { registry, clock });
-    const ownerID = auth.authorize(p.token).accountID;
-    const reviewer = new AvatarReviewCoordinator({ authentication: auth, communityState: new CommunityState(storage, { clock }),
-      avatarPolicy: policy, receipts: new AvatarReviewReceipts(storage, { clock }), registry, client, checkpoint,
-      isEnabled: () => true, isOperator: id => id === ownerID, clock, verifiedDownloadHosts: ["synthetic-avatar.icloud-content.com"], fetchImplementation: provider });
-    let rejectedWithoutInspection = false;
-    try { await reviewer.prepareDecision({ accessToken: p.token, inspectionID: randomUUID(), decisionID: randomUUID(), verdict: "approved" }); }
-    catch (e) { rejectedWithoutInspection = e.code === "AVATAR_REVIEW_STALE"; }
-    const show = await reviewer.prepareInspection({ accessToken: p.token, accountID: ownerID, requestID: uploaded.requestID });
-    await checkpoint.advance(); const image = show(), header = JSON.parse(image.headers.get(avatarReviewHeader));
+    const operatorCall = async (action, value, expectedStatus = 200) => {
+      const req = new Request("https://synthetic-upload.invalid/v1/moderation/avatar/" + action, { method: "POST", signal: request.signal,
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + p.token, "CF-Connecting-IP": "192.0.2.17" }, body: JSON.stringify(value) });
+      Object.defineProperty(req, "cf", { value: { colo: "WAW" } });
+      const response = await forwardGatewayRequest(req, env, { clock });
+      if (response.status !== expectedStatus) throw new Error("Synthetic review status: " + (await response.json()).error);
+      return response;
+    };
+    const missing = await operatorCall("decide", { inspectionID: randomUUID(), decisionID: randomUUID(), verdict: "approved" }, 409);
+    const rejectedWithoutInspection = (await missing.json()).error === "AVATAR_REVIEW_STALE";
+    const queue = await (await operatorCall("queue", {})).json();
+    if (queue.items.length !== 1 || queue.items[0].requestID !== uploaded.requestID) throw new Error("Synthetic review queue");
+    const image = await operatorCall("inspect", { accountID: reviewOperatorID, requestID: uploaded.requestID });
+    const header = JSON.parse(image.headers.get(avatarReviewHeader));
     const shown = new Uint8Array(await image.arrayBuffer()), manifest = JSON.parse(image.headers.get("x-echoes-avatar-manifest"));
-    const body = { accessToken: p.token, inspectionID: header.inspectionID, decisionID: randomUUID(), verdict: "approved" };
-    const decide = await reviewer.prepareDecision(body); await checkpoint.advance(); const approved = decide();
-    const repeat = await reviewer.prepareDecision(body); await checkpoint.advance(); const replayed = repeat();
+    const body = { inspectionID: header.inspectionID, decisionID: randomUUID(), verdict: "approved" };
+    const approved = await (await operatorCall("decide", body)).json();
+    const replayed = await (await operatorCall("decide", body)).json();
+    const observed = await invoke("status");
     review = { bytesMatch: createHash("sha256").update(shown).digest("hex") === manifest.sha256,
-      approved: approved.verdict === "approved", notPublished: policy.snapshot(ownerID).publishedVersionID === null,
+      approved: approved.verdict === "approved", notPublished: observed.publishedVersionID === null && observed.status === "approved",
       exactReplay: approved.revision === replayed.revision && approved.decisionID === replayed.decisionID, rejectedWithoutInspection,
       actualSQL: storage.sql.exec("SELECT COUNT(*) n FROM avatar_review_receipts_v1 WHERE result_revision IS NOT NULL").toArray()[0].n === 1 };
   }

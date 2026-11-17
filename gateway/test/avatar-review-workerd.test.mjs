@@ -6,11 +6,13 @@ import { avatarWorker } from "./support/workerd-image-harness.mjs";
 import { sqliteSnapshot } from "./support/sqlite-snapshot.mjs";
 import { syntheticPublicKeyConfiguration } from "./support/public-record-fixture.mjs";
 
-test("actual local workerd inspects normalized content before a durable moderation decision and exact replay", { timeout: 30000 }, async () => {
+test("actual local workerd routes protected moderation HTTP through edge and authority before exact durable decision", { timeout: 30000 }, async () => {
   const f = await avatarUploadHTTPFixture(); let worker;
   try {
+    // The real platform alarm uses wall time. Issue a fresh synthetic session at that same time.
+    f.advance(Math.max(0, Date.now() - f.clock())); const author = await f.relogin();
     worker = await avatarWorker();
-    const input = { synthetic: "echoes-owned-upload-http-v1", review: true, now: f.clock(), token: f.signedIn.sessionToken,
+    const input = { synthetic: "echoes-owned-upload-http-v1", review: true, now: f.clock(), token: author.sessionToken,
       intent: f.body("upload"), source: Buffer.from(f.sourceBytes).toString("base64"), tables: sqliteSnapshot(f.db),
       records: [...f.model.records.values(), ...f.model.controls.values()], privateKeyPEM: syntheticPublicKeyConfiguration().CLOUDKIT_PRIVATE_KEY,
       signInPrivateKeyPEM: generateKeyPairSync("ec", { namedCurve: "prime256v1" }).privateKey.export({ type: "pkcs8", format: "pem" }) };
@@ -21,4 +23,16 @@ test("actual local workerd inspects normalized content before a durable moderati
     assert.equal(body.cleared.status, "none"); assert.equal(body.status.status, "none");
     assert.doesNotMatch(JSON.stringify(body), /sessionToken|SYNTHETIC-PRIVATE|downloadURL|https:/);
   } finally { if (worker) await worker.stop(); f.close(); }
+});
+
+
+test("actual community entry leaves operator endpoints disabled without activation or secrets", { timeout: 30000 }, async () => {
+  const worker = await avatarWorker({ communityEntry: true });
+  try {
+    for (const action of ["queue", "inspect", "decide"]) {
+      const response = await fetch(new URL("/v1/moderation/avatar/" + action, worker.origin), { method: "POST",
+        headers: { "Content-Type": "application/json", Connection: "close" }, body: "{}" });
+      assert.equal(response.status, 503); assert.equal((await response.json()).error, "GATEWAY_DISABLED");
+    }
+  } finally { await worker.stop(); }
 });

@@ -1,0 +1,193 @@
+{
+  "stage": "CK-04e.3j.3b",
+  "observedAtUTC": "2026-11-17T17:00:47.389086+00:00",
+  "baselineCommit": "bc5275ff99ec75f3df8e938eebb12eafba0c8e04",
+  "checks": {
+    "gateway": {
+      "node22": {
+        "passed": 501,
+        "failed": 0,
+        "skipped": 0
+      },
+      "node24": {
+        "passed": 501,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "runtimeVersions": {
+      "node22": "v22.23.5",
+      "node24": "v24.22.1"
+    },
+    "newTestFunctions": 23,
+    "operatorHTTPTests": 22,
+    "newDefaultEntryTest": 1,
+    "existingWorkerdTestExtended": true,
+    "allNewIndividualCompletionsVerifiedBothVersions": true,
+    "syntaxMJSPerNode": 112,
+    "parsedJSONConfigs": 4,
+    "nativeCoreUIProjectLocksDepsCIUnchanged": true
+  },
+  "implemented": [
+    "closed HTTPS/native POST moderation queue/inspect/decide; no raw review route or request role/URL/provider metadata",
+    "server-only16 reviewer ID allowlist bound to authenticated active account; default flag0 and empty list",
+    "default-disabled Runtime coordinator with current host/role list equality; no upload or peer read/codec factory required",
+    "global-IP heavy before headers/body and durable operator30/min/inspect10/min before body/checkpoint/provider",
+    "512B UTF8 JSON, exact headers/length/fields and128 nonempty chunks,3s input deadline",
+    "Authority12s/core8s/edge15s and one retained admission per handler/isolate, including ignored dependency cancellation",
+    "synchronous role/identity/activation rechecks after quota/body/schedule/checkpoint/operation and before response",
+    "canonical queue8192/decision2048, correlated inspection header1024 and256k full JPEG, manifest/length/SHA and no204/offline",
+    "edge exact code/status JSON errors and safe headers only; no client budget/role/forwarded-IP authority",
+    "schedule existing local maintenance after auth/validation, before checkpoint/operation; unverified/expired receipt cleanup remains local",
+    "owner status/clear withdrawalOnly also available with review only, denying later decision from stale inspection"
+  ],
+  "actualComponents": [
+    "complete gateway functions and actual Request/Response/body streams",
+    "real SQLite/crypto/checkpoint/Wasm/image bytes, full Node regression",
+    "local actual workerd/Durable Object/SQL and static Wasm with concrete Runtime/edge/Authority functions",
+    "real alarm handler exists and schedule accepted in workerd; separate default community entry stays disabled"
+  ],
+  "modeledComponents": [
+    "private Authority binding/id and request.cf platform metadata within local workerd proof",
+    "Apple/account authentication claims and CloudKit records/files/hosts",
+    "synthetic images/tokens and ephemeral unregistered keys; no user data"
+  ],
+  "workerdProof": {
+    "test": "actual local workerd routes protected moderation HTTP through edge and authority before exact durable decision",
+    "sameFinalCodeInBothFullRuns": true,
+    "flow": [
+      "binary upload",
+      "request-only recovery",
+      "no-inspection decision409",
+      "queue",
+      "inspectJPEG200+closedHeaders+SHA",
+      "approved decision",
+      "exact replay",
+      "author status approved,notPublished",
+      "clear",
+      "status"
+    ],
+    "downloadCount": 1,
+    "uploadVariants": 2,
+    "independentS2SSignaturesVerified": true,
+    "actualSQLResultPersisted": true,
+    "boundToRealHostedCloudflareOrApple": false,
+    "alarmTimingOnHostedWorkerProved": false
+  },
+  "defaults": {
+    "AVATAR_REVIEW_ENABLED": "0",
+    "AVATAR_REVIEWER_IDS_JSON": "[]",
+    "GATEWAY_ENABLED": "0",
+    "otherDeploymentConfigExactlyPreserved": true,
+    "actualRoleAssigned": false
+  },
+  "negativeControls": [
+    {
+      "case": "role",
+      "test": "disabled feature and ordinary sessions stop before body, account budget and checkpoint",
+      "failedTests": 1,
+      "exitCode": 1,
+      "copyOnly": true,
+      "sourceSHA256Unchanged": true,
+      "observed": "without early guard a held body is consumed and times out instead of immediate role/quota denial"
+    },
+    {
+      "case": "quota",
+      "test": "account quota denial happens before body, scheduling, checkpoint and download",
+      "failedTests": 1,
+      "exitCode": 1,
+      "copyOnly": true,
+      "sourceSHA256Unchanged": true,
+      "observed": "without early guard a held body is consumed and times out instead of immediate role/quota denial"
+    }
+  ],
+  "firstPassHistory": [
+    "first7 new HTTP and51 old reader/upload tests passed",
+    "expanded20 and final22 operator HTTP tests passed",
+    "first local workerd whole flow failed; default-disabled entry passed",
+    "synthetic stack diagnostics identified test DO missing alarm handler required for schedule; source/test files restored and SHA verified",
+    "added actual local maintenance alarm and fresh synthetic session at platform-aligned clock to avoid past model deadlines; production guards retained",
+    "final2 workerd and complete501 both Node versions passed"
+  ],
+  "knownLimits": [
+    "3c native transport/host/decode/display before conscious verdict and exact unknown-result recovery remains",
+    "previous author journal removed after publication; explicit re-publication after later reapproval without new JPEG remains to implement",
+    "same-server configured role is not separate CloudKit S2S service identity; actual role assignment still requires prepared permission",
+    "new role list/env version may require recreated Runtime; no claim of recalling bytes already transmitted before revocation",
+    "logical deadlines/cancel cannot roll back committed moderation or physically zero all RAM copies",
+    "local workerd functions use modeled private binding/platform/provider; not hosted Free CPU/RSS/coldstart/subrequest/SQL/transfer proof",
+    "shared gateway pilot budgets can reduce throughput below operator-specific limits; no production scale claim",
+    "actual schema/roles/hosts/SIWA/separate service identity/two ordinary accounts and physical import/FileProtection/locked-device remain",
+    "SwiftUI frame warnings/reports/contact/provider asset retention/orphans and full migration remain",
+    "ordinary entry still Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "unchanged Swift/Core/UI build/test/dependency audit repeats",
+    "cloud deployment/activation/real reviewer role/schema/keys/secrets/paid plans",
+    "phone install or expired SDK window reuse",
+    "Production/Firebase/TestFlight operations"
+  ],
+  "newTestNames": [
+    "operator HTTP queues and inspects the actual image before an exact decision without publication",
+    "concrete Runtime and fixed edge preserve closed inspection headers and canonical decision JSON",
+    "disabled feature and ordinary sessions stop before body, account budget and checkpoint",
+    "role and account identity are rechecked after durable admission and final checkpoint",
+    "review activation requires exact bounded reviewer IDs, community and download hosts",
+    "closed review requests cannot supply role, owner decisions, revision, URL or provider metadata",
+    "owner can still withdraw while only moderation is enabled and old inspection then cannot decide",
+    "account quota denial happens before body, scheduling, checkpoint and download",
+    "role loss and changed authenticated account during durable quota cannot consume the body",
+    "strict headers reject encoding, large declarations, forged proof headers and bad bearer before body",
+    "body framing, malformed UTF8, zero chunks and oversized content fail before checkpoint",
+    "input timeout cancels an unread stream without scheduling or checkpoint",
+    "authority admission remains occupied when a timed-out durable budget ignores cancellation",
+    "edge admission survives an aborted caller until ignored authority IO really returns",
+    "disabled edge rejects and cancels the request before authority or client-controlled identity headers",
+    "runtime revocation of role configuration after authority response denies edge publication",
+    "operator transport keeps HTTPS, native origin and fixed method boundaries",
+    "closed output validators reject private fields, duplicate accounts and mismatched decision identities",
+    "authority rejects asynchronous or private-field finalizers without leaking their data",
+    "edge validates exact error status/code and never forwards private headers or fields",
+    "global and IP heavy limits deny before headers, account quota, body and checkpoint",
+    "authority correlates binary proof to the requested owner and validates expiry, variant, exact fields and hash",
+    "actual community entry leaves operator endpoints disabled without activation or secrets"
+  ],
+  "sourceAndDocsSHA256": {
+    "gateway/src/avatar-review-http.mjs": "972334c907b6c434c038b098d61ed7595d6caf91739506b90761cd998c3b930f",
+    "gateway/src/gateway-avatar-review.mjs": "4848b62ed12b4be4be78e3bf3864e219e411b45bcb35f52fb54c7514a99708d3",
+    "gateway/src/gateway-http.mjs": "a116cd8121d89906d1fa9856d866f09570af52bfedb0c45baced395057c1c776",
+    "gateway/src/gateway-limits.mjs": "63bb2b8780ec104dc76af4d142a3ce4f3c41d75d989e1eb0ff83827fea381756",
+    "gateway/src/gateway-runtime.mjs": "f38aba26694a7edbb4626c289f35176f5650b54823be705a3a94d58319ad4f2f",
+    "gateway/test/avatar-review-http.test.mjs": "8a755fe22e166ba10b14c2cb16391bb49d6245e4c9bb3eabdd4e217fcbbbcf37",
+    "gateway/test/avatar-review-workerd.test.mjs": "08008eccdf413d60d0dad4a5f6f74383a839882fc6b98af5d285d041b6b6e6e2",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "0df1dd5285a177a6b8b33a6e16ceaae942975933afc3e4d39d2f8ac6caa07443",
+    "gateway/test/support/avatar-review-http-fixture.mjs": "4789691c5185c4e2d41f0e42fd1b1962d10c626ae79042e5f90ba09846b2416b",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "b7eff28c68d996b3aafc9fd2acaa8dcc59e7b140091683b632acfe6de9aa80e0",
+    "gateway/wrangler.community.jsonc": "0d477188e3d8f515dd71479e8ee27a74d0db39925561497bcd0e86e0f1ad7e97",
+    "Docs/HTTP_MODERACJI_ZDJEC.md": "43bd4a21fa36fafb3b5e6904e2284093d698e685a7d327a2bcdf5106ee7d3746",
+    "Docs/OPERATOR_MODERACJI_ZDJEC.md": "6988386e5a54353058324f9f9b07eb837995d2c03885ef77066e56617380a364",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "2e0f63739904ebf829259c9dc4d5119f4ba5bdf79b76558ae5c5741e822048ab",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "f019f737b7e7c85006ec59874569b3a9afe0adfecd2ac0aa1d518efebe33ca9f",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "c6b7eca4d197dd61b3233ea18120201227011230c165531620fef87916f085fa",
+    "Docs/DZIENNIK_ZMIAN.md": "d00a19f78ab4a54bfe7ec3f48228e47889d44fd47cf3d455b0463aacafe6fb42"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-review-http-first-existing.log": "7cd923cb93d3ef1d815e6174b223580fc63732ee9a060c3842e3b341066d5919",
+    "echoes-avatar-review-http-focused-first.log": "462d11adfab474c38bf67d00bb0f8bf89bd9816ff70a599bbf3bfcec2dd72b6a",
+    "echoes-avatar-review-http-expanded.log": "4964b311034ffe4be9a4d0eefeb82062313c24701bd1a3e82846011312c474a8",
+    "echoes-avatar-review-http-expanded-final.log": "803e5690b1bf2f84caf6184246d5cd3e92131303cb1a28545a1c80382db78707",
+    "echoes-avatar-review-http-workerd-first.log": "8d2b437834ed37a1361e8d43a3e6c97730d5f5931627df14e0bcfdf40af8c8c6",
+    "echoes-avatar-review-http-workerd-diagnostic.log": "d174f215d49b9c57fdc1ef9810eea84b3d163350cf27fb0da179e5c4d79a9709",
+    "echoes-avatar-review-http-workerd-diagnostic2.log": "3dc9af6ea936beabd67ecac37c7e4ea88261e7915f163e11c1d0eb9f6936a2fc",
+    "echoes-avatar-review-http-workerd-final.log": "c245e0ce5bd7b9e3aa5ed92b3758ad416ba73ab49c7a7f18ab9b3c1843dbaf7c",
+    "echoes-avatar-review-http-full-node22.log": "5165086186d2d7c1c61e18b2ddb56a24af20e4f388fa327aa13ef6642ee544e8",
+    "echoes-avatar-review-http-full-node24.log": "8bce52254921abef275f9fdec3d9ce2c6ac3f02a05dbe1541e2f44084be11f7a",
+    "echoes-avatar-review-http-syntax-node22.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-avatar-review-http-syntax-node24.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-avatar-review-http-negative-role.log": "0e76b8440bf70a5a01871b236dc759f3f0df5a70f5fbb00467340f5f9bee2896",
+    "echoes-avatar-review-http-negative-quota.log": "535958b0ed0abd29ae51d9a502825ed3b317100bf545ff1daede57ef23f738d9",
+    "echoes-avatar-review-http-negative-results.json": "847de488a1a3779b06aa9b946f83aca92c8fb0ab9700c7a8e971c847fe03a623"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

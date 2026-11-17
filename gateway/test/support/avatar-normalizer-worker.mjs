@@ -9,6 +9,7 @@ import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
 import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
 import { avatarReadWorkerdProof } from "./avatar-read-workerd-proof.mjs";
 import { avatarUploadWorkerdProof } from "./avatar-upload-workerd-proof.mjs";
+import { createGatewayLocalMaintenance } from "../../src/gateway-runtime.mjs";
 
 // Local integration harness only. No gateway secrets, publication, Apple fetch or user identity.
 export class AvatarCodecTestAuthority extends DurableObject {
@@ -31,6 +32,9 @@ export class AvatarCodecTestAuthority extends DurableObject {
       sql.exec("SELECT COUNT(*) AS n FROM avatar_profiles_v1").toArray()[0].n === 0;
     sql.exec("DELETE FROM auth_accounts_v1 WHERE account_id=?", accountID);
     return Response.json({ selectedGeneration: selection.generation, clearHidden, erased });
+  }
+  async alarm() {
+    await createGatewayLocalMaintenance(this.ctx.storage).alarm();
   }
   async fetch(request) {
     try {

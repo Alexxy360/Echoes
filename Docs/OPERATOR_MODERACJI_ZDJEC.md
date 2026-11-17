@@ -51,3 +51,8 @@ Pierwsze14 miało jeden błąd modelu: erase uruchomiono bez disabled-owner fenc
 Dwie kontrole negatywne tylko w kopiach /tmp: bez isOperator zwykły przepływ jest przyjmowany, a bez zachowania unsettled slot piąty odczyt przechodzi mimo czterech aktywnych fetch. Oba wybrane testy faktycznie oblewają; właściwe pliki mają niezmienione SHA. [Wyniki i SHA](evidence/avatar-review-local-tests.json).
 
 Swift/Core/UI/Runtime konfiguracji/projekt/lockfile/deps/CI nie zmieniono, ich niezmienionych buildów/testów/audytu nie powtarzano. Nie dodano ról/schema w Apple, kont operatora, usług/sekretów/kluczy/opłat lub aktywacji. Bez operacji Production/Firebase/TestFlight, zwykłe wejście nadal Firebase. Zastany project.pbxproj zachowany. Dalszy odbiór obejmuje 3b/3c, rzeczywiste role/schema/hosty/SIWA/odrębną tożsamość serwisową/hosted Free/dwa zwykłe konta, fizyczny import/FileProtection/locked-device oraz zgłoszenia/kontakt i retencję. Pełny cel pozostaje aktywny.
+
+
+## Połączenie HTTP CK-04e.3j.3b
+
+[Zamknięte HTTP i Runtime](HTTP_MODERACJI_ZDJEC.md) realizują punkt3b powyższego planu lokalnie, z domyślną flagą0 i pustą listą. Dalsze rzeczywiste przypisanie ról/konfiguracji nie zostało wykonane.3c i rzeczywisty ogląd człowieka nadal pozostają otwarte. Nowe trasy nie korzystają z niskopoziomowego prepareReview bez potwierdzenia. Właściciel może clear także przy samym review. Przed odbiorem natywnym trzeba też obsłużyć ponowne zatwierdzenie dawnej publikacji bez starego pending journala; nie oznacza ono zgody na automatyczną publikację.
