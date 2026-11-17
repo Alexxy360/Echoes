@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "source": "Concrete local Runtime/HTTP/SQLite/policy/Wasm and modeled Apple/accounts/platform; no real service IO",
+  "imageSHA256": "570d39e62a52248e1201dd7db646969536b924e61363718af2a0b0f5becf90c8",
+  "cases": [
+    {
+      "label": "status-empty",
+      "action": "status",
+      "input": {},
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 0,
+        "requestID": null,
+        "versionID": null,
+        "publishedVersionID": null,
+        "status": "none",
+        "reviewRevision": null
+      }
+    },
+    {
+      "label": "upload-pending",
+      "action": "upload",
+      "input": {
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
+        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "expectedGeneration": 0,
+        "consentVersion": 1
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 1,
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
+        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "publishedVersionID": null,
+        "status": "pending-review",
+        "reviewRevision": "fe1e52ed-fe15-404e-8b8f-50af9cc991b0"
+      }
+    },
+    {
+      "label": "publish-pending",
+      "action": "publish",
+      "input": {
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+      },
+      "status": 409,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_PENDING"
+      }
+    },
+    {
+      "label": "recover-pending",
+      "action": "recover",
+      "input": {
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 1,
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
+        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "publishedVersionID": null,
+        "status": "pending-review",
+        "reviewRevision": "fe1e52ed-fe15-404e-8b8f-50af9cc991b0"
+      }
+    },
+    {
+      "label": "status-approved",
+      "action": "status",
+      "input": {},
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 1,
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
+        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "publishedVersionID": null,
+        "status": "approved",
+        "reviewRevision": "a3e34884-0016-4288-be58-1f230e626ee4"
+      }
+    },
+    {
+      "label": "publish-published",
+      "action": "publish",
+      "input": {
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 1,
+        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
+        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "publishedVersionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "status": "published",
+        "reviewRevision": "a3e34884-0016-4288-be58-1f230e626ee4"
+      }
+    },
+    {
+      "label": "clear-upload-disabled",
+      "action": "clear",
+      "input": {
+        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "expectedGeneration": 1
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 2,
+        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "versionID": null,
+        "publishedVersionID": null,
+        "status": "none",
+        "reviewRevision": null
+      }
+    },
+    {
+      "label": "status-cleared",
+      "action": "status",
+      "input": {},
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "generation": 2,
+        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "versionID": null,
+        "publishedVersionID": null,
+        "status": "none",
+        "reviewRevision": null
+      }
+    },
+    {
+      "label": "upload-disabled",
+      "action": "upload",
+      "input": {
+        "requestID": "8eb75aea-0a9f-4e6d-a54b-28fa838ea2a2",
+        "versionID": "95d632b0-af57-40ac-94c5-d4af6a12df0d",
+        "expectedGeneration": 2,
+        "consentVersion": 1
+      },
+      "status": 503,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "FEATURE_DISABLED"
+      }
+    },
+    {
+      "label": "clear-stale",
+      "action": "clear",
+      "input": {
+        "requestID": "cbb4dbbd-ffce-411c-90a3-a64183273272",
+        "expectedGeneration": 0
+      },
+      "status": 409,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_STALE"
+      }
+    }
+  ]
+}
