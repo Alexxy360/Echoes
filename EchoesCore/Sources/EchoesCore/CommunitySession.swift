@@ -1,6 +1,13 @@
 import Foundation
 import Observation
 
+/// A foreground renderer may bind one weak observer. Notification is synchronous, before any
+/// following await; consumers must recheck the current session before returning visible content.
+@MainActor public protocol CommunityPresentationObserver: AnyObject {
+    func communityPresentationDidChange(_ session: CommunitySession)
+}
+public enum CommunityPresentationFailure: Error { case alreadyObserved }
+
 @MainActor
 public protocol CommunityClient {
     var serverTimeOffset: TimeInterval { get }
@@ -76,12 +83,21 @@ public struct LocationFix: Equatable, Sendable {
 @Observable
 public final class CommunitySession {
     public enum Phase: Equatable { case idle, connecting, ready, failed }
-    public private(set) var phase: Phase = .idle
-    public private(set) var userID: String?
+    public private(set) var phase: Phase = .idle { didSet { if phase != oldValue { presentationChanged() } } }
+    public private(set) var userID: String? { didSet { if userID != oldValue { presentationChanged() } } }
     public private(set) var name = ""
-    public private(set) var users: [NearbyProfile] = []
-    public private(set) var messages: [ChatMessage] = []
-    public private(set) var blockedIDs: Set<String> = []
+    public private(set) var users: [NearbyProfile] = [] {
+        didSet { if users != oldValue { presentationChanged() } }
+    }
+    public private(set) var messages: [ChatMessage] = [] {
+        didSet { if messages != oldValue { presentationChanged() } }
+    }
+    public private(set) var blockedIDs: Set<String> = [] {
+        didSet { if blockedIDs != oldValue { presentationChanged() } }
+    }
+    public private(set) var blockingUserIDs: Set<String> = [] {
+        didSet { if blockingUserIDs != oldValue { presentationChanged() } }
+    }
     public private(set) var isSharing = false
     public private(set) var isChangingVisibility = false
     public private(set) var isSending = false
@@ -96,11 +112,18 @@ public final class CommunitySession {
     public var draft = ""
     public var errorMessage: String?
     public var statusMessage: String?
-    public var isChatOpen = false
-    public private(set) var isForeground = false
-    public private(set) var location: LocationFix?
-    public private(set) var hasUsableLocation = false
+    public var isChatOpen = false { didSet { if isChatOpen != oldValue { presentationChanged() } } }
+    public private(set) var isForeground = false {
+        didSet { if isForeground != oldValue { presentationChanged() } }
+    }
+    public private(set) var location: LocationFix? {
+        didSet { if location != oldValue { presentationChanged() } }
+    }
+    public private(set) var hasUsableLocation = false {
+        didSet { if hasUsableLocation != oldValue { presentationChanged() } }
+    }
     @ObservationIgnored private let client: any CommunityClient
+    @ObservationIgnored private weak var presentationObserver: (any CommunityPresentationObserver)?
     @ObservationIgnored private let now: () -> Date
     @ObservationIgnored private var generation = 0
     @ObservationIgnored private var visibilityEpoch = 0
@@ -118,6 +141,19 @@ public final class CommunitySession {
         self.client = client
         self.now = now
     }
+
+    public func bindPresentationObserver(_ observer: any CommunityPresentationObserver) throws {
+        guard presentationObserver == nil || presentationObserver === observer else {
+            throw CommunityPresentationFailure.alreadyObserved
+        }
+        presentationObserver = observer
+        observer.communityPresentationDidChange(self)
+    }
+    public func unbindPresentationObserver(_ observer: any CommunityPresentationObserver) {
+        if presentationObserver === observer { presentationObserver = nil }
+    }
+    private func presentationChanged() { presentationObserver?.communityPresentationDidChange(self) }
+    public var serverDate: Date { serverNow }
 
     public var usableCoordinate: Coordinate? {
         guard hasUsableLocation, let location, location.isUsable(at: now()) else { return nil }
@@ -147,6 +183,7 @@ public final class CommunitySession {
         users = []
         messages = []
         blockedIDs = []
+        blockingUserIDs = []
         isSharing = false
         isChangingVisibility = false
         isSending = false
@@ -497,8 +534,10 @@ public final class CommunitySession {
     }
 
     public func block(userID: String, blocked: Bool = true) async {
-        guard phase == .ready, isForeground else { return }
+        guard phase == .ready, isForeground, !blockingUserIDs.contains(userID) else { return }
         let epoch = sessionEpoch
+        blockingUserIDs.insert(userID)
+        defer { if epoch == sessionEpoch { blockingUserIDs.remove(userID) } }
         do {
             try await client.block(userID: userID, blocked: blocked)
             guard isCurrent(epoch) else { return }

@@ -12,7 +12,7 @@ private let photoViewerA = "67000000-0000-4000-8000-000000000001"
 private let photoViewerB = "67000000-0000-4000-8000-000000000002"
 
 /// Deliberately ignores cancellation while held, so fences must work even for uncooperative providers.
-private actor PhotoGate {
+actor PhotoGate {
     private var armed = 0
     private var arrived = 0
     private var held: [CheckedContinuation<Void, Never>] = []
@@ -39,7 +39,7 @@ private actor PhotoGate {
         for waiter in pending { waiter.resume() }
     }
 }
-@MainActor @Observable private final class PhotoAuthorization: GatewayAvatarAuthorizationSource {
+@MainActor @Observable final class PhotoAuthorization: GatewayAvatarAuthorizationSource {
     var communityAuthorization: GatewayCommunityAuthorization?
     var cloudName = "synthetic-photo-icloud"
     var foreground = true
@@ -88,7 +88,7 @@ private func photoEntry(_ query: GatewayAvatarQuery, large: Bool = false) throws
         variant: query.variant)
     return .init(manifest: manifest, bytes: f.downloaded.body)
 }
-private actor PhotoAPI: GatewayAvatarReadAPI {
+actor PhotoAPI: GatewayAvatarReadAPI {
     nonisolated let origin = "https://photo-client.example.invalid"
     enum Mode: Sendable {
         case normal, large, force204, wrong204, wrong200, corrupt200, deny, notFound, unavailable,
@@ -134,7 +134,7 @@ private actor PhotoAPI: GatewayAvatarReadAPI {
         }
     }
 }
-private actor PhotoCache: GatewayAvatarCaching {
+actor PhotoCache: GatewayAvatarCaching {
     let real: GatewayAvatarCache
     let activateGate = PhotoGate(), readGate = PhotoGate(), storeGate = PhotoGate()
     private var readFailure: GatewayAvatarCacheFailure?
@@ -165,7 +165,7 @@ private actor PhotoCache: GatewayAvatarCaching {
         try await real.store(bytes, manifest: manifest, lease: lease)
     }
 }
-private actor PhotoDecoder: GatewayAvatarDecoding {
+actor PhotoDecoder: GatewayAvatarDecoding {
     let gate = PhotoGate()
     func decode(_ bytes: Data, manifest: AvatarManifest) async throws -> ValidatedAvatar {
         await gate.enter()
@@ -173,7 +173,7 @@ private actor PhotoDecoder: GatewayAvatarDecoding {
         return try await Task.detached { try AvatarPayloadValidator.decode(bytes, manifest: manifest) }.value
     }
 }
-@MainActor @Observable private final class PhotoState {
+@MainActor @Observable final class PhotoState {
     var enabled = true
     var visible = true
     var hiddenOwners: Set<String> = []
@@ -184,7 +184,7 @@ private actor PhotoDecoder: GatewayAvatarDecoding {
             && (versions[reference.ownerID] == nil || versions[reference.ownerID] == reference.versionID)
     }
 }
-@MainActor private struct PhotoFixture {
+@MainActor struct PhotoFixture {
     let root = FileManager.default.temporaryDirectory.appendingPathComponent(
         "echoes-photo-client-" + UUID().uuidString)
     let source: PhotoAuthorization

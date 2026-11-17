@@ -46,6 +46,7 @@ private final class MockClient: CommunityClient {
     var onConfiguration: (() async -> Void)?
     var onSend: (() async -> Void)?
     var onStop: (() async -> Void)?
+    var onBlock: (() async throws -> Void)?
     var uid = "viewer"
     var blockReads = 0
     var deleteCalls = 0
@@ -94,7 +95,7 @@ private final class MockClient: CommunityClient {
             timestamp: Date().timeIntervalSince1970 * 1000,
             expiresAt: Date().addingTimeInterval(7200).timeIntervalSince1970 * 1000)
     }
-    func block(userID: String, blocked: Bool) async throws {}
+    func block(userID: String, blocked: Bool) async throws { try await onBlock?() }
     func blockedUsers() async throws -> [String] {
         blockReads += 1
         return []
@@ -419,4 +420,62 @@ private final class Clock {
     client.onSend = { client.pending = nil }
     #expect(await tested.sendDraft())
     #expect(tested.draft.isEmpty && tested.messages.isEmpty)
+}
+
+@MainActor private final class PresentationObserver: CommunityPresentationObserver {
+    var changes = 0
+    var pending: Set<String> = []
+    var foreground = false
+    var chat = false
+    func communityPresentationDidChange(_ session: CommunitySession) {
+        changes += 1
+        pending = session.blockingUserIDs
+        foreground = session.isForeground
+        chat = session.isChatOpen
+    }
+}
+
+@MainActor @Test func presentationObserverIsWeakExclusiveAndNotifiedSynchronously() throws {
+    let session = CommunitySession(client: MockClient())
+    var observer: PresentationObserver? = PresentationObserver()
+    weak var weakObserver = observer
+    let other = PresentationObserver()
+    try session.bindPresentationObserver(try #require(observer))
+    #expect(observer?.changes == 1)
+    #expect(throws: CommunityPresentationFailure.alreadyObserved) {
+        try session.bindPresentationObserver(other)
+    }
+    session.unbindPresentationObserver(other)
+    session.isChatOpen = true
+    #expect(observer?.chat == true && observer?.changes == 2)
+    observer = nil
+    #expect(weakObserver == nil)
+    try session.bindPresentationObserver(other)
+    session.isChatOpen = false
+    #expect(!other.chat)
+    session.unbindPresentationObserver(other)
+    let count = other.changes
+    session.isChatOpen = true
+    #expect(other.changes == count)
+}
+
+@MainActor @Test func presentationObserverSeesPendingBlockBeforeRPCAndCleanupAfterFailure() async throws {
+    let client = MockClient()
+    let session = CommunitySession(client: MockClient())
+    let tested = CommunitySession(client: client)
+    let observer = PresentationObserver()
+    try tested.bindPresentationObserver(observer)
+    await tested.connect(name: "Maja")
+    await tested.setForeground(true)
+    #expect(observer.foreground)
+    client.onBlock = {
+        #expect(observer.pending == ["peer"])
+        #expect(tested.blockingUserIDs == ["peer"])
+        throw ValidationError.message
+    }
+    await tested.block(userID: "peer")
+    #expect(observer.pending.isEmpty && tested.blockingUserIDs.isEmpty)
+    #expect(tested.blockedIDs.isEmpty)
+    tested.invalidateForAccountChange()
+    #expect(!observer.foreground)
 }

@@ -9,6 +9,7 @@ import SwiftUI
 final class AppServices {
     let session: CommunitySession
     let privateProfile: PrivateProfileStore?
+    let avatars: GatewayCommunityAvatarBinding?
     private(set) var isUpdatingName = false
     let location = LocationService()
     let music = MusicService()
@@ -25,6 +26,7 @@ final class AppServices {
         client: (any CommunityClient)? = nil, preferences: UserDefaults = .standard, demo: Bool = false
     ) {
         privateProfile = nil
+        avatars = nil
         self.preferences = preferences
         self.demo = demo
         isGatewayDevelopment = false
@@ -38,11 +40,13 @@ final class AppServices {
     /// Controlled native presentation: no Firebase fallback or shared legacy preferences.
     init(
         nativeSession: CommunitySession, privateProfile: PrivateProfileStore? = nil,
+        avatars: GatewayCommunityAvatarBinding? = nil,
         simulatedCoordinate: Coordinate? = nil,
         isCurrent: @escaping @MainActor () -> Bool
     ) {
         session = nativeSession
         self.privateProfile = privateProfile
+        self.avatars = avatars
         preferences = nil
         demo = simulatedCoordinate != nil
         self.simulatedCoordinate = simulatedCoordinate
@@ -54,6 +58,7 @@ final class AppServices {
 
     func invalidateNativePresentation() {
         guard isGatewayDevelopment else { return }
+        avatars?.invalidate()
         hasPreparedProfile = true
         privateProfile?.clearCache()
         isUpdatingName = false

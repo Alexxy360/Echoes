@@ -143,6 +143,20 @@ public struct GatewayAvatarPresentation: Equatable, Sendable, CustomStringConver
         expiryTask = nil
         presentationRevision = UUID()
     }
+
+    /// Releasing a thumbnail must not remove a separately displayed full-size image.
+    public func invalidate(reference: AvatarReference, variant: AvatarVariant) {
+        images = images.filter {
+            $0.value.request.reference != reference || $0.value.request.variant != variant
+        }
+        for operation in pending.values
+        where operation.request.reference == reference && operation.request.variant == variant {
+            operation.task.cancel()
+        }
+        presentationRevision = UUID()
+        pruneSelections()
+        scheduleExpiry()
+    }
     public func invalidate(ownerID: String) { invalidateOwner(ownerID, excluding: nil) }
 
     @discardableResult public func connect() async throws -> String {

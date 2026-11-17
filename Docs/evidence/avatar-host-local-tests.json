@@ -1,0 +1,195 @@
+{
+  "stage": "CK-04e.3i.3a",
+  "observedAtUTC": "2026-11-17T00:11:58.522306+00:00",
+  "baselineCommit": "df58e25659cbfb8a77811dc647b6959838eb0559",
+  "checks": {
+    "Core": {
+      "macOS": {
+        "passed": 28,
+        "skipped": 0,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 28,
+        "skipped": 0,
+        "failed": 0
+      }
+    },
+    "CloudKit": {
+      "definedTests": 320,
+      "macOS": {
+        "passed": 319,
+        "skipped": 1,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 319,
+        "skipped": 1,
+        "failed": 0
+      }
+    },
+    "newTestFunctions": 13,
+    "strictSwiftFormatFiles": 8,
+    "xcresultSummaryVerified": true,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "runtimeClientComposed": true,
+    "rendererRequestsRegistered": false,
+    "newViewsOrUITestRepeat": false,
+    "gatewayConfigurationProjectLockfileDependenciesCIUnchanged": true,
+    "gatewayFullSuitesOrDependencyAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newSourcesCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "6b897324019cefaaed95a56a5c1b9bdbea87a1ba03e722ac6acb63e255f82d40",
+        "Echoes.debug.dylib": "e9289dddc337c0ded12d806a31eceb24141c2a562b9284d562ae889db1f4edbe"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newSourcesCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "68908689b83b0ccea60e96c8033b7d7c2def16f089a5660d1e878faa2399f915"
+      }
+    }
+  },
+  "implemented": [
+    "one shared GatewayCommunityAvatarHost/client/cache per controlled Runtime, binding passed to native AppServices; legacy default nil",
+    "binding identity guards stale invalidation/release/render across foreground domains and native account switch",
+    "one weak exclusive CorePresentationObserver, synchronous notifications before following await",
+    "pending block/unblock visible before adapter dispatch; epoch-limited cleanup, native binding invalidation on native presentation cleanup",
+    "closed map/profile/message surface and parent/foreground/native/private/GPS/time/block eligibility rechecked at render",
+    "map current version/null overrides stale message hint; conflicting message hints deny rather than choose an arbitrary version",
+    "concurrent consumers share only pending fresh read, later consumer triggers new RPC and replaces composite handle; variants independently released",
+    "global unsettled4/read+1/connect slots retained across bind, queue/consumer bounds, no IO before valid consumer",
+    "local12/all and4/image per monotonic-minute Runtime budget retained across bind, manual retry only; failed connect stops loading",
+    "incremental registration/release instead of rebuilding all consumer groups for each attachment"
+  ],
+  "bounds": {
+    "consumerLeases": 320,
+    "unsettledReadsAcrossBindings": 4,
+    "unsettledConnectAcrossBindings": 1,
+    "localReadsPerMinutePerRuntime": 12,
+    "localFullImagesPerMinutePerRuntime": 4,
+    "serverDurableLimitsStillRequired": true,
+    "presentationMaximumSecondsFromRequestStart": 30,
+    "automaticRPCRefreshOrRetryLoop": false,
+    "arbitraryIgnoringDependencyPhysicallyTerminated": false
+  },
+  "coalescing": {
+    "completedAuthorizationNeverReusedForNewAttachment": true,
+    "sharedHandleRequiresEachRegisteredConsumerCurrent": true,
+    "noOldPixelsAsFallbackDuringReplacement": true,
+    "releaseIsVariantScoped": true
+  },
+  "actualComponents": [
+    "Core CommunitySession",
+    "GatewayCommunityAvatarHost and GatewayAvatarClient",
+    "Darwin persistent cache and ImageIO",
+    "app Runtime/AppServices compiled composition",
+    "existing actual monotonic expiry regression on both platforms"
+  ],
+  "modeledComponents": [
+    "native account/iCloud/token source",
+    "photo API/provider replies and cancellation gates",
+    "community adapter and synthetic parent metadata"
+  ],
+  "negativeControl": {
+    "mutation": "replace pending-block eligibility guard with true",
+    "test": "avatarHostBlocksPixelsBeforeBlockRPCAcknowledgementAndReauthorizesAfterFailure",
+    "failedTestFunctions": 1,
+    "issues": 2,
+    "observedFailure": "CGImage remained available before block acknowledgement; no expected fresh read after failure",
+    "sourceRestoredBeforeFullSuites": true
+  },
+  "resolvedDuringValidation": [
+    "initial focused10 pass5.296s; incremental registration/release yields focused10 pass0.175s on same Mac (synthetic test, not UI profiling)",
+    "full319 passed before final review added connect-failure regression; new test fails due loading staying true after connection error",
+    "isLoading guard now reports failure after failed connect epoch, explicit retry reconnects; focused11 and final320 pass both platforms"
+  ],
+  "newTestNames": {
+    "core": [
+      "presentationObserverIsWeakExclusiveAndNotifiedSynchronously",
+      "presentationObserverSeesPendingBlockBeforeRPCAndCleanupAfterFailure"
+    ],
+    "cloudkit": [
+      "avatarHostDefersAllIOUntilAViewRegistersAndCoalescesOnlyPendingFreshReads",
+      "avatarHostMetadataOnlyRefreshDoesNotRefetchOrRemoveCurrentPixels",
+      "avatarHostMapClearWinsOverOlderMessageMetadataAndCannotReuseOldPixelsAfterABA",
+      "avatarHostBlocksPixelsBeforeBlockRPCAcknowledgementAndReauthorizesAfterFailure",
+      "avatarHostBackgroundForegroundFencesLateReadsAndRequiresFreshAuthorization",
+      "avatarHostRebindingKeepsFourUnsettledSlotsAndOldBindingsCannotClearNewAccount",
+      "avatarHostReleasingThumbnailKeepsSeparatelyPresentedFullImage",
+      "avatarHostCapsReadAdmissionAndRetryDoesNotCreateAnAutomaticLoop",
+      "avatarHostHasSeparateFullImageCeilingAndBoundedConsumerRegistrations",
+      "avatarHostChecksParentExpiryAndChatClosureWithoutRelyingOnANetworkRefresh",
+      "avatarHostConnectFailureStopsLoadingAndRequiresExplicitRetry"
+    ]
+  },
+  "knownLimits": [
+    "renderer and actual view lease registration are next CK-04e.3i.3b; current UI still shows no protected photos",
+    "native identity events must synchronously invalidate binding; getters alone do not prove persistent A-B-A fencing for an arbitrary source that ignores that contract",
+    "host serves community map/peer profile/chat with usable area; future own-settings photo surface remains unimplemented",
+    "model benchmark is not UI/RSS/physical-device or hosted Free capacity measurement",
+    "uncooperative dependencies retain slots and can delay new work; local quota is not a guarantee of server availability or free public scale",
+    "30-second expiry does not issue automatic RPC; UI refresh/retry policy and measurement remain to finish",
+    "physical FileProtection, real schema/roles/hosts/SIWA/service identity/Free and ordinary-account A-B remain unverified",
+    "uploader/journal/operator/reports/contact/retention and rest of migration incomplete; ordinary entry still Firebase"
+  ],
+  "notPerformed": [
+    "new UI views, app launch/UI screenshot/repeated UI tests",
+    "phone install or renewed SDK attempt",
+    "remote activation/deployment/schema/roles/keys/secrets/new services/fees",
+    "Production/TestFlight publication or Firebase changes"
+  ],
+  "sourceSHA256": {
+    "EchoesCore/Sources/EchoesCore/CommunitySession.swift": "8ec7939f609aa0995ad73defe23e4ad24403f681755fd3f3f6fa00fdc3cb1bdc",
+    "EchoesCore/Tests/EchoesCoreTests/SessionTests.swift": "13aba3e289f886a6249cd21bde5942500478a28dea38ce3644f0bee43d080273",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarClient.swift": "8cfb3252b880b359489d30b7f509485d1e8e899c23c76f597708719df8ef9fe0",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "eb85b9cf8e2678fde5d01a98dc27bfe2fe4e4b477c03c27ae66a178d8c1cb56c",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarClientTests.swift": "fdfbee4b186ee0fc07843a2ecb86c285070f13852d4044d6973a88b10318276c",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "f710bfb6ea22819dda07e968f77397e2a70fdfa5fe5d0b6a6e8b221c92eec064",
+    "Echo/Services/AppServices.swift": "3fdc7e916543187049c8f5eae9fbe94f16b62a81edb83bf86f33e8d9edfb0225",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "b84e2f4d3b446dd6ee74638039c25181db2177c8d68c0a0ecbc925e0b722fca3"
+  },
+  "documentationSHA256": {
+    "Docs/HOST_ZDJEC_SPOLECZNOSCIOWYCH.md": "a8a04c2132c9f9c7b08f4ab5b248418651c0ce626db6426e80292b2326fefa4a",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "b0a11e905c555fd3189f757d4433adf96dd07c3dd1b8e1683bd38b8c86437079",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "023a41f035170b74bc1b1601fda3b1fc1e21691f1ad41965688e6278b15fe2bc",
+    "Docs/DZIENNIK_ZMIAN.md": "e7ce0b3ac7e83c5d55505bcc79a0a21568966f82c488688ffaf5786d1418b4c9",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "597bc5c81091f04f19c0c0c43eb49e38905bcd50e380f492812d1aa6d52b1367",
+    "Docs/NATYWNY_STEROWNIK_AVATAROW.md": "4e31b3a7502d3a37b6dd4114fc3228ee917a8cb2abb8235e1576a9bd4693d8cb"
+  },
+  "packageResolvedUnchangedSHA256": "726cb71b685ea42ba3bb58ba2e26142fd69557189d0d2fc82c26740aeedc7022",
+  "logSHA256": {
+    "echoes-avatar-host-core-first.log": "2c2aa0c5a946e88fadde27ef15a9354c00d025c09973f66938406407bd8b05d7",
+    "echoes-avatar-host-first-compile.log": "ae652be6f20e058741227cb0cfe4e874b55bc38381e0c9e42fd1a0da8f3afeba",
+    "echoes-avatar-host-focused-before-registration-optimization.log": "5990ef887b35b1156abcb4b4e7df0a52710066f193126ca9c6c389edfee495d0",
+    "echoes-avatar-host-focused.log": "74d6e3b1e0db0de5618de53b8d79b293b90323805b7b7ca012f79d61749ca53a",
+    "echoes-avatar-host-final-focused.log": "6c6bd469f38f0e479c4bf2ca17500985f1d3000df1f2e58ad3c2a99bd2069bfa",
+    "echoes-avatar-host-core-full.log": "a5e52407960659225179377cec8cc8a478d824820bbfeaf0246896c74015208c",
+    "echoes-avatar-host-negative.log": "ca47476295195c3f86f8b23cf17baa75b57fb8d6b93d49c9713e2b1171df18e1",
+    "echoes-avatar-host-full-before-connection-fix.log": "03d88141fb359102ba09c566b73f94ea26d1172eaba4fd77fc3263af44ddc2d0",
+    "echoes-avatar-host-simulator.log": "695705ddfc75635bf326587cb9f4b2444ebc25ec4cdd3f86d71add4d67949752",
+    "echoes-avatar-host-core-simulator.log": "116f052ad1987edf1b7c5b1787c25254809d7ee5ea1bd6bd3df537496497a661",
+    "echoes-avatar-host-connect-failure-before-fix.log": "ac69e5596a0339213d9a22854f8edf0776179335ac9c9b072dcae35e0cb8b814",
+    "echoes-avatar-host-accepted-focused.log": "df6411ecc906cfc7cf0cc9f2f3ce932f308b7be09c7bc461e6dae2f15ce3b496",
+    "echoes-avatar-host-full.log": "e250d836222c8a06cdf119e568bf78a29309404db6cbb5da715ba8e6fba9f96a",
+    "echoes-avatar-host-accepted-simulator.log": "09456b1d545e4f6b776a0cd8bdada5e6e83b7618695b3c7a6505f3837d574f43",
+    "echoes-avatar-host-simulator-summary.json": "1363da3cb0215f7c8b4044ec01d55e9622abad1fdb6661971a812e96724f6eb9",
+    "echoes-avatar-host-core-simulator-summary.json": "de9a8097f1eeee4934ebbf761558d492d02bf7cb03f74e6630d646426f667349",
+    "echoes-avatar-host-debug.log": "1fdc4dc8c02393a86473f99378c855764bdbbdd09d146308a698fdf3dca296e2",
+    "echoes-avatar-host-release.log": "0a63562e38324946afd3bf0a3d277cf30e8152ea4b89705fbbb1119c9a704845",
+    "echoes-avatar-host-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "projectPreservation": {
+    "path": "Echoes.xcodeproj/project.pbxproj",
+    "mustNotStage": true,
+    "unrelatedUserDirtySHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "testedStageCommittedProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  }
+}

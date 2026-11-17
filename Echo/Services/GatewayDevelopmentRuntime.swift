@@ -17,6 +17,7 @@
         let deletion: GatewayDeletionHost
         let community: GatewayCommunityHost
         let avatarCache: GatewayAvatarCache
+        let avatars: GatewayCommunityAvatarHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private let relay: GatewayCommunityInvalidationRelay
@@ -45,9 +46,16 @@
             let profile = PrivateProfileStore(
                 account: auth.cloudKitAccount,
                 scope: { current() ? scope : nil }, database: database, authorizeRead: authorize)
+            let avatarBinding: GatewayCommunityAvatarBinding
+            do {
+                avatarBinding = try avatars.bind(session: presentation.domain.session, isCurrent: current)
+            } catch {
+                community.invalidate()
+                throw error
+            }
             let services = AppServices(
                 nativeSession: presentation.domain.session,
-                privateProfile: profile, isCurrent: current)
+                privateProfile: profile, avatars: avatarBinding, isCurrent: current)
             relay.services = services
             communityServices = services
             communityPresentationID = id
@@ -90,6 +98,11 @@
             let local = try GatewayLocalAccountData(root: cachesRoot)
             let avatarCache = try GatewayAvatarCache(root: cachesRoot)
             self.avatarCache = avatarCache
+            avatars = try GatewayCommunityAvatarHost(
+                api: GatewayAvatarHTTPClient(
+                    configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, cache: avatarCache, isEnabled: { activation.isActive() })
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),
