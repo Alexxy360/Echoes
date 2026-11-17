@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 1,
+  "source": "Concrete local edge/Authority/Runtime/SQLite/policy/Wasm; modeled Apple/accounts/platform/files only",
+  "nowMilliseconds": 1794603600000,
+  "imageSHA256": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+  "selection": {
+    "accountID": "66414056-3207-42e3-9cda-19c2efec0d4d",
+    "requestID": "a72ba70d-57d5-47a9-8bad-3ec50f52237e",
+    "versionID": "2922d1bd-51eb-40e5-9310-8c17ba145b1e",
+    "generation": 1,
+    "reviewRevision": "458cc761-c94c-4fc8-a3b1-cd5b027cdbf2"
+  },
+  "cases": [
+    {
+      "label": "queue-pending",
+      "action": "queue",
+      "input": {},
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "items": [
+          {
+            "accountID": "66414056-3207-42e3-9cda-19c2efec0d4d",
+            "requestID": "a72ba70d-57d5-47a9-8bad-3ec50f52237e",
+            "versionID": "2922d1bd-51eb-40e5-9310-8c17ba145b1e",
+            "generation": 1,
+            "reviewRevision": "458cc761-c94c-4fc8-a3b1-cd5b027cdbf2"
+          }
+        ]
+      }
+    },
+    {
+      "label": "inspect-pending",
+      "action": "inspect",
+      "input": {
+        "accountID": "66414056-3207-42e3-9cda-19c2efec0d4d",
+        "requestID": "a72ba70d-57d5-47a9-8bad-3ec50f52237e"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "2446",
+        "content-type": "image/jpeg",
+        "x-content-type-options": "nosniff",
+        "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"66414056-3207-42e3-9cda-19c2efec0d4d\",\"versionID\":\"2922d1bd-51eb-40e5-9310-8c17ba145b1e\",\"variant\":\"image\",\"byteCount\":2446,\"width\":256,\"height\":128,\"sha256\":\"7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412\"}",
+        "x-echoes-avatar-review": "{\"schemaVersion\":1,\"inspectionID\":\"add5a718-02a9-44ba-9472-7c9163ebee98\",\"expiresAt\":1794603690000,\"requestID\":\"a72ba70d-57d5-47a9-8bad-3ec50f52237e\",\"generation\":1,\"reviewRevision\":\"458cc761-c94c-4fc8-a3b1-cd5b027cdbf2\"}"
+      },
+      "image": "image.jpg"
+    },
+    {
+      "label": "decide-approved",
+      "action": "decide",
+      "input": {
+        "inspectionID": "add5a718-02a9-44ba-9472-7c9163ebee98",
+        "decisionID": "a650e819-4e45-495a-a60e-a248dd21135e",
+        "verdict": "approved"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "inspectionID": "add5a718-02a9-44ba-9472-7c9163ebee98",
+        "accountID": "66414056-3207-42e3-9cda-19c2efec0d4d",
+        "requestID": "a72ba70d-57d5-47a9-8bad-3ec50f52237e",
+        "decisionID": "a650e819-4e45-495a-a60e-a248dd21135e",
+        "revision": "3e04375b-e9aa-44bb-bd2c-7090c4419fdc",
+        "verdict": "approved"
+      }
+    },
+    {
+      "label": "decide-exact-replay",
+      "action": "decide",
+      "input": {
+        "inspectionID": "add5a718-02a9-44ba-9472-7c9163ebee98",
+        "decisionID": "a650e819-4e45-495a-a60e-a248dd21135e",
+        "verdict": "approved"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "inspectionID": "add5a718-02a9-44ba-9472-7c9163ebee98",
+        "accountID": "66414056-3207-42e3-9cda-19c2efec0d4d",
+        "requestID": "a72ba70d-57d5-47a9-8bad-3ec50f52237e",
+        "decisionID": "a650e819-4e45-495a-a60e-a248dd21135e",
+        "revision": "3e04375b-e9aa-44bb-bd2c-7090c4419fdc",
+        "verdict": "approved"
+      }
+    },
+    {
+      "label": "queue-reviewed",
+      "action": "queue",
+      "input": {},
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "items": []
+      }
+    },
+    {
+      "label": "queue-ordinary-denied",
+      "action": "queue",
+      "input": {},
+      "status": 403,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_REVIEW_SCOPE"
+      }
+    },
+    {
+      "label": "queue-disabled",
+      "action": "queue",
+      "input": {},
+      "status": 503,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "FEATURE_DISABLED"
+      }
+    }
+  ]
+}
