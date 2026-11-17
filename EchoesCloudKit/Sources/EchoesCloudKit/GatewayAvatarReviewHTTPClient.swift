@@ -7,6 +7,8 @@ public protocol GatewayAvatarReviewAPI: Sendable {
         -> GatewayAvatarReviewInspection
     func decide(_ intent: GatewayAvatarReviewDecisionIntent, token: GatewaySecret) async throws
         -> GatewayAvatarReviewDecisionResult
+    func recover(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
 }
 public protocol GatewayAvatarReviewTransport: Sendable {
     func send(_ request: URLRequest, operation: GatewayAvatarReviewOperation) async throws
@@ -123,6 +125,45 @@ public struct GatewayAvatarReviewHTTPClient: GatewayAvatarReviewAPI {
         try checkActivation()
         try intent.receipt.validate(origin: origin, token: token, stamp: stamp())
         return .init(intent: intent, revision: value.revision)
+    }
+    public func recover(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
+    {
+        let (response, _, _) = try await perform(.recover(intent), token: token)
+        _ = try avatarReviewObject(
+            response.body,
+            keys: [
+                "protocolVersion", "schemaVersion", "accountID", "requestID", "versionID",
+                "generation", "reviewRevision", "decisionID", "verdict", "outcome", "revision",
+            ])
+        struct Wire: Decodable {
+            let protocolVersion: Int, schemaVersion: Int, generation: Int
+            let accountID: String, requestID: String, versionID: String, reviewRevision: String
+            let decisionID: String, verdict: String, outcome: String
+            let revision: String?
+        }
+        guard let value = try? JSONDecoder().decode(Wire.self, from: response.body),
+            value.protocolVersion == 1, value.schemaVersion == 1,
+            value.accountID == intent.item.accountID, value.requestID == intent.item.requestID,
+            value.versionID == intent.item.versionID, value.generation == intent.item.generation,
+            value.reviewRevision == intent.item.reviewRevision, value.decisionID == intent.decisionID,
+            value.verdict == intent.verdict.rawValue
+        else { throw GatewayAvatarReviewFailure.invalidResponse }
+        let outcome: GatewayAvatarReviewOutcome
+        switch value.outcome {
+        case "confirmed":
+            guard let revision = value.revision, gatewayUUID(revision), revision != intent.item.reviewRevision
+            else {
+                throw GatewayAvatarReviewFailure.invalidResponse
+            }
+            outcome = .confirmed(revision: revision)
+        case "not-applied", "superseded":
+            guard value.revision == nil else { throw GatewayAvatarReviewFailure.invalidResponse }
+            outcome = value.outcome == "not-applied" ? .notApplied : .superseded
+        default: throw GatewayAvatarReviewFailure.invalidResponse
+        }
+        try checkActivation()
+        return .init(intent: intent, outcome: outcome)
     }
     private func perform(_ operation: GatewayAvatarReviewOperation, token: GatewaySecret) async throws
         -> (GatewayAvatarHTTPResponse, AvatarReviewResponseBoundary, AvatarReviewStamp)

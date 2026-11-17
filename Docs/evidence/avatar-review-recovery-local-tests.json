@@ -1,0 +1,221 @@
+{
+  "stage": "CK-04e.3j.3c.2a",
+  "observedAtUTC": "2026-11-17T20:42:35.005488+00:00",
+  "baselineCommit": "14f45960d648dc4be44d342ffa49953620cba936",
+  "checks": {
+    "gateway": {
+      "Node22": {
+        "passed": 510,
+        "failed": 0,
+        "skipped": 0
+      },
+      "Node24": {
+        "passed": 510,
+        "failed": 0,
+        "skipped": 0
+      },
+      "newFunctions": 9,
+      "syntax": {
+        "v22.23.5": 115,
+        "v24.22.1": 115
+      }
+    },
+    "native": {
+      "newFunctions": 9,
+      "contractFunctions": 7,
+      "URLSessionFunctions": 2,
+      "focusedIncludingPreviousReview": 35,
+      "defined": 451,
+      "macOS": {
+        "passed": 449,
+        "skipped": 2,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 449,
+        "skipped": 2,
+        "failed": 0
+      },
+      "xcresultVerified": true,
+      "newIndividualFunctionsVerified": true,
+      "strictFormatFiles": 6,
+      "actualWireResponses": 5
+    }
+  },
+  "builds": {
+    "debug": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "binarySHA256": {
+        "Echoes": "9f07a9ce2839432cb0b385ea118a8531e07b96901b156c574d559973e8833a65",
+        "Echoes.debug.dylib": "bab0a04be5c78654a165d83fc43c5162bc95b9ecbe6988fd7aef662b4d4290fc"
+      }
+    },
+    "release": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "binarySHA256": {
+        "Echoes": "b17a879d0e5b244fee18ac4146c81d51019ed128989c4dc15a6682c94b6da938"
+      }
+    }
+  },
+  "nativeTestNames": [
+    "avatarReviewRecoveryDecodesAllFiveActualServerOutcomesWithoutInspection",
+    "avatarReviewRecoverySendsOnlyExactMetadataAndAcceptsRenewedBearer",
+    "avatarReviewRecoveryCannotAuthorizeMutationAfterReceiptExpiry",
+    "avatarReviewRecoveryRejectsEveryMismatchedIdentityVersionGenerationAndVerdict",
+    "avatarReviewRecoveryRejectsUnknownOutcomeExtraFieldsMissingNullAndForgedRevision",
+    "avatarReviewRecoveryActivationCancellationAndErrorsKeepResultsClosed",
+    "avatarReviewRecoveryRejectsInvalidIDAndRedactsOutcomeMetadata",
+    "avatarReviewRecoveryURLSessionReadsAllActualServerOutcomesWithExactMetadata",
+    "avatarReviewRecoveryURLSessionBoundsSuccessAt2048BeforeBufferingOrEOF"
+  ],
+  "gatewayTestNames": [
+    "read-only recovery confirms exact lost ACK after receipt expiry cleanup and runtime reconstruction",
+    "recovery never applies an unsent intent and needs no inspection receipt",
+    "recovery distinguishes ambiguous claim from applied decision after finish or checkpoint ACK loss",
+    "recovery binds every selection and decision field and never confirms a different operator",
+    "renewed session of the same moderator can recover metadata without renewing receipt",
+    "withdrawal replacement and target erasure yield superseded without a historical success claim",
+    "recovery finalizer refuses a state or operator change after checkpoint",
+    "recovery denies ordinary sessions and consumed operator quota before reading body",
+    "recovery requests and responses have closed keys safe generations and exact correlation"
+  ],
+  "implemented": [
+    "exact read-only recovery for current account/request/version/generation/prior review revision/decision/verdict",
+    "confirmed bound to original reviewer account and decision expected revision/verdict; no new mutation",
+    "not-applied only while original revision remains current; superseded never claims historical nonapplication",
+    "absolute receipt expiry and session renewal do not prevent current moderator metadata query",
+    "same server role/native origin/HTTPS/POST/body512/response2048/quota/deadlines/retained admission as existing review routes",
+    "checkpoint verification and exact outcome comparison in finalizer; later state/role changes denied",
+    "no receipt reservation/renewal or image fetch; policy decision and publication unchanged",
+    "native dedicated recovery intent/result has no bearer/receipt/pixels/URL; expiry of decide remains enforced",
+    "native client strict closed full correlation/outcome/revision and actual URLSession2048 header/stream limits",
+    "default disabled community entry also denies recover; no Runtime/host/UI activation"
+  ],
+  "actualComponents": [
+    "concrete local edge/Authority/Runtime/SQLite/Wasm and independently checked ephemeral S2S signatures",
+    "real workerd DO/SQLite/Wasm recovering not-applied and confirmed after90s receipt cleanup without publication",
+    "five concrete wire responses parsed by native client and actual URLSession through URLProtocol",
+    "full native package Mac/iOS26.1/iPhone17Pro, Debug simulator and Release device compilation"
+  ],
+  "modeledComponents": [
+    "Apple/SIWA/CloudKit provider assets/accounts and platform bindings",
+    "synthetic native clocks/bearers and URLProtocol local responses; no hosted gateway",
+    "time advanced in local workerd proof; not a90s real hosted endurance test"
+  ],
+  "negativeControl": {
+    "mutation": "removed exact reviewer account binding from read-only decision outcome in a temporary gateway copy",
+    "exitCode": 1,
+    "failedTests": 1,
+    "copyOnly": true,
+    "actualSourceUnchanged": true,
+    "source": "gateway/src/avatar-policy-state.mjs",
+    "sourceSHA256": "08fa65500094673bbdf55f53c72a5f755f7e608bdb8399c0a973f59fe9c6e31d"
+  },
+  "firstPassHistory": [
+    "initial new8 backend tests passed; ninth ambiguous claim/finish/checkpoint scenario also passed",
+    "initial source compile permission review timed out without starting process; allowed one retry started and passed",
+    "first native test compile rejected nested require macro; split verdict extraction into constants;35 targeted passed",
+    "first broad Node run51 passed/two workerd startup failures because sandbox disallowed loopback bind",
+    "authorized loopback run53 passed; expanded actual workerd recovery and full510 both Node passed",
+    "final451 package tests on both platforms and Debug/Release passed"
+  ],
+  "warnings": {
+    "compile": {
+      "debug": [
+        "<stage>/Echo/Services/CommunityAvatarPreviewAPI.swift:70:75: warning: main actor-isolated static property 'version' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "   |                                                                           `- warning: main actor-isolated static property 'version' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "<stage>/Echo/Services/CommunityAvatarPreviewAPI.swift:73:17: warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode",
+        "   |                 `- warning: expression is 'async' but is not marked with 'await'; this is an error in the Swift 6 language mode",
+        "<stage>/Echo/Services/CommunityPreviewFixture.swift:330:97: warning: main actor-isolated static property 'version' can not be referenced from a nonisolated context",
+        "    |                                                                                                 `- warning: main actor-isolated static property 'version' can not be referenced from a nonisolated context",
+        "<stage>/Echo/Services/CommunityPreviewFixture.swift:312:97: warning: main actor-isolated static property 'version' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "    |                                                                                                 `- warning: main actor-isolated static property 'version' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "<stage>/Echo/Services/AvatarEditorPreviewFixture.swift:121:23: warning: main actor-isolated property 'isUploadForPreview' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "    |                       `- warning: main actor-isolated property 'isUploadForPreview' cannot be accessed from outside of the actor; this is an error in the Swift 6 language mode",
+        "<stage>/Echo/Views/AvatarEditorSelectionSection.swift:52:44: warning: converting non-Sendable function value to '@concurrent @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "   |                                            `- warning: converting non-Sendable function value to '@concurrent @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "<stage>/Echo/Views/AvatarEditorView.swift:36:76: warning: converting non-Sendable function value to 'nonisolated(nonsending) @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "    |                                                                            `- warning: converting non-Sendable function value to 'nonisolated(nonsending) @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "2026-11-17 21:38:45.728 appintentsmetadataprocessor[63547:6022590] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+      ],
+      "release": [
+        "<stage>/Echo/Views/AvatarEditorSelectionSection.swift:52:44: warning: converting non-Sendable function value to '@concurrent @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "   |                                            `- warning: converting non-Sendable function value to '@concurrent @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "<stage>/Echo/Views/AvatarEditorView.swift:36:76: warning: converting non-Sendable function value to 'nonisolated(nonsending) @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "    |                                                                            `- warning: converting non-Sendable function value to 'nonisolated(nonsending) @Sendable () async throws -> PreparedAvatar' may introduce data races",
+        "2026-11-17 21:38:55.577 appintentsmetadataprocessor[63581:6022894] warning: Metadata extraction skipped, no AppIntents.framework dependency found"
+      ]
+    },
+    "knownPriorSwiftUIFrameWarningsStillOpen": true,
+    "packageRuntimeWarnings": [],
+    "resolutionRequiredBeforeTestFlight": true
+  },
+  "knownLimits": [
+    "superseded is unresolved history, not proof old decision never applied; only latest current job is queried",
+    "not-applied is an observation and never grants delayed mutation; fresh inspection/conscious action required",
+    "durable journal/host and actual displayed-image acknowledgement/UI still next3c.2b",
+    "no permanent moderation history/archive or complete retention/orphans implementation",
+    "author explicit re-publication without upload journal remains required",
+    "physical FileProtection/locked-device/selected PhotoPicker import not accepted",
+    "real schema/roles/hosts/SIWA/separate service identity/hosted Free/two ordinary accounts not accepted",
+    "ordinary entry remains Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote deployments/activation/schema/roles/keys/secrets/paid plans",
+    "phone install or expired SDK windows",
+    "Production/TestFlight/Firebase changes",
+    "unchanged Core/UI/dependency audit repetition"
+  ],
+  "sourceDocsAndFixturesSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewModels.swift": "fcc66a82f11071d3d19f8871ee0ad4398109f2e3f2de77e2daa738f8bca8b17b",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewHTTPClient.swift": "e016037b36793a1bff393ef801be095c972e943dcbb439fbf5f1ae148dc88862",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewRecovery.swift": "46307d7f706e5cf3a2f7b331a799f9e4e7f544eb5b4b8dde18991c0d2f5a25a8",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewTests.swift": "459905806e62ada1bd34822bb7b1fa220d1941a774fcad556bdfebc50326aba9",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewTransportTests.swift": "1f33ed8afcb21702f0b785616435d4f1cca49554137dde14ca399a00bae2e2c0",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewRecoveryTests.swift": "d4ca206ff4eacad13dd89b61c3aa9675cd5906614aa4eb9956cfe56443060a90",
+    "gateway/src/avatar-policy-state.mjs": "08fa65500094673bbdf55f53c72a5f755f7e608bdb8399c0a973f59fe9c6e31d",
+    "gateway/src/avatar-review-coordinator.mjs": "8dd2e52b269a64e9b5d0b6594fb0736e7fc95e592163575e3e0b719c140ab4ba",
+    "gateway/src/avatar-review-http.mjs": "91873eccd3104a518b3ab4a9494edd0608cf6d2d75eac085d6cd01135ac60588",
+    "gateway/src/gateway-avatar-review.mjs": "c3beb9ec0e1b181c984d23188b4a5a6297ed83462bcc818e62b01d6f8d2d899e",
+    "gateway/test/support/avatar-review-http-fixture.mjs": "6b3467145b4999b5f833430003cdcfa24e6ce743995b56c83351704811c368b4",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "f880cead72e5ca3de929dd0cdbf1e1819c5a8a3c3853d54797ee50ce0086eb88",
+    "gateway/test/avatar-review-workerd.test.mjs": "973bfd4fb8ce8f551ecc107b12ec4f2afc9738491341f4ad69a2bf20efbcf01d",
+    "gateway/test/avatar-review-recovery.test.mjs": "e3e3a48f4d124c442aa1561da70b82b1272ccb18e60035a575d0ab121171c053",
+    "gateway/scripts/export-avatar-review-recovery-native-fixture.mjs": "d06fb0c2358ced9055ebfe08f6a94bc2b3f2334c620202c23a62ace84e1c6e35",
+    "Docs/ODZYSKIWANIE_DECYZJI_MODERACJI.md": "e1de8976c4a0ca0ab2e13720f1110770a1729bf0f48007ddf4662d5a21cc78ac",
+    "Docs/HTTP_MODERACJI_ZDJEC.md": "19c878e73cc15b86bcc33333dbf0ff97b9bfc0b3840a65d1e179e08c26bed358",
+    "Docs/NATYWNA_MODERACJA_HTTP.md": "968022637478037b01199578d9ac06d3148df1fe5a17e61916d8e33f133ccf02",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "2fc4e0d7e3c7f203cef44f7f7876481d89bad7ad830d545797dab205ab35fa6b",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "ee4a28b74b20ea397d94c78656ad23dab387ae23c75d4c16cd2d7af82fe76c23",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "8466e9e9ecc988c6d13572976422efbdceda281011f01f0a1c3433755cce1304",
+    "Docs/DZIENNIK_ZMIAN.md": "3093062282ddf4dabf469153f23bc6e4e238ea013e60329fbfcb4e44c8bfee8e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-review-recovery/responses.json": "a801cac33e3b3649bd2b06265f90737ecfa541237a7b22ddaedc85603caf6ba5"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-review-recovery-first.log": "5967f42d09721da308be04f0c8699ac86fabecdcedc58b18e30bdd2cbe27f25c",
+    "echoes-avatar-review-recovery-focused-final.log": "cab94037175d297c1a64f98a90df041cb062b81f2e711e786d9b90bf52c20603",
+    "echoes-avatar-review-recovery-native-compile.log": "fc77f535d5ae54c78c455a507f244fe2eb3194e2b3eb69361df59fdbf61907cc",
+    "echoes-avatar-review-recovery-native-first.log": "291b23d28cf76e370803e797c6b82a8d000cfff6815d08fe0f66f452336ab7ad",
+    "echoes-avatar-review-recovery-native-focused.log": "649d883e9942bdb5efaacc31d2f8ec68c741b58cb121f09402613359ea8df877",
+    "echoes-avatar-review-recovery-gateway-focused.log": "e0c61f9dbec78ad74c8bebd075f6ca10f5f79491829ab23e1dda7ca230e523c0",
+    "echoes-avatar-review-recovery-gateway-focused-final.log": "f4f06e5e9fd25bb007708da146ae9ec157e5579ef5f24ba200406ecc04458d9a",
+    "echoes-avatar-review-recovery-full-node22.log": "9aa9c7b55a99d919eb473bb7c5872777c20e5e0b7d992bfe1163e3103c6abbcf",
+    "echoes-avatar-review-recovery-full-node24.log": "30f1d130d3eec4018b2812b729c5ba21b38f4fcc21dcf9a9ae8e04c2d050a0f2",
+    "echoes-avatar-review-recovery-full-mac.log": "f222bcfe8573a8c19033c7f2aa0c365be0dc88f0466ed56ec10b838845bf78fc",
+    "echoes-avatar-review-recovery-full-simulator.log": "b897cd21c9e4554fae0af322977112353a6910f261fc938f92b8518c36fe1983",
+    "echoes-avatar-review-recovery-simulator-summary.json": "8138940f79e573a6553c4c5972c443a892c2d1c6212913dd36697f9a36521b9c",
+    "echoes-avatar-review-recovery-debug.log": "c86eabc52f9f3e3dfd34b61ffd5b78ca1098841f60b80f5fe4dba6bef24d83a6",
+    "echoes-avatar-review-recovery-release.log": "b26e48c7774b3ae986430f78d346f7c47f9c95bee1df150bb3f8f8852e3b8b45",
+    "echoes-avatar-review-recovery-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-avatar-review-recovery-syntax.json": "39d96ed9b907ef3ff74868843711a09abdf9a0362cf6206d90c004696095258e",
+    "echoes-avatar-review-recovery-negative.log": "65fb2975ac846a69003a8b4f94cbcf74e8141e3886ed9e49b97e451f8138a966",
+    "echoes-avatar-review-recovery-negative-result.json": "a3219015dc7c62df5506136d4ce81e6b79c457e5f98bc2a60472d9000bde9e7f",
+    "echoes-avatar-review-recovery-export.log": "1d0c21f6784b0d33e37c438af5d1d5b7105506e1e98803bfac065037477e29c0"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

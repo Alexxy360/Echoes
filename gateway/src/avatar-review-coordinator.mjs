@@ -14,7 +14,7 @@ export class AvatarReviewCoordinator {
     isEnabled = () => false, isOperator = () => false, clock = Date.now, fetchImplementation = fetch,
     verifiedDownloadHosts = [], timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
-        ["reviewContent", "assertReviewContent", "reviewQueue", "review", "assertReviewCurrent"].some(k => typeof avatarPolicy?.[k] !== "function") ||
+        ["reviewContent", "assertReviewContent", "reviewQueue", "review", "assertReviewCurrent", "reviewOutcome"].some(k => typeof avatarPolicy?.[k] !== "function") ||
         ["get", "reserve", "confirm", "claim", "finish"].some(k => typeof receipts?.[k] !== "function") ||
         typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" ||
         typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function" ||
@@ -168,6 +168,24 @@ export class AvatarReviewCoordinator {
         const current = permit(); this.#policy.assertReviewCurrent(result);
         if (current.result_revision !== result.revision) throw new AvatarReviewError("AVATAR_REVIEW_STALE");
         return Object.freeze({ schemaVersion: 1, inspectionID: o.inspectionID, ...result });
+      };
+    });
+  }
+  async prepareRecovery(value = {}) {
+    const keys = ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"];
+    const o = this.#options(value, keys);
+    if (typeof o.reviewRevision !== "string" || !publicUUID.test(o.reviewRevision) ||
+        !Number.isSafeInteger(o.generation) || o.generation < 1 || o.generation >= Number.MAX_SAFE_INTEGER ||
+        !["approved", "rejected"].includes(o.verdict)) throw new AvatarReviewError("AVATAR_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      await this.#checkpoint.verify({ signal }); check();
+      const query = { ...Object.fromEntries(keys.map(k => [k, o[k]])), reviewerID: identity.operatorID };
+      const outcome = this.#policy.reviewOutcome(query);
+      await this.#checkpoint.advance({ signal }); check();
+      return () => {
+        const current = this.#policy.reviewOutcome(query);
+        if (current.outcome !== outcome.outcome || current.revision !== outcome.revision) throw new AvatarReviewError("AVATAR_REVIEW_STALE");
+        return Object.freeze({ schemaVersion: 1, ...Object.fromEntries(keys.map(k => [k, o[k]])), ...outcome });
       };
     });
   }

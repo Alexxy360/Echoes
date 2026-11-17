@@ -237,3 +237,34 @@ private func reviewNetworkEventually(_ predicate: @Sendable () -> Bool) async th
     let requests = ReviewURLProtocol.plan.finish(origin)
     #expect(requests.count == 4 && requests.allSatisfy { $0.value(forHTTPHeaderField: "Cookie") == nil })
 }
+
+@Test func avatarReviewRecoveryURLSessionReadsAllActualServerOutcomesWithExactMetadata() async throws {
+    let f = try ReviewRecoveryWireFixture()
+    for row in f.rows {
+        let origin = ReviewURLProtocol.plan.install(.init(response: row.response))
+        defer { _ = ReviewURLProtocol.plan.finish(origin) }
+        let value = try await nativeReviewClient(origin).recover(row.intent, token: reviewBearer)
+        #expect(value.outcome == row.expected)
+        let bodies = ReviewURLProtocol.plan.capturedBodies(origin)
+        #expect(bodies.count == 1)
+        #expect(try bodies[0] == GatewayAvatarReviewOperation.recover(row.intent).wire())
+        let requests = ReviewURLProtocol.plan.finish(origin)
+        #expect(requests.count == 1 && requests[0].url?.path == "/v1/moderation/avatar/recover")
+    }
+}
+
+@Test func avatarReviewRecoveryURLSessionBoundsSuccessAt2048BeforeBufferingOrEOF() async throws {
+    let f = try ReviewRecoveryWireFixture()
+    let row = try #require(f.rows.first)
+    for advertised in [true, false] {
+        var headers = reviewJSONHeaders
+        if advertised { headers["content-length"] = "2049" }
+        let response = GatewayAvatarHTTPResponse(
+            status: 200, headers: headers, body: Data(repeating: 32, count: 2049))
+        let origin = ReviewURLProtocol.plan.install(.init(response: response, finish: !advertised))
+        defer { _ = ReviewURLProtocol.plan.finish(origin) }
+        await #expect(throws: GatewayAvatarReviewFailure.invalidResponse) {
+            try await nativeReviewClient(origin).recover(row.intent, token: reviewBearer)
+        }
+    }
+}

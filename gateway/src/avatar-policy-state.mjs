@@ -191,6 +191,30 @@ export class AvatarPolicyState {
   }
   assertReviewCurrent(value) { this.#tx(() => { this.#active(value.accountID); const job = this.#job(value.accountID, value.requestID), profile = this.#lease(value.accountID);
     if (profile.requestID !== value.requestID || job?.decision_id !== value.decisionID || job.moderation_revision !== value.revision || job.moderation_state !== value.verdict) throw new AvatarPolicyError("AVATAR_STALE"); }); }
+  /** Read-only recovery of an exact durable decision, never a renewed inspection or mutation.
+   * A missing/replaced/deleted current selection cannot prove the historical outcome. */
+  reviewOutcome({ accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID } = {}) {
+    for (const value of [accountID, requestID, versionID, reviewRevision, decisionID, reviewerID]) uuid(value);
+    if (!Number.isSafeInteger(generation) || generation < 1 || generation >= Number.MAX_SAFE_INTEGER ||
+        !["approved", "rejected"].includes(verdict)) throw new AvatarPolicyError("AVATAR_INPUT");
+    return this.#tx(() => {
+      const unknown = Object.freeze({ outcome: "superseded", revision: null });
+      let current;
+      try { this.#active(accountID); current = this.#lease(accountID); }
+      catch (e) { if (e.code === "AVATAR_STALE") return unknown; throw e; }
+      if (current.kind !== "select" || current.requestID !== requestID || current.versionID !== versionID || current.generation !== generation) return unknown;
+      const job = this.#job(accountID, requestID);
+      if (!job || job.version_id !== versionID || job.generation !== generation || !validTag(job.staged_tag)) return unknown;
+      if (!publicUUID.test(job.moderation_revision ?? "")) throw new AvatarPolicyError();
+      if (job.decision_id === decisionID) {
+        if (job.decision_expected_revision !== reviewRevision || job.moderation_state !== verdict ||
+            job.reviewer_key !== digest(reviewerID) || job.moderation_revision === reviewRevision) return unknown;
+        return Object.freeze({ outcome: "confirmed", revision: job.moderation_revision });
+      }
+      return job.moderation_revision === reviewRevision
+        ? Object.freeze({ outcome: "not-applied", revision: null }) : unknown;
+    });
+  }
   #publishLease(intent) {
     this.#current(intent); if (intent.kind !== "select") throw new AvatarPolicyError("AVATAR_STALE");
     const job = this.#job(intent.accountID, intent.requestID), descriptor = this.#descriptor(intent);

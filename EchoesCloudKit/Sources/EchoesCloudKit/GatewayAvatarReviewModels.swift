@@ -108,21 +108,30 @@ public enum GatewayAvatarReviewOperation: Equatable, Sendable, CustomStringConve
     case queue
     case inspect(GatewayAvatarReviewItem)
     case decide(GatewayAvatarReviewDecisionIntent)
+    case recover(GatewayAvatarReviewRecoveryIntent)
     var action: String {
         switch self {
         case .queue: "queue"
         case .inspect: "inspect"
         case .decide: "decide"
+        case .recover: "recover"
         }
     }
     func wire() throws -> Data {
-        let fields: [String: String]
+        let fields: [String: Any]
         switch self {
         case .queue: fields = [:]
         case .inspect(let item): fields = ["accountID": item.accountID, "requestID": item.requestID]
         case .decide(let intent):
             fields = [
                 "inspectionID": intent.receipt.inspectionID, "decisionID": intent.decisionID,
+                "verdict": intent.verdict.rawValue,
+            ]
+        case .recover(let intent):
+            fields = [
+                "accountID": intent.item.accountID, "requestID": intent.item.requestID,
+                "versionID": intent.item.versionID, "generation": intent.item.generation,
+                "reviewRevision": intent.item.reviewRevision, "decisionID": intent.decisionID,
                 "verdict": intent.verdict.rawValue,
             ]
         }

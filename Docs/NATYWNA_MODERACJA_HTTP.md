@@ -21,3 +21,7 @@ Pierwsza kompilacja samych źródeł przeszła. Pierwsza kompilacja testów wykr
 Buildy ujawniły ostrzeżenia istniejących preview/edytora o izolacji MainActor/Sendable oraz informacyjne pominięcie ekstrakcji AppIntents. Źródła ostrzeżeń są poza nowymi pięcioma plikami; wymagają naprawy/przeglądu przed TestFlight. Wcześniejsze runtime ostrzeżenia ramki SwiftUI również pozostają otwarte; tego UI nie uruchamiano ponownie. Fizyczne FileProtection i locked-device/import pozostają niezaliczone.
 
 Następny3c.2: host z native/private/foreground/session scope, trwałą intencją przed decyzją i obsługą restart/unknown bez nowego ID; następnie rzeczywisty ekran i świadome potwierdzenie obejrzenia bieżącego obrazu, dostępność/expiry/lifecycle oraz ponowna publikacja zatwierdzonego zdjęcia autora bez dawnego journala. Dalej zgłoszenia/kontakt/retencja/orphans i pełny rzeczywisty odbiór migracji. Zwykłe wejście nadal Firebase. Cel nie jest ukończony i aplikacja nie jest gotowa do TestFlight.
+
+## Odczyt wyniku3c.2a
+
+Dodano osobny odczyt recover: stan bieżącej dokładnej decyzji można sprawdzić po expiry receipt i nowej sesji tego samego uprawnionego konta. Nie odnawia to podglądu i nie wykonuje decyzji. superseded nie jest potwierdzeniem historycznego sukcesu lub porażki. Trwały host/UI nadal kolejne; pełna semantyka i dowody: [odzyskiwanie](ODZYSKIWANIE_DECYZJI_MODERACJI.md).

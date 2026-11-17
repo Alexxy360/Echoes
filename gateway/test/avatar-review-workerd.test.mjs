@@ -18,7 +18,8 @@ test("actual local workerd routes protected moderation HTTP through edge and aut
       signInPrivateKeyPEM: generateKeyPairSync("ec", { namedCurve: "prime256v1" }).privateKey.export({ type: "pkcs8", format: "pem" }) };
     const response = await fetch(new URL("/upload-proof", worker.origin), { method: "POST", headers: { "Content-Type": "application/json", Connection: "close" }, body: JSON.stringify(input) });
     const body = await response.json(); assert.equal(response.status, 200, JSON.stringify(body));
-    assert.deepEqual(body.review, { bytesMatch: true, approved: true, notPublished: true, exactReplay: true, rejectedWithoutInspection: true, actualSQL: true });
+    assert.deepEqual(body.review, { bytesMatch: true, approved: true, notPublished: true, exactReplay: true, rejectedWithoutInspection: true,
+      notApplied: true, confirmedAfterExpiry: true, expiredReceiptsRemoved: true, actualSQL: true });
     assert.equal(body.downloads, 1); assert.equal(body.uploads, 2); assert.ok(body.signatures > 20);
     assert.equal(body.cleared.status, "none"); assert.equal(body.status.status, "none");
     assert.doesNotMatch(JSON.stringify(body), /sessionToken|SYNTHETIC-PRIVATE|downloadURL|https:/);
@@ -29,7 +30,7 @@ test("actual local workerd routes protected moderation HTTP through edge and aut
 test("actual community entry leaves operator endpoints disabled without activation or secrets", { timeout: 30000 }, async () => {
   const worker = await avatarWorker({ communityEntry: true });
   try {
-    for (const action of ["queue", "inspect", "decide"]) {
+    for (const action of ["queue", "inspect", "decide", "recover"]) {
       const response = await fetch(new URL("/v1/moderation/avatar/" + action, worker.origin), { method: "POST",
         headers: { "Content-Type": "application/json", Connection: "close" }, body: "{}" });
       assert.equal(response.status, 503); assert.equal((await response.json()).error, "GATEWAY_DISABLED");

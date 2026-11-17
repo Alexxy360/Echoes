@@ -10,6 +10,7 @@ import { createGatewayRuntime, forwardGatewayRequest, handleAuthorityRequest, au
 import { createWorkerAvatarNormalizer } from "../../src/avatar-codecs-workerd.mjs";
 import { avatarIntentHeader } from "../../src/avatar-upload-http.mjs";
 import { avatarReviewHeader } from "../../src/avatar-review-coordinator.mjs";
+import { purgeAvatarReviewReceipts } from "../../src/avatar-review-state.mjs";
 
 /** Loopback-only fixture with actual Worker/SQLite/Wasm and independently verified S2S signatures.
  * Provider, platform metadata and account proof are models. Never imported by production sources.
@@ -112,17 +113,24 @@ export async function avatarUploadWorkerdProof(request, storage) {
     const rejectedWithoutInspection = (await missing.json()).error === "AVATAR_REVIEW_STALE";
     const queue = await (await operatorCall("queue", {})).json();
     if (queue.items.length !== 1 || queue.items[0].requestID !== uploaded.requestID) throw new Error("Synthetic review queue");
+    const recovery = { ...queue.items[0], decisionID: randomUUID(), verdict: "approved" };
+    const unapplied = await (await operatorCall("recover", recovery)).json();
     const image = await operatorCall("inspect", { accountID: reviewOperatorID, requestID: uploaded.requestID });
     const header = JSON.parse(image.headers.get(avatarReviewHeader));
     const shown = new Uint8Array(await image.arrayBuffer()), manifest = JSON.parse(image.headers.get("x-echoes-avatar-manifest"));
-    const body = { inspectionID: header.inspectionID, decisionID: randomUUID(), verdict: "approved" };
+    const body = { inspectionID: header.inspectionID, decisionID: recovery.decisionID, verdict: "approved" };
     const approved = await (await operatorCall("decide", body)).json();
     const replayed = await (await operatorCall("decide", body)).json();
+    p.now += 90_000; await purgeAvatarReviewReceipts(storage, clock);
+    const outcome = await (await operatorCall("recover", recovery)).json();
     const observed = await invoke("status");
     review = { bytesMatch: createHash("sha256").update(shown).digest("hex") === manifest.sha256,
       approved: approved.verdict === "approved", notPublished: observed.publishedVersionID === null && observed.status === "approved",
       exactReplay: approved.revision === replayed.revision && approved.decisionID === replayed.decisionID, rejectedWithoutInspection,
-      actualSQL: storage.sql.exec("SELECT COUNT(*) n FROM avatar_review_receipts_v1 WHERE result_revision IS NOT NULL").toArray()[0].n === 1 };
+      notApplied: unapplied.outcome === "not-applied" && unapplied.revision === null,
+      confirmedAfterExpiry: outcome.outcome === "confirmed" && outcome.revision === approved.revision,
+      expiredReceiptsRemoved: storage.sql.exec("SELECT COUNT(*) n FROM avatar_review_receipts_v1").toArray()[0].n === 0,
+      actualSQL: storage.sql.exec("SELECT COUNT(*) n FROM avatar_jobs_v1 WHERE decision_id=? AND moderation_state='approved'", body.decisionID).toArray()[0].n === 1 };
   }
   const cleared = await invoke("clear", { requestID: randomUUID(), expectedGeneration: uploaded.generation });
   const status = await invoke("status");

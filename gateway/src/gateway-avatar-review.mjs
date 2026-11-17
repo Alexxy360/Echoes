@@ -12,7 +12,7 @@ export function createAvatarReviewHandler({ authentication, limits, checkpoint, 
   return async (request, serverBudgetHash, action) => {
     let admission, deadline, bytes, response;
     try {
-      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision" }[action];
+      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision", recover: "prepareRecovery" }[action];
       const flag = callback => {
         try { const value = callback(); if (value && typeof value.then === "function") { void value.catch?.(() => {}); return false; } return value === true; }
         catch { return false; }
