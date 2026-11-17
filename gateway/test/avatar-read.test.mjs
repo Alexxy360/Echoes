@@ -278,3 +278,21 @@ test("a SQLite rollback never revalidates an image against an obsolete publicati
     await assert.rejects(() => f.read({ knownSHA256: manifest.sha256 }), code("AVATAR_READ_UNAVAILABLE")); assert.equal(f.downloads.length, 1);
   } finally { f.close(); }
 });
+
+test("all four cancelled provider reads retain admission until a real dependency returns", async () => {
+  const f = await avatarReadFixture(), entered = pause(), held = [pause(), pause(), pause(), pause()]; let arrived = 0;
+  try {
+    f.setDownloadHook(async () => { const index = arrived++; if (arrived === 4) entered.resolve(); if (held[index]) await held[index].promise; });
+    const controllers = Array.from({ length: 4 }, () => new AbortController());
+    const operations = controllers.map(c => f.reader.prepare(f.input({ signal: c.signal })).catch(e => e));
+    await entered.promise; for (const c of controllers) c.abort();
+    const outcomes = await Promise.all(operations); assert.ok(outcomes.every(e => e.code === "AVATAR_READ_UNAVAILABLE"));
+    await assert.rejects(() => f.reader.prepare(f.input()), code("AVATAR_READ_LIMIT"));
+    held[0].resolve(); let resumed = false;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      try { const finalize = await f.reader.prepare(f.input()); await finalize().arrayBuffer(); resumed = true; break; }
+      catch (e) { if (e.code !== "AVATAR_READ_LIMIT") throw e; await new Promise(r => setTimeout(r, 2)); }
+    }
+    assert.equal(resumed, true);
+  } finally { for (const item of held) item.resolve(); f.close(); }
+});

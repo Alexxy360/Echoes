@@ -51,3 +51,8 @@ readPublication/assertReadPublication łączą aktualną zgodę/wybór/decision 
 Wewnętrzny koordynator jest już podłączony do [ograniczonego HTTP](HTTP_UPLOAD_AVATAROW.md) i konkretnego Runtime, z osobną domyślnie wyłączoną aktywacją. Upload/recover/publish/clear/status nie dają roli operatora. Rzeczywiste Wasm i lokalny workerd/SQLite przechodzą przygotowanie obu wariantów oraz request-only recovery; przy niepewnym transferze nie dochodzi do ponowienia pliku. Natywny upload/journal i rzeczywisty proces operatora/oglądania/zgłoszeń/retencji nadal są niegotowe; historyczny opis etapu3e powyżej pozostaje bez zmian.
 
 Status i cofnięcie pozostają dostępne przez jawny withdrawalOnly, gdy upload jest wyłączony, lecz odczyt zdjęć działa. Ten wariant nie może publikować, odzyskiwać uploadu ani nadawać decyzji operatora i nie wymaga codec/assetów.
+
+
+## Podgląd operatora CK-04e.3j.3a
+
+[Nowy koordynator moderacji](OPERATOR_MODERACJI_ZDJEC.md) łączy rzeczywisty serwerowy odczyt treści z krótkim trwałym potwierdzeniem i exact decyzją. Niższy prepareReview nadal nie jest trasą HTTP i nie wolno wystawiać jego pól jako zamiennika potwierdzenia podglądu. Runtime nie ma przypisanej roli operatora. Natywny upload/journal/edytor są opisane w etapach2a–2d; HTTP operatora i rzeczywisty ekran/ogląd/zgłoszenia/retencja nadal pozostają otwarte. Lokalny test workerd nie stanowi odbioru człowieka lub hostingu.

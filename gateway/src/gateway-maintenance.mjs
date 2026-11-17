@@ -1,4 +1,5 @@
 import { purgeAuthenticationStorage } from "./authentication-state.mjs";
+import { purgeAvatarReviewReceipts } from "./avatar-review-state.mjs";
 
 /** One recurring alarm, bounded local cleanup, and fair rotation over internal deletion jobs. */
 export class GatewayMaintenance {
@@ -24,6 +25,7 @@ export class GatewayMaintenance {
     await this.#storage.setAlarm(this.#now() + 60000); await this.#storage.sync();
     await this.#deletions.expireRevocationSecrets();
     await purgeAuthenticationStorage(this.#storage, this.#clock);
+    await purgeAvatarReviewReceipts(this.#storage, this.#clock);
     await this.#limits.purgeExpired(); await this.#deletions.purgeCompletedReceipts();
     const cursor = this.#storage.sql.exec("SELECT cursor FROM gateway_maintenance_v1 WHERE id=1").toArray()[0].cursor ?? "";
     const deletionID = this.#deletions.dueDeletionIDs({ afterID: cursor })[0];
@@ -35,6 +37,7 @@ export class GatewayMaintenance {
     }
     const timedTables = ["auth_challenges_v1", "auth_sessions_v1", "auth_issue_budget_v1", "auth_renewal_grants_v1",
       "auth_refresh_credentials_v1", "auth_credential_reservations_v1", "gateway_windows_v1", "gateway_daily_v1"];
+    if (this.#storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='avatar_review_receipts_v1'").toArray().length) timedTables.push("avatar_review_receipts_v1");
     const timedRows = timedTables.some(table => this.#storage.sql.exec(`SELECT 1 FROM ${table} LIMIT 1`).toArray().length > 0);
     const receipts = this.#storage.sql.exec("SELECT 1 FROM auth_account_deletions_v1 WHERE completed_at IS NOT NULL LIMIT 1").toArray().length > 0;
     if (!timedRows && !receipts && !(processor && this.#deletions.dueDeletionIDs().length)) {

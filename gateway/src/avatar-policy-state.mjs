@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { plain, publicUUID, digest, inputHash, validTag, recordIdentity } from "./public-record-schema.mjs";
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
+import { avatarReviewSchema, avatarReviewerKey } from "./avatar-review-state.mjs";
 
 const codes = new Set(["AVATAR_INPUT", "AVATAR_STALE", "AVATAR_PENDING", "AVATAR_REJECTED", "AVATAR_RATE", "AVATAR_CAPACITY", "AVATAR_SCOPE", "AVATAR_UNAVAILABLE"]);
 export class AvatarPolicyError extends Error {
@@ -8,6 +9,7 @@ export class AvatarPolicyError extends Error {
 }
 const uuid = value => { if (typeof value !== "string" || !publicUUID.test(value)) throw new AvatarPolicyError("AVATAR_INPUT"); return value; };
 export const avatarPolicySchema = Object.freeze([
+  ...avatarReviewSchema,
   `CREATE TABLE IF NOT EXISTS avatar_profiles_v1(account_id TEXT PRIMARY KEY,generation INTEGER NOT NULL DEFAULT 0,
     request_id TEXT,version_id TEXT,ready INTEGER NOT NULL DEFAULT 0,pointer_tag TEXT,
     upload_window INTEGER,upload_count INTEGER NOT NULL DEFAULT 0,updated_at INTEGER NOT NULL DEFAULT 0)`,
@@ -16,9 +18,11 @@ export const avatarPolicySchema = Object.freeze([
     descriptor_json TEXT,staged_tag TEXT,moderation_state TEXT NOT NULL CHECK(moderation_state IN ('pending','approved','rejected')),
     moderation_revision TEXT NOT NULL,decision_id TEXT,decision_expected_revision TEXT,reviewer_key TEXT,
     created_at INTEGER NOT NULL,reviewed_at INTEGER,PRIMARY KEY(account_id,request_id),UNIQUE(account_id,version_id))`,
+  `CREATE INDEX IF NOT EXISTS avatar_review_queue_v1 ON avatar_jobs_v1(moderation_state,created_at,account_id,request_id)`,
 ]);
 /** Called inside the same disabled-owner transaction as the other community policy tables. */
 export function eraseAvatarPolicy(storage, accountID) {
+  storage.sql.exec("DELETE FROM avatar_review_receipts_v1 WHERE account_id=? OR reviewer_key=?", accountID, avatarReviewerKey(accountID));
   storage.sql.exec("DELETE FROM avatar_jobs_v1 WHERE account_id=?", accountID);
   storage.sql.exec("DELETE FROM avatar_profiles_v1 WHERE account_id=?", accountID);
 }
@@ -137,6 +141,33 @@ export class AvatarPolicyState {
       this.#storage.sql.exec("UPDATE avatar_jobs_v1 SET staged_tag=? WHERE account_id=? AND request_id=?", receipt.recordChangeTag, intent.accountID, intent.requestID);
     });
     await this.#durable(); this.assertCurrent(intent);
+  }
+  /** Staged immutable content for trusted moderation, never a viewer grant. */
+  reviewContent(accountID, requestID) {
+    uuid(requestID);
+    const value = this.#tx(() => {
+      this.#active(accountID); const intent = this.#lease(accountID);
+      if (intent.kind !== "select" || intent.requestID !== requestID) throw new AvatarPolicyError("AVATAR_STALE");
+      const job = this.#job(accountID, requestID), descriptor = this.#descriptor(intent);
+      if (!validTag(job.staged_tag)) throw new AvatarPolicyError("AVATAR_PENDING");
+      return { ...intent, reviewRevision: job.moderation_revision, stagedTag: job.staged_tag,
+        payloadHash: avatarDescriptorHash(descriptor), descriptor };
+    });
+    const avatar = this.#registry.readable(recordIdentity(accountID, "avatar", value.versionID).recordName, "avatar");
+    if (!avatar || avatar.requestID !== requestID || avatar.recordTag !== value.stagedTag || avatar.payloadHash !== value.payloadHash) throw new AvatarPolicyError("AVATAR_STALE");
+    return Object.freeze({ ...value, avatar });
+  }
+  assertReviewContent(value, { includeRevision = true } = {}) {
+    const current = this.reviewContent(value?.accountID, value?.requestID);
+    if (["versionID", "generation", "payloadHash", "stagedTag", ...(includeRevision ? ["reviewRevision"] : [])].some(key => current[key] !== value[key])) throw new AvatarPolicyError("AVATAR_STALE");
+    return current;
+  }
+  reviewQueue() {
+    return this.#tx(() => this.#rows(`SELECT j.account_id,j.request_id FROM avatar_jobs_v1 j
+      JOIN avatar_profiles_v1 p ON p.account_id=j.account_id AND p.request_id=j.request_id AND p.version_id=j.version_id AND p.generation=j.generation
+      JOIN auth_accounts_v1 a ON a.account_id=j.account_id LEFT JOIN community_accounts_v1 c ON c.account_id=j.account_id
+      WHERE j.moderation_state='pending' AND j.staged_tag IS NOT NULL AND a.disabled=0 AND COALESCE(c.suspended,0)=0
+      ORDER BY j.created_at,j.account_id,j.request_id LIMIT 20`)).map(row => this.reviewContent(row.account_id, row.request_id));
   }
   async review({ accountID, requestID, decisionID, expectedRevision, verdict, reviewerID } = {}) {
     uuid(requestID); uuid(decisionID); uuid(expectedRevision); uuid(reviewerID);

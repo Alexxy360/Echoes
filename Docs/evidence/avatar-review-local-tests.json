@@ -1,0 +1,179 @@
+{
+  "stage": "CK-04e.3j.3a",
+  "observedAtUTC": "2026-11-17T16:25:27.759442+00:00",
+  "baselineCommit": "c470d2b224c2016099c0ed860e7d9677ef3d7e4a",
+  "checks": {
+    "gateway": {
+      "node22": {
+        "passed": 478,
+        "failed": 0,
+        "skipped": 0
+      },
+      "node24": {
+        "passed": 478,
+        "failed": 0,
+        "skipped": 0
+      }
+    },
+    "runtimeVersions": {
+      "node22": "v22.23.5",
+      "node24": "v24.22.1"
+    },
+    "newTestScenarios": 23,
+    "allNewIndividualCompletionsVerifiedBothVersions": true,
+    "syntaxMJSPerRuntime": 108,
+    "parsedJSONConfigs": 4,
+    "nativeCoreUIProjectLocksDepsCIAndRuntimeConfigUnchanged": true
+  },
+  "implemented": [
+    "internal default-disabled moderation coordinator; verified active gateway session plus synchronous server-only role",
+    "bounded20 current staged/pending queue without names/GPS/bytes/provider fields; rechecked finalization",
+    "closed inspection account/request, immutable owner/version/generation/review revision/descriptor/staged tag/registry commitments",
+    "provider-only allowed HTTPS download URL, no redirects/cookies/Authorization; bounded128 chunks/256k/512px plus SHA/JPEG",
+    "one unsettled service operation/finalizer,8s deadline; cancelled dependency retains admission until actual return",
+    "durable reservation10/min/reviewer before provider IO; unverified reservation cannot decide; confirm only after verified current content",
+    "one receipt per reviewer and256 global; session/reviewer/inspection hashes;90s absolute expiry, rollback and schema consistency checks",
+    "decision exact ID/verdict persisted before policy CAS, result revision persisted before ACK; same retry recovers ambiguous writes/checkpoint",
+    "changed account/session/role/content/moderation/selection/clear/deletion fences responses and old decisions",
+    "approval never publishes for author; owner must publish separately",
+    "local bounded expiry maintenance while disabled and target/reviewer erasure without provider operations",
+    "shared protected download helper and four-slot public-reader correction retaining cancellation slots until real fetch returns"
+  ],
+  "actualComponents": [
+    "real SQLite transactions/files and separate native SQLite connection",
+    "actual Wasm normalization, signature verification, checkpoint and JPEG/hash checks",
+    "actual local workerd/Durable Object/SQLite/crypto with denied external outbound",
+    "existing gateway runtime upload HTTP composes into new INTERNAL moderation coordinator in local proof, then clear/status"
+  ],
+  "modeledComponents": [
+    "Apple OAuth/account claims, CloudKit records/files/hosts and operator allowlist",
+    "synthetic images/tokens and ephemeral unregistered test keys; not user data",
+    "ambiguous claim/finish/checkpoint wrappers inject errors after real writes, not actual power loss"
+  ],
+  "workerdProof": {
+    "name": "actual local workerd inspects normalized content before a durable moderation decision and exact replay",
+    "sameFinalCodeCoveredInBothFullRuns": true,
+    "actualHTTPUpload": true,
+    "operatorHTTPRouteAdded": false,
+    "fullImageSHAMatched": true,
+    "noInspectionDenied": true,
+    "approvedNotPublished": true,
+    "exactDecisionReplay": true,
+    "thenClearAndStatus": true,
+    "downloadCount": 1,
+    "uploadVariantCount": 2,
+    "syntheticSignaturesIndependentlyVerified": true,
+    "actualSQLReceiptResultPersisted": true
+  },
+  "negativeControls": [
+    {
+      "case": "operator",
+      "test": "normal sessions, missing role and async identity or role checks cannot inspect",
+      "failedTests": 1,
+      "exitCode": 1,
+      "copyOnly": true,
+      "actualSourceSHA256Unchanged": true
+    },
+    {
+      "case": "admission",
+      "test": "all four cancelled provider reads retain admission until a real dependency returns",
+      "failedTests": 1,
+      "exitCode": 1,
+      "copyOnly": true,
+      "actualSourceSHA256Unchanged": true
+    }
+  ],
+  "firstPassHistory": [
+    "existing50 reader/publication tests passed after shared helper extraction",
+    "first14:13 passed; erase test incorrectly omitted disabled-owner fence, corrected to real synthetic deletion request",
+    "first workerd failed stricter Node-style credentials property expectation; local synthetic stack diagnostic identified unsupported server Request.credentials; test model corrected, production omit/header constraints retained",
+    "diagnostic error redaction restored immediately and source SHA verified before final tests",
+    "rate review moved reservation before provider IO and added unverified/verified phase;14 passed",
+    "first expanded21:20 passed; new SQLite test adapter lazily skipped writes without toArray, corrected to eager exec; exact claim/result confirmation added",
+    "final expanded21, focused48 and both complete478 runs passed; final real workerd included in both full runs"
+  ],
+  "knownLimits": [
+    "3b closed operator HTTP/Runtime/allowlist/early global-IP-account limits/alarm scheduling remains",
+    "3c native actual content display, conscious verdict, scoped lifecycle and unknown-result UI remains",
+    "receipt proves server content verification and session binding, not that a human viewed or correctly judged all pixels",
+    "new inspection invalidates old receipt even if new fetch fails; absolute90s expiry is not renewed by retries",
+    "cancel cannot roll back already committed moderation; exact retry or fresh inspection required",
+    "logical expiry is not instantaneous physical SQLite erasure; provider asset/orphan retention remains separate",
+    "local workerd is not hosted Free CPU/RSS/cold-start/subrequest/SQL/transfer acceptance",
+    "real schema/roles/verified hosts/SIWA/separate service identity/two ordinary iCloud accounts remain",
+    "physical FileProtection/locked-device/selected PhotosPicker/iCloud Photos and prior SwiftUI frame warnings remain",
+    "standard entry remains Firebase, no TestFlight readiness claim"
+  ],
+  "notPerformed": [
+    "unchanged native/Core/UI tests/builds or dependency audit repeats",
+    "operator role/account assignment, public HTTP/Runtime activation, deployment",
+    "new cloud keys/secrets/schema/paid services or phone install/SDK window",
+    "Production/Firebase/TestFlight operations"
+  ],
+  "newTestNames": [
+    "moderation queue contains only current staged pending metadata and no provider fields",
+    "inspection validates actual full JPEG and emits a one-shot session-bound receipt without publishing",
+    "a decision requires inspection and exact retry is idempotent after lost final response",
+    "normal sessions, missing role and async identity or role checks cannot inspect",
+    "inspection finalizer rechecks operator authorization after the final checkpoint",
+    "receipt cannot cross sessions or reviewer accounts, and a new inspection replaces the old",
+    "clear and supersession during a download cannot yield an inspection response",
+    "a competing review invalidates inspection and cannot be overwritten by stale approval",
+    "corrupt bytes, headers, wrong record and foreign URLs cannot create a receipt",
+    "cancelled and timed out providers retain admission until actual completion",
+    "receipt expiry, clock rollback and local cleanup continue without provider calls",
+    "review receipts are removed for target erasure and reviewer erasure",
+    "new inspections preserve a durable ten-per-minute reviewer budget",
+    "closed schemas, default disabled service and failed clocks never dispatch downloads",
+    "an unverified reservation never authorizes a decision, even with a known inspection identifier",
+    "claimed decisions recover after ambiguous receipt writes and checkpoint failure without a new ID",
+    "target replacement during a durable decision claim prevents the review write",
+    "queue is bounded to twenty active selections and finalization rejects changed moderation",
+    "receipt storage has a global capacity and expiry releases it without images or provider calls",
+    "file-backed receipts are recovered through a new SQLite connection and coordinator",
+    "existing maintenance purges expired inspection rows while review is disabled",
+    "actual local workerd inspects normalized content before a durable moderation decision and exact replay",
+    "all four cancelled provider reads retain admission until a real dependency returns"
+  ],
+  "sourceAndDocsSHA256": {
+    "gateway/src/avatar-policy-state.mjs": "de0ffd83932c0ddb4a9b52dcd68fc6f2cc7d63eb1348b43be627f27f0fb324d9",
+    "gateway/src/avatar-protected-download.mjs": "41ccdaa0d2b33bdf2977d1f9a9cc6550454e03341756d51b7e26d41a981071a9",
+    "gateway/src/avatar-review-coordinator.mjs": "0a9dc44318f68cd9bb9e9466d8fb766cd75ac6dee7fae3dddf06f408bb3d820a",
+    "gateway/src/avatar-review-state.mjs": "b0a857f396ff0c70e51d634ad0b8b95e99547bca8f910c9a33159fb921fb5723",
+    "gateway/src/cloudkit-avatar-reader.mjs": "921255ce8bc6cd57d5fab42d323ea3d6d1a71b8d51d2a8f079d0396484ab44ad",
+    "gateway/src/gateway-maintenance.mjs": "62881e8c880629b5963bc41f3bb4f152ed9d51a9b171181a65a6ecea375f7fa0",
+    "gateway/test/avatar-read.test.mjs": "ab8dac1e34291ed939224689cfe9aecbc32edd05015e7cc24cddb68bf2503c06",
+    "gateway/test/avatar-review-retention.test.mjs": "12a01a236e9e22d75c51137db02268621965fe84d5f3871dbcf48a333d0ce7f6",
+    "gateway/test/avatar-review-workerd.test.mjs": "989f40de9f2c26747e86a9e7a3887ad2acc9e1c77b7e6a9ceb58f6c9d4a407cc",
+    "gateway/test/avatar-review.test.mjs": "99d03f038f452a24e555d9b24e7f43b5cd2d566d8b8179eebf6f25e703c22c84",
+    "gateway/test/support/avatar-review-fixture.mjs": "643c2e9a677ae3262afb8e47d7f5e3e098d8a90253830eaf85562c05c39f9121",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "b3d62a0f349dcbcf19009d0cf94c5807061c53475a3ef2875277434df1876e2a",
+    "Docs/OPERATOR_MODERACJI_ZDJEC.md": "7ec5d08a6ed538bc7d5cb5835d2934e957676f5b5125074590835654e688f5bc",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "c21b0e10a9a9e6052642d63e6f04a3d3d7165d4e1625fc9919a6402b117cf214",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "ca7daf1535d10138b25d9ee7cf2a29a326fb94b6ffd5e24f519f82ec8c7c1621",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "9f7267aa6c1a890c27d424185ecbe0e9fcfec5add14f4049b2cfcae8b7a81cd5",
+    "Docs/DZIENNIK_ZMIAN.md": "e527c63cef0237d06b69b642275b0563f4936c17f76229ee07f383e24d09ce29",
+    "Docs/ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md": "d1abf677b02054ad670aa70e3cc09a3d3f65d28be9fe3788e008584776fd5c72"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-review-first.log": "21660ccb6b815322110da6baf2b80f822c6174e05ed9ad8c1066a23accf550d8",
+    "echoes-avatar-review-focused-first.log": "7906754d0ea4c73e06836194dfaedcce0bbfee47b3e5656fa278dd9f3740555a",
+    "echoes-avatar-review-focused.log": "6140f7e229b7a845f1e703ee9871f350da296aaabc43bd77b66d411b9175631d",
+    "echoes-avatar-review-focused-after-budget.log": "b12cf16ed29b4d46f0564407a6f26c135287bb81c73e06edaca7ac4a4b9bf3fb",
+    "echoes-avatar-review-workerd-first.log": "0d869c71e503a947bcce2660d2cbc0b08b8095841986447763c7fbdefc0ca82a",
+    "echoes-avatar-review-workerd-diagnostic.log": "901da65e45eea2ad952a15c54ef11bc6eddaf7efe7f8a8e7ce998e0421e3deff",
+    "echoes-avatar-review-workerd.log": "d10fcf19fc92b341063d97420f9537a49d1ebd7548ea8fba25dbebac693ad4dc",
+    "echoes-avatar-review-focused-expanded.log": "587f9ffdf9fecf6145e62d70df8cf8e5f07e1b842a021a2e8c77f8434d3f3f8d",
+    "echoes-avatar-review-focused-expanded-final.log": "167bcc2e8f1aa9cabea3fdc5a1a7979f234f3f284a4d5806ceb57f833b77e204",
+    "echoes-avatar-review-focused-with-reader.log": "5b6f65e924d2ce19f9eac85d3600a7eb47fb5de148138b59bad4ea8b790e11ca",
+    "echoes-avatar-review-full-node22.log": "78a54ca579f0bc5eb396d1fdbc0fedd4ad3eb5e68979f5a8dc68691630b3c1a7",
+    "echoes-avatar-review-full-node24.log": "c809e8a9953f14879e06b98fa24e8344465a15edb0d3816cc93816c506c6a6bf",
+    "echoes-avatar-review-syntax-node22.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-avatar-review-syntax-node24.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-avatar-review-negative-operator.log": "ce686aca34d21817556f6354dd6e16bfd49f6ae833d8b5090c29d72c4d323236",
+    "echoes-avatar-review-negative-admission.log": "0add415a5138bcec9795e9f961ee5e85f8c2ed1abe9d8113257585b8c67249a0",
+    "echoes-avatar-review-negative-results.json": "4b27cdb58628822aad1a161c154ca048468b588164245ad75da72331550c66de"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}
