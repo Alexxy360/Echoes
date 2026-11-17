@@ -9,7 +9,11 @@
     @MainActor private final class GatewayCommunityInvalidationRelay {
         weak var host: GatewayCommunityHost?
         weak var services: AppServices?
-        func clearServices() { services?.invalidateNativePresentation() }
+        weak var avatarOwner: GatewayAvatarOwnerController?
+        func clearServices() {
+            avatarOwner?.invalidate()
+            services?.invalidateNativePresentation()
+        }
     }
 
     @MainActor @Observable final class GatewayDevelopmentRuntime {
@@ -18,6 +22,7 @@
         let community: GatewayCommunityHost
         let avatarCache: GatewayAvatarCache
         let avatarUploads: GatewayAvatarUploadJournal
+        let avatarOwner: GatewayAvatarOwnerController
         let avatars: GatewayCommunityAvatarHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
@@ -103,6 +108,12 @@
                 for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
             let avatarUploads = try GatewayAvatarUploadJournal(root: supportRoot)
             self.avatarUploads = avatarUploads
+            avatarOwner = try GatewayAvatarOwnerController(
+                api: GatewayAvatarMutationHTTPClient(
+                    configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, journal: avatarUploads, isEnabled: { activation.isActive() })
+            relay.avatarOwner = avatarOwner
             avatars = try GatewayCommunityAvatarHost(
                 api: GatewayAvatarHTTPClient(
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),

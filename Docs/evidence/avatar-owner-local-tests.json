@@ -1,0 +1,185 @@
+{
+  "stage": "CK-04e.3j.2c",
+  "observedAtUTC": "2026-11-17T12:01:11.701741+00:00",
+  "baselineCommit": "0918c1f45544dc9d5bc29d3276217ea636a28ed4",
+  "checks": {
+    "CloudKit": {
+      "definedTests": 393,
+      "macOS": {
+        "passed": 391,
+        "skipped": 2,
+        "failed": 0
+      },
+      "iOSSimulator": {
+        "passed": 391,
+        "skipped": 2,
+        "failed": 0
+      }
+    },
+    "newPassedTestFunctions": 26,
+    "strictSwiftFormatFiles": 3,
+    "xcresultCountsVerified": true,
+    "newTestIndividualCompletionsVerifiedInMacFocusedAndSimulatorFullLogs": true,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "coreFunctionalGatewayUIProjectLocksDependenciesCIUnchanged": true,
+    "unchangedCoreGatewayUIOrDependencyAuditRepeated": false
+  },
+  "builds": {
+    "Debug": {
+      "passed": true,
+      "newPackageSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "d8a63fb4e66f3e055b85d75239602f8488859d713331e241e695d6bfc0dd83ca",
+        "Echoes.debug.dylib": "745b51bb454e157d48d4ed5fcf6cd89677ee32152a4ba4e86596d730d8548c5f"
+      }
+    },
+    "Release": {
+      "passed": true,
+      "newPackageSourceCompiled": true,
+      "activationAbsent": true,
+      "binarySHA256": {
+        "Echoes": "1d059f1e12f013f6bd9fa7aa87aa876021c364e285a82b3bad6c03f9edec2302"
+      }
+    }
+  },
+  "implemented": [
+    "native/private CloudKit scope, origin, epoch, authorization revision and durable lease around every awaited operation",
+    "one shared controller/transport in isolated Development Runtime and synchronous native/domain invalidation relay",
+    "single unsettled slot including connect/token/journal/API; cancellation and invalidation do not free before actual return",
+    "fresh status before new selection/publication/clear and explicit retransmission/discard; no automatic poll or publication",
+    "persist prepared JPEG/consent/request/version/generation then dispatched before upload; preserve exact IDs and bytes after ambiguity",
+    "recover/status/publish need no local JPEG, expired source cannot retransmit; pending-review/approved are not published",
+    "exact request/version/expectedGeneration+1 before staging/completion; wrong version/generation never discards journal",
+    "uncertain publish reconciles from status without duplicate publish, failed local completion can retry cleanup",
+    "explicit clear atomically replaces pending source and retries same clear even when upload recovery is unavailable",
+    "explicit discard only prepared-unsent or server-proven superseded intent; never auto-discard unknown current work",
+    "snapshot hidden on operation begin/failure/native changes; needsRefresh and pending metadata never carry image bytes",
+    "late401 cannot reject new native authorization, current401 preserves recoverable journal"
+  ],
+  "actualComponents": [
+    "controller MainActor/Observation and existing durable journal/codec/filesystem/ImageIO",
+    "native mutation HTTP client and closed request/response validation in wire bridge",
+    "complete package regression including prior real URLSession delegate tests",
+    "full app Debug/Release compilation, Runtime composition compiled in Debug"
+  ],
+  "modeledComponents": [
+    "native Apple/iCloud and gateway account identity sources, A/B/ABA revisions",
+    "per-account server state and lost replies/errors, no hosted or CloudKit mutations",
+    "journal wrapper delays/errors after real file writes and before remove; not hardware IO failures",
+    "transport of recorded concrete-server wire responses is an actor stub, not HTTPS"
+  ],
+  "wireBridge": {
+    "fixture": "Fixtures/avatar-mutation/responses.json",
+    "replies": [
+      "recover-pending",
+      "status-approved",
+      "publish-published"
+    ],
+    "originalIntentFrom": "upload-pending",
+    "concreteSourceRuntime": [
+      "HTTP edge/Authority",
+      "SQLite",
+      "Wasm/publication policy"
+    ],
+    "actualNativeHTTPClientAndJournal": true,
+    "outgoingRequestJSONEqualsWireIntent": true,
+    "newUploadOrActualURLSessionPerformedByThisBridge": false
+  },
+  "negativeControl": {
+    "copyOnly": true,
+    "mutation": "remove current private iCloud scope equality after native token await",
+    "test": "avatarOwnerICloudChangeDuringFreshTokenPreventsStatusAndMutationDispatch",
+    "failedTests": 1,
+    "issues": 4,
+    "exitCode": 1,
+    "actualSourceSHA256Unchanged": true,
+    "observed": "without private scope equality old context dispatched status/upload after iCloud scope changed"
+  },
+  "firstPasses": {
+    "firstSourceBuildFailed": "local checking function required explicit MainActor",
+    "firstTestBuildFailed": "async short circuit assertions and Optional.none comparison corrected",
+    "basic6Passed": true,
+    "first26FailedTests": 2,
+    "first26Issues": 4,
+    "fixes": [
+      "wire bridge now seeds matching intent from concrete fixture instead of unrelated test UUIDs",
+      "uncertain publication now hides last approved snapshot and sets needsRefresh"
+    ],
+    "final26AndBothFullPlatformsAndBuildsPassed": true
+  },
+  "knownLimits": [
+    "no PhotosPicker/consent/owner UI or AppServices binding yet; explicit consentVersion parameter is not evidence of real human consent",
+    "one controller per Runtime is required; public clients are not a replacement for authoritative server limits",
+    "already dispatched server work may finish after invalidation; no claim of physical rollback or RAM zeroization",
+    "snapshot is last observed owner state, not a grant or continually fresh moderation guarantee",
+    "only synthetic modeled A/B, not required two real ordinary iCloud accounts",
+    "both physical-only FileProtection tests skipped; locked-device evidence still required",
+    "no actual schema/roles/hosts/SIWA/service identity/hosted Free evidence added",
+    "operator/content review/reports/contact/retention/orphans and rest of migration remain",
+    "ordinary app entry still Firebase; not TestFlight-ready"
+  ],
+  "notPerformed": [
+    "unchanged full gateway/Core/UI/dependency audit repeats",
+    "phone install/new SDK window",
+    "remote deployment/activation/schema/roles/keys/secrets/paid plans",
+    "Production/TestFlight/Firebase operations"
+  ],
+  "newTestNames": [
+    "avatarOwnerSubmitPersistsPreparedBytesAndDispatchBeforeNetworkWithoutAutoPublication",
+    "avatarOwnerRequiresConsentAndRefusesOverwritingPendingUpload",
+    "avatarOwnerLostUploadReplyRestoresIDsAndRecoveryNeverRetransmitsJPEG",
+    "avatarOwnerExplicitRetryReusesExactRequestVersionGenerationConsentAndJPEG",
+    "avatarOwnerLostPublishReplyReconcilesPublicationWithoutSecondPublish",
+    "avatarOwnerClearDropsPreparedSourceAndRetriesSameIntentThroughClear",
+    "avatarOwnerInactiveOrMismatchedConfigurationNeverOpensAnAccountOrDispatches",
+    "avatarOwnerInvalidationKeepsSingleSlotUntilAnIgnoringProviderActuallyReturns",
+    "avatarOwnerLateJournalOpenCannotReconnectAnotherAccountOrReleaseAnUnsettledSlot",
+    "avatarOwnerICloudChangeDuringFreshTokenPreventsStatusAndMutationDispatch",
+    "avatarOwnerABARejectsLateUploadAndFreshConnectionRecoversSameAccountIDs",
+    "avatarOwnerBackgroundOrFeatureStopDuringDurableWritesNeverDispatchesJPEG",
+    "avatarOwnerUnknownLocalWriteResultKeepsIDsAndDoesNotSendBeforePersistenceReturns",
+    "avatarOwnerLate401NeverRejectsNewNativeAccount",
+    "avatarOwnerCurrent401ClosesPresentationButPreservesRecoverableIntent",
+    "avatarOwnerErasureDuringUploadPreventsLateACKAndCannotRecreateLocalSource",
+    "avatarOwnerClearRejectsRolledBackGenerationBeforeReplacingPendingSource",
+    "avatarOwnerRejectsWrongUploadAndPublishVersionOrGenerationWithoutForgettingIntent",
+    "avatarOwnerDifferentDeviceSelectionRequiresExplicitDiscardAndFreshGeneration",
+    "avatarOwnerExplicitDiscardAllowsOnlyUnsentOrVerifiedSupersededOperations",
+    "avatarOwnerExpiredSourceCanRecoverAndPublishButCannotRetransmit",
+    "avatarOwnerCallerCancellationKeepsBusyUntilReturnAndThenRecoversUnknownUpload",
+    "avatarOwnerFailedCompletionPersistenceIsReconciledWithoutDuplicatePublication",
+    "avatarOwnerRotatedDurableLeaseStopsDispatchAndLateFencePreservesNewLease",
+    "avatarOwnerUnknownProviderFailureHasNoPrivateDetailsAndPreservesJournal",
+    "avatarOwnerRecoveryAndPublicationConsumeConcreteServerWireFixturesWithoutUpload"
+  ],
+  "sourceAndDocsSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "12070750cd35b00a823d87996e874a8d474c687b476cc8b20fdf9da50684225b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "7d12063d2947174112f1a164b92a93a792e43c9b9c66a3291814a0aeccbf5c28",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "b8bdef31c684200c8a14c9c958ae2d5c2e3712dce3888e96a26769152f2ec051",
+    "Docs/NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md": "af7845cbd35ae47edbaf362466bfabcfd233edad939364e016ce586709856c72",
+    "Docs/NATYWNY_JOURNAL_UPLOADU_AVATAROW.md": "615a55b1d7e6034c6354df3503bb04e43f18def4ae2d51a4a2021d00251a3c83",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "79b2ae4bc91f2532ad0efeb7e7acec41e85ec9f30a80667e35cd742408d8340f",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "1816553d48492d6d64e0e819fe23907e1762f9248000b7032f959cbe3342763d",
+    "Docs/CLOUDKIT_WERYFIKACJA.md": "8b4447b47fbcca60ad47f2b67812990cbc8383b8e2ec6a3562d38d9ba63315df",
+    "Docs/DZIENNIK_ZMIAN.md": "255c8b8e5b13b83808bb50d75fe1752c073c27e6324481ad1d9134a55022a200"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-owner-first-build.log": "5dff02d11eee54cd1caffd7cc7000aba4879e7a32f8e6f53927c796105cdf10e",
+    "echoes-avatar-owner-build.log": "74c6341ed8f18b63a3e0094d05e6a944d13e0a4e4fea9dd061193ec6b3d099b2",
+    "echoes-avatar-owner-focused-first.log": "a499a3dab33558036dc219e8f2e01c129c49fd1c15fe68abc1e932ac3aa9ffd8",
+    "echoes-avatar-owner-focused-six.log": "33ab49283095a976ca7d743f76ac031df21983d670432ce73bd8769ce7d2e1bc",
+    "echoes-avatar-owner-focused.log": "153158656df6bf67266053d6392c15fd803ca103fbdb13fec8731a962e13d715",
+    "echoes-avatar-owner-focused-final.log": "f05a36169afc4d5f31196cabc28b0ab4843be1d3abd677f7c7857249fc1ec7ff",
+    "echoes-avatar-owner-full-mac.log": "1211cf82e2b26fdfc9d416047fe25556392e9c0c5de30696e816d65ca104129f",
+    "echoes-avatar-owner-full-simulator.log": "99967bef5fe0cbc7c88103863fe7eeb91fea872802d1d723a184214d43918a2f",
+    "echoes-avatar-owner-simulator-summary.json": "54c4b48bd4d89821d261b1909a198644c9f09a8716b2185e4fa216effa1589c1",
+    "echoes-avatar-owner-debug.log": "751f1609e46b3db8351b2acf6b943beea274a7d55cf2c6f9e4b22c74280f3cf3",
+    "echoes-avatar-owner-release.log": "4681d73b818d1a62cfa5d4b132580d63714e2c5afdb8abde73b9874f6e473a66",
+    "echoes-avatar-owner-negative.log": "63d2a05e28fd52797074ad138469a9cfe2339c7ab7e49790bb7b6fd7392ea6d6",
+    "echoes-avatar-owner-negative-result.json": "84d4af1432dc3a5a3e424253c9aefeec796b953310df8556de1be3540c99d531",
+    "echoes-avatar-owner-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}
