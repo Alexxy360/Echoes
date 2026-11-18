@@ -97,16 +97,16 @@ struct ChatView: View {
                 }
             }
             .safeAreaInset(edge: .top) { SessionFeedback(session: session) }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if inputFocused {
+                    KeyboardDismissControl(identifier: "chat.keyboard.hide") { inputFocused = false }
+                }
+            }
             .background(Color.meddleNavy).navigationTitle("Lokalny kanał").navigationBarTitleDisplayMode(
                 .inline
             )
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Zamknij") { dismiss() } }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Ukryj klawiaturę") { inputFocused = false }
-                        .accessibilityIdentifier("chat.keyboard.hide")
-                }
             }
             .task {
                 session.isChatOpen = true

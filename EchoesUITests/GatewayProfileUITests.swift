@@ -180,4 +180,21 @@ import XCTest
         enter.tap()
         XCTAssertTrue(app.staticTexts["Twój profil jest ukryty."].waitForExistence(timeout: 10))
     }
+
+    func testLargestTextCanDismissOnboardingKeyboardWithoutChangingPrivateName() {
+        let app = application("profile-onboarding", large: true)
+        XCTAssertTrue(element(app, "profile.loaded").waitForExistence(timeout: 10))
+        let field = element(app, "onboarding.name")
+        reveal(app, field)
+        let original = field.value as? String
+        field.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10))
+        let hide = app.buttons["onboarding.keyboard.hide"]
+        XCTAssertTrue(hide.waitForExistence(timeout: 5) && hide.isHittable)
+        attach(app, "profile-onboarding-keyboard-largest-text")
+        hide.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 10))
+        XCTAssertEqual(field.value as? String, original)
+        XCTAssertTrue(element(app, "onboarding.enter").exists)
+    }
 }

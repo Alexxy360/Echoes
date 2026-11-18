@@ -20,7 +20,7 @@ struct SettingsView: View {
                 Section("Twój profil") {
                     TextField("Pseudonim", text: $name).textContentType(.nickname)
                         .focused($nameFocused).autocorrectionDisabled()
-                        .onSubmit { nameFocused = false }
+                        .submitLabel(.done).onSubmit { nameFocused = false }
                         .disabled(services.isUpdatingName || (services.privateProfile?.isBusy ?? false))
                         .accessibilityIdentifier("settings.name")
                     Button("Zapisz pseudonim") {
@@ -115,14 +115,14 @@ struct SettingsView: View {
                 }
             }
             .safeAreaInset(edge: .top) { SessionFeedback(session: services.session) }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if nameFocused {
+                    KeyboardDismissControl(identifier: "settings.keyboard.hide") { nameFocused = false }
+                }
+            }
             .navigationTitle("Ustawienia")
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) { Button("Gotowe") { dismiss() } }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Ukryj klawiaturę") { nameFocused = false }
-                        .accessibilityIdentifier("settings.keyboard.hide")
-                }
             }
             .onAppear { name = services.session.name }
             .sheet(item: $avatarEditor) { session in

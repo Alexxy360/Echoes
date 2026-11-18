@@ -142,4 +142,22 @@ import XCTest
         XCTAssertLessThanOrEqual(draft.frame.maxY, banner.frame.minY + 1)
         attach(app, "community-pending-large-text")
     }
+
+    func testLargestTextCanDismissChatKeyboardWithoutSendingOrLosingDraft() {
+        let app = application("happy", large: true)
+        let draft = chat(app)
+        draft.tap()
+        let text = "Pierwszy wiersz\nDrugi wiersz"
+        draft.typeText(text)
+        XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 10))
+        let hide = app.buttons["chat.keyboard.hide"]
+        XCTAssertTrue(hide.waitForExistence(timeout: 5) && hide.isHittable)
+        XCTAssertEqual(draft.value as? String, text)
+        attach(app, "community-chat-keyboard-largest-text")
+        hide.tap()
+        XCTAssertTrue(app.keyboards.firstMatch.waitForNonExistence(timeout: 10))
+        XCTAssertEqual(draft.value as? String, text)
+        XCTAssertFalse(app.staticTexts[text].exists)
+        XCTAssertTrue(app.buttons["chat.send"].isEnabled)
+    }
 }

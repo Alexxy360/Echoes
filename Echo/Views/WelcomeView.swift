@@ -33,7 +33,7 @@ struct WelcomeView: View {
                 )
                 .accessibilityIdentifier("onboarding.name")
                 .focused($nameFocused).autocorrectionDisabled()
-                .onSubmit { nameFocused = false }
+                .submitLabel(.done).onSubmit { nameFocused = false }
                 Button(action: enter) {
                     if isEntering {
                         ProgressView("Łączenie…").frame(maxWidth: .infinity)
@@ -57,11 +57,9 @@ struct WelcomeView: View {
             .padding(24).frame(maxWidth: 560).frame(maxWidth: .infinity)
         }
         .background(Color.meddleNavy).onAppear { name = services.savedName }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Ukryj klawiaturę") { nameFocused = false }
-                    .accessibilityIdentifier("onboarding.keyboard.hide")
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if nameFocused {
+                KeyboardDismissControl(identifier: "onboarding.keyboard.hide") { nameFocused = false }
             }
         }
         .onChange(of: services.savedName) { _, saved in

@@ -1,0 +1,197 @@
+{
+  "stage": "UI-01",
+  "createdAt": "2026-11-18T14:36:26.648185+00:00",
+  "baselineCommit": "b37a7abf9f2d17b72cfee522486b636184c33768",
+  "acceptedDistinctFinalUI": 11,
+  "newUIFunctions": 4,
+  "runs": {
+    "originalWithDirectStack": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        }
+      ],
+      "cases": [
+        "GatewaySettingsUITests testPhotoSettingsRemainReachableWithLargestAccessibilityText"
+      ],
+      "log": "/private/tmp/echoes-runtime-issue-direct-stack.log",
+      "logSHA256": "5f8d72560fdfc5cac6afce1e874ef64692122020982bcab2d4426304902e93c4",
+      "summarySHA256": "ebcc5307e17194a523000aba8177cb3626e7e32223516ca97fe16d5797fa415e"
+    },
+    "conditionalAccessoryStillWarnsOnFocus": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [
+        {
+          "issueType": "Runtime Warning",
+          "message": "Invalid frame dimension (negative or non-finite)."
+        }
+      ],
+      "cases": [
+        "GatewaySettingsUITests testNicknameKeyboardCanBeDismissedWithLargestAccessibilityText",
+        "GatewaySettingsUITests testPhotoSettingsRemainReachableWithLargestAccessibilityText"
+      ],
+      "log": "/private/tmp/echoes-frame-warning-settings-focused.log",
+      "logSHA256": "aa762ba0e9ff1c174d2f72c350d58b65fa8309d28275c023d63c12c8a925bdf0",
+      "summarySHA256": "bcb2acdca8348325c8517256a0934e97945aa0d69347ef4c0ee2906632798138"
+    },
+    "firstSafeAreaCheck": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "cases": [
+        "GatewaySettingsUITests testNicknameKeyboardCanBeDismissedWithLargestAccessibilityText",
+        "GatewaySettingsUITests testPhotoSettingsRemainReachableWithLargestAccessibilityText"
+      ],
+      "log": "/private/tmp/echoes-keyboard-safe-area-settings.log",
+      "logSHA256": "6b59c939d45cfc2b6a778311eb9e48aea75e64b03df19a7c1587f231da31a03a",
+      "summarySHA256": "a9f87d3617e848680378f73903be3fcf79b2d43e7fed424e8850a9c17f0eeea0"
+    },
+    "finalRegression": {
+      "total": 10,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "cases": [
+        "GatewayAvatarEditorUITests testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText",
+        "GatewayCommunityUITests testLargestTextCanDismissChatKeyboardWithoutSendingOrLosingDraft",
+        "GatewayCommunityUITests testLargeTextKeepsRecoveryActionsWithinScrollableContent",
+        "GatewayCommunityUITests testNativeChatSendsAndSettingsRouteToAppleDeletionFlow",
+        "GatewayCommunityUITests testPendingRetryKeepsEditedNewDraft",
+        "GatewayProfileUITests testLargestTextCanDismissOnboardingKeyboardWithoutChangingPrivateName",
+        "GatewayProfileUITests testLargeTextKeepsRestoredNameAndConsentActionAccessible",
+        "GatewayProfileUITests testNewPrivateNameDoesNotImportLegacyAndSurvivesNewPresentation",
+        "GatewaySettingsUITests testNicknameKeyboardCanBeDismissedWithLargestAccessibilityText",
+        "GatewaySettingsUITests testPhotoSettingsRemainReachableWithLargestAccessibilityText"
+      ],
+      "log": "/private/tmp/echoes-keyboard-safe-area-regression.log",
+      "logSHA256": "95dd617b0b71a3d7209174d0780a4d9d0e224469addf84c8c73154473dd095bc",
+      "summarySHA256": "bd75c57e8c3ad4416d261bbaebb891dc09c65c6071277aa5dcd9ff002b46a821"
+    },
+    "finalProfileConflictEdit": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "runtimeWarnings": [],
+      "cases": [
+        "GatewayProfileUITests testConflictPreservesDraftAndOnlyExplicitSaveAfterReloadChangesSessionName"
+      ],
+      "log": "/private/tmp/echoes-keyboard-safe-area-profile-edit.log",
+      "logSHA256": "069e3e18d613af8462850e9e30c11a970ba313514121e8f6008d269d3faa7f58",
+      "summarySHA256": "3196a98f61538a9381453e7a00f067013d54f7ee4ab489bb707d224aefb851df"
+    }
+  },
+  "sourceSHA256": {
+    "Echo/ChatView.swift": "642d031f8ba1ec1f48abbbeba8416a5f708501ce7841e2cac4b452e6d56867d4",
+    "Echo/Views/SettingsView.swift": "d8a19b54f1ee2bc586646736935ee796385b5e84ee4280aef625f64de37aa29f",
+    "Echo/Views/WelcomeView.swift": "c4491c1616487c93dd36237e4f48b8e2c0d70b58e5097158de739fc8132a1a94",
+    "Echo/Views/KeyboardDismissControl.swift": "428f0660524dfac0877fec8363f0d98cf93da06505031225508db9801938a182",
+    "EchoesUITests/GatewayCommunityUITests.swift": "66633af2d1c22b10f2b81b7f09e3926b66f7e1f3f56ad9336ae072d012314589",
+    "EchoesUITests/GatewayProfileUITests.swift": "16b3ec71f9cefef1b4266955693ab917546940809c108cf4045ffda089e142d6",
+    "EchoesUITests/GatewaySettingsUITests.swift": "ee6ff0f7c3d97507c960f526c6bb366508acde05446f0c496974717c6dc3955b"
+  },
+  "runtimeIssueStack": {
+    "fullSelectedTrace": "/private/tmp/echoes-frame-warning-relevant-stack.json",
+    "SHA256": "53e20417d2f3fe3b1edc9fefc9189704787fad8d6de25ff0f3c12e25e87a6c57",
+    "firstFrames": [
+      "one-time initialization function for runtimeIssuesLog",
+      "_dispatch_client_callout",
+      "_dispatch_once_callout",
+      "function signature specialization <Arg[3] = Dead> of SwiftUI._FrameLayout.init(width: Swift.Optional<CoreGraphics.CGFloat>, height: Swift.Optional<CoreGraphics.CGFloat>, alignment: SwiftUI.Alignment) -> SwiftUI._FrameLayout",
+      "SwiftUI._FrameLayout.init(width: Swift.Optional<CoreGraphics.CGFloat>, height: Swift.Optional<CoreGraphics.CGFloat>, alignment: SwiftUI.Alignment) -> SwiftUI._FrameLayout",
+      "SwiftUI.InputAccessoryBar.body.getter : some",
+      "closure #1 @Swift.MainActor () -> () in SwiftUI.ViewBodyAccessor.updateBody(of: τ_0_0, changed: Swift.Bool) -> ()",
+      "SwiftUI.ViewBodyAccessor.updateBody(of: τ_0_0, changed: Swift.Bool) -> ()",
+      "protocol witness for SwiftUI.BodyAccessor.updateBody(of: τ_0_0.Container, changed: Swift.Bool) -> () in conformance SwiftUI.ViewBodyAccessor<τ_0_0> : SwiftUI.BodyAccessor in SwiftUI",
+      "closure #1 () -> () in SwiftUI.StaticBody.updateValue() -> ()",
+      "SwiftUI.StaticBody.updateValue() -> ()",
+      "partial apply forwarder for implicit closure #1 (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 () -> (Swift.UnsafeMutableRawPointer, __C.AGAttribute) -> () in closure #1 (Swift.UnsafePointer<τ_1_0>) -> AttributeGraph.Attribute<τ_0_0> in AttributeGraph.Attribute.init<τ_0_0 where τ_0_0 == τ_1_0.Value, τ_1_0: AttributeGraph.StatefulRule>(τ_1_0) -> AttributeGraph.Attribute<τ_0_0>"
+    ],
+    "limitation": "Identifies the InputAccessoryBar path, not internal iOS layout arithmetic."
+  },
+  "interruptedDiagnostic": {
+    "log": "/private/tmp/echoes-runtime-issue-settings.log",
+    "SHA256": "9eb12988caf230ae51741bf36d38cb6391781bf1e6e03dcf047dc9436cc90957",
+    "exitCode": 75,
+    "accepted": false,
+    "reason": "Assertions completed; command cancelled during stuck simctl sysdiagnose."
+  },
+  "earlierUnsuccessfulStackCaptureLogsSHA256": {
+    "echoes-frame-warning-baseline.log": "904720c5397bc37f2ad76c036ff62168aaf52ec68f7ce6554fda98775777118e",
+    "echoes-frame-warning-settings-baseline.log": "37e468a5a0449711e0106f885dd20f6bcbfcd605a95c1f5c55ce795d4ef80a27",
+    "echoes-frame-warning-settings-stack.log": "4b3fd168a87a95b254afc0a57cec0154b6bdd3ba211fab8945ceaa1f7f5c166a"
+  },
+  "builds": {
+    "Debug": "passed with final UI test build",
+    "unsignedRelease": "passed",
+    "releaseLogSHA256": "8fd5d522127f76c292c7e4be4098cf4ef992f641505678a767436fec51224124"
+  },
+  "strictFormat": {
+    "files": 7,
+    "passed": true,
+    "logSHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "screenshots": {
+    "Docs/evidence/keyboard-ui/settings-keyboard-ax.png": {
+      "SHA256": "bdd0663fb4101e500380df1fe8644fbf94e98f61fc5bf38e9722a18526b89ea4",
+      "source": "/private/tmp/echoes-keyboard-safe-area-regression-attachments/C49EE124-20F3-46C0-9F29-B03F7975D350.png",
+      "visuallyInspected": true
+    },
+    "Docs/evidence/keyboard-ui/chat-keyboard-ax.png": {
+      "SHA256": "892b16741371bdcc16bba9998e4db39a81ca5d8b97deb70bb6dea0e67c4304fe",
+      "source": "/private/tmp/echoes-keyboard-safe-area-regression-attachments/6A426E7A-7721-4F3F-88BE-EBDE32B64C35.png",
+      "visuallyInspected": true
+    },
+    "Docs/evidence/keyboard-ui/onboarding-keyboard-ax.png": {
+      "SHA256": "f1c0eb0c56f949ae90f6698c81150bb672b947cc36bbd3cc628c307c4b7c8b79",
+      "source": "/private/tmp/echoes-keyboard-safe-area-regression-attachments/D3500CBD-4534-4037-BC00-C4780CC3D62F.png",
+      "visuallyInspected": true
+    }
+  },
+  "unchanged": [
+    "EchoesCloudKit",
+    "EchoesCore",
+    "gateway",
+    "dependencies",
+    "CI",
+    "Xcode project"
+  ],
+  "unchangedNativePreviousResultOnly": {
+    "defined": 556,
+    "passed": 554,
+    "physicalDeviceSkipped": 2,
+    "rerunInThisStage": false
+  },
+  "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "scope": {
+    "realSwiftUIAndSimulatorKeyboard": true,
+    "syntheticIdentitiesAndServiceModels": true,
+    "remoteActivation": false,
+    "newSecretsOrPermissions": false,
+    "fees": false,
+    "physicalDeviceSDKTest": false,
+    "ProductionChanges": false,
+    "FirebaseChanges": false,
+    "TestFlightPublication": false
+  },
+  "openGates": [
+    "VoiceOver and physical/hardware keyboard",
+    "other platforms and full regression",
+    "two ordinary iCloud accounts and separate service identity",
+    "real schema/roles/SIWA/asset hosts/Free limits",
+    "reports/contact/retention",
+    "remaining migration plan and controlled TestFlight readiness"
+  ]
+}
