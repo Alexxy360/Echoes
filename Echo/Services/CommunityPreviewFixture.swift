@@ -30,6 +30,7 @@
                     "avatars", "avatars-denied", "avatars-corrupt", "avatars-delayed",
                     "avatar-owner", "avatar-owner-approved", "avatar-owner-lost", "avatar-owner-delayed",
                     "avatar-owner-no-location", "avatar-owner-publish-lost",
+                    "avatar-owner-existing-approved", "avatar-owner-existing-pending",
                 ].contains(mode)
             else { throw GatewayFailure.configuration }
             self.mode = mode

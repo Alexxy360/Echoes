@@ -5,8 +5,14 @@ import Testing
 @testable import EchoesCloudKit
 
 @MainActor private func editorHost(_ f: OwnerFlowFixture) throws -> GatewayAvatarEditorHost {
-    try .init(
+    let wire = try OwnerPreviewWireFixture()
+    let clock = OwnerPreviewClock(wire.now)
+    let api = OwnerPreviewHostAPI(fixture: wire, clock: clock, origin: f.configuration.origin.absoluteString)
+    return try .init(
         controller: f.controller, cloudKit: f.cloudKit, authorization: f.authorization,
+        ownerPreview: GatewayAvatarOwnerPreviewHost(
+            api: api, configuration: f.configuration, cloudKit: f.cloudKit, authorization: f.authorization,
+            isEnabled: { f.flags.enabled }, date: { clock.date() }, uptime: { clock.up() }),
         isEnabled: { f.flags.enabled })
 }
 
@@ -62,8 +68,15 @@ import Testing
     #expect(!session.canPublish && !session.canChoosePhoto)
     try await f.api.review(.approved)
     await session.perform(.refresh)
+    session.setForeground(true)
+    #expect(!session.canPublish)
+    await session.loadPublicationPreview()
+    let approved = try #require(session.publicationPresentation)
+    try session.acknowledgePublicationDisplay(approved)
     #expect(session.canPublish)
     await session.perform(.publish)
+    #expect(session.snapshot?.status == .approved)
+    await session.confirmPublication(approved)
     #expect(session.snapshot?.status == .published && session.pendingOperation == nil)
 }
 @Test @MainActor func avatarEditorOldSheetCannotReadOrCloseANewerSheet() async throws {

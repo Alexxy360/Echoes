@@ -14,7 +14,19 @@
         init(mode: String, source: any GatewayAvatarAuthorizationSource, cloudKit: CloudKitConfiguration)
             throws
         {
-            api = AvatarEditorPreviewAPI(mode: mode)
+            let format = UIGraphicsImageRendererFormat()
+            format.scale = 1
+            format.opaque = true
+            let renderer = UIGraphicsImageRenderer(size: .init(width: 256, height: 256), format: format)
+            let bytes = renderer.jpegData(withCompressionQuality: 0.8) { context in
+                UIColor.systemTeal.setFill()
+                context.fill(.init(x: 0, y: 0, width: 256, height: 256))
+                UIImage(systemName: "person.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
+                    .draw(in: .init(x: 64, y: 48, width: 128, height: 160))
+            }
+            api = try AvatarEditorPreviewAPI(
+                mode: mode,
+                seed: mode.hasPrefix("avatar-owner-existing-") ? AvatarPreparer.prepare(bytes) : nil)
             let configuration = try GatewayConfiguration(origin: URL(string: api.origin)!)
             let root = FileManager.default.temporaryDirectory.appendingPathComponent(
                 "Echoes-owner-photo-preview-" + UUID().uuidString)
@@ -28,17 +40,10 @@
                 isEnabled: { true },
                 presentationChanged: { [weak avatars] in avatars?.observeOwner($0, snapshot: $1) })
             host = try GatewayAvatarEditorHost(
-                controller: controller, cloudKit: cloudKit, authorization: source, isEnabled: { true })
-            let format = UIGraphicsImageRendererFormat()
-            format.scale = 1
-            format.opaque = true
-            let renderer = UIGraphicsImageRenderer(size: .init(width: 256, height: 256), format: format)
-            let bytes = renderer.jpegData(withCompressionQuality: 0.8) { context in
-                UIColor.systemTeal.setFill()
-                context.fill(.init(x: 0, y: 0, width: 256, height: 256))
-                UIImage(systemName: "person.fill")?.withTintColor(.white, renderingMode: .alwaysOriginal)
-                    .draw(in: .init(x: 64, y: 48, width: 128, height: 160))
-            }
+                controller: controller, cloudKit: cloudKit, authorization: source,
+                ownerPreview: GatewayAvatarOwnerPreviewHost(
+                    api: api, configuration: configuration, cloudKit: cloudKit, authorization: source,
+                    isEnabled: { true }), isEnabled: { true })
             selection = {
                 let task = Task.detached(priority: .utility) {
                     let file = FileManager.default.temporaryDirectory.appendingPathComponent(
@@ -55,7 +60,8 @@
             }
         }
     }
-    actor AvatarEditorPreviewAPI: GatewayAvatarMutationAPI, GatewayAvatarReadAPI {
+    actor AvatarEditorPreviewAPI: GatewayAvatarMutationAPI, GatewayAvatarReadAPI, GatewayAvatarOwnerPreviewAPI
+    {
         nonisolated let origin = "https://community-preview.example.invalid"
         private let approved: Bool
         private var loseUpload: Bool
@@ -66,20 +72,26 @@
         private var photos: [String: PreparedAvatar] = [:]
         private var selectedOwner = "11111111-1111-4111-8111-111111111111"
         func selectOwner(_ value: String) { selectedOwner = value }
-        init(mode: String) {
+        init(mode: String, seed: PreparedAvatar? = nil) throws {
             approved =
                 mode == "avatar-owner-approved" || mode == "avatar-owner-no-location"
-                || mode == "avatar-owner-publish-lost"
+                || mode == "avatar-owner-publish-lost" || mode == "avatar-owner-existing-approved"
             loseUpload = mode == "avatar-owner-lost"
             losePublication = mode == "avatar-owner-publish-lost"
             delayed = mode == "avatar-owner-delayed"
+            if let seed {
+                photos[selectedOwner] = seed
+                states[selectedOwner] = try snapshot(
+                    generation: 1, request: UUID().uuidString.lowercased(),
+                    version: UUID().uuidString.lowercased(), status: approved ? .approved : .pendingReview)
+            }
         }
         func release() {
             delayed = false
             waiting?.resume()
             waiting = nil
         }
-        private func snapshot(
+        nonisolated private func snapshot(
             generation: Int = 0, request: String? = nil, version: String? = nil,
             status: GatewayAvatarOwnerStatus = .none
         ) throws -> GatewayAvatarOwnerSnapshot {
@@ -137,6 +149,42 @@
             }
             return value
         }
+        func preview(_ query: GatewayAvatarOwnerPreviewQuery, token: GatewaySecret) async throws
+            -> GatewayAvatarOwnerPreview
+        {
+            let owner = selectedOwner
+            guard query.ownerID == owner, let state = states[owner], state.status == .approved,
+                query.selection.matches(state), let photo = photos[owner],
+                let source = CGImageSourceCreateWithData(photo.image as CFData, nil),
+                let fields = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+                let width = fields[kCGImagePropertyPixelWidth] as? NSNumber,
+                let height = fields[kCGImagePropertyPixelHeight] as? NSNumber
+            else { throw GatewayAvatarFailure.notFound }
+            let manifest: [String: Any] = [
+                "schemaVersion": 1, "ownerID": owner, "versionID": query.selection.versionID,
+                "variant": "image", "byteCount": photo.image.count, "width": width, "height": height,
+                "sha256": SHA256.hash(data: photo.image).map { String(format: "%02x", $0) }.joined(),
+            ]
+            let proof: [String: Any] = [
+                "schemaVersion": 1, "requestID": query.selection.requestID,
+                "versionID": query.selection.versionID,
+                "generation": query.selection.generation, "reviewRevision": query.selection.reviewRevision,
+            ]
+            let response = GatewayAvatarHTTPResponse(
+                status: 200,
+                headers: [
+                    "Content-Type": "image/jpeg", "Content-Length": String(photo.image.count),
+                    "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff",
+                    "X-Echoes-Avatar-Manifest": String(
+                        decoding: try JSONSerialization.data(withJSONObject: manifest), as: UTF8.self),
+                    "X-Echoes-Avatar-Selection": String(
+                        decoding: try JSONSerialization.data(withJSONObject: proof), as: UTF8.self),
+                ], body: photo.image)
+            return try await GatewayAvatarOwnerPreviewHTTPClient(
+                configuration: .init(origin: URL(string: origin)!),
+                transport: AvatarEditorOwnerPreviewTransport(response: response), isEnabled: { true }
+            ).preview(query, token: token)
+        }
         func read(_ query: GatewayAvatarQuery, token: GatewaySecret) async throws -> GatewayAvatarReply {
             let owner = query.reference.ownerID
             guard owner == selectedOwner, let state = states[owner], state.status == .published,
@@ -158,6 +206,13 @@
             return query.knownSHA256 == digest
                 ? .revalidated(manifest: manifest) : .downloaded(manifest: manifest, bytes: bytes)
         }
+    }
+    private actor AvatarEditorOwnerPreviewTransport: GatewayAvatarOwnerPreviewTransport {
+        let response: GatewayAvatarHTTPResponse
+        init(response: GatewayAvatarHTTPResponse) { self.response = response }
+        func send(_ request: URLRequest, query: GatewayAvatarOwnerPreviewQuery) async throws
+            -> GatewayAvatarHTTPResponse
+        { response }
     }
     extension GatewayAvatarMutation {
         nonisolated fileprivate var isUploadForPreview: Bool {

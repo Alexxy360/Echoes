@@ -140,6 +140,12 @@
                 presentationChanged: { relay.avatars?.observeOwner($0, snapshot: $1) })
             avatarEditor = try GatewayAvatarEditorHost(
                 controller: avatarOwner, cloudKit: activation.cloudKit, authorization: auth,
+                ownerPreview: GatewayAvatarOwnerPreviewHost(
+                    api: GatewayAvatarOwnerPreviewHTTPClient(
+                        configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                    configuration: activation.configuration, cloudKit: activation.cloudKit,
+                    authorization: auth,
+                    isEnabled: { activation.isActive() }),
                 isEnabled: { activation.isActive() })
             relay.avatarEditor = avatarEditor
             avatars = try GatewayCommunityAvatarHost(

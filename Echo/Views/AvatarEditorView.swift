@@ -37,6 +37,7 @@ struct AvatarEditorView: View {
                         previewSelection: previewSelection.map { action in
                             { @Sendable in try await action() }
                         })
+                    AvatarApprovedPreviewSection(session: session)
                     AvatarEditorActionsSection(session: session) { confirmation = $0 }
                 } else {
                     Section {
@@ -52,7 +53,10 @@ struct AvatarEditorView: View {
                 AvatarEditorConfirmationView(session: session, confirmation: intent)
             }
         }
-        .task { await session.perform(.refresh) }
+        .task {
+            session.setForeground(scenePhase == .active)
+            await session.perform(.refresh)
+        }
         .task(id: photo) { await prepareSelection() }
         .onDisappear { session.close() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { close() } }

@@ -22,6 +22,8 @@ public enum GatewayAvatarEditorAction: Sendable {
     private let cloudKit: CloudKitConfiguration
     private let source: any GatewayAvatarAuthorizationSource
     private let isEnabled: @MainActor () -> Bool
+    private let ownerPreview: GatewayAvatarOwnerPreviewHost?
+    private var foreground = false
     private var context: Context?
     @ObservationIgnored private weak var editor: GatewayAvatarEditorSession?
     @ObservationIgnored private var cancelWork: (@MainActor () -> Void)?
@@ -30,6 +32,7 @@ public enum GatewayAvatarEditorAction: Sendable {
     public init(
         controller: GatewayAvatarOwnerController, cloudKit: CloudKitConfiguration,
         authorization: any GatewayAvatarAuthorizationSource,
+        ownerPreview: GatewayAvatarOwnerPreviewHost? = nil,
         isEnabled: @escaping @MainActor () -> Bool = { false }
     ) throws {
         guard cloudKit.containerIdentifier == "iCloud.mpvEcho.Echo", cloudKit.environment == .development
@@ -38,6 +41,7 @@ public enum GatewayAvatarEditorAction: Sendable {
         self.cloudKit = cloudKit
         source = authorization
         self.isEnabled = isEnabled
+        self.ownerPreview = ownerPreview
     }
     public func open(isCurrent: @escaping @MainActor () -> Bool) throws -> GatewayAvatarEditorSession {
         guard isEnabled(), isCurrent(), let native = source.communityAuthorization,
@@ -52,6 +56,8 @@ public enum GatewayAvatarEditorAction: Sendable {
         return value
     }
     public func invalidate() {
+        foreground = false
+        ownerPreview?.setForeground(false)
         context = nil
         editor?.clearLocal()
         editor = nil
@@ -66,7 +72,96 @@ public enum GatewayAvatarEditorAction: Sendable {
         return isEnabled() && context.isCurrent() && source.communityAuthorization == context.native
             && source.privateDataScope(configuration: cloudKit) == context.owner
     }
-    fileprivate var busy: Bool { working != nil || controller.isBusy }
+    fileprivate var busy: Bool { working != nil || controller.isBusy || ownerPreview?.isBusy == true }
+    fileprivate func setForeground(_ active: Bool, id: UUID) {
+        guard current(id) else { return }
+        foreground = active
+        ownerPreview?.setForeground(active)
+        if !active { invalidate() }
+    }
+    private func selectedApproved(_ id: UUID) -> GatewayAvatarPublishIntent? {
+        guard current(id), editor?.id == id, editor?.draft == nil,
+            controller.isConnected, !controller.needsRefresh,
+            let snapshot = controller.snapshot, snapshot.status == .approved,
+            let selected = try? GatewayAvatarPublishIntent(snapshot: snapshot)
+        else { return nil }
+        if let entry = controller.pendingOperation {
+            switch entry.intent {
+            case .upload(let intent):
+                guard entry.phase == .staged, intent.requestID == selected.requestID,
+                    intent.versionID == selected.versionID,
+                    intent.expectedGeneration + 1 == selected.generation
+                else { return nil }
+            case .publish(let saved): guard saved == selected else { return nil }
+            case .clear: return nil
+            }
+        }
+        return selected
+    }
+    fileprivate func canLoadPreview(_ id: UUID) -> Bool {
+        foreground && ownerPreview != nil && !busy && selectedApproved(id) != nil
+    }
+    fileprivate func presentation(_ id: UUID) -> GatewayAvatarOwnerPreviewPresentation? {
+        guard foreground, !busy, let selected = selectedApproved(id), let ownerPreview,
+            let handle = ownerPreview.presentation, ownerPreview.matches(handle, selection: selected)
+        else { return nil }
+        return handle
+    }
+    fileprivate func image(_ handle: GatewayAvatarOwnerPreviewPresentation, id: UUID) -> CGImage? {
+        guard presentation(id) == handle else { return nil }
+        return ownerPreview?.image(for: handle)
+    }
+    fileprivate func acknowledgeDisplay(_ handle: GatewayAvatarOwnerPreviewPresentation, id: UUID) throws {
+        guard presentation(id) == handle else { throw GatewayAvatarOwnerPreviewHostFailure.displayRequired }
+        try ownerPreview?.acknowledgeDisplay(handle)
+    }
+    fileprivate func canConfirm(_ handle: GatewayAvatarOwnerPreviewPresentation, id: UUID) -> Bool {
+        presentation(id) == handle && ownerPreview?.canConfirm(handle) == true
+    }
+    fileprivate func loadPreview(_ session: GatewayAvatarEditorSession) async {
+        do {
+            guard canLoadPreview(session.id), let selected = selectedApproved(session.id), let ownerPreview
+            else {
+                throw GatewayAvatarOwnerPreviewHostFailure.displayRequired
+            }
+            let token = try begin(session.id)
+            defer { finish(token) }
+            cancelWork = { ownerPreview.invalidate() }
+            let sessionID = session.id
+            try ownerPreview.open { [weak self] in
+                guard let self else { return false }
+                return self.current(sessionID) && self.selectedApproved(sessionID) == selected
+                    && !self.controller.isBusy
+            }
+            try await ownerPreview.load(selected)
+            try check(session.id)
+        } catch { session.fail(error) }
+    }
+    fileprivate func confirmPublication(
+        _ handle: GatewayAvatarOwnerPreviewPresentation, session: GatewayAvatarEditorSession
+    ) async {
+        do {
+            guard canConfirm(handle, id: session.id), let selected = selectedApproved(session.id),
+                let ownerPreview
+            else {
+                throw GatewayAvatarOwnerPreviewHostFailure.displayRequired
+            }
+            let token = try begin(session.id)
+            defer { finish(token) }
+            cancelWork = { [controller] in
+                ownerPreview.invalidate()
+                controller.invalidate()
+            }
+            let confirmed = try await ownerPreview.confirmSelection(handle)
+            try check(session.id)
+            guard confirmed == selected, selectedApproved(session.id) == selected else {
+                throw GatewayAvatarMutationFailure.stale
+            }
+            ownerPreview.invalidate()
+            try await controller.publish(selected: confirmed)
+            try check(session.id)
+        } catch { session.fail(error) }
+    }
     private func check(_ id: UUID) throws {
         guard current(id) else { throw GatewayAvatarOwnerFailure.superseded }
         if Task.isCancelled { throw GatewayFailure.cancelled }
@@ -93,6 +188,7 @@ public enum GatewayAvatarEditorAction: Sendable {
             let token = try begin(session.id)
             defer { finish(token) }
             preparing = true
+            ownerPreview?.invalidate()
             session.clearLocal()
             let task = Task.detached(priority: .utility) { () async throws -> AvatarEditorDraft in
                 let prepared = try await load()
@@ -111,13 +207,12 @@ public enum GatewayAvatarEditorAction: Sendable {
     }
     fileprivate func perform(_ action: GatewayAvatarEditorAction, session: GatewayAvatarEditorSession) async {
         do {
-            // Source-free publication needs the upcoming protected author preview/confirmation UI.
-            // Keep the existing editor limited to its already selected staged upload meanwhile.
-            if case .publish = action, !session.canPublish {
-                throw GatewayAvatarUploadJournalFailure.invalidTransition
+            if case .publish = action {
+                throw GatewayAvatarOwnerPreviewHostFailure.displayRequired
             }
             let token = try begin(session.id)
             defer { finish(token) }
+            ownerPreview?.invalidate()
             cancelWork = { [controller] in controller.invalidate() }
             switch action {
             case .refresh:
@@ -134,7 +229,7 @@ public enum GatewayAvatarEditorAction: Sendable {
                 try await controller.submit(draft.prepared, consentVersion: 1)
             case .recover: try await controller.recover()
             case .retryUpload: try await controller.retryUpload()
-            case .publish: try await controller.publish()
+            case .publish: throw GatewayAvatarOwnerPreviewHostFailure.displayRequired
             case .clear:
                 session.clearLocal()
                 try await controller.clear()
@@ -214,12 +309,24 @@ private struct AvatarEditorDraft: Sendable {
         return entry.phase == .prepared || entry.phase == .dispatched
     }
     public var canPublish: Bool {
-        guard isConnected, !isBusy, !needsRefresh, let entry = pendingOperation,
-            case .upload(let intent) = entry.intent, let value = snapshot, value.status == .approved
-        else { return false }
-        return entry.phase != .prepared && value.requestID == intent.requestID
-            && value.versionID == intent.versionID
-            && value.generation == intent.expectedGeneration + 1
+        guard let handle = publicationPresentation else { return false }
+        return host.canConfirm(handle, id: id)
+    }
+    public var canLoadPublicationPreview: Bool { host.canLoadPreview(id) }
+    public var publicationPresentation: GatewayAvatarOwnerPreviewPresentation? { host.presentation(id) }
+    public func publicationImage(for handle: GatewayAvatarOwnerPreviewPresentation) -> CGImage? {
+        host.image(handle, id: id)
+    }
+    public func acknowledgePublicationDisplay(_ handle: GatewayAvatarOwnerPreviewPresentation) throws {
+        try host.acknowledgeDisplay(handle, id: id)
+    }
+    public func canConfirmPublication(_ handle: GatewayAvatarOwnerPreviewPresentation) -> Bool {
+        host.canConfirm(handle, id: id)
+    }
+    public func setForeground(_ active: Bool) { host.setForeground(active, id: id) }
+    public func loadPublicationPreview() async { await host.loadPreview(self) }
+    public func confirmPublication(_ handle: GatewayAvatarOwnerPreviewPresentation) async {
+        await host.confirmPublication(handle, session: self)
     }
     public var canDiscardPending: Bool {
         guard isConnected, !isBusy, !needsRefresh, let entry = pendingOperation, let value = snapshot else {
@@ -268,6 +375,10 @@ private struct AvatarEditorDraft: Sendable {
         } else if let value = error as? GatewayAvatarMutationFailure {
             storedError = value.errorDescription
         } else if let value = error as? GatewayAvatarUploadJournalFailure {
+            storedError = value.errorDescription
+        } else if let value = error as? GatewayAvatarOwnerPreviewHostFailure {
+            storedError = value.errorDescription
+        } else if let value = error as? GatewayAvatarFailure {
             storedError = value.errorDescription
         } else if let value = error as? GatewayFailure {
             storedError = value.errorDescription

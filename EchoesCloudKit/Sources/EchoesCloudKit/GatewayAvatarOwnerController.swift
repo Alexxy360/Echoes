@@ -413,6 +413,13 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         let selected: GatewayAvatarPublishIntent? = snapshot.flatMap {
             $0.status == .approved ? try? GatewayAvatarPublishIntent(snapshot: $0) : nil
         }
+        try await publish(captured: selected)
+    }
+    /// Exact metadata consumed from the owner's explicit current-image confirmation.
+    public func publish(selected: GatewayAvatarPublishIntent) async throws {
+        try await publish(captured: selected)
+    }
+    private func publish(captured selected: GatewayAvatarPublishIntent?) async throws {
         try await exclusive {
             let context = try self.bound()
             let entry = try await self.pending(context)

@@ -1,0 +1,275 @@
+{
+  "stage": "CK-04e.3j.3c.4c.3",
+  "createdAt": "2026-11-18T14:06:31.738498+00:00",
+  "baselineCommit": "7119befbebcb2c54b77da3ed017cc1d74183b916",
+  "fullNative": {
+    "mac": {
+      "defined": 556,
+      "passed": 554,
+      "skipped": 2,
+      "failed": 0
+    },
+    "iOSSimulator": {
+      "defined": 556,
+      "passed": 554,
+      "skipped": 2,
+      "failed": 0
+    }
+  },
+  "newNativeFunctions": 22,
+  "newNativeNames": [
+    "ownerPreviewHostRequiresCurrentDisplayAndConsumesExactConfirmationOnce",
+    "ownerPreviewHostNewImageRequiresItsOwnDisplayAckAndRejectsOldHandle",
+    "ownerPreviewHostEveryGetterChecksNativePrivateParentActivationAndScene",
+    "ownerPreviewHostReopeningAndForegroundReturnNeverRestoreOldPixelsOrAck",
+    "ownerPreviewHostExpiryAndBothClockRollbacksDenyAllOldHandles",
+    "ownerPreviewHostRetainsOneSlotAcrossIgnoredProviderAndNewParentUntilActualReturn",
+    "ownerPreviewHostPrivateScopeChangeDuringTokenOrProviderNeverRestoresImage",
+    "ownerPreviewHostRejectsSubstitutedSelectionAndRedactsUnknownFailure",
+    "ownerPreviewHostConfirmationWaitKeepsSlotAndExpiresBeforeReturningIntent",
+    "ownerPreviewHostConfirmationInvalidatedDuringCredentialsCannotReturnSelection",
+    "ownerPreviewHostExpiryNotifiesObservationWithoutRefreshOrGetterPolling",
+    "ownerPreviewHostInvalidSessionRejectsOnlyTheStillCurrentNativeBinding",
+    "publicationEditorWithoutJournalNeedsImageDisplayAndSeparateExactConfirmation",
+    "publicationEditorRefreshRequiresNewImageAndAckEvenWhenSelectionIsUnchanged",
+    "publicationEditorNewServerReviewCannotReplacePreviouslyConfirmedSelection",
+    "publicationEditorUnknownResultRecoversReadOnlyAndRetryNeedsNewDisplayAndConfirmation",
+    "publicationEditorExpiryDoesNotPollAndOldConfirmationCannotPublish",
+    "publicationEditorClosedConfirmationKeepsBusyUntilTokenIOActuallyReturns",
+    "publicationEditorDelayedPreviewCannotPopulateNewSessionAfterClose",
+    "publicationEditorCurrentPrivateScopeIsCheckedBeforeEveryImageAndConfirmation",
+    "publicationEditorPreviewContextDoesNotRetainClosedViewOrEditorHost",
+    "publicationEditorUnsentLocalDraftDoesNotAuthorizeOlderServerPhoto"
+  ],
+  "newUIFunctions": 5,
+  "distinctAcceptedUI": 14,
+  "UIAcceptanceByCase": {
+    "testLostReplyIsRecoveredAfterReopeningEditorWithoutRechoosingPhoto": "initial unchanged path",
+    "testSelectionRequiresExplicitConsentAndDoesNotAutomaticallyPublish": "initial unchanged path",
+    "testApprovedPhotoStillRequiresPublishAndClearRequiresConfirmation": "viewport final",
+    "testClosingDraftDropsItsPreviewAndConsentOnReopen": "initial unchanged path",
+    "testPublishedOwnPhotoReloadsWithoutLocationOrAnUnsentDraft": "viewport final",
+    "testSystemPhotoPickerCanBeCancelledWithoutUploadingOrClosingTheEditor": "initial unchanged path",
+    "testExistingPendingPhotoCannotPreviewOrPublishWithoutUploadJournal": "initial unchanged path",
+    "testApprovedImageExpiresInConfirmationAndRequiresNewExplicitPreview": "viewport final",
+    "testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload": "final visible-content gesture check",
+    "testConsentAndSubmitAreReachableWithLargestAccessibilityText": "initial unchanged path",
+    "testLostPublicationReplyKeepsMetadataAndRecoversWithoutBlindPublishOrDiscard": "viewport final",
+    "testBackgroundDropsApprovedPreviewAndReopenRequiresNewFetchAndDisplay": "viewport final",
+    "testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText": "final visible-content gesture check",
+    "testBackgroundDropsUnsentPreviewAndClosesItsDomain": "initial unchanged path"
+  },
+  "UIRuns": {
+    "initialRegression": {
+      "total": 14,
+      "passed": 12,
+      "failed": 2
+    },
+    "viewportRegression": {
+      "total": 7,
+      "passed": 6,
+      "failed": 1
+    },
+    "finalVisibility": {
+      "total": 2,
+      "passed": 2,
+      "failed": 0
+    },
+    "note": "14 distinct accepted cases aggregated; not a single final 14/14 run. Seven untouched test bodies and their shared helpers verified identical to the saved initial source. Final viewport run covers affected production paths; its AX test corrected by measured-content gestures and rerun along with normal text."
+  },
+  "debugBuild": "passed as part of final UI run",
+  "unsignedRelease": "passed",
+  "strictSwiftFormatFiles": 15,
+  "checked": [
+    "native/private/parent/foreground scope, exact query/manifest/bearer and 30s time; retained slot through actual IO/decode",
+    "opaque image with current lookup, timer without RPC, new open/scene and stale handles, actual visibility90% ACK",
+    "explicit separate confirmation consumes display handle, rechecks fresh credentials, exact selected metadata reaches durable controller and HTTP",
+    "source-free/staged/pending publish eligibility, no unsent draft, old generic editor publish entry point refuses",
+    "unknown stays metadata-only and recover is readonly; explicit retry needs new image/ACK/confirmation and preserves exact IDs/revision",
+    "fresh server reapproval cannot replace confirmed revision; current-only invalid-session rejection cannot sign out another account",
+    "weak session/host release, cancellation, private change during credentials/provider and UI background",
+    "real UI normal/AX XXXL image frame wholly inside visible viewport above fixed controls, both final actions reachable"
+  ],
+  "actualComponents": [
+    "real host/editor/controller/durable filesystem journal and ImageIO through native preview client",
+    "real Simulator SwiftUI/Form/ScrollView/visibility and gestures, preview/consent/expiry/withdrawal/unknown/recovery",
+    "full package Mac/iOS plus Debug and unsigned Release compilation"
+  ],
+  "modeledComponents": [
+    "all Apple/CloudKit/gateway identity and backend responses in UI",
+    "host API responses use real native client/decoder over synthetic HTTP transport",
+    "no real hosted HTTPS/Free/SIWA/account A-B/phone storage evidence"
+  ],
+  "negativeControl": {
+    "isolatedCopy": true,
+    "removed": "displayID == shown.id from explicit confirmation",
+    "failedTests": 1,
+    "issues": 2,
+    "originalSourceTestHashesPreserved": true
+  },
+  "knownLimits": [
+    "frame dimension warnings still reproduce; no proven cause or fix",
+    "real schema/roles/hosts/SIWA/separate service identity/hosted Free and two ordinary iCloud accounts remain unaccepted",
+    "physical Keychain/FileProtection/locked-device/PhotosPicker/iCloud Photos remain required",
+    "reports/contact/retention and remaining migration still incomplete; ordinary entry Firebase; not TestFlight ready",
+    "local viewport/display ACK is not proof of human seeing or a server authorization grant; callers must forward lifecycle barriers"
+  ],
+  "notPerformed": [
+    "remote deployment/activation/new keys/permissions/paid services",
+    "phone SDK/new physical test windows",
+    "Production/Firebase/TestFlight changes",
+    "unchanged backend538/Core/dependency/CI reruns"
+  ],
+  "UIWarnings": {
+    "initial": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "viewport": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "final": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ]
+  },
+  "sourceDocsSHA256": {
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "7883e4ff62c5383341d962741c92b7382ad14a899a51e46ec6dba256bbbba19f",
+    "Echo/Services/CommunityPreviewFixture.swift": "c571995ec8a3bd94789a93d6f6e4450a1f5a16ab1fa0ab68a02c53864d863d3f",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "cf75c2f0c32419bd3e7a00013d57daa0aeae656c5c747766fe4caba840a3ed72",
+    "Echo/Views/AvatarEditorActionsSection.swift": "666cdb91beb9563208cb5ec2e200caecbdace08bc61163a606bc4755f356fbdb",
+    "Echo/Views/AvatarEditorConfirmationView.swift": "a79aa3e15e8f966bcad4824542850faf19d004386a0234660845116e33376440",
+    "Echo/Views/AvatarEditorView.swift": "c952a725bf6fdde49752c708cb4c2f3bcec9af000bf5a9ac8e11e25e26a25f4b",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "57c985542e5670f818f026f71575720c040982c6e2cf6996a500968587542ff8",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "14e1903d16a765f1944acc20b52fcdb77f5b4d1a528b375435126a9dd83a2b59",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarEditorTests.swift": "7473d81dc5336b5978a7aa782ce59ae736fed3312cbc59d972f1759c8335b948",
+    "EchoesUITests/GatewayAvatarEditorUITests.swift": "7f0df053de5b5de532a360b52788d6df2f00a9f721320a360f321ae7acd9516a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerPreviewHost.swift": "608d1a170ceb02749b26016b0b6730667dbd8384888dff562c0635b2a8e93936",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerPreviewHostTests.swift": "352e668173b8cb6f9e3fdb082e138421176f5423de46d8db59796f688a558493",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarPublicationEditorTests.swift": "9d83090a8e8362bc6cb613a6fa717c1d7a75f2617e20a13cd73e2f77f26de0ec",
+    "Echo/Views/AvatarApprovedPreviewView.swift": "437362ea30c99ffdca1495f0faa4020962628e66c6ba12453fe6b214fd1dce28",
+    "Echo/Views/AvatarEditorPublicationPreview.swift": "0eb80bcb8ef115b657ea6a73beb9e97abca3b9e0ef09e5938bcf307745c8e76a",
+    "Docs/PUBLIKACJA_Z_PODGLADEM_IOS.md": "756ff4390c56a9f045903bc44dc41db04ce08af3169aa7336ed12630adf2b48a",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "499a18fa0913d48575cb00fa46d8561422c98e14eb520b00d241f14b282aad2c",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "18320f8dc55a04a510f41d6da22418258a830a7b000e60f8e6cfcbbb9b8cd1a3",
+    "Docs/DZIENNIK_ZMIAN.md": "86ccfdc5605196823edfe322ac0f10816e596fb997fd222547df22592663fadf",
+    "Docs/NATYWNY_PODGLAD_ZDJECIA_AUTORA.md": "60a15137530e0aaf8e229a913c34e9b465b495f6cebbf429f5d2d2627fac5935",
+    "Docs/PUBLIKACJA_METADANYCH_IOS.md": "4b18d18ef8b96cf00cf78ff1f0fc88b103881054d68e3a4d980bda4ce115de2d",
+    "Docs/EDYTOR_WLASNEGO_ZDJECIA_IOS.md": "d36f7a08649924e49f6c2b8986122d6e379cb64cc807250e44b74ac7a28773f5"
+  },
+  "localLogSHA256": {
+    "echoes-owner-publication-final-full-mac.log": "58427468b42304a069796ed3a9ef82cdf12a16b5e325382e83a0dabb0cf737c2",
+    "echoes-owner-publication-final-package-simulator.log": "154f9b9b52f57dfce70116471ba73961e9390b7f378d73cfd8094630a3e2bf56",
+    "echoes-owner-publication-final-package-simulator-summary.json": "e840e8267125970b3c803108778f72763c2ff27385711d8bb46a6daababaefd5",
+    "echoes-owner-publication-editor-ui.log": "5e02db4cf7cc22b11dcc8e78cc8c3f8982a82cad6c0563525ff89595ef50d156",
+    "echoes-owner-publication-editor-ui-summary.json": "ce9156b3fbd92f9b344452278a0e230ee9b0aa87239aedb09541396ee21e48e3",
+    "echoes-owner-publication-viewport-ui.log": "8a730620dc4ba55666f91b46dc5a7f4d2784a3102eda3ff36bff698c0fec7b5c",
+    "echoes-owner-publication-viewport-ui-summary.json": "df75b2a112efbd19dbe48df36537591d0bb865ea9200eb107fbf02764eadb41e",
+    "echoes-owner-publication-final-visibility-ui.log": "2660a8356afcd044ae123ad10dd748dd59327023c9c158041bfb90da52ad094a",
+    "echoes-owner-publication-final-visibility-ui-summary.json": "f70936fa6e5e8b342ceb0115e762a67e01018c97b36c2b8891637e03634ff909",
+    "echoes-owner-publication-verified-release.log": "c9e871ae17d967ffbacb479c1e6d4c3178f7fc400d811e956e926080df416301",
+    "echoes-owner-publication-final-negative.log": "885bda74b832cbbf1dad19414b28aab179a0cf26786469e8b898a51d439eb1c2",
+    "echoes-owner-publication-verified-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-owner-publication-initial-ui-source.swift": "cf1145d17c3678729e8c64e0570ab503a8623aa2312bb3c3407a4d05a447c9dd"
+  },
+  "localScreenshots": {
+    "/private/tmp/echoes-owner-publication-final-visibility-ui-attachments/FA07E4DB-F8BE-4C93-85C8-A9D62E9683D0.png": {
+      "sha256": "d205ae491a55adc4210b0cf19a93ff2098f7eff86e6506ae785d4ae79dad193e",
+      "label": "owner-existing-photo-explicitly-published_0_994B4906-732B-4817-9970-994A2DBA7507.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-final-visibility-ui-attachments/2E35D9A7-E506-46E4-BE36-0337B29AEF7E.png": {
+      "sha256": "857eae4e460dc36c09468dc073c47e21de12b35a28a6b630abbc4a8a1194bcb0",
+      "label": "owner-approved-image-publication-confirmation_0_04484B44-FCCB-4949-B8D3-825F1CB3F17B.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-final-visibility-ui-attachments/48831D50-C1F3-4EBB-9D1E-7B589954797D.png": {
+      "sha256": "d84e31882dc7527b7396b86832fa13b7f5122a27e844d3a2a5c44ecfae42fe23",
+      "label": "owner-existing-approved-without-journal_0_1E28A8D0-A09E-42E5-98F1-BB0403C70FE9.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-final-visibility-ui-attachments/64616756-0687-4F2D-B3B9-D15E0C00B5AA.png": {
+      "sha256": "da8fa70a41bbcd3a02f12ab0922218676c351107555d8f72223acb93dc4cd098",
+      "label": "owner-existing-approved-published-largest-text_0_95685688-0E17-447B-85A6-CCA53BE3DC71.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText()"
+    },
+    "/private/tmp/echoes-owner-publication-final-visibility-ui-attachments/9F6D1D19-0BBD-4E05-9998-A4FADDDF066D.png": {
+      "sha256": "4bb12b0e2e8b06461a01041690ae7fa0acb743d8bdba22cf8e365b21edcdcf8d",
+      "label": "owner-approved-image-publication-confirmation_0_76CD24BC-08CC-47B5-929D-2BB4F9AE9073.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText()"
+    },
+    "/private/tmp/echoes-owner-publication-expiry-ui-attachments/83CCD73C-B7AB-4CC0-B728-ADE246E33F3A.png": {
+      "sha256": "54343f0394a757e751a9a4e94b18144b84cace3c2cda6a03ae773449ab52a654",
+      "label": "owner-approved-image-publication-confirmation_0_48526200-3554-4D52-B426-2057F4532D6C.png",
+      "test": "GatewayAvatarEditorUITests/testApprovedImageExpiresInConfirmationAndRequiresNewExplicitPreview()"
+    },
+    "/private/tmp/echoes-owner-publication-expiry-ui-attachments/01513DC5-36D1-42BF-A696-CCB96DBC9817.png": {
+      "sha256": "2828f4662360ee73297f94e912b719318b5ee4fedeb822fe0022e8488d3a3c6e",
+      "label": "owner-publication-confirmation-expired_0_DD7A371B-07D5-435A-BBDD-FEBF2A30BB8E.png",
+      "test": "GatewayAvatarEditorUITests/testApprovedImageExpiresInConfirmationAndRequiresNewExplicitPreview()"
+    },
+    "/private/tmp/echoes-owner-publication-pending-ui-attachments/2F642188-5557-4CD9-AD47-72EF49A81639.png": {
+      "sha256": "957e090d12f02f7c1bef73fbccfbd6a4e8719a760dd22472d0f8b7303dc0548e",
+      "label": "owner-existing-pending-not-publishable_0_53FC21CA-331A-46BA-97D7-950D732FEF45.png",
+      "test": "GatewayAvatarEditorUITests/testExistingPendingPhotoCannotPreviewOrPublishWithoutUploadJournal()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/81E00DC7-8B3D-4582-86CB-D185BCBCE49D.png": {
+      "sha256": "5af1236df564c6ec45be94380ef88b2e4c85574345731f727c899e5780e833fe",
+      "label": "owner-approved-preview-after-background_0_17220DD2-FE5D-45F5-8044-90272C1C8736.png",
+      "test": "GatewayAvatarEditorUITests/testBackgroundDropsApprovedPreviewAndReopenRequiresNewFetchAndDisplay()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/A25A9070-A09D-4EDD-A1A1-E1933ECA7A2B.png": {
+      "sha256": "e895c769236aed7f4b56f33e785ae1bb53e54b97fc30b8c743ca5bd3ec968741",
+      "label": "owner-existing-photo-explicitly-published_0_23EEB9B9-68FF-4D19-95F2-C0EED177073B.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/4C687D58-585F-4BC5-BF58-7B4E6902313B.png": {
+      "sha256": "898b860ab26b1ac41d78a9e610800b784a545971440a7cebee0eb4abbe34483f",
+      "label": "owner-approved-image-publication-confirmation_0_10821B10-6F6B-44EA-AEA4-1E652B33A9C3.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/ACB70CD9-6386-4F0A-BA78-510624BDDCCB.png": {
+      "sha256": "5af1236df564c6ec45be94380ef88b2e4c85574345731f727c899e5780e833fe",
+      "label": "owner-existing-approved-without-journal_0_CE4D7D49-1F97-4F53-990E-4A3C7CCF4065.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/ECA9730C-9863-4E62-A7CF-A57D68C17AA5.png": {
+      "sha256": "f8e8ce1b4dcf7c7218a690928c81bf6ccfc0d0e0f629c0ed777ab786006b406a",
+      "label": "owner-existing-approved-published-largest-text_0_9BC83176-24BD-4D1B-9084-B2E338E25C4F.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/64D33B21-F37F-4E15-BC12-4CF16523825C.png": {
+      "sha256": "a89724e856f68b85402096a51999c2b561cf7e8162268aa0e3d0cfc2f74cca40",
+      "label": "owner-approved-image-publication-confirmation_0_7EE7F00B-0D1C-46BB-86B1-756BFB3BEED6.png",
+      "test": "GatewayAvatarEditorUITests/testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/BD8EC6A5-0812-424C-BD10-97DE944EEA40.png": {
+      "sha256": "38f2b49b34ccc87d5a18a17a9eafeb62a4cbbb532e7551f736a71afe306a9a8f",
+      "label": "owner-photo-publication-metadata-recovered_0_92167F71-A8A7-423C-B31B-F950090E1020.png",
+      "test": "GatewayAvatarEditorUITests/testLostPublicationReplyKeepsMetadataAndRecoversWithoutBlindPublishOrDiscard()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/C5932F0F-58B1-4CAD-A398-5EDB24D55723.png": {
+      "sha256": "e9bb5a3b02dfe1da32d2247eb0e1f9f61c0d4aad3774b8077647d901d81ff7e4",
+      "label": "owner-photo-publication-unknown-metadata_0_5D6E1DE4-B95A-4325-A62F-4FC01550B695.png",
+      "test": "GatewayAvatarEditorUITests/testLostPublicationReplyKeepsMetadataAndRecoversWithoutBlindPublishOrDiscard()"
+    },
+    "/private/tmp/echoes-owner-publication-corrected-ui-attachments/0702BD8E-8733-4302-B901-E62A4DDB3B6A.png": {
+      "sha256": "cde8ef735f3daaa5e571b923ecbfdb6a4d9f2a181e8e7f6ffd0cbb47895e2bbd",
+      "label": "owner-approved-image-publication-confirmation_0_56698F76-0E81-48FC-BB89-F159C0FE663A.png",
+      "test": "GatewayAvatarEditorUITests/testLostPublicationReplyKeepsMetadataAndRecoversWithoutBlindPublishOrDiscard()"
+    }
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

@@ -16,8 +16,8 @@ struct AvatarEditorActionsSection: View {
                         .accessibilityIdentifier("avatar.editor.retry")
                 }
             }
-            if session.canPublish {
-                Button("Opublikuj zatwierdzone zdjęcie", action: publish)
+            if session.canPublish, let handle = session.publicationPresentation {
+                Button("Opublikuj zatwierdzone zdjęcie") { requestConfirmation(.publish(handle)) }
                     .accessibilityIdentifier("avatar.editor.publish")
             }
             Button("Wycofaj zdjęcie", role: .destructive) { requestConfirmation(.clear) }
@@ -31,5 +31,4 @@ struct AvatarEditorActionsSection: View {
     private func refresh() { Task { await session.perform(.refresh) } }
     private func recover() { Task { await session.perform(.recover) } }
     private func retry() { Task { await session.perform(.retryUpload) } }
-    private func publish() { Task { await session.perform(.publish) } }
 }

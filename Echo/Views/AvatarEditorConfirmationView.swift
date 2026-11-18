@@ -1,17 +1,35 @@
 import EchoesCloudKit
 import SwiftUI
 
-enum AvatarEditorConfirmation: String, Identifiable, Hashable {
+enum AvatarEditorConfirmation: Identifiable, Hashable {
     case clear, discard
-    var id: String { rawValue }
-    var title: String { self == .clear ? "Wycofać zdjęcie i zgodę?" : "Zapomnieć tę próbę na urządzeniu?" }
-    var button: String { self == .clear ? "Wycofaj zdjęcie" : "Zapomnij lokalną próbę" }
-    var message: String {
-        self == .clear
-            ? "Wycofanie ukrywa zdjęcie. Nie oznacza natychmiastowego fizycznego skasowania wcześniejszych plików."
-            : "Usuniemy lokalny zapis próby, która nie została wysłana lub została zastąpiona. To nie wycofuje aktualnego zdjęcia z serwera."
+    case publish(GatewayAvatarOwnerPreviewPresentation)
+    var id: Self { self }
+    var title: String {
+        switch self {
+        case .clear: "Wycofać zdjęcie i zgodę?"
+        case .discard: "Zapomnieć tę próbę na urządzeniu?"
+        case .publish: "Opublikować to zdjęcie?"
+        }
     }
-    var action: GatewayAvatarEditorAction { self == .clear ? .clear : .discardUnsentOrSuperseded }
+    var button: String {
+        switch self {
+        case .clear: "Wycofaj zdjęcie"
+        case .discard: "Zapomnij lokalną próbę"
+        case .publish: "Potwierdź publikację zdjęcia"
+        }
+    }
+    var message: String {
+        switch self {
+        case .clear:
+            "Wycofanie ukrywa zdjęcie. Nie oznacza natychmiastowego fizycznego skasowania wcześniejszych plików."
+        case .discard:
+            "Usuniemy lokalny zapis próby, która nie została wysłana lub została zastąpiona. To nie wycofuje aktualnego zdjęcia z serwera."
+        case .publish:
+            "Opublikujemy wyświetlone zdjęcie. Będzie widoczne zgodnie z zasadami dostępu aplikacji."
+        }
+    }
+    var isPublication: Bool { if case .publish = self { true } else { false } }
 }
 
 /// The system popover clipped its message at AX XXXL. This screen keeps text scrollable and both
@@ -26,16 +44,20 @@ struct AvatarEditorConfirmationView: View {
             VStack(alignment: .leading, spacing: 20) {
                 Text(confirmation.title).font(.headline).accessibilityAddTraits(.isHeader)
                 Text(confirmation.message)
+                if case .publish(let handle) = confirmation {
+                    AvatarApprovedPreviewView(session: session, handle: handle)
+                }
                 if confirming { ProgressView("Potwierdzanie operacji…") }
             }.frame(maxWidth: .infinity, alignment: .leading).padding()
         }
+        .accessibilityIdentifier("avatar.editor.confirmationContent")
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 12) {
-                Button(role: .destructive, action: confirm) {
+                Button(role: confirmation.isPublication ? nil : .destructive, action: confirm) {
                     Text(confirmation.button).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent).tint(.red)
-                .disabled(confirming || !session.isCurrent || session.isBusy)
+                .buttonStyle(.borderedProminent).tint(confirmation.isPublication ? Color.accentColor : .red)
+                .disabled(confirming || !session.isCurrent || session.isBusy || !canConfirm)
                 .accessibilityIdentifier("avatar.editor.confirm")
                 Button(role: .cancel) {
                     dismiss()
@@ -50,11 +72,19 @@ struct AvatarEditorConfirmationView: View {
         }
         .navigationTitle("Potwierdzenie").navigationBarTitleDisplayMode(.inline)
     }
+    private var canConfirm: Bool {
+        if case .publish(let handle) = confirmation { return session.canConfirmPublication(handle) }
+        return true
+    }
     private func confirm() {
-        guard !confirming, session.isCurrent, !session.isBusy else { return }
+        guard !confirming, session.isCurrent, !session.isBusy, canConfirm else { return }
         confirming = true
         Task {
-            await session.perform(confirmation.action)
+            switch confirmation {
+            case .clear: await session.perform(.clear)
+            case .discard: await session.perform(.discardUnsentOrSuperseded)
+            case .publish(let handle): await session.confirmPublication(handle)
+            }
             confirming = false
             if session.isCurrent { dismiss() }
         }

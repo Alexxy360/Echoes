@@ -73,6 +73,60 @@ import XCTest
     private func closeEditor(_ app: XCUIApplication) {
         app.navigationBars["Twoje zdjęcie"].buttons["Gotowe"].tap()
     }
+    private func previewAndPublish(_ app: XCUIApplication, cancelFirst: Bool = false) {
+        XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
+        tap(app, "avatar.editor.loadApprovedPreview")
+        displayApprovedImage(app)
+        tap(app, "avatar.editor.publish")
+        XCTAssertTrue(app.staticTexts["Opublikować to zdjęcie?"].waitForExistence(timeout: 5))
+        displayApprovedImage(app, confirmation: true)
+        attach(app, "owner-approved-image-publication-confirmation")
+        if cancelFirst {
+            app.buttons["avatar.editor.confirmCancel"].tap()
+            status(app, contains: "zatwierdzone")
+            XCTAssertFalse(element(app, "avatar.editor.pendingPublication").exists)
+            // Reading status at AX XXXL can outlast the first preview. This is an explicit fetch.
+            tap(app, "avatar.editor.loadApprovedPreview")
+            displayApprovedImage(app)
+            tap(app, "avatar.editor.publish")
+            displayApprovedImage(app, confirmation: true)
+        }
+        tap(app, "avatar.editor.confirm")
+    }
+    private func displayApprovedImage(_ app: XCUIApplication, confirmation: Bool = false) {
+        let image = element(app, "avatar.editor.approvedImage")
+        let content = element(app, confirmation ? "avatar.editor.confirmationContent" : "avatar.editor.form")
+        for _ in 0..<9 {
+            let top = max(
+                content.frame.minY,
+                app.navigationBars[confirmation ? "Potwierdzenie" : "Twoje zdjęcie"].frame.maxY)
+            let bottom = confirmation ? app.buttons["avatar.editor.confirm"].frame.minY : content.frame.maxY
+            if image.exists && image.isHittable && image.frame.minY >= top && image.frame.maxY <= bottom {
+                break
+            }
+            // safeAreaInset buttons overlap the ScrollView's accessibility frame. Keep the
+            // gesture inside visible content, above the fixed controls.
+            guard bottom > top else {
+                XCTFail("No visible preview viewport")
+                return
+            }
+            let down = !image.exists || image.frame.minY < top
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let x = content.frame.midX - app.frame.minX
+            let low = top + (bottom - top) * 0.8 - app.frame.minY
+            let high = top + (bottom - top) * 0.2 - app.frame.minY
+            origin.withOffset(.init(dx: x, dy: down ? high : low)).press(
+                forDuration: 0.05,
+                thenDragTo: origin.withOffset(.init(dx: x, dy: down ? low : high)))
+        }
+        XCTAssertTrue(image.waitForExistence(timeout: 5) && image.isHittable)
+        let top = max(
+            content.frame.minY,
+            app.navigationBars[confirmation ? "Potwierdzenie" : "Twoje zdjęcie"].frame.maxY)
+        let bottom = confirmation ? app.buttons["avatar.editor.confirm"].frame.minY : content.frame.maxY
+        XCTAssertGreaterThanOrEqual(image.frame.minY, top)
+        XCTAssertLessThanOrEqual(image.frame.maxY, bottom)
+    }
     private func attach(_ app: XCUIApplication, _ name: String) {
         let value = XCTAttachment(screenshot: app.screenshot())
         value.name = name
@@ -98,7 +152,7 @@ import XCTest
         choose(app)
         acceptAndSend(app)
         status(app, contains: "zatwierdzone")
-        tap(app, "avatar.editor.publish")
+        previewAndPublish(app)
         status(app, contains: "jest opublikowane")
         let published = element(app, "community.avatar.ownerEditor")
         let loaded = XCTNSPredicateExpectation(
@@ -123,7 +177,7 @@ import XCTest
         choose(app)
         acceptAndSend(app)
         status(app, contains: "zatwierdzone")
-        tap(app, "avatar.editor.publish")
+        previewAndPublish(app)
         status(app, contains: "Sprawdź aktualny stan")
         XCTAssertTrue(element(app, "avatar.editor.pendingPublication").waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
@@ -189,7 +243,7 @@ import XCTest
         choose(app)
         acceptAndSend(app)
         status(app, contains: "zatwierdzone")
-        tap(app, "avatar.editor.publish")
+        previewAndPublish(app)
         status(app, contains: "jest opublikowane")
         closeEditor(app)
         tap(app, "settings.avatar")
@@ -217,6 +271,67 @@ import XCTest
         XCTAssertTrue(element(app, "avatar.editor.previewNotice").waitForExistence(timeout: 10))
         XCTAssertFalse(app.switches["avatar.editor.consent"].exists)
         XCTAssertFalse(element(app, "avatar.editor.preview").exists)
+    }
+    func testExistingApprovedPhotoNeedsCurrentPreviewAndSeparateConfirmationWithoutUpload() {
+        let app = application("avatar-owner-existing-approved")
+        open(app)
+        status(app, contains: "zatwierdzone")
+        XCTAssertFalse(element(app, "avatar.editor.preview").exists)
+        XCTAssertFalse(app.switches["avatar.editor.consent"].exists)
+        XCTAssertFalse(app.buttons["avatar.editor.recover"].exists)
+        attach(app, "owner-existing-approved-without-journal")
+        previewAndPublish(app, cancelFirst: true)
+        status(app, contains: "jest opublikowane")
+        attach(app, "owner-existing-photo-explicitly-published")
+    }
+    func testExistingPendingPhotoCannotPreviewOrPublishWithoutUploadJournal() {
+        let app = application("avatar-owner-existing-pending")
+        open(app)
+        status(app, contains: "czeka na sprawdzenie")
+        XCTAssertFalse(app.buttons["avatar.editor.loadApprovedPreview"].exists)
+        XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
+        XCTAssertFalse(element(app, "avatar.editor.approvedImage").exists)
+        attach(app, "owner-existing-pending-not-publishable")
+    }
+    func testApprovedImageExpiresInConfirmationAndRequiresNewExplicitPreview() {
+        let app = application("avatar-owner-existing-approved")
+        open(app)
+        tap(app, "avatar.editor.loadApprovedPreview")
+        displayApprovedImage(app)
+        tap(app, "avatar.editor.publish")
+        displayApprovedImage(app, confirmation: true)
+        let confirm = app.buttons["avatar.editor.confirm"]
+        XCTAssertTrue(confirm.waitForExistence(timeout: 5) && confirm.isEnabled)
+        XCTAssertTrue(element(app, "avatar.editor.approvedPreviewUnavailable").waitForExistence(timeout: 35))
+        XCTAssertFalse(confirm.isEnabled)
+        XCTAssertFalse(element(app, "avatar.editor.approvedImage").exists)
+        attach(app, "owner-publication-confirmation-expired")
+        app.buttons["avatar.editor.confirmCancel"].tap()
+        status(app, contains: "zatwierdzone")
+        previewAndPublish(app)
+        status(app, contains: "jest opublikowane")
+    }
+    func testExistingApprovedPublicationConfirmationSupportsLargestAccessibilityText() {
+        let app = application("avatar-owner-existing-approved", large: true)
+        open(app)
+        previewAndPublish(app, cancelFirst: true)
+        status(app, contains: "jest opublikowane")
+        attach(app, "owner-existing-approved-published-largest-text")
+    }
+    func testBackgroundDropsApprovedPreviewAndReopenRequiresNewFetchAndDisplay() {
+        let app = application("avatar-owner-existing-approved")
+        open(app)
+        tap(app, "avatar.editor.loadApprovedPreview")
+        displayApprovedImage(app)
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(element(app, "community.preview.closed").waitForExistence(timeout: 10))
+        app.buttons["Otwórz nową sesję testową"].tap()
+        open(app)
+        status(app, contains: "zatwierdzone")
+        XCTAssertFalse(element(app, "avatar.editor.approvedImage").exists)
+        XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
+        attach(app, "owner-approved-preview-after-background")
     }
     func testConsentAndSubmitAreReachableWithLargestAccessibilityText() {
         let app = application("avatar-owner", large: true)

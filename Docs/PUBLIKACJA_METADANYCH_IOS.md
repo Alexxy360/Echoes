@@ -28,6 +28,8 @@ Publikacja bez upload journala pozostaje zamknięta w interfejsie. Następny eta
 
 CK-04e.3j.3c.4c.1 dodał [serwerowy podgląd zatwierdzonego wyboru autora](PODGLAD_ZATWIERDZONEGO_ZDJECIA_AUTORA.md), także ready=0, bez GPS/roli moderatora. Nie połączono go jeszcze z natywnym transportem, wyświetleniem i osobnym potwierdzeniem; powyższa blokada UI nadal obowiązuje.
 
+Kontynuacja CK-04e.3j.3c.4c.3 dodaje [aktualny obraz i osobną zgodę w edytorze](PUBLIKACJA_Z_PODGLADEM_IOS.md). Źródłowo pusta lub zgodna metadata-only intencja może zostać opublikowana po chronionym podglądzie/ACK i osobnym potwierdzeniu, a stare perform(.publish) pozostaje zamknięte. Recover nadal jest tylko odczytem; jawny retry zachowuje dokładny zapisany wybór i wymaga nowego obrazu oraz potwierdzenia.
+
 ## Dowody i otwarte wymagania
 
 [Raport etapu](evidence/avatar-publication-journal-local-tests.json) zapisuje końcowe wyniki i SHA. Siedem nowych testów magazynu sprawdza zapis bez JPEG, ponowne otwarcie plików i brak TTL, atomowe zastąpienie staged uploadu, zakazane podmiany/fazy, uszkodzone pola/bajty, erasure oraz błędy przed/po rename. Dziesięć nowych testów sterownika obejmuje trwałość przed dispatch, nowy store/controller po utracie ACK, read-only recovery, zachowanie unknown przy approved, dokładne jawne ponowienie, supersession, rollback, błędy IO i zmianę prywatnego scope. Dodatkowy test edytora utrzymuje zamkniętą publikację bez podglądu, zachowując recovery i withdrawal.
