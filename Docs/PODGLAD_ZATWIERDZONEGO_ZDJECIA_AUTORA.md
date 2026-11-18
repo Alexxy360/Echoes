@@ -34,4 +34,6 @@ Dodatkowy test uruchamia rzeczywisty lokalny workerd/SQLite/Wasm/S2S signatures 
 
 Ten etap obejmuje serwer. Następny CK-04e.3j.3c.4c.2: natywne API/transport i efemeryczny podgląd dokładnego zatwierdzonego wyboru, a następnie integracja rzeczywiście wyświetlonego obrazu i osobnego potwierdzenia w edytorze. Publikacja bez upload journala nadal jest zamknięta w UI. Kod iOS/Core, zależności i CI pozostały niezmienione; nie powtarzano ich wcześniejszych testów. Nie wykonano zdalnego wdrożenia, aktywacji, zmian schematu/ról/sekretów/usług/opłat, SDK telefonu, Production, Firebase ani TestFlight.
 
+Kontynuacja CK-04e.3j.3c.4c.2 dodała [natywny klient/transport oraz efemeryczny zweryfikowany wynik](NATYWNY_PODGLAD_ZDJECIA_AUTORA.md). Nadal wymagany jest host/aktualny obraz, faktyczne wyświetlenie i osobna zgoda w edytorze; blokada publikacji bez upload journala w UI pozostaje aktywna.
+
 Nadal wymagane są m.in. realne role/schemat/hosty/SIWA/service identity/hosted Free, dwa zwykłe konta, fizyczny Keychain/FileProtection/locked-device i PhotosPicker/iCloud Photos, zgłoszenia/kontakt/retencja oraz pozostała migracja. Wcześniejsze ostrzeżenia ramek UI pozostają otwarte; zwykłe wejście nadal używa Firebase. To nie jest odbiór gotowości TestFlight.

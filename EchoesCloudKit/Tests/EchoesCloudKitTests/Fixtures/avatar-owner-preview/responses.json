@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "source": "Concrete local edge/Authority/Runtime/SQLite/policy; modeled Apple/accounts/files/platform only",
+  "nowMilliseconds": 1794603600000,
+  "selection": {
+    "ownerID": "af7480a3-4d46-4935-af48-90303a89e4cc",
+    "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+    "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+    "generation": 1,
+    "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+  },
+  "imageSHA256": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+  "cases": [
+    {
+      "label": "approved-unpublished",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "2446",
+        "content-type": "image/jpeg",
+        "x-content-type-options": "nosniff",
+        "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"af7480a3-4d46-4935-af48-90303a89e4cc\",\"versionID\":\"753ba905-4e2c-4209-9533-eb4b1a1a7ebd\",\"variant\":\"image\",\"byteCount\":2446,\"width\":256,\"height\":128,\"sha256\":\"7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412\"}",
+        "x-echoes-avatar-selection": "{\"schemaVersion\":1,\"requestID\":\"3ecc9849-8f28-4416-946e-26a6ab2c4c31\",\"versionID\":\"753ba905-4e2c-4209-9533-eb4b1a1a7ebd\",\"generation\":1,\"reviewRevision\":\"f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4\"}"
+      },
+      "image": "image.jpg"
+    },
+    {
+      "label": "other-account-denied",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_READ_NOT_FOUND"
+      }
+    },
+    {
+      "label": "old-revision-denied",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_READ_NOT_FOUND"
+      }
+    },
+    {
+      "label": "reapproved-unpublished",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "26124f30-b8cd-45b8-88df-a22641489b22"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "2446",
+        "content-type": "image/jpeg",
+        "x-content-type-options": "nosniff",
+        "x-echoes-avatar-manifest": "{\"schemaVersion\":1,\"ownerID\":\"af7480a3-4d46-4935-af48-90303a89e4cc\",\"versionID\":\"753ba905-4e2c-4209-9533-eb4b1a1a7ebd\",\"variant\":\"image\",\"byteCount\":2446,\"width\":256,\"height\":128,\"sha256\":\"7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412\"}",
+        "x-echoes-avatar-selection": "{\"schemaVersion\":1,\"requestID\":\"3ecc9849-8f28-4416-946e-26a6ab2c4c31\",\"versionID\":\"753ba905-4e2c-4209-9533-eb4b1a1a7ebd\",\"generation\":1,\"reviewRevision\":\"26124f30-b8cd-45b8-88df-a22641489b22\"}"
+      },
+      "image": "image.jpg"
+    },
+    {
+      "label": "cleared-denied",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "26124f30-b8cd-45b8-88df-a22641489b22"
+      },
+      "status": 404,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_READ_NOT_FOUND"
+      }
+    },
+    {
+      "label": "client-owner-denied",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4",
+        "ownerID": "af7480a3-4d46-4935-af48-90303a89e4cc"
+      },
+      "status": 400,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_READ_INPUT"
+      }
+    },
+    {
+      "label": "invalid-session",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+      },
+      "status": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "INVALID_SESSION"
+      }
+    },
+    {
+      "label": "feature-disabled",
+      "input": {
+        "requestID": "3ecc9849-8f28-4416-946e-26a6ab2c4c31",
+        "versionID": "753ba905-4e2c-4209-9533-eb4b1a1a7ebd",
+        "generation": 1,
+        "reviewRevision": "f2b82c1b-2c0a-4ff3-9fe0-3f1247064fc4"
+      },
+      "status": 503,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "FEATURE_DISABLED"
+      }
+    }
+  ]
+}

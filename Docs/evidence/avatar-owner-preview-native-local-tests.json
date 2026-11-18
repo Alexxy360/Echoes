@@ -1,0 +1,124 @@
+{
+  "stage": "CK-04e.3j.3c.4c.2",
+  "createdAt": "2026-11-18T09:33:02.724977+00:00",
+  "baselineCommit": "333fff930ff32b6914015c23208cc626816c5521",
+  "scope": "Native approved-owner preview API/transport and ephemeral validated result; host/UI/display ACK/consent still required.",
+  "fullNative": {
+    "mac": {
+      "defined": 534,
+      "passed": 532,
+      "skipped": 2,
+      "failed": 0
+    },
+    "iOSSimulator": {
+      "defined": 534,
+      "passed": 532,
+      "skipped": 2,
+      "failed": 0
+    }
+  },
+  "newTestFunctions": 19,
+  "newAPIFunctions": 12,
+  "newURLSessionFunctions": 7,
+  "newTestNames": [
+    "ownerPreviewNativeDecodesConcreteApprovedAndReapprovedUnpublishedResponses",
+    "ownerPreviewNativeDecodesAllConcreteServerRejectionsWithoutReturningPixels",
+    "ownerPreviewNativeDefaultActivationBadBearerAndCancellationStopBeforeTransport",
+    "ownerPreviewNativeCorrelatesEverySelectionFieldAndExactProofSchema",
+    "ownerPreviewNativeRejectsMissingOversizedAliasedAndUnsafeBinaryHeaders",
+    "ownerPreviewNativeRejectsCorruptTruncatedAndUndecodableJPEGDespiteMatchingHash",
+    "ownerPreviewNativeRejectsErrorCodeStatusSchemaEncodingAndBodyLimitMismatch",
+    "ownerPreviewNativeRateLimitAndAuthAreDistinctAndRetryIsBounded",
+    "ownerPreviewNativeNetworkExpiryRollbackAndActivationLossFencePixels",
+    "ownerPreviewNativeLifetimeStartsBeforeNetworkAndIncludesDecodeWithoutRenewal",
+    "ownerPreviewNativeDecodeCancellationAndDisableNeverReturnValidatedPixels",
+    "ownerPreviewNativeResultBindingExpiryAndDiagnosticsAreRedacted",
+    "ownerPreviewURLSessionReadsConcreteImageAndExactBodyWithoutCookiesOrCacheReuse",
+    "ownerPreviewURLSessionRefusesRedirectWithoutForwardingBearer",
+    "ownerPreviewURLSessionRefusesResponseFromAnotherURL",
+    "ownerPreviewURLSessionRejectsWrongSelectionOrOwnerBeforeWaitingForEOF",
+    "ownerPreviewURLSessionRejectsExcessDeclaredLengthBeforeEOFAndBoundsUnknownErrorLength",
+    "ownerPreviewURLSessionOneUnsettledSlotCancelsAndRequiresAnotherExplicitRequest",
+    "ownerPreviewURLSessionNeverUsesPreviouslyDecodedImageFor204OrServerDenial"
+  ],
+  "debugBuild": "passed",
+  "unsignedReleaseBuild": "passed",
+  "strictSwiftFormatFiles": 5,
+  "gatewayExporter": {
+    "concreteLocalCases": 8,
+    "imageBytes": 2446,
+    "imageSHA256": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+    "syntax": "passed Node22/Node24",
+    "noRemoteIO": true
+  },
+  "checked": [
+    "fixed owner-preview POST, canonical native bearer, only four metadata fields; expected owner local only, no consent/GPS/cache/owner on wire",
+    "exact request/version/generation/reviewRevision proof and closed manifest owner/image/version before bounded streaming and after injected transport",
+    "full JPEG length/SHA and real ImageIO through existing detached native decoder; malformed matching-hash JPEG rejected",
+    "default inactive, no Runtime/UI activation, no journal/write or publication",
+    "nonrenewable30s anchored before network and covering decode, wall+monotonic rollback/expiry, origin/bearer/query binding, redacted query/result",
+    "ephemeral URLSession without cookies/credentials/cache/redirect/application retry/offline204, one unsettled transport operation, cancellation and exact response URL",
+    "bounded2048B closed UTF8 errors, code/status, quota/auth distinction and bounded Retry-After"
+  ],
+  "actualComponents": [
+    "real native HTTP client, URLSession with URLProtocol, ImageIO/CGImage, detached decoder, query/result and time/binding checks",
+    "eight responses from concrete local Node edge/private Authority/Runtime/SQLite/policy and normalized JPEG",
+    "full Mac/iOS package tests and whole Debug/unsigned Release compilation; synthetic response fixtures absent from built app bundles"
+  ],
+  "modeledComponents": [
+    "all identity/session tokens, Apple/CloudKit/files/platform bindings",
+    "URLProtocol responses are not hosted HTTPS/Cloudflare Free or live iCloud A/B"
+  ],
+  "negativeControl": {
+    "isolatedCopy": true,
+    "removed": "exact proof.reviewRevision == query.selection.reviewRevision barrier",
+    "failedTests": 1,
+    "issues": 1,
+    "originalSourceTestHashesPreserved": true
+  },
+  "knownLimits": [
+    "no current owner host/opaque image/lifecycle/private scope/display ACK/explicit publication confirmation yet; source-free UI publishing remains closed",
+    "30s local result validity is not a server grant or proof that a person saw/approved pixels",
+    "API returns validated CGImage; future host must fence native/private/parent/scene scope and retain busy through decode",
+    "physical Keychain/FileProtection/locked-device/PhotosPicker/iCloud Photos and two ordinary real iCloud accounts remain unaccepted",
+    "real schema/roles/hosts/SIWA/separate service identity/hosted Free, reports/contact/retention and other migration remain open",
+    "prior SwiftUI frame warnings unresolved; standard entry Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote deployment/activation/schema/roles/new credentials/permissions/paid services",
+    "physical phone SDK or new test windows",
+    "Production/TestFlight/Firebase changes",
+    "unchanged gateway538/Core/UI/dependency/CI test repetition"
+  ],
+  "packageRuntimeWarnings": [],
+  "appBuildWarnings": [
+    "AppIntents metadata extraction skipped; no AppIntents.framework dependency"
+  ],
+  "sourceDocsSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerPreview.swift": "b47cf3688a458c7ac37f3bc72001798fb7f41b2923e66a8494f12198120412e0",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerPreviewHTTPClient.swift": "142daab079e699c1529b70f642ae5017483e8091feb417715180416e3ec6c0e8",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerPreviewTransport.swift": "c09355cf1146d8cf97a7995944893dc4af82ec52b4837d588ea7f4e9942919da",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerPreviewTests.swift": "94d63535c2e874cbb987fd8cdd8655c00ec31da8a47c35d9d04996f844001c3e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerPreviewTransportTests.swift": "b149be9fea1bbe046803311c60de2630b3efb12efe9b1661b250c9c49b674291",
+    "gateway/scripts/export-avatar-owner-preview-native-fixture.mjs": "c7c57707a365a27589b1eba921dd55617642eda79a2b31e853ada9de6e8130a8",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-owner-preview/responses.json": "249dce28ec439279b1721d17e2362a142ec63d16f06cfbf7eca2642a13872979",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-owner-preview/image.jpg": "7c11d1252375c6c7ce6db8a4647d06c6c298c1a6ce6619f6201a86f9629a0412",
+    "Docs/NATYWNY_PODGLAD_ZDJECIA_AUTORA.md": "218b999903154552b5e9a27e6c302fdb69fa7ef703c351643b9c51e2f7ad02be",
+    "Docs/PODGLAD_ZATWIERDZONEGO_ZDJECIA_AUTORA.md": "9e9d99b8d72a67f23c57c43e800148ec0ef46438b27bcd9090077deae88841aa",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "591c58653988ddb7d3ff83cc8ecc287eeb0f9bfd8f712b0117c7e9e9f6769a08",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "a1b7cf4bfd6ef934480c04775aca9298ea6f4c1889da87c6dcc27d21a0136965",
+    "Docs/DZIENNIK_ZMIAN.md": "28dfcbb0b076e46b5360d0b07148b26211e2a6d1374922dfa74dede635e03587"
+  },
+  "localLogSHA256": {
+    "echoes-owner-preview-native-full-mac.log": "54d67d9da2a934776372d99a7b0bdab0050e09e92752db62626b9a0a2d4b2a1d",
+    "echoes-owner-preview-native-package-simulator.log": "d5100040b52d0462dd5f8e5b42bfb06989d39e77d1b305a6e6fed10fca508e34",
+    "echoes-owner-preview-native-package-simulator-summary.json": "a19e03c493e99ca1656766806276abeab1bcbe70a5ff87ae464b8096005de802",
+    "echoes-owner-preview-native-debug.log": "e9260c56b7beec0515fb8f9ddd72774d5c74786e0bea26a8659d582c495fd889",
+    "echoes-owner-preview-native-release.log": "421a5d2a6643e6724d7777e9a5388e7d041da858d46f525e8d23181cdafd9e6c",
+    "echoes-owner-preview-native-negative.log": "69f1132a85400e73075c953e9b6a288989eed259138d2159147f135751b806a0",
+    "echoes-owner-preview-native-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "echoes-owner-preview-native-export.log": "ef6c5597c6cfd208d363b7ce93cdf1215284d1dfa7cc20a7be0dd4d674fdf284"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}
