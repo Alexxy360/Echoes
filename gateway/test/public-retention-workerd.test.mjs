@@ -5,6 +5,8 @@ import { retentionFixture } from "./support/public-retention-fixture.mjs";
 import { profileInput, syntheticPublicKeyConfiguration } from "./support/public-record-fixture.mjs";
 import { sqliteSnapshot } from "./support/sqlite-snapshot.mjs";
 import { avatarWorker } from "./support/workerd-image-harness.mjs";
+import { maintenanceRuntimeFixture } from "./support/maintenance-runtime-fixture.mjs";
+import { setTimeout as delay } from "node:timers/promises";
 
 test("real local workerd SQL and signed provider model erase expired content and restore only fresh presence", { timeout: 30000 }, async () => {
   const f = await retentionFixture(); let worker;
@@ -26,5 +28,37 @@ test("real local workerd SQL and signed provider model erase expired content and
     assert.equal(result.retryCode, "PUBLIC_ERASED"); assert.equal(result.presenceRestored, true);
     assert.equal(result.profilePreserved, true); assert.equal(result.occupiedAfterDrain, false);
     assert.equal(result.metadataOnly, 1); assert.ok(result.signatures >= 10);
+  } finally { if (worker) await worker.stop(); f.close(); }
+});
+
+test("real local workerd delivers a native alarm through Runtime and its independent durable maintenance budget", { timeout: 30000 }, async () => {
+  const f = await maintenanceRuntimeFixture(); let worker;
+  try {
+    const presence = await f.repository.writeLatest({ accessToken: f.signedIn.sessionToken, kind: "presence", logicalID: "singleton", requestID: randomUUID(),
+      input: { name: "Maja", latitude: 51.1123456, longitude: 17.0345678, song: "Synthetic song", songID: "123", generation: 0, measuredAt: f.clock() }, authorizeMutation() {} });
+    const message = await f.message(), id = randomUUID();
+    const report = await f.repository.write({ accessToken: f.signedIn.sessionToken, kind: "report", logicalID: id, requestID: id,
+      input: { messageID: message.record.recordName, reason: "SYNTHETIC-PRIVATE-REPORT" } });
+    const profile = await f.repository.write(profileInput(f.signedIn, "Trwały profil"));
+    f.advance(30 * 86400000);
+    f.activate({ PUBLIC_RETENTION_ENABLED: "1", GATEWAY_EXPIRES_AT: new Date(f.clock() + 6 * 86400000).toISOString() });
+    worker = await avatarWorker({ retentionEntry: true });
+    const response = await fetch(new URL("/maintenance-start", worker.origin), { method: "POST", headers: { "Content-Type": "application/json", Connection: "close" },
+      body: JSON.stringify({ synthetic: "echoes-owned-local-retention-proof-v1", now: f.clock(), tables: sqliteSnapshot(f.db), env: f.env,
+        records: [...f.model.records.values(), ...f.model.controls.values()],
+        expiredNames: [presence.recordName, message.record.recordName, report.recordName], profileName: profile.recordName,
+        privateKeyPEM: syntheticPublicKeyConfiguration().CLOUDKIT_PRIVATE_KEY }) });
+    assert.equal(response.status, 202, await response.text());
+    let result;
+    for (let i = 0; i < 100; i++) {
+      result = await (await fetch(new URL("/maintenance-status", worker.origin), { headers: { Connection: "close" } })).json();
+      if (!result.pending) break;
+      await delay(50);
+    }
+    assert.equal(result.pending, undefined, "Native workerd alarm did not deliver within five seconds");
+    assert.equal(result.error, undefined, JSON.stringify(result));
+    assert.equal(result.deliveries, 1); assert.equal(result.emptyFences, true); assert.equal(result.erased, 2);
+    assert.equal(result.profilePreserved, true); assert.equal(result.metadataOnly, 1); assert.ok(result.signatures >= 6);
+    assert.deepEqual(result.budget, [{ total: 1, deletion: 0, retention: 1 }]); assert.equal(result.nextAlarm, null);
   } finally { if (worker) await worker.stop(); f.close(); }
 });

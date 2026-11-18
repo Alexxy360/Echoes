@@ -12,6 +12,8 @@ import { AccountDeletionState } from "./account-deletion-state.mjs";
 import { AccountDeletionCoordinator, AccountDeletionProcessor } from "./account-deletion.mjs";
 import { GatewayLimits, edgeBudgetHash } from "./gateway-limits.mjs";
 import { GatewayMaintenance } from "./gateway-maintenance.mjs";
+import { MaintenanceProviderWork } from "./gateway-maintenance-control.mjs";
+import { CloudKitPublicRetentionProcessor } from "./public-retention-processor.mjs";
 import { createGatewayHTTPHandler, inspectGatewayRequest, gatewayFailure, gatewayJSON } from "./gateway-http.mjs";
 import { CloudKitPublicClient } from "./cloudkit-public-client.mjs";
 import { PublicRecordRegistry } from "./public-record-registry.mjs";
@@ -41,6 +43,8 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
       env.CLOUDKIT_CONTAINER !== "iCloud.mpvEcho.Echo" || env.CLOUDKIT_ENVIRONMENT !== "development" ||
       !["0", "1"].includes(env.ACCOUNT_DELETION_ENABLED) ||
       !["0", "1"].includes(env.PUBLIC_RECORDS_ENABLED ?? "0") ||
+      !["0", "1"].includes(env.PUBLIC_RETENTION_ENABLED ?? "0") ||
+      env.PUBLIC_RETENTION_ENABLED === "1" && env.PUBLIC_RECORDS_ENABLED !== "1" ||
       !["0", "1"].includes(env.COMMUNITY_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_READ_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_OWNER_PREVIEW_ENABLED ?? "0") ||
@@ -66,7 +70,7 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
   } catch { return null; }
   return Object.freeze({ deadline, avatarOwnerPreviewEnabled: env.AVATAR_OWNER_PREVIEW_ENABLED === "1", avatarReviewEnabled: env.AVATAR_REVIEW_ENABLED === "1", avatarReviewers: reviewers, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
     avatarUploadEnabled: env.AVATAR_UPLOAD_ENABLED === "1", avatarUploadHosts: uploadHosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
-    publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
+    publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", retentionEnabled: env.PUBLIC_RETENTION_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
 }
 function keyMap(json) {
   if (typeof json !== "string" || json.length > 2048) throw new Error();
@@ -95,18 +99,23 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const renewalProofs = new RenewalProofs({ activeKeyID: env.RENEWAL_ACTIVE_KEY_ID, keys: renewalKeys });
     const clientSecret = new AppleClientSecret({ privateKeyPEM: env.APPLE_SIGNIN_PRIVATE_KEY, keyID: env.APPLE_SIGNIN_KEY_ID, clock });
     let checkpoint;
-    const guardedFetch = (...args) => {
-      if (!activeGatewayConfiguration(env, clock()) || !checkpoint && hasRegistryCheckpoint(storage)) throw new Error("Gateway is inactive.");
-      return fetchImplementation(...args);
+    const guardedFetch = (request, options) => {
+      const signal = options?.signal ?? request?.signal;
+      if (signal?.aborted || !activeGatewayConfiguration(env, clock()) || !checkpoint && hasRegistryCheckpoint(storage)) throw new Error("Gateway is inactive.");
+      return fetchImplementation(request, options);
     };
-    const providerFetch = async (...args) => {
-      await checkpoint?.advance({ signal: args[1]?.signal });
-      return guardedFetch(...args);
+    const providerFetch = async (request, options) => {
+      const signal = options?.signal ?? request?.signal;
+      if (signal?.aborted) throw new Error("Gateway is inactive.");
+      await checkpoint?.advance({ signal });
+      return guardedFetch(request, { ...options, signal });
     };
     const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: providerFetch });
     const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: providerFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
     let publicRecords, community, communityState, avatarReader, avatarPublication, avatarWithdrawal, avatarReview, avatarOwnerPreview;
+    let publicClient, retentionState, retentionProcessor;
+    const isRetentionEnabled = () => activeGatewayConfiguration(env, clock())?.retentionEnabled === true;
     const isAvatarReadEnabled = () => {
       const active = activeGatewayConfiguration(env, clock());
       return active?.avatarReadEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
@@ -135,6 +144,11 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
         keyID: env.CLOUDKIT_KEY_ID, privateKeyPEM: env.CLOUDKIT_PRIVATE_KEY, clock, fetchImplementation: guardedFetch,
         isEnabled: () => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true });
       checkpoint = new PublicRegistryCheckpoint({ registry, client });
+      publicClient = client;
+      if (config.retentionEnabled) {
+        retentionState = registry;
+        retentionProcessor = new CloudKitPublicRetentionProcessor({ registry, client, checkpoint, clock, isEnabled: isRetentionEnabled });
+      }
       publicRecords = new CloudKitPublicRepository({ authentication, clock, registry, client, checkpoint });
       if (config.communityEnabled || storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").toArray().length) communityState = new CommunityState(storage, { clock });
       const avatarPolicy = config.avatarReadEnabled || config.avatarUploadEnabled || config.avatarReviewEnabled || config.avatarOwnerPreviewEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
@@ -174,12 +188,25 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       catch (error) { await checkpoint?.advance(); throw error; }
       await checkpoint?.advance(); return result;
     };
-    const maintenance = checkpoint ? {
+    const providerWork = new MaintenanceProviderWork(async () => {
+      await checkpoint?.waitForPendingOperations();
+      await publicClient?.waitForPendingOperations();
+      await apple.waitForPendingOperations();
+    });
+    const retention = retentionProcessor ? {
+      prepare: async () => { if (isRetentionEnabled()) await retentionState.backfillRetention(); },
+      schedule: () => isRetentionEnabled() ? retentionState.retentionSchedule() : { dueAt: null, needsBackfill: false },
+      step: options => providerWork.run(() => retentionProcessor.step(options)),
+    } : undefined;
+    const maintenance = {
       schedule: () => localMaintenance.schedule(),
-      alarm: options => activeGatewayConfiguration(env, clock())?.publicRecordsEnabled === true
-        ? afterCheckpoint(() => localMaintenance.alarm(options))
-        : localMaintenance.alarm({ processor: undefined }),
-    } : localMaintenance;
+      alarm: options => {
+        const active = activeGatewayConfiguration(env, clock());
+        return localMaintenance.alarm({ processor: active?.deletionEnabled ? options?.processor : undefined,
+          retention: active?.retentionEnabled ? retention : undefined,
+          providerBusy: () => providerWork.isOccupied || retentionProcessor?.isOccupied === true });
+      },
+    };
     const login = new AppleLoginCoordinator({ state: authentication, verifier, credentialVault,
       exchangeAuthorizationCode: input => apple.exchangeAuthorizationCode(input) });
     const renewal = new SessionRenewalCoordinator({ state: authentication, verifier, credentialVault, appleClient: apple });
@@ -192,9 +219,11 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
           if (!receipt.remaining && communityState) { await communityState.eraseOwner(context.accountID); await checkpoint.advance(); }
           return receipt;
         } : erasePublicDataBatch }) : undefined;
-    const processor = checkpoint ? { step: async deletionID => {
-      await checkpoint.verify(); return afterCheckpoint(() => localProcessor.step(deletionID));
-    } } : localProcessor;
+    const processor = localProcessor ? { step: deletionID => providerWork.run(async () => {
+      if (activeGatewayConfiguration(env, clock())?.deletionEnabled !== true) throw new Error("Gateway is inactive.");
+      if (checkpoint) { await checkpoint.verify(); return afterCheckpoint(() => localProcessor.step(deletionID)); }
+      return localProcessor.step(deletionID);
+    }) } : undefined;
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
       avatarReader, isAvatarReadEnabled, avatarOwnerPreview, isAvatarOwnerPreviewEnabled,

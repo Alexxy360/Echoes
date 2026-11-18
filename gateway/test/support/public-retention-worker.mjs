@@ -9,12 +9,27 @@ import { CloudKitPublicClient } from "../../src/cloudkit-public-client.mjs";
 import { PublicRegistryCheckpoint, checkpointRecordName } from "../../src/public-registry-checkpoint.mjs";
 import { CloudKitPublicRepository } from "../../src/public-record-repository.mjs";
 import { CloudKitPublicRetentionProcessor } from "../../src/public-retention-processor.mjs";
+import { GatewayLimits } from "../../src/gateway-limits.mjs";
+import { GatewayMaintenance } from "../../src/gateway-maintenance.mjs";
+import { createGatewayRuntime } from "../../src/gateway-runtime.mjs";
 
 /** Loopback-only proof. Outbound networking is denied by the harness; all provider data is synthetic. */
 export class RetentionProofAuthority extends DurableObject {
+  #runtime; #inspect; #deliveries = 0;
+  async alarm() {
+    this.#deliveries++;
+    try {
+      if (!this.#runtime || !this.#inspect) throw new Error("Missing synthetic alarm fixture");
+      await this.#runtime.maintenance.alarm({ processor: this.#runtime.processor });
+      await new Promise(resolve => setTimeout(resolve, 0));
+      await this.ctx.storage.put("maintenance-proof-result", { ...await this.#inspect(), deliveries: this.#deliveries });
+    } catch { await this.ctx.storage.put("maintenance-proof-result", { error: "SYNTHETIC_ALARM_FAILED", deliveries: this.#deliveries }); }
+  }
   async fetch(request) {
     try {
-      if (request.method !== "POST" || new URL(request.url).pathname !== "/retention-proof") return new Response(null, { status: 404 });
+      const path = new URL(request.url).pathname;
+      if (request.method === "GET" && path === "/maintenance-status") return Response.json(await this.ctx.storage.get("maintenance-proof-result") ?? { pending: true });
+      if (request.method !== "POST" || !["/retention-proof", "/maintenance-start"].includes(path)) return new Response(null, { status: 404 });
       const bytes = new Uint8Array(await request.arrayBuffer());
       if (bytes.length > 524288) throw new Error("Synthetic input limit");
       const p = JSON.parse(new TextDecoder().decode(bytes));
@@ -23,7 +38,8 @@ export class RetentionProofAuthority extends DurableObject {
       const storage = this.ctx.storage, clock = () => p.now;
       const proofs = new RenewalProofs({ activeKeyID: "synthetic", keys: { synthetic: randomBytes(32).toString("base64url") } });
       new AuthenticationState(storage, { clock, renewalProofs: proofs });
-      new AccountDeletionState(storage, { clock }); new PublicRecordRegistry(storage, { clock });
+      const deletions = new AccountDeletionState(storage, { clock }); new PublicRecordRegistry(storage, { clock });
+      const limits = new GatewayLimits(storage, { clock }); new GatewayMaintenance(storage, { clock, limits, deletions });
       const allowed = new Set(storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").toArray().map(r => r.name));
       let rowCount = 0;
       storage.transactionSync(() => {
@@ -76,6 +92,26 @@ export class RetentionProofAuthority extends DurableObject {
           records.set(record.recordName, result); return structuredClone(result);
         }).reverse() });
       };
+      if (path === "/maintenance-start") {
+        // Actual native workerd alarm delivery. The synthetic provider closure remains in this instance;
+        // this proves alarm/Runtime composition, not eviction recovery or hosted Cloudflare acceptance.
+        this.#runtime = createGatewayRuntime(storage, p.env, { clock, fetchImplementation: provider });
+        this.#inspect = async () => ({
+          emptyFences: p.expiredNames.every(name => {
+            const record = records.get(name);
+            return record?.fields.erased.value === 1 && Object.keys(record.fields).sort().join() === "erased,ownerKey,retentionKey,schemaVersion";
+          }),
+          erased: storage.sql.exec("SELECT count(*) n FROM public_records_v1 WHERE phase='erased'").toArray()[0].n,
+          profilePreserved: records.get(p.profileName)?.fields.name?.value === "Trwały profil",
+          budget: storage.sql.exec("SELECT total,deletion,retention FROM maintenance_daily_v1").toArray(),
+          nextAlarm: await storage.getAlarm(), signatures, metadataOnly,
+        });
+        await storage.delete("maintenance-proof-result");
+        await this.#runtime.maintenance.schedule();
+        await storage.setAlarm(Date.now() + 25); // Test-only acceleration of the first delivery, no manual alarm call.
+        await storage.sync();
+        return Response.json({ scheduled: true }, { status: 202 });
+      }
       const client = new CloudKitPublicClient({ container: "iCloud.mpvEcho.Echo", environment: "development", keyID: "synthetic-public-v1",
         privateKeyPEM: p.privateKeyPEM, fetchImplementation: provider, isEnabled: () => true, clock });
       const checkpoint = new PublicRegistryCheckpoint({ registry, client });

@@ -53,28 +53,30 @@ async function boundedBody(response, signal) {
     await response.body?.cancel(); throw new AppleOAuthError();
   }
   if (!response.body) return "";
-  const reader = response.body.getReader(); const chunks = []; let size = 0;
-  const abort = () => { void reader.cancel().catch(() => {}); };
+  const reader = response.body.getReader(); const chunks = []; let size = 0, cancellation;
+  const cancel = () => cancellation ??= reader.cancel().catch(() => {});
+  const abort = () => { void cancel(); };
   signal.addEventListener("abort", abort, { once: true });
   try {
     if (signal.aborted) throw new AppleOAuthError();
     while (true) {
       const { value, done } = await reader.read();
       if (done) break;
+      if (!(value instanceof Uint8Array) || chunks.length >= 4096 || signal.aborted) throw new AppleOAuthError();
       size += value.byteLength;
       if (size > 65536) throw new AppleOAuthError();
       chunks.push(value);
     }
   } finally {
     signal.removeEventListener("abort", abort);
-    await reader.cancel().catch(() => {}); reader.releaseLock();
+    await cancel(); reader.releaseLock();
   }
   return new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks, size));
 }
 
 /** Native App ID only: fixed Apple URLs, no redirects and no retries of a one-use code. Server internal. */
 export class AppleOAuthClient {
-  #secret; #fetch; #timeout;
+  #secret; #fetch; #timeout; #pending = new Set();
   constructor({ clientSecret, fetchImplementation = request => fetch(request), timeoutMilliseconds = 5000 } = {}) {
     if (typeof clientSecret?.create !== "function" || typeof fetchImplementation !== "function" ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 5000) {
@@ -112,6 +114,8 @@ export class AppleOAuthClient {
         if (fields.grant_type === "authorization_code" && !result.refreshToken) throw new AppleOAuthError();
         return Object.freeze(result);
       })();
+      this.#pending.add(operation);
+      void operation.then(() => this.#pending.delete(operation), () => this.#pending.delete(operation));
       const deadline = new Promise((_, reject) => {
         timer = setTimeout(() => { controller.abort(); reject(new AppleOAuthError()); }, this.#timeout);
       });
@@ -120,6 +124,7 @@ export class AppleOAuthClient {
       throw error instanceof AppleOAuthError ? error : new AppleOAuthError();
     } finally { clearTimeout(timer); controller.abort(); }
   }
+  async waitForPendingOperations() { await Promise.allSettled([...this.#pending]); }
   exchangeAuthorizationCode({ authorizationCode } = {}) {
     try {
       return this.#post("/auth/token", { code: opaque(authorizationCode, 2048), grant_type: "authorization_code" });

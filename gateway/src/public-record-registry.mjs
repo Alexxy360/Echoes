@@ -435,6 +435,19 @@ export class PublicRecordRegistry {
     });
     await this.#durable(); return count;
   }
+  retentionSchedule() {
+    return this.#tx(() => {
+      const row = this.#rows(`SELECT MIN(CASE WHEN r.state='fencing' THEN MAX(r.due_at,r.lease_at+?) ELSE r.due_at END) AS due_at
+        FROM public_retention_v1 r JOIN public_records_v1 p ON p.record_name=r.record_name JOIN auth_accounts_v1 a ON a.account_id=p.account_id
+        WHERE a.disabled=0 AND p.phase IN ('pending','settled') AND r.state IN ('pending','fencing')`, publicRetentionLeaseMilliseconds)[0];
+      const dueAt = row?.due_at ?? null;
+      if (dueAt !== null && (!Number.isSafeInteger(dueAt) || dueAt < 0)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      const legacy = this.#rows(`SELECT 1 FROM public_records_v1 p JOIN auth_accounts_v1 a ON a.account_id=p.account_id
+        LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name WHERE a.disabled=0
+        AND p.phase IN ('pending','settled') AND p.kind IN ('presence','message','report') AND r.record_name IS NULL LIMIT 1`).length > 0;
+      return Object.freeze({ dueAt, needsBackfill: legacy });
+    });
+  }
   /** Fair, durable leases. No CloudKit permission or HTTP route is granted by this local API. */
   async claimExpiredRecords(maximumRecords = 25) {
     if (!Number.isInteger(maximumRecords) || maximumRecords < 1 || maximumRecords > 25) throw new PublicRecordError("PUBLIC_INPUT");

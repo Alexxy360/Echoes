@@ -1,0 +1,164 @@
+{
+  "stage": "CK-05a.3",
+  "createdAt": "2026-11-18T19:12:15.224974+00:00",
+  "baselineCommit": "a7fd967e5a61d9a0db305ad49d668032726e9c80",
+  "runs": {
+    "node22": {
+      "tests": 600,
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-maintenance-verified-node22.log",
+      "SHA256": "c434ebc59bbddb467cb067f80ccfbe297009c589aab97e16493f189d0bc67c11"
+    },
+    "node24": {
+      "tests": 600,
+      "passed": 600,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-maintenance-verified-node24.log",
+      "SHA256": "aa403781c16d00ceb7edffc249fc09b0a78d9455e43d3777c7f5cfcdbddc1547"
+    }
+  },
+  "newFunctionCount": 27,
+  "newFunctions": [
+    "future retention without local timed rows sleeps until the first deadline without provider IO",
+    "bounded backfill keeps a minute wake without being treated as provider work",
+    "a failed deletion rotates to retention and immediate platform retries cannot consume another attempt",
+    "an occupied provider skips admission but still performs bounded local cleanup",
+    "real local workerd delivers a native alarm through Runtime and its independent durable maintenance budget",
+    "retention is opt-in and a disabled alarm makes no provider or checkpoint call",
+    "an alarm runs retention without a community request or a live user session",
+    "a real Runtime processes at most 25 rows per minute and ignores same-minute alarm retries",
+    "account erasure and retention alternate independent provider lanes in the actual Runtime",
+    "disabling retention during durable admission consumes its attempt without making a provider call",
+    "inactive or expired Runtime and key-free local maintenance preserve remote jobs without provider IO",
+    "a timed-out Runtime retains its provider slot across later alarm minutes until real IO settles",
+    "maintenance budget consumes one durable provider attempt per UTC minute across both lanes",
+    "simultaneous alarm retries cannot reserve two attempts in the same minute",
+    "daily lane reservations prevent one class from consuming the other's capacity and reset at UTC midnight",
+    "user request quota exhaustion does not consume the reserved maintenance pool",
+    "maintenance consumption leaves ordinary request budgets unchanged",
+    "file-backed reopen preserves the minute fence, counters and next lane",
+    "purging old days retains a clock floor and cannot restore a previous day's budget",
+    "failed durability or an expired permit never authorizes provider work and the attempt remains consumed",
+    "crossing midnight during durability closes the old permit before any provider call",
+    "bad lane, clock and corrupted counters fail with a sanitized control error",
+    "the provider slot is retained until actual drain even after a step returns",
+    "failed provider drain keeps both lanes closed instead of assuming the work stopped",
+    "an ignored Apple revoke fetch remains tracked after its timeout",
+    "Apple response body cancellation keeps the first cancel promise tracked until it settles",
+    "Apple body transport bounds empty fragment floods and rejects non-byte chunks with a sanitized error"
+  ],
+  "sourceSHA256": {
+    "gateway/src/apple-oauth.mjs": "298c65963f894279a6b6345283d21d04bdd083c096f9c1cb56d78da12942b3d2",
+    "gateway/src/gateway-maintenance-control.mjs": "b612b32a7ea9c50c9df201e3ff58bf064d94e5c4ec25690b681a12d260264448",
+    "gateway/src/gateway-maintenance.mjs": "8c196de200e90ceb11c7aebc5bcf8581af453c7b67c477f868abf22ca20d6e0c",
+    "gateway/src/gateway-runtime.mjs": "0b2df83549a3c5864f0748b8dcc7cf2cccc3b354f073f0f7913b7d14c4438dea",
+    "gateway/src/public-record-registry.mjs": "c0475990a287d77a58dd38685f5999c020f2871df8301423f85cf3eafb0e5cc9",
+    "gateway/src/public-retention-policy.mjs": "ad362812e668c2b954e59449217e51c1970433914533c13db4564aceeaad2274",
+    "gateway/test/gateway-maintenance.test.mjs": "9887d82afea226e2a69f13c5097d65af11af9c74371d0ca4b8f03a35a3d54021",
+    "gateway/test/maintenance-control.test.mjs": "479f50de4af0f162c8d6acbd354a89a31384c0a4ebf6c4782d8be1557d1b68a5",
+    "gateway/test/maintenance-runtime.test.mjs": "f4fddf09818409e8a24f431c42d075516c5465d34984e0797dbb8b8dc498b05f",
+    "gateway/test/public-retention-workerd.test.mjs": "83705e2ca6cf16e1ea44d896f4d59159f380cecffb188742aa075fc2f53de9a9",
+    "gateway/test/support/maintenance-runtime-fixture.mjs": "76de874675a452ed1b8f0232c1231cfd044dad2f104560f6c9f34c31da462091",
+    "gateway/test/support/public-retention-worker.mjs": "ceaa966aa3f8ba88c3b55b740d70097954fe4b1712a8d54de9bc9716d01d59d7",
+    "gateway/wrangler.community.jsonc": "94c8eb75f6088f4232470a21cde9262d31ccf16f6f42cd19c9ba0c802b836f5d"
+  },
+  "syntax": {
+    "MJS": 134,
+    "nodeVersions": [
+      22,
+      24
+    ],
+    "JSON": 2,
+    "log": "/private/tmp/echoes-maintenance-syntax.log",
+    "SHA256": "8758173664eeb2f97767fb52842d7b6b17347aeecdfbd2f1cbb766b6840b7c7d"
+  },
+  "negativeControl": {
+    "expectedFailures": 1,
+    "removed": "same-UTC-minute durable admission fence; separate copy only",
+    "productionSourcePreserved": true,
+    "log": "/private/tmp/echoes-maintenance-negative.log",
+    "SHA256": "dd43b7c85007de89ba717e5ff602b3d7286af036c807c0323f2120581f799262"
+  },
+  "intermediateRuns": {
+    "echoes-maintenance-control-targeted.log": {
+      "log": "/private/tmp/echoes-maintenance-control-targeted.log",
+      "SHA256": "fb4aa7ca7e8b901188ea358ca5cbf3a59abb71d602e080c34b2a488ebb139992"
+    },
+    "echoes-maintenance-integration-early-full.log": {
+      "log": "/private/tmp/echoes-maintenance-integration-early-full.log",
+      "SHA256": "eb65e7aa5fa20af994fbb1b68397d09061237340c7df71cb890ea80e2951518f"
+    },
+    "echoes-maintenance-runtime-targeted.log": {
+      "log": "/private/tmp/echoes-maintenance-runtime-targeted.log",
+      "SHA256": "d84a6e9c59d232317d4a4ecf939035d59344789468d476fa8d21546d87abc24c"
+    },
+    "echoes-maintenance-runtime-targeted-final.log": {
+      "log": "/private/tmp/echoes-maintenance-runtime-targeted-final.log",
+      "SHA256": "239fb02e8d684301316aa51a96322e4f92da78b156d94a9030f4e5f04c4f3f41"
+    },
+    "echoes-maintenance-native-alarm.log": {
+      "log": "/private/tmp/echoes-maintenance-native-alarm.log",
+      "SHA256": "83d727dfb1d3cd64c208adbc5f2217c18afea7bf9fc4c1c8ff830001a01c2dca"
+    },
+    "echoes-maintenance-final-node22.log": {
+      "log": "/private/tmp/echoes-maintenance-final-node22.log",
+      "SHA256": "b54423a6daaef98241fefdefa8a1d87c1b5d21ed209cffe8dba593d0539de783"
+    },
+    "echoes-maintenance-final-node24.log": {
+      "log": "/private/tmp/echoes-maintenance-final-node24.log",
+      "SHA256": "3b0a69cf982a207ff995c9606a8e1c3dc46e2f32de6a590c7bdbf28a245f9bd7"
+    }
+  },
+  "initialRuntimeRun": {
+    "tests": 7,
+    "passed": 3,
+    "failed": 4,
+    "cause": "Fixture expected fenced queue rows for immutable messages that correctly become erased and leave the queue; also expected a final Apple revocation status despite two retained tokens and bounded one-token processing."
+  },
+  "workerdProof": {
+    "runtimeVersion": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "nativeAlarmDelivered": true,
+    "manualAlarmCall": false,
+    "sameInstanceProviderFixture": true,
+    "outboundNetworking": "denied",
+    "timedRecords": 3,
+    "erasedRegistryRows": 2,
+    "profilePreserved": true,
+    "budget": {
+      "total": 1,
+      "deletion": 0,
+      "retention": 1
+    },
+    "nextAlarm": null
+  },
+  "defaults": {
+    "PUBLIC_RETENTION_ENABLED": "0",
+    "remoteDeployment": false,
+    "remoteActivation": false,
+    "newSecretsOrPermissions": false,
+    "paidServices": false
+  },
+  "preservation": {
+    "unchangedNonDocsBaselineFiles": 335,
+    "swiftUIAndDependenciesChanged": false,
+    "userProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "notAccepted": [
+    "actual CloudKit schema/roles/retentionKey and separated service identity",
+    "hosted Free SQL rows/CPU/RSS/duration/capacity",
+    "two ordinary iCloud accounts",
+    "real physical device acceptance",
+    "avatar asset/orphan retention",
+    "confidential reports/support contact",
+    "ordinary Firebase entry migration and TestFlight"
+  ],
+  "officialSources": [
+    "https://developers.cloudflare.com/durable-objects/api/alarms/",
+    "https://developers.cloudflare.com/durable-objects/platform/pricing/",
+    "https://developers.cloudflare.com/durable-objects/platform/limits/"
+  ]
+}

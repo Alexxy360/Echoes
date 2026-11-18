@@ -125,7 +125,7 @@ test("fair persisted rotation reaches jobs beyond the first ten even when earlie
   const f = setup(); const visited = [];
   try {
     for (let i = 0; i < 12; i++) f.addJob();
-    for (let i = 0; i < 12; i++) await f.maintenance.alarm({ processor: { async step(id) { visited.push(id); } } });
+    for (let i = 0; i < 12; i++) { await f.maintenance.alarm({ processor: { async step(id) { visited.push(id); } } }); f.advance(60000); }
     assert.equal(new Set(visited).size, 12);
     await f.maintenance.alarm({ processor: { async step(id) { visited.push(id); } } });
     assert.equal(visited[12], visited[0]);
@@ -156,7 +156,53 @@ test("a new object instance resumes its maintenance cursor instead of restarting
     f.addJob(); f.addJob();
     await f.maintenance.alarm({ processor: { async step(id) { visited.push(id); } } });
     f.close(); f = setup({ path });
+    f.advance(60000);
     await f.maintenance.alarm({ processor: { async step(id) { visited.push(id); } } });
     assert.notEqual(visited[0], visited[1]);
   } finally { f.close(); rmSync(directory, { recursive: true, force: true }); }
+});
+
+test("future retention without local timed rows sleeps until the first deadline without provider IO", async () => {
+  const f = setup(); let calls = 0;
+  try {
+    const dueAt = start + 7200000;
+    await f.maintenance.alarm({ retention: { async prepare() {}, schedule: () => ({ dueAt, needsBackfill: false }), async step() { calls++; } } });
+    assert.equal(calls, 0); assert.equal(f.alarm(), dueAt);
+    assert.equal(f.db.prepare("SELECT count(*) n FROM maintenance_daily_v1").get().n, 0);
+  } finally { f.close(); }
+});
+
+test("bounded backfill keeps a minute wake without being treated as provider work", async () => {
+  const f = setup(); let prepares = 0, calls = 0;
+  try {
+    await f.maintenance.alarm({ retention: { async prepare() { prepares++; }, schedule: () => ({ dueAt: null, needsBackfill: true }), async step() { calls++; } } });
+    assert.equal(prepares, 1); assert.equal(calls, 0); assert.equal(f.alarm(), start + 60000);
+    assert.equal(f.db.prepare("SELECT count(*) n FROM maintenance_daily_v1").get().n, 0);
+  } finally { f.close(); }
+});
+
+test("a failed deletion rotates to retention and immediate platform retries cannot consume another attempt", async () => {
+  const f = setup(); let deletes = 0, retains = 0;
+  try {
+    f.addJob();
+    const processor = { async step() { deletes++; throw new Error("Synthetic provider outage"); } };
+    const retention = { async prepare() {}, schedule: () => ({ dueAt: start, needsBackfill: false }), async step() { retains++; } };
+    await assert.rejects(() => f.maintenance.alarm({ processor, retention }));
+    await f.maintenance.alarm({ processor, retention }); assert.equal(deletes, 1); assert.equal(retains, 0);
+    f.advance(60000); await f.maintenance.alarm({ processor, retention });
+    assert.equal(deletes, 1); assert.equal(retains, 1);
+    assert.deepEqual({ ...f.db.prepare("SELECT total,deletion,retention FROM maintenance_daily_v1").get() }, { total: 2, deletion: 1, retention: 1 });
+  } finally { f.close(); }
+});
+
+test("an occupied provider skips admission but still performs bounded local cleanup", async () => {
+  const f = setup(); let calls = 0;
+  try {
+    f.addJob();
+    f.db.prepare("INSERT INTO auth_challenges_v1(challenge_id,nonce_hash,expires_at,state) VALUES(?,?,?,'pending')").run(randomUUID(), hash("expired"), start - 1);
+    await f.maintenance.alarm({ processor: { async step() { calls++; } }, providerBusy: () => true,
+      retention: { async prepare() {}, schedule: () => ({ dueAt: start, needsBackfill: false }), async step() { calls++; } } });
+    assert.equal(calls, 0); assert.equal(f.db.prepare("SELECT count(*) n FROM auth_challenges_v1").get().n, 0);
+    assert.equal(f.db.prepare("SELECT count(*) n FROM maintenance_daily_v1").get().n, 0); assert.equal(f.alarm(), start + 60000);
+  } finally { f.close(); }
 });
