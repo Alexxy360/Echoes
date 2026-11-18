@@ -11,7 +11,7 @@ final class AppServices {
     let privateProfile: PrivateProfileStore?
     let avatars: GatewayCommunityAvatarBinding?
     private let avatarEditorHost: GatewayAvatarEditorHost?
-    let avatarPreviewSelection: (@Sendable () async throws -> PreparedAvatar)?
+    let avatarPreviewSelection: GatewayAvatarPreparation?
     @ObservationIgnored private weak var activeAvatarEditor: GatewayAvatarEditorSession?
     private(set) var isUpdatingName = false
     let location = LocationService()
@@ -47,7 +47,7 @@ final class AppServices {
         nativeSession: CommunitySession, privateProfile: PrivateProfileStore? = nil,
         avatars: GatewayCommunityAvatarBinding? = nil,
         avatarEditorHost: GatewayAvatarEditorHost? = nil,
-        avatarPreviewSelection: (@Sendable () async throws -> PreparedAvatar)? = nil,
+        avatarPreviewSelection: GatewayAvatarPreparation? = nil,
         simulatedCoordinate: Coordinate? = nil,
         isCurrent: @escaping @MainActor () -> Bool
     ) {

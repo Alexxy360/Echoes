@@ -97,6 +97,8 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     @ObservationIgnored private var ownerObserved = false
     @ObservationIgnored private var ownerVersion: String?
     @ObservationIgnored private var ownerGeneration: Int?
+    @ObservationIgnored private var moderationFences: [String: Set<String>] = [:]
+    @ObservationIgnored private var moderationSaturated = false
     public private(set) var presentationRevision = UUID()
 
     public init(
@@ -118,7 +120,10 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
             isVisible: { relay.host?.allows($0) == true }, uptime: uptime)
         relay.host = self
     }
-    public func bind(session: CommunitySession, isCurrent: @escaping @MainActor () -> Bool) throws
+    public func bind(
+        session: CommunitySession, pendingModeration: GatewayAvatarReviewRecoveryIntent? = nil,
+        isCurrent: @escaping @MainActor () -> Bool
+    ) throws
         -> GatewayCommunityAvatarBinding
     {
         if let context { invalidate(binding: context) }
@@ -132,6 +137,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         privateScope = scope
         current = isCurrent
         self.session = session
+        if let pendingModeration { addModerationFence(pendingModeration) }
         do { try session.bindPresentationObserver(self) } catch {
             invalidate(binding: id)
             throw GatewayFailure.configuration
@@ -173,6 +179,43 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         presentationRevision = UUID()
         reconcile()
     }
+    /// A trusted local pending decision hides all surfaces until an exact known outcome. Removing
+    /// this fence only permits a NEW protected read; it never authorizes cached pixels/publication.
+    public func observeModeration(_ event: GatewayAvatarReviewPublicationEvent) {
+        guard context != nil, current(), enabled(), source.communityAuthorization == authorization,
+            privateScope != nil, source.privateDataScope(configuration: cloudKit) == privateScope
+        else { return }
+        let owner: String
+        switch event {
+        case .pending(let intent):
+            owner = intent.item.accountID
+            addModerationFence(intent)
+        case .resolved(let result):
+            owner = result.intent.item.accountID
+            guard moderationFences[owner]?.remove(result.intent.decisionID) != nil else { return }
+            if moderationFences[owner]?.isEmpty == true { moderationFences.removeValue(forKey: owner) }
+        }
+        client.invalidate(ownerID: owner)
+        for (key, group) in groups where key.owner == owner {
+            discard(key, group)
+            groups.removeValue(forKey: key)
+        }
+        presentationRevision = UUID()
+        reconcile()
+    }
+    private func addModerationFence(_ intent: GatewayAvatarReviewRecoveryIntent) {
+        let owner = intent.item.accountID
+        if moderationFences[owner]?.contains(intent.decisionID) == true { return }
+        if moderationFences.values.reduce(0, { $0 + $1.count }) >= 32 {
+            moderationSaturated = true
+        } else {
+            moderationFences[owner, default: []].insert(intent.decisionID)
+        }
+        if owner == authorization?.identity.accountID {
+            ownerObserved = true
+            ownerVersion = nil
+        }
+    }
     public func communityPresentationDidChange(_ session: CommunitySession) {
         guard self.session === session else { return }
         reconcile()
@@ -187,6 +230,8 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         ownerObserved = false
         ownerVersion = nil
         ownerGeneration = nil
+        moderationFences = [:]
+        moderationSaturated = false
         current = { false }
         active = false
         connected = false
@@ -202,6 +247,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     private func eligibility(_ consumer: Consumer) -> Double? {
         guard operational, let session else { return nil }
         let owner = consumer.reference.ownerID
+        guard !moderationSaturated, moderationFences[owner] == nil else { return nil }
         if owner == authorization?.identity.accountID, ownerObserved,
             ownerVersion != consumer.reference.versionID
         {

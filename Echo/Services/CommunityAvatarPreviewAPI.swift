@@ -5,9 +5,9 @@
     import UIKit
 
     enum CommunityAvatarPreviewData {
-        static let ownerA = "11111111-1111-4111-8111-111111111111"
-        static let ownerB = "22222222-2222-4222-8222-222222222222"
-        static let version = "68000000-0000-4000-8000-000000000001"
+        nonisolated static let ownerA = "11111111-1111-4111-8111-111111111111"
+        nonisolated static let ownerB = "22222222-2222-4222-8222-222222222222"
+        nonisolated static let version = "68000000-0000-4000-8000-000000000001"
     }
 
     /// Explicitly synthetic local UI provider. It never constructs a URLSession or Apple database.

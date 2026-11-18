@@ -49,7 +49,7 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
     private let isEnabled: @MainActor () -> Bool
     private let date: @MainActor () -> Date
     private let uptime: @MainActor () -> TimeInterval
-    private let willDecide: @MainActor (String) -> Void
+    private let publicationChanged: @MainActor (GatewayAvatarReviewPublicationEvent) -> Void
     @ObservationIgnored private var context: Context?
     @ObservationIgnored private var epoch = UUID()
     @ObservationIgnored private var slot: UUID?
@@ -108,7 +108,7 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
         isEnabled: @escaping @MainActor () -> Bool = { false },
         date: @escaping @MainActor () -> Date = { Date() },
         uptime: @escaping @MainActor () -> TimeInterval = { ProcessInfo.processInfo.systemUptime },
-        willDecide: @escaping @MainActor (String) -> Void = { _ in }
+        publicationChanged: @escaping @MainActor (GatewayAvatarReviewPublicationEvent) -> Void = { _ in }
     ) throws {
         guard api.origin == configuration.origin.absoluteString,
             cloudKit.containerIdentifier == "iCloud.mpvEcho.Echo",
@@ -122,7 +122,7 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
         self.isEnabled = isEnabled
         self.date = date
         self.uptime = uptime
-        self.willDecide = willDecide
+        self.publicationChanged = publicationChanged
     }
     private func stamp() throws -> AvatarReviewStamp { try .init(date: date(), uptime: uptime()) }
     private func current(_ value: Context) -> Bool {
@@ -296,6 +296,8 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
                     id: UUID(), epoch: start, authorization: native, scope: scope, lease: lease,
                     isCurrent: isCurrent)
                 self.storedPending = pending
+                if let pending { self.publicationChanged(.pending(pending.intent)) }
+                try self.check(self.bound())
             } catch {
                 self.journal.fence(lease)
                 throw error
@@ -373,7 +375,7 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
             let dispatched = try await self.journal.dispatched(prepared, lease: context.lease)
             try self.check(context)
             self.storedPending = dispatched
-            self.willDecide(intent.receipt.item.accountID)
+            self.publicationChanged(.pending(dispatched.intent))
             try await self.match(dispatched, context)
             let result = try await self.api.decide(intent, token: token)
             try await self.match(dispatched, context)
@@ -384,6 +386,8 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
             try self.check(context)
             self.storedPending = resolved
             self.storedResolution = .init(id: UUID(), result: recovered)
+            self.publicationChanged(.resolved(recovered))
+            try self.check(context)
             self.storedQueue = []
         }
     }
@@ -403,6 +407,8 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
             try self.check(context)
             self.storedPending = resolved
             self.storedResolution = .init(id: UUID(), result: result)
+            self.publicationChanged(.resolved(result))
+            try self.check(context)
             self.storedQueue = []
             self.denied = false
         }

@@ -1,0 +1,365 @@
+{
+  "stage": "CK-04e.3j.3c.3",
+  "observedAtUTC": "2026-11-18T07:15:30.398505+00:00",
+  "baselineCommit": "7f7777213f94bb8535c4161e6e6cebb4c66b1395",
+  "checks": {
+    "newPackageFunctions": 9,
+    "defined": 490,
+    "macOS": {
+      "passed": 488,
+      "failed": 0,
+      "skipped": 2
+    },
+    "iOSSimulator": {
+      "passed": 488,
+      "failed": 0,
+      "skipped": 2
+    },
+    "newIndividualCompletionsVerified": true,
+    "moderatorUI": {
+      "passed": 10,
+      "failed": 0
+    },
+    "regressionUI": {
+      "passed": 33,
+      "failed": 0,
+      "previousTests": 31,
+      "moderatorVisualRepeats": 2
+    },
+    "distinctUI": 41,
+    "strictSwiftFormatFiles": 20,
+    "simulator": "iPhone17Pro/iOS26.1"
+  },
+  "builds": {
+    "debug": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "moderatorFixtureAbsent": false,
+      "binarySHA256": {
+        "Echoes": "541d215310a2ffc4ca92388b573e1d8e8ff3d0b7809ab7a14e9a977f09cd3b13",
+        "Echoes.debug.dylib": "d53c5a544f7127e7c963f795585c4618fd08f3437b43b85ae57fc9d9864933ca"
+      }
+    },
+    "release": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "moderatorFixtureAbsent": true,
+      "binarySHA256": {
+        "Echoes": "d4dbce7a2bd2f09ba2731a5c69e31be8eb5478f009588adafd7c7a047bb6133f"
+      }
+    }
+  },
+  "newPackageTestNames": [
+    "avatarHostModerationBootstrapFenceAppliesBeforeNewBindingStartsReads",
+    "avatarHostModerationExactResolutionRequiresFreshProtectedRead",
+    "avatarHostModerationLateReadCannotRestorePendingPixels",
+    "avatarHostModerationOldDecisionCannotClearANewerFence",
+    "avatarHostModerationOwnImageNeedsFreshOwnerObservationAfterResolution",
+    "avatarHostModerationPendingFencesEveryPeerSurfaceAndPreservesUnrelatedOwner",
+    "avatarReviewJournalPeekDoesNotCreateRecordOrRotateLiveLease",
+    "avatarReviewJournalPeekRejectsErasedAndCorruptScopeWithoutRepair",
+    "avatarReviewHostPublicationFencePrecedesDispatchAndSurvivesLostReplyReopen"
+  ],
+  "actualComponents": [
+    "real SwiftUI view/navigation/lifecycle and actual Simulator touch/accessibility/screenshot evidence",
+    "real ImageIO JPEG decode, moderator HTTP client/closed codecs, host and serial journal backend",
+    "actual terminate and relaunch of app process with stable synthetic disk-backed journal and fake server",
+    "native model/cache fencing across map/profile/message/owner editor and post-await controls",
+    "readonly journal bootstrap and no lease rotation",
+    "full Mac/iOS package tests, Debug tests and Release build"
+  ],
+  "modeledComponents": [
+    "all native/private iCloud identities, tokens, API roles, queue/decisions/recovery and delayed responses",
+    "UI test journal is isolated synthetic disk storage; package tests use memory fault injection; no Keychain OS CRUD",
+    "server model persisted locally under random run UUID; no network CloudKit or Cloudflare",
+    "display acknowledgement establishes view lifecycle, not human understanding"
+  ],
+  "negativeControl": {
+    "removed": "single eligibility guard for local pending-moderation fence",
+    "isolatedCopy": true,
+    "failedTests": 1,
+    "issues": 1,
+    "allOriginalSwiftHashesUnchanged": true
+  },
+  "warnings": {
+    "moderatorUI": [],
+    "existingRegression": [
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      },
+      {
+        "issueType": "Runtime Warning",
+        "message": "Invalid frame dimension (negative or non-finite)."
+      }
+    ],
+    "existingFrameWarningOccurrences": 11,
+    "oldIssueStackAddressesWereZero": true,
+    "frameSourceNotEstablished": true,
+    "fixOrReviewBeforeTestFlight": true,
+    "mainActorSendableAppWarningsRemoved": true,
+    "appIntentsMetadataExtractionOnlyCompileWarningExpected": true
+  },
+  "firstPassHistory": [
+    "skeleton and preview builds passed before wiring acceptance",
+    "initial focused fence test compile used missing session helper; replaced with actual isChatOpen and refresh API",
+    "8 new fence/peek tests then one publication-event test passed; full490 both platforms",
+    "UI first3/10, second2/10: popover cancel/action lookup, nested AX buttons, offscreen large-text controls and too-short synthetic expiry",
+    "alert with explicit cancel, scoped firstMatch queries, scrolling before enabled checks, synthetic12s expiry and safe-area test counter; final10/10 passed",
+    "extra33/33 run repeats approval/largest-text only for new alert screenshots in addition to31 existing UI",
+    "negative-copy initial setup missing relative Core dependency corrected locally; final actual negative test fails as intended"
+  ],
+  "knownLimits": [
+    "one Runtime journal and in-process serialization; not interprocess CAS",
+    "pending fences affect this client; server retains responsibility for all remote access",
+    "author explicit re-publication without previous upload journal still required",
+    "Keychain/PhotosPicker/iCloud Photos/locked-device and physical protection remain unaccepted",
+    "existing chat/settings SwiftUI frame warnings source unresolved",
+    "real schema/roles/hosts/SIWA/separate service identity/hosted Free/two ordinary accounts remain open",
+    "reports/contact/retention/orphans and migration incomplete; standard entry Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote deployments/activation/roles/schema/new permissions/keys/secrets/paid services",
+    "phone SDK or any expansion of expired approval windows",
+    "CloudKit Production/TestFlight/Firebase changes",
+    "unchanged full510 gateway/Core/dependency audit repetition"
+  ],
+  "sourceDocsSHA256": {
+    "Echo/EchoApp.swift": "7923d2acefbb3822c84c5b0b36830d205ad1ba6dfd234af5e84964071ea7de1c",
+    "Echo/Services/AppServices.swift": "0f2512ba4e8de045e97ed842e358cacd16ba0ff89b6b9a14763bff946968e8a4",
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "d5fbd6dd82ad100252659ab83b74e35a012c42c2544f5c2902092c2c6d487ce1",
+    "Echo/Services/AvatarReviewPreviewFixture.swift": "fd59ba0fe1821db1fa8fcc1e63db424ec7ff703c111e54edb85a3fefe628def0",
+    "Echo/Services/CommunityAvatarPreviewAPI.swift": "098a1ea499fe4c857830b24087c1d3b926306a4f1c142a5344956156e2c11ccf",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "45c292409f3235acc00438e117a3afd3c990dfbc40a3087f8ee52d3f3ec797c0",
+    "Echo/Views/AvatarEditorSelectionSection.swift": "3eb5fd20565d26d8aece3497ca98828e40e23e14c1334c93009eeec439b65d63",
+    "Echo/Views/AvatarEditorView.swift": "cc92bd6192987f687e49055742b8c8c9cc781b5914ba788835733bed4f6f2db9",
+    "Echo/Views/AvatarReviewPreviewView.swift": "ea709c8b95624c181f1536d6cdad363e60cae695a86fe918715eefcf69fe63d6",
+    "Echo/Views/AvatarReviewView.swift": "6f41755dda4c52236a717e9acd1fe6f133d95af34be3eaf94aef27dd6634fff0",
+    "Echo/Views/GatewayAuthCheckView.swift": "5a4c7daca66e0a2830378fc975cb0e5efbae2fcba2cea2e4e8e84561c84b237d",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "b474b713a62ae7f49a0459359fb29d4860ad9d37c4b8b4a44b81c387de6f9d20",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewHost.swift": "d30d13e6bbb9104e6de4a5d363e213a626099fbc9a061bdace43ecae329da128",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewJournal.swift": "4b5ff9cadf7aee5e3e9f344f8618f4cc21da83611b4431853805caf5d3000870",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewModels.swift": "2dae309b6b244f1bcd19729304330fe3d6eac217ef2a4a23ac51857ea9f366a9",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "a7cc2b0bd7e6c9f2d759a7f5db4ae988176257e46909cdcd4ba7661745279cb7",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewHostTests.swift": "32242749e1e78806417ecfb40acdaa98b4d22b4f2a1badab5ba41417c82c51d5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewJournalTests.swift": "46ba389691c67f7610d48e6f08c18481fc98d5521cad567884aed7b5cdc81988",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "95d48b3ccee911d6b363bf8692f52e17cc8b0b0b76a60235b9541b8e81285c1c",
+    "EchoesUITests/GatewayAvatarReviewUITests.swift": "04793b634321a317019d91d359ecd959b0d24c0e786f28c08b0b78481f4684ad",
+    "Docs/PANEL_MODERACJI_ZDJEC_IOS.md": "676dd812332655447b8b97814006de25ce8ebe1d1d3694f98bb1ed2daa49cd84",
+    "Docs/MAGAZYN_I_HOST_MODERACJI_IOS.md": "fcd814819eb576e791c07c2e1c924ce7f61d85e1531bdead92140f362bf324ba",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "db368edd978d55687dfe4a894fc91eb8fb9393d1c976d5c5d93f9bac2cf8c4d6",
+    "Docs/DZIENNIK_ZMIAN.md": "f8e719da445f02907fadcc9b67c2c37439338f2fcb85644d8ac37492ae57df34"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-review-ui-ready-build.log": "a2416ec6bdd997000ed288118b625e563fc9c6629d6525af0078715a71ea90eb",
+    "echoes-avatar-review-ui-events.log": "ef61826311fa96a7c10e6ac02a3d1e769d575879917bd90d51b0096e62a6cfe9",
+    "echoes-avatar-review-ui-full-mac.log": "1bfb20f44ec1fe43de593cf850dea66a61dc88cd72a9271ad975681245526a4f",
+    "echoes-avatar-review-ui-first.log": "36a10d991e0ebbccb1d8d13a70df11c2b230270bfaab0ce97c64171af0c241f4",
+    "echoes-avatar-review-ui-first-summary.json": "13b26559aed55fa06e2963c7f56e610b1a99eddceef38e107b14cbe48219d4a2",
+    "echoes-avatar-review-ui-second.log": "dd16bf0c520d4c50f48b8bfd574c2088e558ad866eb4ed7742e81a1afeda33ee",
+    "echoes-avatar-review-ui-third.log": "97dff14a79d276158f6c77fd1f58970dc62f29116d192d35329fc34b8df601a2",
+    "echoes-avatar-review-ui-third-summary.json": "8634d46f3ca21bb303d951289f751da4cf55b85a1cdd9eea6c22bce6a960b7aa",
+    "echoes-avatar-review-ui-regression.log": "289d905974ca85b4ae627e435720e5476ab9f38d2ab7f04a815d4b03977787a2",
+    "echoes-avatar-review-ui-regression-summary.json": "62c96a1cb18bb7016f024347444cf0fd7ffa86de269033070c201219c6f5593d",
+    "echoes-avatar-review-ui-package-simulator.log": "cfef62332999320ccf01772a623faaa2c59dfd56839fe721ae56bf664491fba3",
+    "echoes-avatar-review-ui-package-simulator-summary.json": "92b621ec19e91ca72bb9c343240b9952b9eb33995c069a81f7f02c909fb0888c",
+    "echoes-avatar-review-ui-final-release.log": "08089ae3cf238afabbdf63972a3404756ff1904e021a6291b92f6edeffe8f8f5",
+    "echoes-avatar-review-ui-negative-final.log": "3b42493a6a5106da73f6f24bf460b9bed4dff0c5bd5ad7c1ae7a827048599092",
+    "echoes-avatar-review-ui-negative-originals.json": "5bbc3f5d51d8f4b9f61a9978ed0d7587d62e102e907a33c77f785938154214c4",
+    "echoes-avatar-review-prior-warning-legacy-summary.json": "689dbc3dce24c57679130d909fe2d0968db664c3733583330faa4afdce8178a2",
+    "echoes-avatar-review-ui-actual-debug.log": "dc3d8e084fc7c253489f67e20a32e48547dc7db9d1c8878e4717e3f56456a656",
+    "echoes-avatar-review-ui-actual-release.log": "a07ad427584345a9488a951a22d3541057b2bd197cfde12a81b06113b19ed0ec"
+  },
+  "localScreenshotSHA256": {
+    "echoes-avatar-review-ui-third-attachments/B8573F95-4214-410D-AD12-4FDCFA3F69FE.png": {
+      "label": "moderator-approved-without-publication_0_1F877B5C-4CD5-4371-B954-F06133E259FC.png",
+      "sha256": "887b8f42926a27b9fdce38683613f5d6a3e4196e72663487bb47a287dcf42e90"
+    },
+    "echoes-avatar-review-ui-third-attachments/00AA1F33-FCC4-436B-B6CE-383A9E77960D.png": {
+      "label": "moderator-current-image-before-decision_0_1242F0C9-D75B-4084-9B59-B0C40FA3FD90.png",
+      "sha256": "f94ac908020c04ca24ddbefce9e786604907ecff72abb8cb0222bb60757b2cfb"
+    },
+    "echoes-avatar-review-ui-third-attachments/1044609E-7E69-4226-A3F3-90EAF164EF89.png": {
+      "label": "moderator-normal-initial_0_D1B10E14-0582-4A8D-A952-2C0B32D686C8.png",
+      "sha256": "38124021185dbaabf14d24cca0b34b65bae09e3366fd16f6af37de7a63012b73"
+    },
+    "echoes-avatar-review-ui-third-attachments/B2B056AE-E3C7-4B67-AA2A-7FD07D27AA82.png": {
+      "label": "moderator-lost-initial_0_CD4D5443-ACD1-4683-9AAC-B875460D8F71.png",
+      "sha256": "6f481986776951af2ff71b1545521df190e156f3070b6cf0c87864edb6c67edd"
+    },
+    "echoes-avatar-review-ui-third-attachments/BEC05BD8-2CA4-4DEF-A016-68B8B533702B.png": {
+      "label": "moderator-denied-state_0_2E365617-5C98-4B28-A717-A642FA676A46.png",
+      "sha256": "d392367d3971f2a27ad7870e2595ca57e1153a185af3edc1ae065fd3a14f65c9"
+    },
+    "echoes-avatar-review-ui-third-attachments/9E6DA6BD-E50B-4D62-B1F1-699E97234416.png": {
+      "label": "moderator-denied-initial_0_9636C7AC-4099-4800-8B23-AB4E36BC1FB6.png",
+      "sha256": "d392367d3971f2a27ad7870e2595ca57e1153a185af3edc1ae065fd3a14f65c9"
+    },
+    "echoes-avatar-review-ui-third-attachments/1A8CAA18-B942-4AC1-8E1C-B3E20BACF9F0.png": {
+      "label": "moderator-empty-state_0_E22EDBB6-AA9B-4BED-B717-1262F82A7D55.png",
+      "sha256": "3ac7a4e1e4f95f3ca6822808a3f9aa50aa2d7261e5e6df9d84344e30ccc29594"
+    },
+    "echoes-avatar-review-ui-third-attachments/E7AD97F0-E08B-490B-941D-7A65BC1AF647.png": {
+      "label": "moderator-empty-initial_0_DA1F7672-2928-4EFB-B8B2-3ADACC3C7B49.png",
+      "sha256": "3ac7a4e1e4f95f3ca6822808a3f9aa50aa2d7261e5e6df9d84344e30ccc29594"
+    },
+    "echoes-avatar-review-ui-third-attachments/29A6D441-6524-41D9-96D1-F7C69DD2A43E.png": {
+      "label": "moderator-expired-confirmation_0_81F1D5F7-AA14-4812-AF3F-8E10112DE7A1.png",
+      "sha256": "f6980af243e7b70a499b6eebd6dd6fba5cb00be27340eb50b60d18dca4e3681e"
+    },
+    "echoes-avatar-review-ui-third-attachments/D20A5635-FAC8-4AE3-A46B-B957A662FA0D.png": {
+      "label": "moderator-expiry-initial_0_0243EDCD-9A1C-4CBA-A4C1-ECEAFAE2F343.png",
+      "sha256": "6f481986776951af2ff71b1545521df190e156f3070b6cf0c87864edb6c67edd"
+    },
+    "echoes-avatar-review-ui-third-attachments/0229D76E-9B10-4711-8B54-3A39606E9B0C.png": {
+      "label": "moderator-largest-text-acknowledged_0_336B08CC-8F90-4A83-B8F2-37283C73565D.png",
+      "sha256": "c6da6f49efc213ef2c0aec5c4d24a016f02ca42a8fd7e3e2072e4b2687c2dca5"
+    },
+    "echoes-avatar-review-ui-third-attachments/BBE256F7-E370-4028-87C3-7389C18B7F26.png": {
+      "label": "moderator-largest-text-preview_0_E3267E55-4578-49BD-B884-9C30638C14B8.png",
+      "sha256": "13786d8675e406c0d3ce538628918c723d643297640125d324a13f1146740ab8"
+    },
+    "echoes-avatar-review-ui-third-attachments/4EB2C3B2-7FF2-415C-8700-2CE993D1E3A5.png": {
+      "label": "moderator-normal-initial_0_3BECE273-FE25-43EC-ADAE-A7FA01A74409.png",
+      "sha256": "bc546858f759764b593bf9d6bea91ce88cd724f338156a1450dd9d793e409fd7"
+    },
+    "echoes-avatar-review-ui-third-attachments/C15975B8-8207-41D0-BBF7-3609AD0048FA.png": {
+      "label": "moderator-delayed-initial_0_DD5A66CA-1CC9-4CF6-A242-21842B232D45.png",
+      "sha256": "4799f8d7e96e2375c562f410a07b6ee774af96dbd1112168aa0a7ecca7ca312c"
+    },
+    "echoes-avatar-review-ui-third-attachments/5DF26D4C-862A-45A1-9E03-21922E9BE568.png": {
+      "label": "moderator-recovered-after-process-restart_0_B4BF20FD-B6CA-48D1-BBDA-76B673CB56C4.png",
+      "sha256": "1c8a522557cf15d94c3d8dcc24e65169e10b60a377b70293e3c1ea420ffef038"
+    },
+    "echoes-avatar-review-ui-third-attachments/8F5974FD-335B-4709-B90A-7ACFF4C5F375.png": {
+      "label": "moderator-unknown-before-restart_0_CAF8A8BE-7D65-4057-8168-5890D681F498.png",
+      "sha256": "9da74575034b2f03933b967ee6f632656e716c702d0062427c6a9a2fea141f6d"
+    },
+    "echoes-avatar-review-ui-third-attachments/62E7C85F-255E-4847-A807-4BE18A8119BD.png": {
+      "label": "moderator-lost-initial_0_E1321089-0755-4DBB-B126-7EF653493E29.png",
+      "sha256": "8564cb8aa2830c064050d331b74101bd1d441819db6928cbfe6c2b950a4df9eb"
+    },
+    "echoes-avatar-review-ui-third-attachments/2428CEBE-DC26-4371-8C26-7ACA61156543.png": {
+      "label": "moderator-not-applied_0_0D9C21DE-21B7-4D54-A061-F92715753300.png",
+      "sha256": "c5b60015df93592ea5057f98ce85b3a580ee270208594be600f2a16bad980762"
+    },
+    "echoes-avatar-review-ui-third-attachments/9119264F-535D-4453-9250-9E0ABBEECD84.png": {
+      "label": "moderator-not-applied-initial_0_CD9C987F-161F-4321-9DB2-F4FC92EE05E8.png",
+      "sha256": "8564cb8aa2830c064050d331b74101bd1d441819db6928cbfe6c2b950a4df9eb"
+    },
+    "echoes-avatar-review-ui-third-attachments/CADF4C12-BB07-4E41-84C5-138D63FE41DE.png": {
+      "label": "moderator-normal-initial_0_23378C76-4C59-46F2-A3CC-8B48DC17F5AE.png",
+      "sha256": "8564cb8aa2830c064050d331b74101bd1d441819db6928cbfe6c2b950a4df9eb"
+    },
+    "echoes-avatar-review-ui-third-attachments/2329F118-C127-4120-8DE7-24F3B249D471.png": {
+      "label": "moderator-superseded-warning_0_0542D51F-1757-43A9-87EF-386AB8A5134E.png",
+      "sha256": "2b6deee318dc8b15d9ff65023c38cc1632b60694153916f8b100d9b562bb656b"
+    },
+    "echoes-avatar-review-ui-third-attachments/173BCB6B-57CC-41F7-AC9E-FD8AA1A49844.png": {
+      "label": "moderator-superseded-initial_0_7F1FA0AC-136A-4033-834F-DCBC9D0942C9.png",
+      "sha256": "beeddff4ae4ba9822ac5717dbfbd4a77ae946046c65748afac41c85387674fe6"
+    },
+    "echoes-avatar-review-ui-regression-attachments/DAEFBBE7-3B5B-4582-BAE2-A718D0B295F8.png": {
+      "label": "moderator-approved-without-publication_0_AAC30A70-65CD-4F66-9C6A-760530D35AE9.png",
+      "sha256": "dbb4617e74fc8be03d8a3f6be6aa473c8e5d7956c1b538782c2b927df01cde73"
+    },
+    "echoes-avatar-review-ui-regression-attachments/2474FD58-B304-44BE-9841-FFAE887D3BE9.png": {
+      "label": "moderator-confirm-approval_0_C7FFC678-514A-4565-B972-6EC91701DA71.png",
+      "sha256": "67a70ca0b82b53f5c68884d040e3a62c91ab7b022eb1d8a4dad965962cd15ccd"
+    },
+    "echoes-avatar-review-ui-regression-attachments/718C1CB2-E9B8-42B6-B2A2-DC4479CA49ED.png": {
+      "label": "moderator-current-image-before-decision_0_795908CC-D340-4C39-95E5-B78049307B87.png",
+      "sha256": "609d27810a4174e385e70a8b9dc2e32531f5ebe03f54b3f0a21200670d7a1462"
+    },
+    "echoes-avatar-review-ui-regression-attachments/BB06D6E5-8A88-4F4F-A343-512E5E0AF0CD.png": {
+      "label": "moderator-cancellable-approval-alert_0_330A7B46-603E-4B63-B473-DCFF5A34E871.png",
+      "sha256": "67a70ca0b82b53f5c68884d040e3a62c91ab7b022eb1d8a4dad965962cd15ccd"
+    },
+    "echoes-avatar-review-ui-regression-attachments/01E06501-445C-47A5-A01B-6BF3298D48FA.png": {
+      "label": "moderator-normal-initial_0_17A97507-3406-412A-B929-7C595BA58735.png",
+      "sha256": "31495554fcfe04b5050bffb494554a69980306dc8abb46a4cd67d92368df2b36"
+    },
+    "echoes-avatar-review-ui-regression-attachments/FC8D7277-83D9-466B-AEB1-C2A62F189894.png": {
+      "label": "moderator-largest-text-acknowledged_0_78D07873-C8B8-47E5-A4B6-968E4110B843.png",
+      "sha256": "4b1d92958aad222e01bd8ac74fe373c600dbe56b1ddb427c2a67644ad1a5e2ae"
+    },
+    "echoes-avatar-review-ui-regression-attachments/95F56E53-EB8A-413E-92CE-FDEDC860EB15.png": {
+      "label": "moderator-confirm-rejection_0_B4DA84CA-11DC-43F9-89BC-4D27C255953D.png",
+      "sha256": "070e7e61af508aa95f756005ae3634bfec02a8c81ae13f36150cb84db4892f24"
+    },
+    "echoes-avatar-review-ui-regression-attachments/C5AA1AA5-00E1-4B53-A121-D15F074F3622.png": {
+      "label": "moderator-largest-text-preview_0_FE4FC751-38B9-4E94-8D20-6A1FDDF89963.png",
+      "sha256": "bb8c34d6d44e626aef7331d46ae9db98c9541e9275727601a4a26f9797b98e5d"
+    },
+    "echoes-avatar-review-ui-regression-attachments/7206439C-E374-42D0-B923-832BD51189B5.png": {
+      "label": "moderator-normal-initial_0_41D3D5D9-E149-4CC8-890C-8643FC607531.png",
+      "sha256": "166cb8a63d5fc67722f4bfc7b63c0ac486b590cd9ccdfbc28c3dd12fe6c38e92"
+    }
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "actualUserProjectBuilds": {
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "projectUnchanged": true,
+    "testedStageProjectRetainedForUITests": true,
+    "debug": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "debugEntitlementsSourceAbsent": true,
+      "binarySHA256": {
+        "Echoes": "0e022112665b71f8f1c2afdb758c5afa5a49a4ef7034450d4cecfc66429f2f25",
+        "Echoes.debug.dylib": "86af0d00dac8b705d2fcaea702e5f1103a626d5d8b3973948880865ab0646727"
+      },
+      "logSHA256": "dc3d8e084fc7c253489f67e20a32e48547dc7db9d1c8878e4717e3f56456a656"
+    },
+    "release": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "debugEntitlementsSourceAbsent": true,
+      "binarySHA256": {
+        "Echoes": "1f70bc3a46f533f16211df77eb447818b519caef2f0c7aea3c16ce967636cf00"
+      },
+      "logSHA256": "a07ad427584345a9488a951a22d3541057b2bd197cfde12a81b06113b19ed0ec"
+    }
+  }
+}

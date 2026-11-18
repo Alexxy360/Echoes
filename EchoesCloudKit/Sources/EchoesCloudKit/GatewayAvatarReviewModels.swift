@@ -40,6 +40,14 @@ public struct GatewayAvatarReviewItem: Equatable, Sendable, CustomStringConverti
 
 public enum GatewayAvatarReviewVerdict: String, Equatable, Sendable { case approved, rejected }
 
+/// Trusted local presentation fence, never a publication or viewer authorization grant.
+public enum GatewayAvatarReviewPublicationEvent: Sendable, CustomStringConvertible, CustomReflectable {
+    case pending(GatewayAvatarReviewRecoveryIntent)
+    case resolved(GatewayAvatarReviewRecoveryResult)
+    public var description: String { "GatewayAvatarReviewPublicationEvent(<redacted>)" }
+    public var customMirror: Mirror { Mirror(self, children: [:]) }
+}
+
 /// Returned only with verified bytes. Bound to the exact bearer/origin and an absolute, nonrenewable
 /// expiry. It is not a UI-display acknowledgement or a substitute for host/account fencing.
 public struct GatewayAvatarReviewReceipt: Equatable, Sendable, CustomStringConvertible, CustomReflectable {

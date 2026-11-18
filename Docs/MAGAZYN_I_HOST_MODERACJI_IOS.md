@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.2b — trwała decyzja i sterownik moderatora
 
+Dokument zachowuje zakres i wyniki etapu 3c.2b. Ekran i lokalne blokady zdjęć dodane w następnym etapie opisuje [panel moderacji iOS](PANEL_MODERACJI_ZDJEC_IOS.md).
+
 GatewayAvatarReviewJournal i GatewayAvatarReviewHost łączą [HTTP moderatora](NATYWNA_MODERACJA_HTTP.md) z [odczytem niepewnego wyniku](ODZYSKIWANIE_DECYZJI_MODERACJI.md). Kontrolowany Debug Runtime ma wspólny magazyn/host, native invalidation relay i erasure. Nie dodano jeszcze ekranu lub przycisków moderatora i nie aktywowano usługi. Zwykłe wejście pozostaje Firebase.
 
 ## Zapis i IO

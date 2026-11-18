@@ -10,7 +10,7 @@
         let host: GatewayAvatarEditorHost
         let api: AvatarEditorPreviewAPI
         let avatars: GatewayCommunityAvatarHost
-        let selection: @Sendable () async throws -> PreparedAvatar
+        let selection: GatewayAvatarPreparation
         init(mode: String, source: any GatewayAvatarAuthorizationSource, cloudKit: CloudKitConfiguration)
             throws
         {
@@ -150,6 +150,8 @@
         }
     }
     extension GatewayAvatarMutation {
-        fileprivate var isUploadForPreview: Bool { if case .upload = self { true } else { false } }
+        nonisolated fileprivate var isUploadForPreview: Bool {
+            if case .upload = self { true } else { false }
+        }
     }
 #endif

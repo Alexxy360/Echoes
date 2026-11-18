@@ -93,6 +93,9 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     var enabled = true
     var parent = true
 }
+@MainActor private final class ReviewPublicationEvents {
+    var values: [GatewayAvatarReviewPublicationEvent] = []
+}
 @MainActor struct ReviewHostFixture {
     let wire: ReviewWireFixture
     let clock: ReviewClock
@@ -105,7 +108,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     let host: GatewayAvatarReviewHost
     init(
         storage: ReviewMemoryStorage? = nil, api: ReviewHostAPI? = nil,
-        willDecide: @escaping @MainActor (String) -> Void = { _ in }
+        publicationChanged: @escaping @MainActor (GatewayAvatarReviewPublicationEvent) -> Void = { _ in }
     ) throws {
         wire = try .init()
         clock = ReviewClock(wire.now)
@@ -120,7 +123,8 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
             api: self.api,
             configuration: .init(origin: URL(string: self.api.origin)!), cloudKit: scope.owner.configuration,
             authorization: authorization, journal: journal, isEnabled: { [flags] in flags.enabled },
-            date: { [clock] in clock.date() }, uptime: { [clock] in clock.up() }, willDecide: willDecide)
+            date: { [clock] in clock.date() }, uptime: { [clock] in clock.up() },
+            publicationChanged: publicationChanged)
         host.setForeground(true)
     }
     func connect() async throws { try await host.connect { flags.parent } }
@@ -187,6 +191,55 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     }
     try await f.host.acknowledgeResult(#require(f.host.resolution))
     #expect(f.host.pendingOperation == nil)
+}
+
+@Test @MainActor func avatarReviewHostPublicationFencePrecedesDispatchAndSurvivesLostReplyReopen()
+    async throws
+{
+    for lost in [false, true] {
+        let events = ReviewPublicationEvents()
+        let f = try ReviewHostFixture(publicationChanged: { events.values.append($0) })
+        let shown = try await f.show()
+        #expect(events.values.isEmpty)
+        await f.api.before { intent in
+            let saved = try await f.journal.peek(scope: f.scope)
+            #expect(saved?.phase == .dispatched)
+            await MainActor.run {
+                #expect(events.values.count == 1)
+                guard case .pending(let pending) = events.values.first else {
+                    Issue.record("Publication fence must precede decision dispatch")
+                    return
+                }
+                #expect(pending == GatewayAvatarReviewRecoveryIntent(decision: intent))
+            }
+        }
+        if lost {
+            await f.api.setMode(.lostACK)
+            await #expect(throws: GatewayAvatarReviewFailure.unavailable) {
+                try await f.host.decide(.rejected, presentation: shown)
+            }
+            #expect(events.values.count == 1)
+            f.host.invalidate()
+            try await f.connect()
+            #expect(events.values.count == 2)
+            guard case .pending(let restored) = events.values.last else {
+                Issue.record("Reopen must restore the exact pending publication fence")
+                return
+            }
+            #expect(restored == f.host.pendingOperation?.intent)
+            try await f.host.recover()
+        } else {
+            try await f.host.decide(.rejected, presentation: shown)
+        }
+        guard case .resolved(let result) = events.values.last else {
+            Issue.record("Only persisted resolution can clear the matching publication fence")
+            return
+        }
+        let saved = try await f.journal.peek(scope: f.scope)
+        #expect(saved?.phase == .resolved && saved?.intent == result.intent)
+        #expect(events.values.count == (lost ? 3 : 2))
+        #expect(await f.api.decisions.count == 1)
+    }
 }
 
 @Test @MainActor func avatarReviewHostPendingResultBlocksNewInspectionQueueAndReplacementVerdict()

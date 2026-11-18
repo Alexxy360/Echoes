@@ -7,7 +7,7 @@ struct AvatarEditorView: View {
     @Environment(\.scenePhase) private var scenePhase
     let session: GatewayAvatarEditorSession
     var avatars: GatewayCommunityAvatarBinding? = nil
-    var previewSelection: (@Sendable () async throws -> PreparedAvatar)? = nil
+    var previewSelection: GatewayAvatarPreparation? = nil
     @State private var photo: PhotosPickerItem?
     @State private var confirmation: AvatarEditorConfirmation?
     var body: some View {
@@ -33,7 +33,10 @@ struct AvatarEditorView: View {
                         }
                     }
                     AvatarEditorSelectionSection(
-                        session: session, photo: $photo, previewSelection: previewSelection)
+                        session: session, photo: $photo,
+                        previewSelection: previewSelection.map { action in
+                            { @Sendable in try await action() }
+                        })
                     AvatarEditorActionsSection(session: session) { confirmation = $0 }
                 } else {
                     Section {

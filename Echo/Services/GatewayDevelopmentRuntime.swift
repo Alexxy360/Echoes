@@ -32,15 +32,29 @@
         let avatarReviews: GatewayAvatarReviewHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
+        private(set) var openingCommunity = false
         private let relay: GatewayCommunityInvalidationRelay
         private let profileConfiguration: CloudKitConfiguration
+        private let gatewayConfiguration: GatewayConfiguration
 
-        @discardableResult func openCommunity() throws -> UUID {
+        @discardableResult func openCommunity() async throws -> UUID {
+            guard !openingCommunity else { throw GatewayAvatarReviewFailure.busy }
+            openingCommunity = true
+            defer { openingCommunity = false }
+            avatarReviews.setForeground(false)
             let auth = authentication
             let configuration = profileConfiguration
             guard let native = auth.communityAuthorization,
                 let scope = auth.privateDataScope(configuration: configuration)
             else { throw GatewayFailure.signInRequired }
+            let reviewScope = try GatewayAvatarReviewScope(
+                configuration: gatewayConfiguration,
+                owner: scope, binding: native.identity.binding)
+            let pendingModeration = try await avatarReviewJournal.peek(scope: reviewScope)
+            guard auth.communityAuthorization == native,
+                auth.privateDataScope(configuration: configuration) == scope
+            else { throw GatewayFailure.signInRequired }
+            try Task.checkCancellation()
             let presentation = try community.open()
             let id = presentation.id
             let current: @MainActor () -> Bool = { [weak community, weak auth] in
@@ -60,7 +74,9 @@
                 scope: { current() ? scope : nil }, database: database, authorizeRead: authorize)
             let avatarBinding: GatewayCommunityAvatarBinding
             do {
-                avatarBinding = try avatars.bind(session: presentation.domain.session, isCurrent: current)
+                avatarBinding = try avatars.bind(
+                    session: presentation.domain.session,
+                    pendingModeration: pendingModeration?.intent, isCurrent: current)
             } catch {
                 community.invalidate()
                 throw error
@@ -86,6 +102,7 @@
                 infoDictionary: Bundle.main.infoDictionary ?? [:],
                 bundleIdentifier: Bundle.main.bundleIdentifier)
             profileConfiguration = activation.cloudKit
+            gatewayConfiguration = activation.configuration
             let client = GatewayHTTPClient(configuration: activation.configuration)
             let authenticationAPI = try ActivatedGatewayAuthenticationAPI(api: client, activation: activation)
             let deletionAPI = try ActivatedGatewayAccountDeletionAPI(api: client, activation: activation)
@@ -138,7 +155,8 @@
                 api: GatewayAvatarReviewHTTPClient(
                     configuration: activation.configuration, isEnabled: { activation.isActive() }),
                 configuration: activation.configuration, cloudKit: activation.cloudKit,
-                authorization: auth, journal: reviewJournal, isEnabled: { activation.isActive() })
+                authorization: auth, journal: reviewJournal, isEnabled: { activation.isActive() },
+                publicationChanged: { [weak avatars = self.avatars] in avatars?.observeModeration($0) })
             avatarReviews = reviews
             relay.avatarReviews = reviews
             let communityStorage = KeychainGatewayCommunityJournalStorage()

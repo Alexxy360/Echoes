@@ -5,7 +5,7 @@ import SwiftUI
 struct AvatarEditorSelectionSection: View {
     let session: GatewayAvatarEditorSession
     @Binding var photo: PhotosPickerItem?
-    var previewSelection: (@Sendable () async throws -> PreparedAvatar)?
+    var previewSelection: GatewayAvatarPreparation?
     var body: some View {
         Section("Wybierz zdjęcie") {
             PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
@@ -49,6 +49,6 @@ struct AvatarEditorSelectionSection: View {
     private func submit() { Task { await session.perform(.submit) } }
     private func preparePreview() {
         guard let previewSelection else { return }
-        Task { await session.prepare(load: previewSelection) }
+        Task { await session.prepare { try await previewSelection() } }
     }
 }

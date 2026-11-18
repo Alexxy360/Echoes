@@ -341,3 +341,33 @@ func reviewStoreIntent() throws -> GatewayAvatarReviewRecoveryIntent {
         KeychainGatewayAvatarReviewJournalStorage.accessibility as String
             == kSecAttrAccessibleWhenUnlockedThisDeviceOnly as String)
 }
+
+@Test @MainActor func avatarReviewJournalPeekDoesNotCreateRecordOrRotateLiveLease() async throws {
+    let storage = ReviewMemoryStorage()
+    let journal = GatewayAvatarReviewJournal(storage: storage)
+    let scope = try reviewStoreScope()
+    #expect(try await journal.peek(scope: scope) == nil)
+    #expect(storage.records.isEmpty && storage.writes == 0)
+    let lease = try await journal.open(scope: scope)
+    let intent = try reviewStoreIntent()
+    let entry = try await journal.prepare(intent, lease: lease)
+    let writes = storage.writes
+    #expect(try await journal.peek(scope: scope) == entry)
+    #expect(storage.writes == writes && journal.isActive(lease))
+    let recreated = GatewayAvatarReviewJournal(storage: storage)
+    #expect(try await recreated.peek(scope: scope) == entry)
+    #expect(storage.writes == writes)
+}
+@Test @MainActor func avatarReviewJournalPeekRejectsErasedAndCorruptScopeWithoutRepair() async throws {
+    let storage = ReviewMemoryStorage()
+    let journal = GatewayAvatarReviewJournal(storage: storage)
+    let scope = try reviewStoreScope()
+    storage.records[scope.digest] = Data([0])
+    let writes = storage.writes
+    await #expect(throws: GatewayAvatarReviewJournalFailure.unavailable) {
+        try await journal.peek(scope: scope)
+    }
+    #expect(storage.records[scope.digest] == Data([0]) && storage.writes == writes)
+    try await journal.erase(owner: scope.owner)
+    await #expect(throws: GatewayAvatarReviewJournalFailure.inactive) { try await journal.peek(scope: scope) }
+}

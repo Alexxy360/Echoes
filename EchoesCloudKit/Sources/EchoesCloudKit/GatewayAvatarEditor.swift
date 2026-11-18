@@ -3,6 +3,8 @@ import Foundation
 import ImageIO
 import Observation
 
+public typealias GatewayAvatarPreparation = @Sendable () async throws -> PreparedAvatar
+
 public enum GatewayAvatarEditorAction: Sendable {
     case refresh, submit, recover, retryUpload, publish, clear, discardUnsentOrSuperseded
 }
@@ -85,7 +87,7 @@ public enum GatewayAvatarEditorAction: Sendable {
         }
     }
     fileprivate func prepare(
-        _ session: GatewayAvatarEditorSession, load: @escaping @Sendable () async throws -> PreparedAvatar
+        _ session: GatewayAvatarEditorSession, load: @escaping GatewayAvatarPreparation
     ) async {
         do {
             let token = try begin(session.id)
@@ -235,7 +237,7 @@ private struct AvatarEditorDraft: Sendable {
         clearLocal()
     }
     public func close() { host.close(id) }
-    public func prepare(load: @escaping @Sendable () async throws -> PreparedAvatar) async {
+    public func prepare(load: @escaping GatewayAvatarPreparation) async {
         guard canChoosePhoto else { return }
         await host.prepare(self, load: load)
     }

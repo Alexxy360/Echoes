@@ -16,6 +16,9 @@ public struct GatewayAvatarReviewScope: Equatable, Sendable, CustomStringConvert
     let owner: PrivateAccountScope
     let binding: GatewayIdentityBinding
     let digest: String
+    /// Opaque identifiers for trusted storage providers; never native IDs or access grants.
+    public var storageIdentifier: String { digest }
+    public var ownerStorageIdentifier: String { owner.digest }
     public init(
         configuration: GatewayConfiguration, owner: PrivateAccountScope, binding: GatewayIdentityBinding
     ) throws {
@@ -72,6 +75,9 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
         switch command {
         case .open(let scope): return .lease(try open(scope: scope))
         case .pending(let lease): return .entry(try pending(lease: lease))
+        case .peek(let scope):
+            guard allowed(scope) else { throw GatewayAvatarReviewJournalFailure.inactive }
+            return .entry(try load(scope)?.entry?.value())
         case .prepare(let intent, let lease): return .entry(try prepare(intent, lease: lease))
         case .dispatch(let entry, let lease): return .entry(try dispatched(entry, lease: lease))
         case .resolve(let entry, let result, let lease):
@@ -310,6 +316,7 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
 
 private enum AvatarReviewJournalCommand: Sendable {
     case open(GatewayAvatarReviewScope)
+    case peek(GatewayAvatarReviewScope)
     case pending(GatewayAvatarReviewJournalLease)
     case prepare(GatewayAvatarReviewRecoveryIntent, GatewayAvatarReviewJournalLease)
     case dispatch(GatewayAvatarReviewJournalEntry, GatewayAvatarReviewJournalLease)
@@ -350,6 +357,17 @@ private enum AvatarReviewJournalReply: Sendable {
     }
     public func isActive(_ lease: GatewayAvatarReviewJournalLease) -> Bool {
         allowed(lease.scope) && active?.id == lease.id && active?.scope == lease.scope
+    }
+    /// Read-only bootstrap before binding community photos. No record creation or lease rotation.
+    public func peek(scope: GatewayAvatarReviewScope) async throws -> GatewayAvatarReviewJournalEntry? {
+        guard allowed(scope) else { throw GatewayAvatarReviewJournalFailure.inactive }
+        let start = epoch
+        guard case .entry(let entry) = try await backend.execute(.peek(scope)) else {
+            throw GatewayAvatarReviewJournalFailure.unavailable
+        }
+        guard allowed(scope), epoch == start else { throw GatewayAvatarReviewJournalFailure.inactive }
+        if Task.isCancelled { throw GatewayFailure.cancelled }
+        return entry
     }
     public func open(scope: GatewayAvatarReviewScope) async throws -> GatewayAvatarReviewJournalLease {
         guard allowed(scope) else { throw GatewayAvatarReviewJournalFailure.inactive }

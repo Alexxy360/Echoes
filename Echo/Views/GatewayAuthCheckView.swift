@@ -60,13 +60,19 @@
                             }
                             Section("Okolica — Development") {
                                 Button("Otwórz mapę i czat") {
-                                    do { path = [.community(try runtime.openCommunity())] } catch {
-                                        presentationError = error.localizedDescription
+                                    Task {
+                                        do { path = [.community(try await runtime.openCommunity())] } catch {
+                                            presentationError = error.localizedDescription
+                                        }
                                     }
-                                }.disabled(host.phase != .ready).accessibilityIdentifier(
-                                    "gateway.auth.community")
+                                }.disabled(host.phase != .ready || runtime.openingCommunity)
+                                    .accessibilityIdentifier(
+                                        "gateway.auth.community")
                             }
                             Section("Konto") {
+                                NavigationLink("Ocena zdjęć", value: Destination.moderation)
+                                    .disabled(host.phase != .ready || runtime.openingCommunity)
+                                    .accessibilityIdentifier("gateway.auth.moderation")
                                 NavigationLink("Usuwanie konta", value: Destination.deletion)
                                     .disabled(host.isBusy).accessibilityIdentifier("gateway.auth.deletion")
                             }
@@ -118,6 +124,8 @@
                 .navigationDestination(for: Destination.self) { destination in
                     if let runtime {
                         switch destination {
+                        case .moderation:
+                            AvatarReviewView(host: runtime.avatarReviews)
                         case .deletion: GatewayAccountDeletionView(host: runtime.deletion)
                         case .community(let id):
                             if runtime.community.isCurrent(id), runtime.communityPresentationID == id,
@@ -199,6 +207,7 @@
 
         private enum Destination: Hashable {
             case deletion
+            case moderation
             case community(UUID)
             var communityID: UUID? {
                 if case .community(let id) = self { return id }
