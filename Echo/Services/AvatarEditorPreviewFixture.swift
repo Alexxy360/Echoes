@@ -67,6 +67,7 @@
         private var loseUpload: Bool
         private var losePublication: Bool
         private var delayed: Bool
+        private let expiresAfterUpload: Bool
         private var waiting: CheckedContinuation<Void, Never>?
         private var states: [String: GatewayAvatarOwnerSnapshot] = [:]
         private var photos: [String: PreparedAvatar] = [:]
@@ -79,9 +80,10 @@
             loseUpload = mode == "avatar-owner-lost"
             losePublication = mode == "avatar-owner-publish-lost"
             delayed = mode == "avatar-owner-delayed"
+            expiresAfterUpload = mode == "avatar-owner-expired"
             if let seed {
                 photos[selectedOwner] = seed
-                states[selectedOwner] = try snapshot(
+                states[selectedOwner] = try Self.snapshot(
                     generation: 1, request: UUID().uuidString.lowercased(),
                     version: UUID().uuidString.lowercased(), status: approved ? .approved : .pendingReview)
             }
@@ -91,7 +93,7 @@
             waiting?.resume()
             waiting = nil
         }
-        nonisolated private func snapshot(
+        private static func snapshot(
             generation: Int = 0, request: String? = nil, version: String? = nil,
             status: GatewayAvatarOwnerStatus = .none
         ) throws -> GatewayAvatarOwnerSnapshot {
@@ -107,15 +109,23 @@
             -> GatewayAvatarOwnerSnapshot
         {
             let owner = selectedOwner
-            let old = try states[owner] ?? snapshot()
+            let old = try states[owner] ?? Self.snapshot()
             let value: GatewayAvatarOwnerSnapshot
             switch action {
-            case .status: return old
+            case .status:
+                if expiresAfterUpload, old.versionID != nil, old.status != .published {
+                    let expired = try Self.snapshot(
+                        generation: old.generation, request: old.requestID, version: old.versionID,
+                        status: .expired)
+                    states[owner] = expired
+                    return expired
+                }
+                return old
             case .upload(let intent, let image):
                 guard old.generation == intent.expectedGeneration || old.requestID == intent.requestID else {
                     throw GatewayAvatarMutationFailure.stale
                 }
-                value = try snapshot(
+                value = try Self.snapshot(
                     generation: intent.expectedGeneration + 1, request: intent.requestID,
                     version: intent.versionID, status: approved ? .approved : .pendingReview)
                 photos[owner] = try AvatarPreparer.prepare(image)
@@ -128,12 +138,12 @@
                 guard old.requestID == id, old.status == .approved || old.status == .published else {
                     throw GatewayAvatarMutationFailure.pending
                 }
-                value = try snapshot(
+                value = try Self.snapshot(
                     generation: old.generation, request: id, version: old.versionID, status: .published)
             case .clear(let id, let generation):
                 guard old.generation == generation || old.requestID == id && old.generation == generation + 1
                 else { throw GatewayAvatarMutationFailure.stale }
-                value = try snapshot(generation: generation + 1, request: id)
+                value = try Self.snapshot(generation: generation + 1, request: id)
             }
             states[owner] = value
             if case .publish = action, losePublication {

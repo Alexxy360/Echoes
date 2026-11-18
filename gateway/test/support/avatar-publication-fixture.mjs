@@ -63,7 +63,7 @@ export async function avatarPublicationFixture(options = {}) {
   return { ...f, ...initial, social, sourceBytes, assetCalls, uploadedBytes, make, operatorID,
     get signedIn() { return session; },
     upload(changes = {}) { return { accessToken: session.sessionToken, requestID: randomUUID(), versionID: randomUUID(), bytes: sourceBytes,
-      expectedGeneration: initial.policy.snapshot(session.accountID).generation, consentVersion: 1, ...changes }; },
+      expectedGeneration: initial.policy.snapshot(session.accountID, { allowUnpersistedExpiry: true }).generation, consentVersion: 1, ...changes }; },
     credentials(changes = {}) { return { accessToken: session.sessionToken, ...changes }; },
     publication(status = initial.policy.snapshot(session.accountID)) { return { requestID: status.requestID, versionID: status.versionID, generation: status.generation, reviewRevision: status.reviewRevision, consentVersion: 1 }; },
     review(status, verdict = "approved", changes = {}) { return { accountID: session.accountID, requestID: status.requestID, expectedRevision: status.reviewRevision, decisionID: randomUUID(), verdict, ...changes }; },

@@ -63,6 +63,20 @@ public struct GatewayAvatarUploadJournalEntry: Equatable, Sendable, CustomString
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
 
+extension GatewayAvatarUploadJournalEntry {
+    /// A fresh, exact terminal server result allows explicit local forgetting, never a new dispatch.
+    func isExpired(by snapshot: GatewayAvatarOwnerSnapshot) -> Bool {
+        guard snapshot.status == .expired else { return false }
+        switch intent {
+        case .upload(let selected):
+            return snapshot.requestID == selected.requestID && snapshot.versionID == selected.versionID
+                && snapshot.generation == selected.expectedGeneration + 1
+        case .publish(let selected): return selected.matches(snapshot)
+        case .clear: return false
+        }
+    }
+}
+
 struct StoredAvatarUpload: Codable {
     var revision: String, kind: String, requestID: String
     var expectedGeneration: Int

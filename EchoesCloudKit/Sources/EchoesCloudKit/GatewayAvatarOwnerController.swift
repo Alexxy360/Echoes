@@ -280,6 +280,10 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
             try observe(value, context: context)
             return false
         }
+        if entry.isExpired(by: value) {
+            try observe(value, context: context)
+            return true  // Preserve uncertain IDs until the owner's explicit discard or clear.
+        }
         if case .publish(let selected) = entry.intent {
             try selected.validateProgress(value)
             guard selected.matches(value) else {
@@ -496,6 +500,11 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
             let context = try self.bound()
             guard let entry = try await self.pending(context) else { return }
             let status = try await self.dispatch(.status, context: context, expected: entry)
+            if entry.isExpired(by: status) {
+                try await self.complete(entry, context: context)
+                try self.observe(status, context: context)
+                return
+            }
             if case .publish(let selected) = entry.intent {
                 try selected.validateProgress(status)
                 guard

@@ -4,6 +4,28 @@ import Testing
 
 @testable import EchoesCloudKit
 
+@Test @MainActor func avatarEditorExpiredSelectionOffersExplicitForgetAndThenAllowsANewPhoto() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    let host = try editorHost(f)
+    let session = try host.open(isCurrent: { true })
+    await session.perform(.refresh)
+    await session.prepare { f.avatar }
+    session.consent(true, for: try #require(session.selectionID))
+    await session.perform(.submit)
+    try await f.api.review(.expired)
+    await session.perform(.refresh)
+    #expect(session.snapshot?.status == .expired && session.pendingOperation != nil)
+    #expect(
+        session.canDiscardPending && !session.canRecover && !session.canRetryUpload && !session.canPublish
+            && !session.canChoosePhoto)
+    await session.perform(.discardUnsentOrSuperseded)
+    #expect(session.pendingOperation == nil && session.canChoosePhoto)
+    await session.prepare { f.avatar }
+    session.consent(true, for: try #require(session.selectionID))
+    #expect(session.canSubmit)
+}
+
 @MainActor private func editorHost(_ f: OwnerFlowFixture) throws -> GatewayAvatarEditorHost {
     let wire = try OwnerPreviewWireFixture()
     let clock = OwnerPreviewClock(wire.now)

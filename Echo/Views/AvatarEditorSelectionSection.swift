@@ -10,7 +10,8 @@ struct AvatarEditorSelectionSection: View {
         Section("Wybierz zdjęcie") {
             PhotosPicker(selection: $photo, matching: .images, preferredItemEncoding: .current) {
                 Label("Wybierz z biblioteki", systemImage: "photo.on.rectangle")
-            }.disabled(!session.canChoosePhoto).accessibilityIdentifier("avatar.editor.choose")
+            }.disabled(!session.canChoosePhoto).opacity(session.canChoosePhoto ? 1 : 0.45)
+                .accessibilityIdentifier("avatar.editor.choose")
             #if DEBUG
                 if previewSelection != nil {
                     Button("Wybierz przykładowe zdjęcie", action: preparePreview)
@@ -41,8 +42,11 @@ struct AvatarEditorSelectionSection: View {
                     .disabled(session.isBusy).accessibilityIdentifier("avatar.editor.cancelSelection")
             }
             if session.pendingOperation != nil {
-                Text("Przed wybraniem kolejnego zdjęcia sprawdź wynik bieżącej próby lub wycofaj ją.").font(
-                    .caption)
+                Text(
+                    session.snapshot?.status == .expired
+                        ? "Zapomnij wygasłą próbę poniżej, zanim wybierzesz nowe zdjęcie."
+                        : "Przed wybraniem kolejnego zdjęcia sprawdź wynik bieżącej próby lub wycofaj ją."
+                ).font(.caption)
             }
         }
     }

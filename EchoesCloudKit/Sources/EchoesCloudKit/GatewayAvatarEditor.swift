@@ -298,6 +298,7 @@ private struct AvatarEditorDraft: Sendable {
     public var canClear: Bool { isConnected && !isBusy }
     public var canRecover: Bool {
         guard isConnected, !isBusy, let entry = pendingOperation else { return false }
+        if let snapshot, entry.isExpired(by: snapshot) { return false }
         if case .clear = entry.intent { return true }
         if case .publish = entry.intent { return true }
         return entry.phase != .prepared
@@ -306,6 +307,7 @@ private struct AvatarEditorDraft: Sendable {
         guard isConnected, !isBusy, let entry = pendingOperation, entry.hasSource,
             case .upload = entry.intent
         else { return false }
+        if let snapshot, entry.isExpired(by: snapshot) { return false }
         return entry.phase == .prepared || entry.phase == .dispatched
     }
     public var canPublish: Bool {
@@ -332,6 +334,7 @@ private struct AvatarEditorDraft: Sendable {
         guard isConnected, !isBusy, !needsRefresh, let entry = pendingOperation, let value = snapshot else {
             return false
         }
+        if entry.isExpired(by: value) { return true }
         let id: String
         let generation: Int
         switch entry.intent {

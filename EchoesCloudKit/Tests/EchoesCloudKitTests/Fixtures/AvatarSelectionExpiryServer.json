@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "synthetic": true,
+  "source": "local Runtime/HTTP/SQLite/Wasm; modeled provider and accounts",
+  "snapshots": {
+    "pending": {
+      "protocolVersion": 1,
+      "generation": 1,
+      "requestID": "188723e6-fa32-4cee-b745-4d96e2c8f761",
+      "versionID": "92bd67e3-dcac-4651-8dfe-30d387aa473b",
+      "publishedVersionID": null,
+      "status": "pending-review",
+      "reviewRevision": "09311669-cc8a-4d8a-9449-825116646d4b"
+    },
+    "expired": {
+      "protocolVersion": 1,
+      "generation": 1,
+      "requestID": "188723e6-fa32-4cee-b745-4d96e2c8f761",
+      "versionID": "92bd67e3-dcac-4651-8dfe-30d387aa473b",
+      "publishedVersionID": null,
+      "status": "expired",
+      "reviewRevision": "09311669-cc8a-4d8a-9449-825116646d4b"
+    },
+    "recovered": {
+      "protocolVersion": 1,
+      "generation": 1,
+      "requestID": "188723e6-fa32-4cee-b745-4d96e2c8f761",
+      "versionID": "92bd67e3-dcac-4651-8dfe-30d387aa473b",
+      "publishedVersionID": null,
+      "status": "expired",
+      "reviewRevision": "09311669-cc8a-4d8a-9449-825116646d4b"
+    },
+    "expiredAfterFence": {
+      "protocolVersion": 1,
+      "generation": 1,
+      "requestID": "188723e6-fa32-4cee-b745-4d96e2c8f761",
+      "versionID": "92bd67e3-dcac-4651-8dfe-30d387aa473b",
+      "publishedVersionID": null,
+      "status": "expired",
+      "reviewRevision": "09311669-cc8a-4d8a-9449-825116646d4b"
+    },
+    "cleared": {
+      "protocolVersion": 1,
+      "generation": 2,
+      "requestID": "796bd585-72e0-4d3b-bee1-86fa672602ad",
+      "versionID": null,
+      "publishedVersionID": null,
+      "status": "none",
+      "reviewRevision": null
+    }
+  },
+  "uploadTransfers": 4,
+  "additionalTransfersAfterExpiry": 0
+}

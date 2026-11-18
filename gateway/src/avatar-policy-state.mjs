@@ -3,6 +3,7 @@ import { plain, publicUUID, digest, inputHash, validTag, recordIdentity } from "
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
 import { avatarReviewSchema, avatarReviewerKey } from "./avatar-review-state.mjs";
 import { markAvatarRetired } from "./avatar-retirement-state.mjs";
+import { avatarSelectionDeadline, avatarSelectionLifetimeMilliseconds, migrateAvatarSelectionExpiry, expireAvatarSelection } from "./avatar-selection-expiry.mjs";
 
 const codes = new Set(["AVATAR_INPUT", "AVATAR_STALE", "AVATAR_PENDING", "AVATAR_REJECTED", "AVATAR_RATE", "AVATAR_CAPACITY", "AVATAR_SCOPE", "AVATAR_UNAVAILABLE"]);
 export class AvatarPolicyError extends Error {
@@ -37,6 +38,7 @@ export class AvatarPolicyState {
     this.#tx(() => {
       if (!this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").length) throw new AvatarPolicyError();
       for (const sql of avatarPolicySchema) storage.sql.exec(sql);
+      migrateAvatarSelectionExpiry(storage);
     });
   }
   #tx(action) { try { return this.#storage.transactionSync(action); } catch (e) { throw e instanceof AvatarPolicyError ? e : new AvatarPolicyError(); } }
@@ -54,6 +56,8 @@ export class AvatarPolicyState {
   #lease(accountID) {
     const row = this.#profile(accountID);
     if (!row || !Number.isSafeInteger(row.generation) || row.generation < 1 || !publicUUID.test(row.request_id ?? "")) throw new AvatarPolicyError("AVATAR_STALE");
+    const deadline = avatarSelectionDeadline(row, row.version_id === null ? undefined : this.#job(accountID, row.request_id), this.#now());
+    if (deadline !== null && deadline <= this.#now()) throw new AvatarPolicyError("AVATAR_STALE");
     return Object.freeze({ accountID, requestID: row.request_id, generation: row.generation, versionID: row.version_id,
       kind: row.version_id === null ? "clear" : "select" });
   }
@@ -86,10 +90,11 @@ export class AvatarPolicyState {
       const window = Math.floor(now / 600000) * 600000, count = profile?.upload_window === window ? profile.upload_count : 0;
       if (profile?.updated_at > now) throw new AvatarPolicyError();
       if (count >= 3) throw new AvatarPolicyError("AVATAR_RATE");
-      markAvatarRetired(this.#storage, profile, now);
+      const deadline = avatarSelectionDeadline(profile, profile?.version_id ? this.#job(accountID, profile.request_id) : undefined, now);
+      markAvatarRetired(this.#storage, profile, deadline !== null && deadline <= now ? deadline : now);
       this.#storage.sql.exec(`INSERT INTO avatar_profiles_v1(account_id,generation,request_id,version_id,ready,pointer_tag,upload_window,upload_count,updated_at)
         VALUES(?,?,?,?,0,NULL,?,?,?) ON CONFLICT(account_id) DO UPDATE SET generation=excluded.generation,request_id=excluded.request_id,
-        version_id=excluded.version_id,ready=0,pointer_tag=NULL,upload_window=excluded.upload_window,upload_count=excluded.upload_count,updated_at=excluded.updated_at`,
+        version_id=excluded.version_id,ready=0,pointer_tag=NULL,expired_at=NULL,expired_review_revision=NULL,upload_window=excluded.upload_window,upload_count=excluded.upload_count,updated_at=excluded.updated_at`,
       accountID, expectedGeneration + 1, requestID, versionID, window, count + 1, now);
       this.#storage.sql.exec(`INSERT INTO avatar_jobs_v1(account_id,request_id,version_id,generation,source_hash,consent_version,
         moderation_state,moderation_revision,created_at) VALUES(?,?,?,?,?,1,'pending',?,?)`, accountID, requestID, versionID, expectedGeneration + 1, sourceHash, randomUUID(), now);
@@ -103,13 +108,14 @@ export class AvatarPolicyState {
     const result = this.#tx(() => {
       this.#active(accountID); const profile = this.#profile(accountID), now = this.#now();
       if (profile?.request_id === requestID && profile.version_id === null && profile.generation === expectedGeneration + 1) return this.#lease(accountID);
-      if ((profile?.generation ?? 0) !== expectedGeneration || this.#job(accountID, requestID)) throw new AvatarPolicyError("AVATAR_STALE");
+      if ((profile?.generation ?? 0) !== expectedGeneration || profile?.request_id === requestID || this.#job(accountID, requestID)) throw new AvatarPolicyError("AVATAR_STALE");
       if (profile?.updated_at > now) throw new AvatarPolicyError();
-      markAvatarRetired(this.#storage, profile, now);
+      const deadline = avatarSelectionDeadline(profile, profile?.version_id ? this.#job(accountID, profile.request_id) : undefined, now);
+      markAvatarRetired(this.#storage, profile, deadline !== null && deadline <= now ? deadline : now);
       // Clear has no upload rate/capacity gate and never resets the selection budget.
       this.#storage.sql.exec(`INSERT INTO avatar_profiles_v1(account_id,generation,request_id,version_id,ready,pointer_tag,updated_at)
         VALUES(?,?,?,NULL,0,NULL,?) ON CONFLICT(account_id) DO UPDATE SET generation=excluded.generation,request_id=excluded.request_id,
-        version_id=NULL,ready=0,pointer_tag=NULL,updated_at=excluded.updated_at`, accountID, expectedGeneration + 1, requestID, now);
+        version_id=NULL,ready=0,pointer_tag=NULL,expired_at=NULL,expired_review_revision=NULL,updated_at=excluded.updated_at`, accountID, expectedGeneration + 1, requestID, now);
       return this.#lease(accountID);
     });
     await this.#durable(); this.assertCurrent(result); return result;
@@ -183,7 +189,8 @@ export class AvatarPolicyState {
       JOIN avatar_profiles_v1 p ON p.account_id=j.account_id AND p.request_id=j.request_id AND p.version_id=j.version_id AND p.generation=j.generation
       JOIN auth_accounts_v1 a ON a.account_id=j.account_id LEFT JOIN community_accounts_v1 c ON c.account_id=j.account_id
       WHERE j.moderation_state='pending' AND j.staged_tag IS NOT NULL AND a.disabled=0 AND COALESCE(c.suspended,0)=0
-      ORDER BY j.created_at,j.account_id,j.request_id LIMIT 20`)).map(row => this.reviewContent(row.account_id, row.request_id));
+      AND p.expired_at IS NULL AND j.created_at>?
+      ORDER BY j.created_at,j.account_id,j.request_id LIMIT 20`, this.#now() - avatarSelectionLifetimeMilliseconds)).map(row => this.reviewContent(row.account_id, row.request_id));
   }
   async review({ accountID, requestID, decisionID, expectedRevision, verdict, reviewerID } = {}) {
     uuid(requestID); uuid(decisionID); uuid(expectedRevision); uuid(reviewerID);
@@ -274,10 +281,23 @@ export class AvatarPolicyState {
     if (["requestID", "versionID", "generation", "reviewRevision", "payloadHash", "stagedTag", "pointerTag"].some(key => current[key] !== value[key])) throw new AvatarPolicyError("AVATAR_STALE");
     return current;
   }
-  snapshot(accountID) { return this.#tx(() => {
+  async ensureSelectionExpiry(accountID) {
+    this.#tx(() => {
+      this.#active(accountID);
+      expireAvatarSelection(this.#storage, accountID, this.#now(), (profile, deadline) => markAvatarRetired(this.#storage, profile, deadline));
+    });
+    await this.#durable();
+  }
+  snapshot(accountID, { allowUnpersistedExpiry = false } = {}) { return this.#tx(() => {
     this.#active(accountID); const p = this.#profile(accountID);
     if (!p) return Object.freeze({ generation: 0, requestID: null, versionID: null, publishedVersionID: null, status: "none", reviewRevision: null });
     const job = p.version_id === null ? null : this.#job(accountID, p.request_id);
+    const deadline = avatarSelectionDeadline(p, job, this.#now());
+    if (deadline !== null && deadline <= this.#now()) {
+      if (!allowUnpersistedExpiry && p.expired_at === null) throw new AvatarPolicyError("AVATAR_PENDING");
+      return Object.freeze({ generation: p.generation, requestID: p.request_id,
+        versionID: p.version_id, publishedVersionID: null, status: "expired", reviewRevision: p.expired_review_revision ?? job.moderation_revision });
+    }
     if (p.version_id !== null && !job) throw new AvatarPolicyError();
     const published = !!p.ready && job?.moderation_state === "approved";
     return Object.freeze({ generation: p.generation, requestID: p.request_id, versionID: p.version_id, publishedVersionID: published ? p.version_id : null,

@@ -57,7 +57,9 @@ export async function avatarUploadHTTPFixture({ runtime = false, readEnabled = f
     assert.equal(value, objectID); return { fetch(request) { forwarded.push(request); return handleAuthorityRequest(request, { runtime: authority, env, objectID, clock: f.clock }); } };
   } };
   const body = (action, changes = {}) => {
-    const state = f.policy.snapshot(f.signedIn.accountID), requestID = state.requestID ?? randomUUID();
+    if (action === "status") return { ...changes };
+    if (action === "recover" && changes.requestID !== undefined) return { ...changes };
+    const state = f.policy.snapshot(f.signedIn.accountID, { allowUnpersistedExpiry: true }), requestID = state.requestID ?? randomUUID();
     return { ...({ upload: { requestID: randomUUID(), versionID: randomUUID(), expectedGeneration: state.generation, consentVersion: 1 },
       clear: { requestID: randomUUID(), expectedGeneration: state.generation }, recover: { requestID }, publish: f.publication(state), status: {} }[action]), ...changes };
   };

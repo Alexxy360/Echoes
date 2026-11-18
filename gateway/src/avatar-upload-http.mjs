@@ -96,7 +96,7 @@ export async function avatarMutationBody(request, headers, signal, timeout = 300
 export function avatarMutationSnapshot(value) {
   const keys = ["generation", "requestID", "versionID", "publishedVersionID", "status", "reviewRevision"];
   if (!exact(value, keys) || !Number.isSafeInteger(value.generation) || value.generation < 0 ||
-      !["none", "clearing", "uploading", "pending-review", "approved", "rejected", "published"].includes(value.status) ||
+      !["none", "clearing", "uploading", "pending-review", "approved", "rejected", "published", "expired"].includes(value.status) ||
       [value.requestID, value.versionID, value.publishedVersionID, value.reviewRevision].some(v => v !== null && !id(v))) throw new AvatarIntakeError("AVATAR_RESPONSE");
   if (value.generation === 0 ? keys.filter(k => k.endsWith("ID") || k === "reviewRevision").some(k => value[k] !== null) || value.status !== "none" : value.requestID === null) throw new AvatarIntakeError("AVATAR_RESPONSE");
   if (value.versionID === null ? value.reviewRevision !== null || value.publishedVersionID !== null || !["none", "clearing"].includes(value.status) :

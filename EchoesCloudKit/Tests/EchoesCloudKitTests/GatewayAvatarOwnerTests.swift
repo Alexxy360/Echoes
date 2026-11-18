@@ -1180,3 +1180,149 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
     await #expect(throws: GatewayAvatarOwnerFailure.superseded) { try await read.value }
     #expect(events.values.count == count && events.values.last?.1 == nil)
 }
+
+@Test @MainActor func avatarOwnerExpiredUploadStopsRetryAndKeepsIDsUntilExplicitFreshDiscard() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    await f.api.fail("upload", .lostReply)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) {
+        try await f.controller.submit(f.avatar, consentVersion: 1)
+    }
+    let original = try #require(await f.journal.read())
+    guard case .upload(let selected) = original.intent else {
+        Issue.record("Missing upload")
+        return
+    }
+    await f.api.set(
+        try ownerSnapshot(
+            generation: selected.expectedGeneration + 1,
+            request: selected.requestID, version: selected.versionID, status: .expired))
+    f.clock.advance(8 * 86400)
+    try await f.controller.retryUpload()
+    #expect(f.controller.snapshot?.status == .expired)
+    #expect(f.controller.pendingOperation?.intent == original.intent)
+    #expect(f.controller.pendingOperation?.hasSource == false)
+    #expect(await f.actions().filter { $0 == "upload" }.count == 1)
+    try await f.controller.discardUnsentOrSuperseded()
+    #expect(try await f.journal.read() == nil && f.controller.pendingOperation == nil)
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    #expect(f.controller.snapshot?.generation == 2 && f.controller.snapshot?.status == .pendingReview)
+    #expect(await f.actions().filter { $0 == "upload" }.count == 2)
+}
+
+@Test @MainActor func avatarOwnerExpiredPublicationKeepsItsJournalAndNeverRetriesPublish() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    try await f.controller.refresh()
+    let approved = try #require(f.controller.snapshot)
+    await f.api.fail("publish", .beforeAccept)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let entry = try #require(await f.journal.read())
+    await f.api.set(
+        try ownerSnapshot(
+            generation: approved.generation, request: approved.requestID,
+            version: approved.versionID, status: .expired, reviewRevision: #require(approved.reviewRevision)))
+    try await f.controller.recover()
+    #expect(f.controller.snapshot?.status == .expired && f.controller.pendingOperation == entry)
+    #expect(await f.actions().filter { $0 == "publish" }.count == 1)
+    try await f.controller.discardUnsentOrSuperseded()
+    #expect(try await f.journal.read() == nil)
+}
+
+@Test @MainActor func avatarOwnerExpiredProofForAnotherVersionCannotForgetTheCurrentSavedIDs() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    let current = try #require(f.controller.snapshot)
+    let entry = try #require(await f.journal.read())
+    await f.api.set(
+        try ownerSnapshot(
+            generation: current.generation, request: current.requestID,
+            version: UUID().uuidString.lowercased(), status: .expired))
+    await #expect(throws: GatewayAvatarMutationFailure.invalidResponse) { try await f.controller.refresh() }
+    await #expect(throws: GatewayAvatarMutationFailure.pending) {
+        try await f.controller.discardUnsentOrSuperseded()
+    }
+    #expect(try await f.journal.read() == entry)
+}
+
+@Test @MainActor func avatarOwnerDiscardRechecksExpirationInsteadOfUsingTheDisplayedSnapshot() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    let current = try #require(f.controller.snapshot)
+    let entry = try #require(await f.journal.read())
+    await f.api.set(
+        try ownerSnapshot(
+            generation: current.generation, request: current.requestID, version: current.versionID,
+            status: .expired))
+    try await f.controller.refresh()
+    await f.api.set(
+        try ownerSnapshot(
+            generation: current.generation, request: current.requestID, version: current.versionID,
+            status: .approved))
+    await #expect(throws: GatewayAvatarMutationFailure.pending) {
+        try await f.controller.discardUnsentOrSuperseded()
+    }
+    #expect(try await f.journal.read() == entry)
+}
+
+@Test @MainActor func avatarOwnerExpiredDiscardCannotRemoveAnotherAccountJournalAfterAwait() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    let current = try #require(f.controller.snapshot)
+    let entry = try #require(await f.journal.read())
+    await f.api.set(
+        try ownerSnapshot(
+            generation: current.generation, request: current.requestID, version: current.versionID,
+            status: .expired))
+    try await f.controller.refresh()
+    await f.api.pause("status")
+    let discard = Task { try await f.controller.discardUnsentOrSuperseded() }
+    try await f.api.gate.wait()
+    try f.authorization.select(ownerFlowB)
+    await f.api.gate.release()
+    await #expect(throws: GatewayAvatarOwnerFailure.superseded) { try await discard.value }
+    #expect(try await f.journal.read() == entry)
+}
+
+@Test @MainActor func avatarOwnerAcceptsActualRuntimeExpiryResponsesAndReleasesOnlyTheExactLocalAttempt()
+    async throws
+{
+    let url = try #require(
+        Bundle.module.url(
+            forResource: "AvatarSelectionExpiryServer", withExtension: "json", subdirectory: "Fixtures"))
+    let fixture = try #require(JSONSerialization.jsonObject(with: Data(contentsOf: url)) as? [String: Any])
+    let raw = try #require(fixture["snapshots"] as? [String: [String: Any]])
+    var parsed: [String: GatewayAvatarOwnerSnapshot] = [:]
+    for (name, fields) in raw {
+        parsed[name] = try GatewayAvatarOwnerSnapshot(data: JSONSerialization.data(withJSONObject: fields))
+    }
+    let pending = try #require(parsed["pending"])
+    let expired = try #require(parsed["expiredAfterFence"])
+    #expect(pending.status == .pendingReview && expired.status == .expired)
+    #expect(parsed["expired"] == parsed["recovered"] && parsed["recovered"] == expired)
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    let selected = try GatewayAvatarUploadIntent(
+        requestID: #require(pending.requestID), versionID: #require(pending.versionID),
+        expectedGeneration: pending.generation - 1)
+    let lease = try await f.journal.open(scope: f.scope)
+    let entry = try await f.journal.prepareUpload(intent: selected, avatar: f.avatar, lease: lease)
+    _ = try await f.journal.transition(entry, to: .dispatched, lease: lease)
+    await f.api.set(expired)
+    try await f.controller.connect()
+    try await f.controller.refresh()
+    #expect(f.controller.snapshot == expired && f.controller.pendingOperation?.intent == .upload(selected))
+    try await f.controller.discardUnsentOrSuperseded()
+    #expect(try await f.journal.read() == nil)
+    #expect(await f.actions() == ["status", "status"])
+}

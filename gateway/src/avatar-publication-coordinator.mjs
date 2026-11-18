@@ -9,7 +9,7 @@ import { avatarPublicationKeys, validAvatarPublicationIntent } from "./avatar-pu
 export class AvatarPublicationCoordinator {
   #state; #authentication; #community; #normalizer; #assets; #profiles; #checkpoint; #enabled; #operator; #withdrawalOnly;
   constructor({ state, authentication, communityState, normalizer, avatarRepository, profileRepository, checkpoint, isEnabled, authorizeOperator, withdrawalOnly = false } = {}) {
-    if (["select", "clear", "rememberDescriptor", "staged", "review", "snapshot"].some(key => typeof state?.[key] !== "function") ||
+    if (["select", "clear", "rememberDescriptor", "staged", "review", "snapshot", "ensureSelectionExpiry"].some(key => typeof state?.[key] !== "function") ||
         typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
         typeof withdrawalOnly !== "boolean" || (withdrawalOnly ? normalizer !== undefined || avatarRepository !== undefined || authorizeOperator !== undefined :
           typeof normalizer?.prepare !== "function" || typeof avatarRepository?.stage !== "function" || typeof avatarRepository.recover !== "function") ||
@@ -75,6 +75,13 @@ export class AvatarPublicationCoordinator {
       if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
       const o = this.#options(value, ["accessToken", "signal", "requestID"]), { accountID } = this.#identity(o);
       await this.#checkpoint.verify({ signal: o.signal }); this.#identity(o, accountID);
+      await this.#state.ensureSelectionExpiry(accountID); this.#identity(o, accountID);
+      const status = this.#state.snapshot(accountID);
+      if (status.status === "expired" && status.requestID === o.requestID) return () => {
+        this.#identity(o, accountID); const current = this.#state.snapshot(accountID);
+        if (current.status !== "expired" || current.requestID !== status.requestID || current.versionID !== status.versionID || current.generation !== status.generation) throw new AvatarPolicyError("AVATAR_STALE");
+        return current;
+      };
       const intent = this.#state.intent(accountID, o.requestID), permit = () => this.#permit(o, intent);
       if (intent.kind === "clear") return await this.#writePointer(o, intent);
       const descriptor = this.#state.descriptor(intent);
@@ -119,6 +126,7 @@ export class AvatarPublicationCoordinator {
     try {
       const o = this.#options(value, ["accessToken", "signal"]), { accountID } = this.#identity(o);
       await this.#checkpoint.verify({ signal: o.signal }); this.#identity(o, accountID);
+      await this.#state.ensureSelectionExpiry(accountID); this.#identity(o, accountID);
       return () => { this.#identity(o, accountID); return this.#state.snapshot(accountID); };
     } catch (e) { throw this.#error(e); }
   }

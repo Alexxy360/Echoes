@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { validCheckpoint, sameCheckpoint } from "./public-registry-checkpoint.mjs";
 import { publicRetentionDeadline, publicRetentionIntentKey, publicRetentionLeaseMilliseconds, publicRetentionSchema } from "./public-retention-policy.mjs";
 import { avatarRetirementDeadline, backfillAvatarRetirements, needsAvatarRetirementBackfill, expireAvatarTransferReceipts } from "./avatar-retirement-state.mjs";
+import { migrateAvatarSelectionExpiry, avatarSelectionExpirySchedule } from "./avatar-selection-expiry.mjs";
 
 const schema = [
   `CREATE TABLE IF NOT EXISTS public_records_v1 (
@@ -37,6 +38,7 @@ export class PublicRecordRegistry {
       if (existed && !this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='avatar_asset_transfers_v1'").length &&
           this.#rows("SELECT record_name FROM public_records_v1 WHERE kind='avatar' LIMIT 1").length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       for (const statement of [...schema, ...publicRetentionSchema]) storage.sql.exec(statement);
+      migrateAvatarSelectionExpiry(storage);
       if (!this.#rows("PRAGMA table_info(public_records_v1)").some(row => row.name === "asset_claims")) {
         // NULL marks legacy avatar attempts: unknown claim history cannot safely authorize new uploads.
         storage.sql.exec("ALTER TABLE public_records_v1 ADD COLUMN asset_claims INTEGER CHECK(asset_claims IS NULL OR asset_claims IN (0,1,2,3))");
@@ -447,12 +449,12 @@ export class PublicRecordRegistry {
       const row = this.#rows(`SELECT MIN(CASE WHEN r.state='fencing' THEN MAX(r.due_at,r.lease_at+?) ELSE r.due_at END) AS due_at
         FROM public_retention_v1 r JOIN public_records_v1 p ON p.record_name=r.record_name JOIN auth_accounts_v1 a ON a.account_id=p.account_id
         WHERE a.disabled=0 AND p.phase IN ('pending','settled') AND r.state IN ('pending','fencing')`, publicRetentionLeaseMilliseconds)[0];
-      const dueAt = row?.due_at ?? null;
+      const dueAt = row?.due_at ?? null, wakeAt = avatarSelectionExpirySchedule(this.#storage, this.#now());
       if (dueAt !== null && (!Number.isSafeInteger(dueAt) || dueAt < 0)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       const legacy = this.#rows(`SELECT 1 FROM public_records_v1 p JOIN auth_accounts_v1 a ON a.account_id=p.account_id
         LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name WHERE a.disabled=0
         AND p.phase IN ('pending','settled') AND p.kind IN ('presence','message','report') AND r.record_name IS NULL LIMIT 1`).length > 0;
-      return Object.freeze({ dueAt, needsBackfill: legacy || needsAvatarRetirementBackfill(this.#storage) });
+      return Object.freeze({ dueAt, wakeAt, needsBackfill: legacy || needsAvatarRetirementBackfill(this.#storage) || wakeAt !== null && wakeAt <= this.#now() });
     });
   }
   /** Fair, durable leases. No CloudKit permission or HTTP route is granted by this local API. */

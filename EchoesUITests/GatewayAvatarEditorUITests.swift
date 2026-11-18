@@ -146,6 +146,34 @@ import XCTest
         XCTAssertFalse(element(app, "avatar.editor.preview").exists)
         attach(app, "owner-photo-pending-review")
     }
+    func testExpiredSelectionCanBeForgottenWithoutRetransmissionAndAllowsANewChoice() {
+        expiredSelectionFlow(large: false)
+    }
+    func testExpiredSelectionRemainsRecoverableAtLargestAccessibilityTextSize() {
+        expiredSelectionFlow(large: true)
+    }
+    private func expiredSelectionFlow(large: Bool) {
+        let app = application("avatar-owner-expired", large: large)
+        open(app)
+        choose(app)
+        acceptAndSend(app)
+        status(app, contains: "czeka na sprawdzenie")
+        tap(app, "avatar.editor.refresh")
+        status(app, contains: "wygasł")
+        XCTAssertFalse(app.buttons["avatar.editor.retry"].exists)
+        XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
+        XCTAssertFalse(visibleButton(app, "avatar.editor.recover").isEnabled)
+        attach(app, "owner-photo-expired-before-forget")
+        tap(app, "avatar.editor.discard")
+        XCTAssertTrue(app.staticTexts["Zapomnieć tę próbę na urządzeniu?"].waitForExistence(timeout: 5))
+        tap(app, "avatar.editor.confirm")
+        status(app, contains: "Możesz wybrać nowe")
+        choose(app)
+        XCTAssertFalse(visibleButton(app, "avatar.editor.submit").isEnabled)
+        acceptAndSend(app)
+        status(app, contains: "czeka na sprawdzenie")
+        attach(app, "owner-photo-expired-new-selection")
+    }
     func testApprovedPhotoStillRequiresPublishAndClearRequiresConfirmation() {
         let app = application("avatar-owner-approved")
         open(app)

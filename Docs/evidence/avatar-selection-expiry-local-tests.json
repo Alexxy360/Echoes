@@ -1,0 +1,237 @@
+{
+  "stage": "CK-05b.2",
+  "createdAt": "2026-11-18T23:28:24.984098+00:00",
+  "localDate": "2026-11-19",
+  "baselineCommit": "e5a47c0c4f236b0be29c230df4adbf28bd3907b3",
+  "runs": {
+    "node22": {
+      "tests": 632,
+      "passed": 632,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-avatar-expiry-final-node22.log",
+      "SHA256": "301ffe35bdc1cc12895ebda69db1359cda9d1fc5532eef537184df31d01167c2"
+    },
+    "node24": {
+      "tests": 632,
+      "passed": 632,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-avatar-expiry-final-node24.log",
+      "SHA256": "415af72c8651454e1d881f12fe9923ae9df6ffdf8696a76620a1c31ec410711c"
+    }
+  },
+  "newNodeFunctions": [
+    "a future local selection deadline wakes maintenance without qualifying for provider admission",
+    "real local workerd expires the current staging selection and preserves its terminal snapshot after fencing",
+    "an unfinished selection expires exactly after seven days before any alarm and cannot dispatch a late upload",
+    "expired staged content is hidden immediately, fences later, and remains a recoverable terminal owner snapshot",
+    "a rejection gets seven days from the last review while approved published photos have no selection TTL",
+    "a late review or captured approval cannot revive a selection whose server deadline has passed",
+    "clear or replacement after virtual expiry keeps the original deadline instead of adding another seven days",
+    "orphan policy jobs with no record receive a future local wake and are purged in bounded batches",
+    "selection expiry migrates older profile tables without changing published approval or resetting generation",
+    "account deletion takes priority over expiring a current picture and does not leave a terminal tombstone",
+    "expired owner recovery finalizers reject a newer selection and never expose an unrelated version",
+    "actual local Runtime HTTP returns expired owner state before and after fencing without another asset transfer",
+    "an expired selection remains terminal after file-backed reopen even when its job and assets are already fenced",
+    "expiry and retirement markers roll back together when the profile transition cannot be committed",
+    "a terminal HTTP expiry is durable and a rolled-back clock cannot revive the forgotten selection",
+    "crossing the selection deadline during the final checkpoint cannot emit an unpersisted terminal response",
+    "failed expiry durability cannot return a terminal finalizer and an exact fresh retry confirms the same state"
+  ],
+  "newNativeFunctions": [
+    "avatarEditorExpiredSelectionOffersExplicitForgetAndThenAllowsANewPhoto",
+    "avatarExpiredSnapshotRequiresExactOwnerSelectionAndCannotAcknowledgePublicationOrClear",
+    "avatarOwnerExpiredUploadStopsRetryAndKeepsIDsUntilExplicitFreshDiscard",
+    "avatarOwnerExpiredPublicationKeepsItsJournalAndNeverRetriesPublish",
+    "avatarOwnerExpiredProofForAnotherVersionCannotForgetTheCurrentSavedIDs",
+    "avatarOwnerDiscardRechecksExpirationInsteadOfUsingTheDisplayedSnapshot",
+    "avatarOwnerExpiredDiscardCannotRemoveAnotherAccountJournalAfterAwait",
+    "avatarOwnerAcceptsActualRuntimeExpiryResponsesAndReleasesOnlyTheExactLocalAttempt"
+  ],
+  "newUIFunctions": [
+    "testExpiredSelectionCanBeForgottenWithoutRetransmissionAndAllowsANewChoice",
+    "testExpiredSelectionRemainsRecoverableAtLargestAccessibilityTextSize"
+  ],
+  "native": {
+    "defined": 564,
+    "passed": 562,
+    "skipped": 2,
+    "failed": 0,
+    "mac": {
+      "log": "/private/tmp/echoes-avatar-expiry-swift-mac-verified.log",
+      "SHA256": "ecd5e46c4cade684678b67e2a4ebe516fbd63ca8fa39a001c23d312c3f837e24"
+    },
+    "iOSSimulator": {
+      "log": "/private/tmp/echoes-avatar-expiry-package-ios.log",
+      "SHA256": "1450e58554949a401032d87d3dfeae03d44fccb3be73630051640d14efd86ab8"
+    },
+    "iOSResult": "/private/tmp/echoes-avatar-expiry-package-ios.xcresult",
+    "iOSSummary": {
+      "log": "/private/tmp/echoes-avatar-expiry-package-ios-summary.json",
+      "SHA256": "f10a0cded84923db02f2729699ec749cb805a69960877dc56f8ba81c13b38654"
+    },
+    "physicalFileProtectionAccepted": false
+  },
+  "UI": {
+    "distinctAccepted": 5,
+    "initialPassed": 5,
+    "finalAffectedPassed": 2,
+    "failed": 0,
+    "initial": {
+      "log": "/private/tmp/echoes-avatar-expiry-ui.log",
+      "SHA256": "455cfafcafe9db4e1ff135668f7fbe58e4f8e80ec53948c7c6b77852ed2dc881"
+    },
+    "final": {
+      "log": "/private/tmp/echoes-avatar-expiry-ui-final.log",
+      "SHA256": "fc539e437cf0f608838bf4b4ff76b69d2f98a25ca9d1509c485ed91e4d41afe8"
+    },
+    "finalResult": "/private/tmp/echoes-avatar-expiry-ui-final.xcresult",
+    "finalSummary": {
+      "log": "/private/tmp/echoes-avatar-expiry-ui-final-summary.json",
+      "SHA256": "f575a05bc5e7f7fbdd48852b324798686f2577be251ff7413350cb586764b3c5"
+    },
+    "screenshots": {
+      "Docs/evidence/avatar-selection-expired.png": "e7d1405779bd3a35b91f60f3b2a06448c426cc299eb28a57e51a89e4668a0b34",
+      "Docs/evidence/avatar-selection-expired-large.png": "5e504e625c4a9b7cef6b80e8e5bb3b8a22517e95c7e068a52533e318178830ef",
+      "Docs/evidence/avatar-selection-new-after-expiry-large.png": "016cd0e23a7490169790ddaa75e23e92cf9158de1ff5a2f0f239771fdbcfab92"
+    },
+    "visuallyReviewed": true,
+    "networkAndAccounts": "synthetic preview"
+  },
+  "builds": {
+    "Debug": {
+      "log": "/private/tmp/echoes-avatar-expiry-ui-final-build.log",
+      "SHA256": "c7c5ea2a3ca539eba4d816ddb2c162bebf3b6f549a2f83add469806ea1af0fc3"
+    },
+    "unsignedRelease": {
+      "log": "/private/tmp/echoes-avatar-expiry-release-final.log",
+      "SHA256": "a8666a1b5689778b1e3fbb8aa114b3b270c8acfdbfc7f92a6a88f15654473407"
+    }
+  },
+  "syntax": {
+    "MJS": 139,
+    "nodeVersions": [
+      22,
+      24
+    ],
+    "JSON": 3,
+    "log": "/private/tmp/echoes-avatar-expiry-final-syntax.log",
+    "SHA256": "892e903b738c87b2d173cec3261ce3aae4c3add427f80b389106a6872a3a1692"
+  },
+  "format": {
+    "SwiftFiles": 13,
+    "log": "/private/tmp/echoes-avatar-expiry-final-format.log",
+    "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "sourceSHA256": {
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "1aaec5621fa8f10fc6c78cd95a091261f07b81b0a50f11e2418701047b13eee7",
+    "Echo/Services/CommunityPreviewFixture.swift": "f4c08e3547c79d9a8ec5a0c303d331eb6711f3f56495bb0ac750a4057023d292",
+    "Echo/Views/AvatarEditorConfirmationView.swift": "0b00c623c90977007934d46eec7b13687a3d33491be6b51d5766b2c23c8aacaa",
+    "Echo/Views/AvatarEditorSelectionSection.swift": "41e564073c70036addf61f14f5f5feb155e0229b92c998c9954eece9ae012d59",
+    "Echo/Views/AvatarEditorView.swift": "9fc85462a8073a862e0070b1c29d7e65ef7bd423232c20042f74dee36e502f17",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "3e7c700cc47c96d6ca85414fcf017cb14e4e67a48ece2fc2c2f1447d826914ad",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarMutationAPI.swift": "b89ff895e4e89d575da0157ba9005e8039a5ca58cef888bb687ecfb006cf4f12",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "3418d6e403201435fd53b829f588df424eadbb4d5f4d74c5415bdb24c328fb32",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarUploadRecord.swift": "16e29a088e5f7f36b823f344321656325626589e7f9ad0e87c7fefdfdec53ab1",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/AvatarSelectionExpiryServer.json": "093b035941099bc9aa1c2fd1e58337af2c254e8830069813e8de1f6e30409d69",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarEditorTests.swift": "e1781fcd49f7cbedcfa430506a00f352d91b9022ffd23d574170d299824e2720",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarMutationTests.swift": "e3fdea5c1d9b81ee93ca5940fe1307b965c4cde193c850a306213655baed2d4b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "5e7e81aad5ba8a395aa833022ba3588ac203da03750dcd67f2ad926f4333b81f",
+    "EchoesUITests/GatewayAvatarEditorUITests.swift": "f2728ac6496dfbe5f67b352eeb4a4444b945d41140597792eca689a686be0745",
+    "gateway/scripts/export-avatar-expiry-native-fixture.mjs": "aca0541f1f4f7d0b8405084b805db1ade4d13fe1169ff68cb42248545f2017d5",
+    "gateway/src/avatar-policy-state.mjs": "001fe22f1d095565c95bedd2a02b0d31669b7fac01d4d351fd547107a59e409d",
+    "gateway/src/avatar-publication-coordinator.mjs": "09b7015e6041adc214b54d9fb984d533faab5614a04b9ef5467adfde8b1508c7",
+    "gateway/src/avatar-retirement-state.mjs": "04d97acec514abbc5d650c0665ccc238b0fe9f2f5b0d3903e82cde77802b59ed",
+    "gateway/src/avatar-selection-expiry.mjs": "e2ef438fc8f66f4896896f054c79f7f6516745cef690c2d135eb6801efe42a56",
+    "gateway/src/avatar-upload-http.mjs": "8f5dc07da42c54edc887ecfd83061749f5d679c52a5c073c2d4765bb054752fb",
+    "gateway/src/gateway-maintenance.mjs": "4ccefbbd3e58225a29d24ccf00f9a58fb8a13d238ef8e7f69cedb8395c6653fa",
+    "gateway/src/public-record-registry.mjs": "3e229f16829003206334ef4ed4112d63370f86865eb95ad53e1c2a741814e614",
+    "gateway/test/avatar-selection-expiry.test.mjs": "ed1c278c80a7410e5bf3ac1ef93ea9a16d4d8d7b7797c992a604eb09e70d4494",
+    "gateway/test/gateway-maintenance.test.mjs": "49a3953d50b438d985c3dfb8de0dd32004ccc797726863c9ca5eabcd39ed96cf",
+    "gateway/test/public-retention-workerd.test.mjs": "1df448c746e2883712f53eaf1e621decb8f7b37d167bafec1156b666146ec588",
+    "gateway/test/support/avatar-publication-fixture.mjs": "0e34e56940cfd982c83b693d7377926d017f950a19e449783412a8e032e98c84",
+    "gateway/test/support/avatar-upload-http-fixture.mjs": "b30b6f3569ba43a40b1ea2233b92f6e1ea6baa22d5bca0055ff3132c91c039bd",
+    "gateway/test/support/public-retention-worker.mjs": "79a2c0afb1d16d45467d958cf88b4df1f316afcf7b476c5926ee6c5bcf1da537"
+  },
+  "bridgeFixture": {
+    "snapshots": 5,
+    "RuntimeHTTPAndSQLiteAndWasm": true,
+    "providerAndIdentity": "synthetic",
+    "unchangedUploadTransfersAfterExpiry": true,
+    "log": "/private/tmp/echoes-avatar-expiry-fixture-verified-export.log",
+    "SHA256": "e533a21ee0600eaf855a15caeedd2fc550716c9ce87d4a828cc48b9b12dbc2b5"
+  },
+  "negativeControls": [
+    {
+      "removed": "current selection expiry lease guard",
+      "expectedFailures": 1,
+      "sourcePreserved": true,
+      "log": "/private/tmp/echoes-avatar-expiry-final-negative-lease.log",
+      "SHA256": "b9b7453e9096dd26f8846d34500d28051c27423187af797c08d967689cb3c077"
+    },
+    {
+      "removed": "durability guard in final terminal snapshot",
+      "expectedFailures": 1,
+      "sourcePreserved": true,
+      "log": "/private/tmp/echoes-avatar-expiry-final-negative-terminal.log",
+      "SHA256": "3eca1434f76b7dc7cd06a1c8bee96c4c5e7a116a53f5472115c64c3cd8557562"
+    }
+  ],
+  "intermediateRuns": {
+    "echoes-avatar-selection-integration-early.log": {
+      "log": "/private/tmp/echoes-avatar-selection-integration-early.log",
+      "SHA256": "a3fa4c6ed7b3bbc68541743bd3296916f46a24cb886270e4bc70dc5122f493bf"
+    },
+    "echoes-avatar-selection-expiry-targeted.log": {
+      "log": "/private/tmp/echoes-avatar-selection-expiry-targeted.log",
+      "SHA256": "d35972b875b0158d8642d10ffd2e71d85323e0da2ba0c724e2b1d6ec73aa7052"
+    },
+    "echoes-avatar-expiry-swift-mac.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-swift-mac.log",
+      "SHA256": "01858480e0aa14117611213057e56701a7c4144907f4f15577b94190e3d40765"
+    },
+    "echoes-avatar-expiry-swift-mac-corrected.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-swift-mac-corrected.log",
+      "SHA256": "4dd18fe2f9989b4a1a26f18a64d537ae0060f616faf9410f17f53cf195441510"
+    },
+    "echoes-avatar-expiry-release.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-release.log",
+      "SHA256": "62d0daa233b61d499463929b4f3fc6576ccc603442782e2169c940f0e78aaa36"
+    },
+    "echoes-avatar-expiry-release-corrected.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-release-corrected.log",
+      "SHA256": "6021ded99ab076e751c15b83fcfa799742c42ed7979baba6329fd7247a3d20ea"
+    },
+    "echoes-avatar-expiry-durability-targeted.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-durability-targeted.log",
+      "SHA256": "6ee00266b4753f6125ea3fc6652cd633c108542911c3deca1435f1b9d0a04831"
+    },
+    "echoes-avatar-expiry-durability-corrected.log": {
+      "log": "/private/tmp/echoes-avatar-expiry-durability-corrected.log",
+      "SHA256": "905bf4eb9a4f60621024c9f3b044953182ec558cdddf999489f12839b51e187b"
+    }
+  },
+  "correctedFailures": [
+    "Missing try in a new native test gate wait; corrected before full native acceptance.",
+    "Release initially referenced a deleted cache; used the existing pinned Debug dependency cache without lockfile changes.",
+    "Clock rollback test builder initially read policy before sending HTTP; status/explicit recover now construct their body independently."
+  ],
+  "durableTerminalInvariant": "No expired response before durable profile/retirement state; deadline crossing at final checkpoint fails closed; clock rollback never revives an observed terminal intent.",
+  "preservation": {
+    "unchangedOtherNonDocsFiles": 326,
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "dependenciesAndCIChanged": false
+  },
+  "notAccepted": [
+    "physical unattached asset deletion and CDN/backups",
+    "actual CloudKit schema/roles and separated service identity",
+    "two ordinary accounts",
+    "hosted Free SQL/CPU/RSS/duration/capacity",
+    "physical FileProtection",
+    "confidential reports/support",
+    "ordinary Firebase removal and TestFlight readiness"
+  ]
+}

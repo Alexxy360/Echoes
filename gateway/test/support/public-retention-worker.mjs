@@ -142,6 +142,7 @@ export class RetentionProofAuthority extends DurableObject {
         avatarTransfersRemaining: p.retiredAvatarName ? storage.sql.exec("SELECT count(*) n FROM avatar_asset_transfers_v1 WHERE record_name=?", p.retiredAvatarName).toArray()[0].n : null,
         currentAvatarPreserved: p.currentAvatarName ? records.get(p.currentAvatarName)?.fields.image?.type === "ASSET" &&
           records.get(p.currentAvatarName)?.fields.thumbnail?.type === "ASSET" && registry.readable(p.currentAvatarName, "avatar") !== null : null,
+        expiredSelectionRetained: p.expiredAvatarAccountID ? new AvatarPolicyState(storage, { registry, clock }).snapshot(p.expiredAvatarAccountID).status === "expired" : null,
         occupiedAfterDrain: processor.isOccupied }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) { return Response.json({ error: error.code ?? "SYNTHETIC_PROOF_FAILED" }, { status: 400 }); }
   }

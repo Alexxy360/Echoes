@@ -1,4 +1,5 @@
 import { PublicRecordError, publicUUID, recordIdentity } from "./public-record-schema.mjs";
+import { avatarSelectionDeadline, currentAvatarSelection, expireAvatarSelections, purgeAvatarJobsWithoutRecords } from "./avatar-selection-expiry.mjs";
 
 export const avatarRetirementGraceMilliseconds = 86400000;
 export const avatarRetirementSchema = Object.freeze([
@@ -36,17 +37,27 @@ export function markAvatarRetired(storage, selection, retiredAt) {
 /** Revalidate against the current selection at every lease boundary, including after provider IO. */
 export function avatarRetirementDeadline(storage, context, now) {
   const row = rows(storage, "SELECT * FROM avatar_retirements_v1 WHERE record_name=?", context.recordName)[0];
-  if (!row) return null;
+  if (!row) {
+    if (!hasPolicy(storage)) return null;
+    const { profile, job } = currentAvatarSelection(storage, context.accountID);
+    if (profile?.request_id !== context.requestID || profile?.version_id === null || profile?.version_id === undefined ||
+        recordIdentity(context.accountID, "avatar", profile.version_id).recordName !== context.recordName) return null;
+    const deadline = avatarSelectionDeadline(profile, job, now);
+    return deadline !== null && deadline <= now ? deadline + avatarRetirementGraceMilliseconds : null;
+  }
   if (context.kind !== "avatar" || row.account_id !== context.accountID || row.request_id !== context.requestID ||
       typeof row.version_id !== "string" || !publicUUID.test(row.version_id) ||
       recordIdentity(context.accountID, "avatar", row.version_id).recordName !== context.recordName ||
       !validTime(row.retired_at) || row.retired_at < context.startedAt || row.retired_at > now || !hasPolicy(storage)) throw unavailable();
-  const current = rows(storage, "SELECT request_id,version_id,generation,updated_at FROM avatar_profiles_v1 WHERE account_id=?", context.accountID)[0];
-  if (!current || current.request_id === row.request_id || current.version_id === row.version_id ||
+  const { profile: current, job } = currentAvatarSelection(storage, context.accountID);
+  const same = current?.request_id === row.request_id || current?.version_id === row.version_id;
+  if (same && (current?.request_id !== row.request_id || current?.version_id !== row.version_id ||
+      avatarSelectionDeadline(current, job, now) !== row.retired_at || row.retired_at > now)) throw unavailable();
+  if (!current ||
       typeof current.request_id !== "string" || !publicUUID.test(current.request_id) ||
       current.version_id !== null && (typeof current.version_id !== "string" || !publicUUID.test(current.version_id)) ||
       !Number.isSafeInteger(current.generation) || current.generation < 1 ||
-      !Number.isSafeInteger(current.updated_at) || current.updated_at < row.retired_at || current.updated_at > now) throw unavailable();
+      !Number.isSafeInteger(current.updated_at) || !same && current.updated_at < row.retired_at || current.updated_at > now) throw unavailable();
   return row.retired_at + avatarRetirementGraceMilliseconds;
 }
 
@@ -58,13 +69,15 @@ const historical = `FROM avatar_jobs_v1 j JOIN avatar_profiles_v1 p ON p.account
 export function backfillAvatarRetirements(storage, now, maximum = 100) {
   if (!hasPolicy(storage)) return 0;
   if (!validTime(now) || !Number.isInteger(maximum) || maximum < 1 || maximum > 100) throw unavailable();
+  const expired = expireAvatarSelections(storage, now, maximum, (profile, deadline) => markAvatarRetired(storage, profile, deadline));
+  purgeAvatarJobsWithoutRecords(storage, now, maximum);
   const candidates = rows(storage, `SELECT j.account_id,j.request_id,j.version_id,p.updated_at ${historical}
-    ORDER BY j.account_id,j.request_id LIMIT ?`, maximum);
+    ORDER BY j.account_id,j.request_id LIMIT ?`, maximum - expired);
   for (const row of candidates) {
     if (!validTime(row.updated_at) || row.updated_at > now) throw unavailable();
     markAvatarRetired(storage, row, row.updated_at);
   }
-  return candidates.length;
+  return expired + candidates.length;
 }
 export function needsAvatarRetirementBackfill(storage) {
   if (rows(storage, `SELECT 1 FROM avatar_retirements_v1 t JOIN public_records_v1 p ON p.record_name=t.record_name

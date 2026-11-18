@@ -14,6 +14,29 @@ let mutationHeaders = [
     "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
 ]
 
+@Test func avatarExpiredSnapshotRequiresExactOwnerSelectionAndCannotAcknowledgePublicationOrClear() throws {
+    let expired = try GatewayAvatarOwnerSnapshot(
+        data: JSONSerialization.data(withJSONObject: mutationBody(.expired)))
+    #expect(expired.status == .expired && expired.publishedVersionID == nil)
+    try expired.validate(for: .recover(requestID: mutationRequestID))
+    #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
+        try expired.validate(for: .publish(intent: publicationIntent()))
+    }
+    #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
+        try expired.validate(for: .clear(requestID: mutationRequestID, expectedGeneration: 0))
+    }
+    for changes: [String: Any] in [
+        ["versionID": NSNull()], ["reviewRevision": NSNull()], ["generation": 0],
+        ["publishedVersionID": mutationVersionID],
+    ] {
+        #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
+            try GatewayAvatarOwnerSnapshot(
+                data: JSONSerialization.data(
+                    withJSONObject: mutationBody(.expired).merging(changes) { _, x in x }))
+        }
+    }
+}
+
 private func publicationIntent() throws -> GatewayAvatarPublishIntent {
     try .init(
         requestID: mutationRequestID, versionID: mutationVersionID, generation: 1,

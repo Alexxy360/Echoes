@@ -24,7 +24,7 @@ enum AvatarEditorConfirmation: Identifiable, Hashable {
         case .clear:
             "Wycofanie ukrywa zdjęcie. Nie oznacza natychmiastowego fizycznego skasowania wcześniejszych plików."
         case .discard:
-            "Usuniemy lokalny zapis próby, która nie została wysłana lub została zastąpiona. To nie wycofuje aktualnego zdjęcia z serwera."
+            "Usuniemy lokalny zapis próby, która nie została wysłana, została zastąpiona lub wygasła. To nie wycofuje aktualnego zdjęcia z serwera."
         case .publish:
             "Opublikujemy wyświetlone zdjęcie. Będzie widoczne zgodnie z zasadami dostępu aplikacji."
         }

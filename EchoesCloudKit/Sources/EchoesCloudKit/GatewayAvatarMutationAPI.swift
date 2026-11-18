@@ -152,7 +152,7 @@ public enum GatewayAvatarMutation: Equatable, Sendable, CustomStringConvertible,
 public enum GatewayAvatarOwnerStatus: String, Equatable, Sendable {
     case none, clearing, uploading
     case pendingReview = "pending-review"
-    case approved, rejected, published
+    case approved, rejected, published, expired
 }
 
 /// A current owner snapshot, never an authorization to display a peer photo or publish by itself.

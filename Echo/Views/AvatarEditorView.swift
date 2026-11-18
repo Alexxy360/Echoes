@@ -93,6 +93,10 @@ struct AvatarEditorStatusSection: View {
                 ? "Zdjęcie zatwierdzone. Możesz je opublikować." : "Zdjęcie zostało zatwierdzone."
         case .rejected: return "Zdjęcie nie zostało zatwierdzone. Możesz je wycofać."
         case .published: return "Zdjęcie jest opublikowane."
+        case .expired:
+            return session.pendingOperation == nil
+                ? "Wybór zdjęcia wygasł. Możesz wybrać nowe zdjęcie."
+                : "Wybór zdjęcia wygasł. Zapomnij lokalną próbę, aby wybrać nowe zdjęcie."
         }
     }
     var body: some View {

@@ -61,6 +61,32 @@ test("real local workerd fences a superseded avatar, removes its transfer metada
   } finally { if (worker) await worker.stop(); f.close(); }
 });
 
+test("real local workerd expires the current staging selection and preserves its terminal snapshot after fencing", { timeout: 30000 }, async () => {
+  const f = await avatarPublicationFixture(); let worker;
+  try {
+    const selected = await f.call("prepareUpload", f.upload()), id = recordIdentity(f.signedIn.accountID, "avatar", selected.versionID).recordName;
+    const presenceInput = { name: "Maja", latitude: 51.1123456, longitude: 17.0345678, song: "Synthetic song", songID: "123", generation: 0, measuredAt: f.clock() };
+    const oldPresenceRequestID = randomUUID();
+    const presence = await f.repository.writeLatest({ accessToken: f.signedIn.sessionToken, kind: "presence", logicalID: "singleton",
+      requestID: oldPresenceRequestID, input: presenceInput, authorizeMutation() {} });
+    const messageID = randomUUID(), message = await f.repository.write({ accessToken: f.signedIn.sessionToken, kind: "message", logicalID: messageID,
+      requestID: messageID, input: { name: "Maja", text: "Syntetyczna wiadomość", latitude: 51.1123456, longitude: 17.0345678 } });
+    const profile = await f.repository.write(profileInput(f.signedIn, "Trwały profil"));
+    f.advance(8 * 86400000); await f.relogin();
+    worker = await avatarWorker({ retentionEntry: true });
+    const response = await fetch(new URL("/retention-proof", worker.origin), { method: "POST", headers: { "Content-Type": "application/json", Connection: "close" },
+      body: JSON.stringify({ synthetic: "echoes-owned-local-retention-proof-v1", now: f.clock(), tables: sqliteSnapshot(f.db),
+        records: [...f.model.records.values(), ...f.model.controls.values()], sessionToken: f.signedIn.sessionToken,
+        expiredNames: [presence.recordName, message.recordName, id], profileName: profile.recordName,
+        oldPresenceRequestID, presenceInput, retiredAvatarName: id, expiredAvatarAccountID: f.signedIn.accountID,
+        privateKeyPEM: syntheticPublicKeyConfiguration().CLOUDKIT_PRIVATE_KEY }) });
+    const result = await response.json(); assert.equal(response.status, 200, JSON.stringify(result));
+    assert.equal(result.processed, 3); assert.equal(result.emptyFences, true); assert.equal(result.erased, 2);
+    assert.equal(result.avatarTransfersRemaining, 0); assert.equal(result.expiredSelectionRetained, true);
+    assert.equal(result.presenceRestored, true); assert.equal(result.profilePreserved, true);
+  } finally { if (worker) await worker.stop(); f.close(); }
+});
+
 test("real local workerd delivers a native alarm through Runtime and its independent durable maintenance budget", { timeout: 30000 }, async () => {
   const f = await maintenanceRuntimeFixture(); let worker;
   try {

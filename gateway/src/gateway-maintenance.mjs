@@ -25,11 +25,12 @@ export class GatewayMaintenance {
     await this.#storage.sync();
   }
   #retentionSchedule(retention) {
-    if (!retention) return { dueAt: null, needsBackfill: false };
+    if (!retention) return { dueAt: null, wakeAt: null, needsBackfill: false };
     const value = retention.schedule();
     if (!value || value.dueAt !== null && (!Number.isSafeInteger(value.dueAt) || value.dueAt < 0) ||
+        value.wakeAt !== undefined && value.wakeAt !== null && (!Number.isSafeInteger(value.wakeAt) || value.wakeAt < 0) ||
         typeof value.needsBackfill !== "boolean") throw new Error("Maintenance is unavailable.");
-    return value;
+    return { ...value, wakeAt: value.wakeAt ?? null };
   }
   async #advanceDeletionCursor(deletionID) {
     this.#storage.transactionSync(() => this.#storage.sql.exec("UPDATE gateway_maintenance_v1 SET cursor=? WHERE id=1", deletionID));
@@ -81,6 +82,7 @@ export class GatewayMaintenance {
     if (timedRows || receipts || retentionSchedule.needsBackfill) candidates.push(now + 60000);
     if (processor && this.#deletions.dueDeletionIDs().length) candidates.push(retry.deletion ?? now + 60000);
     if (retentionSchedule.dueAt !== null) candidates.push(retentionSchedule.dueAt > now ? retentionSchedule.dueAt : retry.retention ?? now + 60000);
+    if (retentionSchedule.wakeAt !== null) candidates.push(retentionSchedule.wakeAt > now ? retentionSchedule.wakeAt : now + 60000);
     if (!candidates.length) {
       // A later authenticated request/configuration bootstrap schedules work again.
       await this.#storage.deleteAlarm(); await this.#storage.sync();

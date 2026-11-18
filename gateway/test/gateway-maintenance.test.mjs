@@ -206,3 +206,13 @@ test("an occupied provider skips admission but still performs bounded local clea
     assert.equal(f.db.prepare("SELECT count(*) n FROM maintenance_daily_v1").get().n, 0); assert.equal(f.alarm(), start + 60000);
   } finally { f.close(); }
 });
+
+test("a future local selection deadline wakes maintenance without qualifying for provider admission", async () => {
+  const f = setup(); let calls = 0;
+  try {
+    const wakeAt = start + 7 * 86400000;
+    await f.maintenance.alarm({ retention: { async prepare() {}, schedule: () => ({ dueAt: null, wakeAt, needsBackfill: false }), async step() { calls++; } } });
+    assert.equal(f.alarm(), wakeAt); assert.equal(calls, 0);
+    assert.equal(f.db.prepare("SELECT count(*) n FROM maintenance_daily_v1").get().n, 0);
+  } finally { f.close(); }
+});
