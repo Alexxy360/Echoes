@@ -12,6 +12,8 @@ import { CloudKitPublicRetentionProcessor } from "../../src/public-retention-pro
 import { GatewayLimits } from "../../src/gateway-limits.mjs";
 import { GatewayMaintenance } from "../../src/gateway-maintenance.mjs";
 import { createGatewayRuntime } from "../../src/gateway-runtime.mjs";
+import { CommunityState } from "../../src/community-state.mjs";
+import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
 
 /** Loopback-only proof. Outbound networking is denied by the harness; all provider data is synthetic. */
 export class RetentionProofAuthority extends DurableObject {
@@ -38,7 +40,9 @@ export class RetentionProofAuthority extends DurableObject {
       const storage = this.ctx.storage, clock = () => p.now;
       const proofs = new RenewalProofs({ activeKeyID: "synthetic", keys: { synthetic: randomBytes(32).toString("base64url") } });
       new AuthenticationState(storage, { clock, renewalProofs: proofs });
-      const deletions = new AccountDeletionState(storage, { clock }); new PublicRecordRegistry(storage, { clock });
+      const deletions = new AccountDeletionState(storage, { clock });
+      const initialRegistry = new PublicRecordRegistry(storage, { clock });
+      new CommunityState(storage, { clock }); new AvatarPolicyState(storage, { registry: initialRegistry, clock });
       const limits = new GatewayLimits(storage, { clock }); new GatewayMaintenance(storage, { clock, limits, deletions });
       const allowed = new Set(storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").toArray().map(r => r.name));
       let rowCount = 0;
@@ -135,6 +139,9 @@ export class RetentionProofAuthority extends DurableObject {
       return Response.json({ processed: result.processed, emptyFences, erased, retryCode, metadataOnly, signatures,
         presenceRestored: restored.fields.erased.value === 0 && registry.readable(restored.recordName, "presence") !== null,
         profilePreserved: records.get(p.profileName)?.fields.name?.value === "Trwały profil",
+        avatarTransfersRemaining: p.retiredAvatarName ? storage.sql.exec("SELECT count(*) n FROM avatar_asset_transfers_v1 WHERE record_name=?", p.retiredAvatarName).toArray()[0].n : null,
+        currentAvatarPreserved: p.currentAvatarName ? records.get(p.currentAvatarName)?.fields.image?.type === "ASSET" &&
+          records.get(p.currentAvatarName)?.fields.thumbnail?.type === "ASSET" && registry.readable(p.currentAvatarName, "avatar") !== null : null,
         occupiedAfterDrain: processor.isOccupied }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) { return Response.json({ error: error.code ?? "SYNTHETIC_PROOF_FAILED" }, { status: 400 }); }
   }

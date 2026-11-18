@@ -1,4 +1,5 @@
 import { PublicRecordError, digest, fieldValues, publicRecordTypes } from "./public-record-schema.mjs";
+import { avatarRetirementSchema } from "./avatar-retirement-state.mjs";
 
 export const publicRetentionLifetimes = Object.freeze({ presence: 600000, message: 7200000, report: 2592000000 });
 export const publicRetentionLeaseMilliseconds = 60000;
@@ -14,7 +15,7 @@ export function publicRetentionDeadline(context) {
 }
 
 export function publicRetentionIntentKey(context) {
-  if (publicRetentionDeadline(context) === null) throw new PublicRecordError("PUBLIC_SCOPE");
+  if (publicRetentionDeadline(context) === null && context.kind !== "avatar") throw new PublicRecordError("PUBLIC_SCOPE");
   return digest(JSON.stringify(["echoes/retention-intent/v1", context.recordName, context.accountID,
     context.kind, context.logicalKey, context.requestID, context.payloadHash, context.createdAt, context.startedAt]));
 }
@@ -26,6 +27,7 @@ export function expiredPublicFields(context) {
 }
 
 export const publicRetentionSchema = Object.freeze([
+  ...avatarRetirementSchema,
   `CREATE TABLE IF NOT EXISTS public_retention_v1(record_name TEXT PRIMARY KEY,intent_key TEXT NOT NULL,
     due_at INTEGER NOT NULL,state TEXT NOT NULL CHECK(state IN ('pending','fencing','fenced')),
     lease_id TEXT,lease_at INTEGER,fence_tag TEXT)`,

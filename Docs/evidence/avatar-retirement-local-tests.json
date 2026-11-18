@@ -1,0 +1,155 @@
+{
+  "stage": "CK-05b.1",
+  "createdAt": "2026-11-18T19:32:39.114680+00:00",
+  "baselineCommit": "32cc248e18372edca3e250b06d8c6e313699672f",
+  "runs": {
+    "node22": {
+      "tests": 615,
+      "passed": 615,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-avatar-retirement-verified-node22.log",
+      "SHA256": "71905839e81df6ba3a09474ffc545c0bf6e6958d8065ef10df5a4954fe1c67e1"
+    },
+    "node24": {
+      "tests": 615,
+      "passed": 615,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-avatar-retirement-verified-node24.log",
+      "SHA256": "b3ac2d6b3f1fe44348d7312a46db5f76739e7036c3d13439471cac4832926562"
+    }
+  },
+  "newFunctionCount": 15,
+  "newFunctions": [
+    "real local workerd fences a superseded avatar, removes its transfer metadata and preserves the current picture",
+    "withdrawing a staged photo retires its exact version and later removes both asset fields and local secrets",
+    "retiring a superseded picture preserves the new approved publication and its asset commitments",
+    "failed or idempotent selection changes cannot retire a current photo or extend an existing retirement deadline",
+    "bounded legacy backfill discovers historical versions after clear and keeps the latest selection untouched",
+    "a late original CREATE cannot resurrect a photo withdrawn while its provider response was held",
+    "a forged retirement for the current picture fails before photo IO instead of deleting its assets",
+    "unknown retirement writes stay retryable and an actual account deletion has priority over avatar retention",
+    "retired avatar metadata and leases survive a fresh registry instance without reopening mutation access",
+    "retirement is atomic with a selection transaction and survives an unknown durability response",
+    "file-backed reopen preserves retirement time and provider fencing without a fresh upload",
+    "key-free local maintenance expires encrypted upload receipts while retaining consumed transfers and source scope",
+    "an incomplete or corrupt current selection cannot authorize retirement of historical assets",
+    "local cleanup accepts the older transfer schema with no receipt column without needing provider keys",
+    "a rolled-back clock cannot replace a later clear intent or move its retirement deadline backwards"
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-policy-state.mjs": "8d9f9502c8b67080f91e5c913377eefea8820f9fa478061d84bd0070b94e34aa",
+    "gateway/src/avatar-retirement-state.mjs": "fcb49d83ea28f6380081d3334f73869e00b62c075ff399374f53a2f336b90548",
+    "gateway/src/gateway-maintenance.mjs": "ff75ca5d9131bfe9e3254320fd457faf5047a9ec1eac8c5728d7527205713fe0",
+    "gateway/src/public-record-registry.mjs": "77e0b1f9f5dea5994388ca0378dc53e108ae00136e414572dd178c1ee4f679d1",
+    "gateway/src/public-record-repository.mjs": "6ccae3d1330d702471cdae4c36a6310fe4b8c7a0e05808866e82424d6ea1219c",
+    "gateway/src/public-retention-policy.mjs": "1b6dc0cceea317ddb344b58fe0660406a167046392182fe81713fc9080aa6be6",
+    "gateway/test/avatar-retirement.test.mjs": "7e2a2b9a69bdaea165991d0d4c0cbd6581f258f7abd7ae0789103f4f49578659",
+    "gateway/test/public-retention-workerd.test.mjs": "e7e73c192ce0e0efbbe1630e911073f7d78047fa22bb1e3ea4cf601f35e4d189",
+    "gateway/test/support/public-retention-worker.mjs": "9776c56bf0606ab66423eb5216ff8127011b3cf40929a84b6e266d91b5410932"
+  },
+  "syntax": {
+    "MJS": 136,
+    "nodeVersions": [
+      22,
+      24
+    ],
+    "JSON": 2,
+    "log": "/private/tmp/echoes-avatar-retirement-verified-syntax.log",
+    "SHA256": "bf9458897edc19a646449b64d656e3ebdcd4705f1434a68c69866736a0f943c6"
+  },
+  "negativeControl": {
+    "expectedFailures": 1,
+    "removed": "current request/version guard in avatar retirement deadline; separate copy only",
+    "productionSourcePreserved": true,
+    "log": "/private/tmp/echoes-avatar-retirement-verified-negative.log",
+    "SHA256": "cd3735258b4b385405a1b727007bb47c69646f4b535187352917c9d30b7bff7b"
+  },
+  "intermediateRuns": {
+    "echoes-avatar-retirement-targeted.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-targeted.log",
+      "SHA256": "787345965518b245daa7cb1de4bd111b71e871d7fbb9f7840d8d331d201e2516"
+    },
+    "echoes-avatar-retirement-corrected.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-corrected.log",
+      "SHA256": "88a1f2cbeb5cd7ab5a666f6ee050892534449d861ceb75f950eb46237d578007"
+    },
+    "echoes-avatar-retirement-expanded.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-expanded.log",
+      "SHA256": "7c478d1c2cdb60bd7b8ed854a60c5e9526e4e2b3800182e2a8e5adab868df9ce"
+    },
+    "echoes-avatar-retirement-workerd.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-workerd.log",
+      "SHA256": "97d1f059289a6c8aa34564117cd99147d7c8ffc5d8bf1f67f7ea6c0489ca090b"
+    },
+    "echoes-avatar-retirement-final-node22.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-final-node22.log",
+      "SHA256": "e1f2b888bb2315e037adb61c6ef60daf28b3cc92feaa781735c1de375b3b5cef"
+    },
+    "echoes-avatar-retirement-final-node24.log": {
+      "log": "/private/tmp/echoes-avatar-retirement-final-node24.log",
+      "SHA256": "0739c89094a62df38ed8355ab06fdfea17342e137c519de201072b652a9b8c8e"
+    }
+  },
+  "initialTargetedRun": {
+    "tests": 47,
+    "passed": 46,
+    "failed": 1,
+    "cause": "Account erasure only recognized fixed-age content retention fences; a lost avatar-retirement reply needed the authoritative registry retirement deadline. Fixed without accepting arbitrary erased metadata."
+  },
+  "policy": {
+    "supersededAndWithdrawnGraceMilliseconds": 86400000,
+    "currentSelectionAutomaticallyExpires": false,
+    "boundedHistoricalMarks": 100,
+    "boundedQueueBackfill": 100,
+    "boundedProviderBatch": 25,
+    "localExpiredReceiptBatch": 100,
+    "quotaIdentitiesRefunded": false
+  },
+  "workerdProof": {
+    "runtimeVersion": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "outboundNetworking": "denied",
+    "syntheticProviderAndAccounts": true,
+    "expiredRecords": [
+      "superseded avatar",
+      "presence",
+      "message"
+    ],
+    "processed": 3,
+    "erasedRows": 2,
+    "retiredAvatarTransfersRemaining": 0,
+    "currentAvatarPreserved": true,
+    "profilePreserved": true,
+    "freshPresenceRestored": true,
+    "physicalAppleAssetDeletionProven": false
+  },
+  "defaults": {
+    "PUBLIC_RETENTION_ENABLED": "0",
+    "remoteDeployment": false,
+    "remoteActivation": false,
+    "newSecretsOrPermissions": false,
+    "paidServices": false
+  },
+  "preservation": {
+    "unchangedNonDocsBaselineFiles": 341,
+    "swiftUIAndDependenciesChanged": false,
+    "userProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66"
+  },
+  "notAccepted": [
+    "current unfinished/rejected selection expiry with iOS recovery state",
+    "metadata jobs with no known record",
+    "unattached uploaded assets and physical Apple deletion time/CDN/backups",
+    "real schema retentionKey/ACL and separated service identity",
+    "hosted Free SQL/CPU/RSS/duration and scale",
+    "two ordinary iCloud accounts",
+    "physical device acceptance",
+    "confidential reports/support contact",
+    "ordinary Firebase entry migration and controlled TestFlight readiness"
+  ],
+  "officialSources": [
+    "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/ModifyRecords.html",
+    "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/RereferenceAssets.html"
+  ]
+}

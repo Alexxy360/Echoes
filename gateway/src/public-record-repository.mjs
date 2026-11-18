@@ -1,7 +1,7 @@
 import { PublicRecordError, recordIdentity, normalizePublicInput, inputHash, liveFields, erasedFields,
   matchesFields, plain } from "./public-record-schema.mjs";
 import { communityPolicy } from "./community-domain.mjs";
-import { publicRetentionDeadline, expiredPublicFields } from "./public-retention-policy.mjs";
+import { expiredPublicFields } from "./public-retention-policy.mjs";
 
 function providerFailure(record) {
   if (["EXISTS", "CONFLICT", "NOT_FOUND"].includes(record?.serverErrorCode)) return new PublicRecordError("PUBLIC_CONFLICT");
@@ -16,7 +16,7 @@ function checkScope(record, context) {
 export class CloudKitPublicRepository {
   #registry; #client; #authentication; #clock; #checkpoint;
   constructor({ registry, client, authentication, checkpoint, clock = Date.now } = {}) {
-    if (typeof registry?.reserve !== "function" || typeof client?.modify !== "function" || typeof client.lookup !== "function" ||
+    if (typeof registry?.reserve !== "function" || typeof registry.retentionDeadlineForErasure !== "function" || typeof client?.modify !== "function" || typeof client.lookup !== "function" ||
         typeof authentication?.authorize !== "function" || typeof checkpoint?.verify !== "function" ||
         typeof checkpoint.advance !== "function" || typeof clock !== "function") throw new PublicRecordError();
     this.#registry = registry; this.#client = client; this.#authentication = authentication; this.#clock = clock; this.#checkpoint = checkpoint;
@@ -160,7 +160,7 @@ export class CloudKitPublicRepository {
         } else {
           if (found?.serverErrorCode) throw providerFailure(found);
           checkScope(found, row);
-          const dueAt = publicRetentionDeadline(row);
+          const dueAt = this.#registry.retentionDeadlineForErasure(row);
           if (found.fields.erased.value === 1 && !matchesFields(found.fields, fields) &&
               !(dueAt !== null && dueAt <= this.#clock() && matchesFields(found.fields, expiredPublicFields(row)))) throw new PublicRecordError("PUBLIC_SCOPE");
           // Replace even an existing fence: metadata-only lookup cannot prove absence of extra content.

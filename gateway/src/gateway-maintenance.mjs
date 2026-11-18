@@ -1,6 +1,7 @@
 import { purgeAuthenticationStorage } from "./authentication-state.mjs";
 import { purgeAvatarReviewReceipts } from "./avatar-review-state.mjs";
 import { GatewayMaintenanceBudget, MaintenanceControlError } from "./gateway-maintenance-control.mjs";
+import { expireAvatarTransferReceipts } from "./avatar-retirement-state.mjs";
 
 /** One recurring alarm, bounded local cleanup, and fair rotation over internal deletion jobs. */
 export class GatewayMaintenance {
@@ -41,6 +42,8 @@ export class GatewayMaintenance {
     await this.#deletions.expireRevocationSecrets();
     await purgeAuthenticationStorage(this.#storage, this.#clock);
     await purgeAvatarReviewReceipts(this.#storage, this.#clock);
+    this.#storage.transactionSync(() => expireAvatarTransferReceipts(this.#storage, this.#now()));
+    await this.#storage.sync();
     await this.#limits.purgeExpired(); await this.#deletions.purgeCompletedReceipts();
     await this.#budget.purgeExpired();
     if (retention) await retention.prepare(); // Bounded local backfill, never provider IO.

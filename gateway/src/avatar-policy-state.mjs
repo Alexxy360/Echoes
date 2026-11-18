@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { plain, publicUUID, digest, inputHash, validTag, recordIdentity } from "./public-record-schema.mjs";
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
 import { avatarReviewSchema, avatarReviewerKey } from "./avatar-review-state.mjs";
+import { markAvatarRetired } from "./avatar-retirement-state.mjs";
 
 const codes = new Set(["AVATAR_INPUT", "AVATAR_STALE", "AVATAR_PENDING", "AVATAR_REJECTED", "AVATAR_RATE", "AVATAR_CAPACITY", "AVATAR_SCOPE", "AVATAR_UNAVAILABLE"]);
 export class AvatarPolicyError extends Error {
@@ -85,6 +86,7 @@ export class AvatarPolicyState {
       const window = Math.floor(now / 600000) * 600000, count = profile?.upload_window === window ? profile.upload_count : 0;
       if (profile?.updated_at > now) throw new AvatarPolicyError();
       if (count >= 3) throw new AvatarPolicyError("AVATAR_RATE");
+      markAvatarRetired(this.#storage, profile, now);
       this.#storage.sql.exec(`INSERT INTO avatar_profiles_v1(account_id,generation,request_id,version_id,ready,pointer_tag,upload_window,upload_count,updated_at)
         VALUES(?,?,?,?,0,NULL,?,?,?) ON CONFLICT(account_id) DO UPDATE SET generation=excluded.generation,request_id=excluded.request_id,
         version_id=excluded.version_id,ready=0,pointer_tag=NULL,upload_window=excluded.upload_window,upload_count=excluded.upload_count,updated_at=excluded.updated_at`,
@@ -99,13 +101,15 @@ export class AvatarPolicyState {
     uuid(requestID);
     if (!Number.isSafeInteger(expectedGeneration) || expectedGeneration < 0 || expectedGeneration >= Number.MAX_SAFE_INTEGER) throw new AvatarPolicyError("AVATAR_INPUT");
     const result = this.#tx(() => {
-      this.#active(accountID); const profile = this.#profile(accountID);
+      this.#active(accountID); const profile = this.#profile(accountID), now = this.#now();
       if (profile?.request_id === requestID && profile.version_id === null && profile.generation === expectedGeneration + 1) return this.#lease(accountID);
       if ((profile?.generation ?? 0) !== expectedGeneration || this.#job(accountID, requestID)) throw new AvatarPolicyError("AVATAR_STALE");
+      if (profile?.updated_at > now) throw new AvatarPolicyError();
+      markAvatarRetired(this.#storage, profile, now);
       // Clear has no upload rate/capacity gate and never resets the selection budget.
       this.#storage.sql.exec(`INSERT INTO avatar_profiles_v1(account_id,generation,request_id,version_id,ready,pointer_tag,updated_at)
         VALUES(?,?,?,NULL,0,NULL,?) ON CONFLICT(account_id) DO UPDATE SET generation=excluded.generation,request_id=excluded.request_id,
-        version_id=NULL,ready=0,pointer_tag=NULL,updated_at=excluded.updated_at`, accountID, expectedGeneration + 1, requestID, this.#now());
+        version_id=NULL,ready=0,pointer_tag=NULL,updated_at=excluded.updated_at`, accountID, expectedGeneration + 1, requestID, now);
       return this.#lease(accountID);
     });
     await this.#durable(); this.assertCurrent(result); return result;
