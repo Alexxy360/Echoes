@@ -475,6 +475,15 @@ export class PublicRecordRegistry {
     return context;
   }
   assertRetentionCurrent(lease) { return this.#tx(() => this.#retentionLease(lease)); }
+  isConfirmedRetentionFence(context, tag) {
+    return this.#tx(() => {
+      const current = this.#context(this.#row(context?.recordName));
+      this.#active(current.accountID);
+      const retention = this.#retention(current);
+      return current.kind === "presence" && retention?.state === "fenced" &&
+        retention.intent_key === publicRetentionIntentKey(context) && retention.fence_tag === tag;
+    });
+  }
   /** Caller must first verify exact content-free CloudKit fields and change tag. */
   async completeRetention(lease, recordTag) {
     if (!validTag(recordTag)) throw new PublicRecordError("PUBLIC_RESPONSE");

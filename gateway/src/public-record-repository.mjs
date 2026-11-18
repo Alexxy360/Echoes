@@ -1,6 +1,7 @@
 import { PublicRecordError, recordIdentity, normalizePublicInput, inputHash, liveFields, erasedFields,
   matchesFields, plain } from "./public-record-schema.mjs";
 import { communityPolicy } from "./community-domain.mjs";
+import { publicRetentionDeadline, expiredPublicFields } from "./public-retention-policy.mjs";
 
 function providerFailure(record) {
   if (["EXISTS", "CONFLICT", "NOT_FOUND"].includes(record?.serverErrorCode)) return new PublicRecordError("PUBLIC_CONFLICT");
@@ -52,7 +53,9 @@ export class CloudKitPublicRepository {
         if (found?.serverErrorCode) throw providerFailure(found);
         if (!known) throw new PublicRecordError("PUBLIC_SCOPE");
         checkScope(found, known);
-        if (found.fields.erased.value !== 0) throw new PublicRecordError("PUBLIC_ERASED");
+        if (found.fields.erased.value !== 0 && !(kind === "presence" &&
+            this.#registry.isConfirmedRetentionFence(known, found.recordChangeTag) &&
+            matchesFields(found.fields, expiredPublicFields(known)))) throw new PublicRecordError("PUBLIC_ERASED");
         expectedTag = found.recordChangeTag;
       }
     }
@@ -157,7 +160,9 @@ export class CloudKitPublicRepository {
         } else {
           if (found?.serverErrorCode) throw providerFailure(found);
           checkScope(found, row);
-          if (found.fields.erased.value === 1 && !matchesFields(found.fields, fields)) throw new PublicRecordError("PUBLIC_SCOPE");
+          const dueAt = publicRetentionDeadline(row);
+          if (found.fields.erased.value === 1 && !matchesFields(found.fields, fields) &&
+              !(dueAt !== null && dueAt <= this.#clock() && matchesFields(found.fields, expiredPublicFields(row)))) throw new PublicRecordError("PUBLIC_SCOPE");
           // Replace even an existing fence: metadata-only lookup cannot prove absence of extra content.
           operations.push({ operationType: "replace", record: { recordName: row.recordName,
             recordType: row.recordType, recordChangeTag: found.recordChangeTag, fields } });

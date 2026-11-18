@@ -32,6 +32,11 @@ export class PublicRegistryCheckpoint {
     this.#registry = registry; this.#client = client;
   }
   #check(signal) { if (signal?.aborted) throw new PublicRecordError(); }
+  async waitForPendingOperations() {
+    await this.#tail;
+    if (typeof this.#client.waitForPendingOperations !== "function") throw new PublicRecordError();
+    await this.#client.waitForPendingOperations();
+  }
   #serial(action, signal) {
     const result = this.#tail.then(async () => { this.#check(signal); return action(); });
     this.#tail = result.catch(() => {}); return result;

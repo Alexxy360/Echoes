@@ -1,0 +1,171 @@
+{
+  "stage": "CK-05a.2",
+  "createdAt": "2026-11-18T18:38:44.482722+00:00",
+  "baselineCommit": "85f1281b3288a6f555eef9a9a616c51eece67b1b",
+  "runs": {
+    "node22": {
+      "tests": 573,
+      "passed": 573,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-retention-processor-verified-node22.log",
+      "SHA256": "856b16dc27c927195424c387262e882a37ab806f5c76c4bdd539eb23ffb0aeef"
+    },
+    "node24": {
+      "tests": 573,
+      "passed": 573,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-retention-processor-verified-node24.log",
+      "SHA256": "a295b7c78474ec5602f086132e672f29bbdbd73de55d440d45982a4871afa351"
+    }
+  },
+  "newFunctionCount": 20,
+  "newFunctions": [
+    "retention processor is disabled by default and malformed internal options cause no provider calls",
+    "exact expired messages lose all content while persistent profiles remain unchanged",
+    "a missing reserved CREATE receives a durable fence so the original request cannot resurrect content",
+    "a lost modify response stays pending and a later exact inspection confirms the same content-free fence",
+    "presence needs a confirmed exact fence and fresh intent before it can publish again",
+    "an unconfirmed or modified presence fence never permits fresh publication",
+    "account erasure accepts its own exact retention fence and removes pending local expiry work",
+    "account deletion during metadata or mutation IO prevents a false expiry receipt",
+    "foreign owner/type, extra metadata and mismatched fences stop before modifying CloudKit",
+    "malformed full modification replies cannot prove erasure even if the provider committed a fence",
+    "one conflict is not blindly retried while other verified records can finish",
+    "disabling or rolling back time during checkpoint validation prevents every subsequent provider operation",
+    "checkpoint rollback refuses retention before claiming or changing user records",
+    "timeout retains one slot until the actual ignored provider fetch and body work finishes",
+    "an aborted checkpoint fetch keeps the retention slot until its real underlying operation settles",
+    "private report reason expires after thirty days without a live user session",
+    "aborted body cancellation retains the slot until the original cancel promise actually settles",
+    "null removed fields in a CloudKit replace response are accepted but contain no retained value",
+    "public JSON transport bounds pathological fragment counts and rejects non-byte chunks",
+    "real local workerd SQL and signed provider model erase expired content and restore only fresh presence"
+  ],
+  "sourceSHA256": {
+    "gateway/src/cloudkit-public-client.mjs": "6d925ca3112e4a0e889cdcc9a4c823cf01c895e1521b60c947e88c16661d2c38",
+    "gateway/src/public-registry-checkpoint.mjs": "257e9ee7b8697e4f43e41c319b3e9e89026f552ace3026a3ec9d9a42dc027195",
+    "gateway/src/public-record-registry.mjs": "4786b2a7d4e185d3b2738c011e9c67620a1ec892ab8b1e75c09a2d25b4f540d6",
+    "gateway/src/public-record-repository.mjs": "547142b1acce7d32d72c15163d5b59121dcfc14c4c936e3cebf9e0315a1f82ae",
+    "gateway/src/public-retention-processor.mjs": "4a106542b7d3b73e61bd254a956e80197475aa44c15b26963d177138ff5d8b64",
+    "gateway/test/public-retention-processor.test.mjs": "5362708c8a278b5b64487b402aa30e0fcc768fc04963caf530d4bc23e28b22f4",
+    "gateway/test/public-retention-workerd.test.mjs": "8e6fb48bd8034402a97181993ea4225d1ebc1cb334a38f682d57a484d7d6c696",
+    "gateway/test/support/public-retention-fixture.mjs": "48f5e09e510fb747f7da54681394437b962c0a83659af96eb58c5d681089ea65",
+    "gateway/test/support/public-retention-worker.mjs": "51abada2e397d31ec521addd8f7cece040aa49689605116769058458c42a81bc",
+    "gateway/test/support/workerd-image-harness.mjs": "85c1c30b4a1738e345de50616ff549d4f280da01db0fd67bbc4654cacebf2c65"
+  },
+  "intermediateRuns": {
+    "targeted": {
+      "log": "/private/tmp/echoes-retention-processor-targeted.log",
+      "SHA256": "f697d0b9665d5bc22ba480d80d5413a7e86b09ccfa0ccf584edad90a7b35c89b"
+    },
+    "corrected": {
+      "log": "/private/tmp/echoes-retention-processor-corrected.log",
+      "SHA256": "e6d84d9c78568dcf72750ff5f1172bf602a5a0e2d9a81228c546c6995533e0c4"
+    },
+    "expanded": {
+      "log": "/private/tmp/echoes-retention-processor-expanded.log",
+      "SHA256": "67a5db3bed4b9d86b1ebdc91ca4ebb3d8369eaeba70a56907ffc70ca62ec33af"
+    },
+    "contract": {
+      "log": "/private/tmp/echoes-retention-processor-contract.log",
+      "SHA256": "b9f6bccb22e1988cc1c0fcb530c530dc87f7b35c517be639d0a3624fc9a74595"
+    },
+    "bounded": {
+      "log": "/private/tmp/echoes-retention-processor-bounded.log",
+      "SHA256": "9e8e9eedbe7ec067e25565d94c9ba797c2f83f870f91f0a5a0e866edd22fda0f"
+    }
+  },
+  "initialUnitRun": {
+    "tests": 15,
+    "passed": 13,
+    "failed": 2,
+    "cause": "Fixture session expired before the intended replay assertions; explicitly reauthenticated."
+  },
+  "negativeControl": {
+    "expectedFailures": 1,
+    "log": "/private/tmp/echoes-retention-processor-review-negative.log",
+    "SHA256": "6633eeeeb170b27fe51b933a579eb3311e2dc526e93cce949a3a101f5888bdcd",
+    "removed": "memoized first body cancel promise",
+    "originalsPreserved": true,
+    "originalSHA256": {
+      "src/cloudkit-public-client.mjs": "6d925ca3112e4a0e889cdcc9a4c823cf01c895e1521b60c947e88c16661d2c38",
+      "src/public-retention-processor.mjs": "4a106542b7d3b73e61bd254a956e80197475aa44c15b26963d177138ff5d8b64",
+      "test/public-retention-processor.test.mjs": "5362708c8a278b5b64487b402aa30e0fcc768fc04963caf530d4bc23e28b22f4"
+    }
+  },
+  "syntax": {
+    "syntax": {
+      "v22.23.5": 130,
+      "v24.22.1": 130
+    },
+    "JSON": 2,
+    "moduleHashesSHA256": "8e69c5bf305ee832790f90e5af29832e6672f8348d93fe9eb28016c49defc112",
+    "negativeOriginalsPreserved": true
+  },
+  "workerd": {
+    "realLocalSQLiteAndCrypto": true,
+    "providerAndAccountsAreModels": true,
+    "outboundNetworkingDenied": true,
+    "assertedProcessed": 3,
+    "assertedErased": 2,
+    "assertedEmptyFences": true,
+    "assertedProfilePreserved": true,
+    "assertedOldPresenceDenied": true,
+    "assertedFreshPresenceAccepted": true,
+    "assertedMetadataOnlyRequests": 1,
+    "assertedMinimumSignatures": 10,
+    "realCloudKitAcceptance": false,
+    "twoOrdinaryICloudAccounts": false
+  },
+  "bounds": {
+    "batch": 25,
+    "defaultTimeoutMilliseconds": 8000,
+    "bodyBytes": 524288,
+    "bodyFragments": 4096,
+    "retainedSlot": 1
+  },
+  "schemaRequirement": "retentionKey in Development presence/message/report types, not changed remotely",
+  "runtimeWiring": false,
+  "alarmWiring": false,
+  "defaultProcessorEnabled": false,
+  "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "unchanged": [
+    "iOS",
+    "EchoesCloudKit",
+    "EchoesCore",
+    "dependencies",
+    "CI",
+    "activation configuration"
+  ],
+  "notRerun": [
+    "native unit tests",
+    "UI tests",
+    "Debug/Release app builds"
+  ],
+  "remoteOperations": false,
+  "newSecretsOrPermissions": false,
+  "fees": false,
+  "ProductionChanges": false,
+  "FirebaseChanges": false,
+  "TestFlightPublication": false,
+  "primaryProtocolReferences": [
+    "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/ModifyRecords.html",
+    "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/Types.html"
+  ],
+  "openWork": [
+    "alarm/quota/explicit disabled flag and hosted Free acceptance",
+    "actual schema/roles/SIWA and separate service identity",
+    "two ordinary iCloud accounts",
+    "asset orphan retention",
+    "confidential reports/operator contact",
+    "remaining migration and TestFlight gates"
+  ],
+  "supersededFullRunLogsSHA256": {
+    "node22": "f8e9d84ffe108e7aced4e08ad793953def7815fa696e8102db416f5b3e3f8191",
+    "node24": "44d0db95de9c67c216adbfa0e47d6466982cecbfedec86c87d57cc600660b48e"
+  },
+  "finalReviewFix": "Clock callback errors are sanitized before the retention step starts; final suites and negative control rerun."
+}

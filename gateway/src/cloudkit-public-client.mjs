@@ -9,7 +9,7 @@ const recordCodes = new Set(["NOT_FOUND", "EXISTS", "CONFLICT", "ACCESS_DENIED",
 const types = new Set([...Object.values(publicRecordTypes), checkpointRecordType]);
 /** Server-only, fixed Development/public target. It is never an HTTP proxy or a client signer. */
 export class CloudKitPublicClient {
-  #signer; #fetch; #enabled; #clock; #timeout;
+  #signer; #fetch; #enabled; #clock; #timeout; #pending = new Set();
   constructor({ container, environment, keyID, privateKeyPEM, fetchImplementation = fetch,
     isEnabled, clock = Date.now, timeoutMilliseconds = 8000 } = {}) {
     if (container !== "iCloud.mpvEcho.Echo" || environment !== "development" || typeof fetchImplementation !== "function" ||
@@ -32,14 +32,16 @@ export class CloudKitPublicClient {
     if (length !== null && (!/^\d+$/.test(length) || Number(length) > responseLimit)) {
       await response.body.cancel().catch(() => {}); throw new PublicRecordError("PUBLIC_RESPONSE");
     }
-    const reader = response.body.getReader(), parts = []; let size = 0;
-    const abort = () => { void reader.cancel().catch(() => {}); };
+    const reader = response.body.getReader(), parts = []; let size = 0, cancellation;
+    const cancel = () => cancellation ??= reader.cancel().catch(() => {});
+    const abort = () => { void cancel(); };
     signal.addEventListener("abort", abort, { once: true });
     try {
       while (true) {
         this.#check(signal);
         const { value, done } = await reader.read();
         if (done) break;
+        if (!(value instanceof Uint8Array) || parts.length >= 4096) throw new PublicRecordError("PUBLIC_RESPONSE");
         size += value.byteLength;
         if (size > responseLimit) throw new PublicRecordError("PUBLIC_RESPONSE");
         parts.push(value);
@@ -49,7 +51,7 @@ export class CloudKitPublicClient {
       for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
       return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     } finally {
-      signal.removeEventListener("abort", abort); await reader.cancel().catch(() => {}); reader.releaseLock();
+      signal.removeEventListener("abort", abort); await cancel(); reader.releaseLock();
     }
   }
   async #call(operation, payload, names, parent) {
@@ -82,17 +84,21 @@ export class CloudKitPublicClient {
         if (marker !== null && (typeof marker !== "string" || !marker.length || marker.length > 8192)) throw new PublicRecordError("PUBLIC_RESPONSE");
         return { records, marker };
       })();
+      this.#pending.add(operationPromise);
+      void operationPromise.then(() => this.#pending.delete(operationPromise), () => this.#pending.delete(operationPromise));
       return await Promise.race([operationPromise, cancelled, new Promise((_, reject) => {
         timer = setTimeout(() => { controller.abort(); reject(new PublicRecordError()); }, this.#timeout);
       })]);
     } catch (error) { throw error instanceof PublicRecordError ? error : new PublicRecordError(); }
     finally { clearTimeout(timer); controller.abort(); parent?.removeEventListener("abort", abort); }
   }
+  /** Bounded callers retain their slot until actual fetch/body/cancellation work settles. */
+  async waitForPendingOperations() { await Promise.allSettled([...this.#pending]); }
   async lookup(names, { metadataOnly = false, signal } = {}) {
     if (!Array.isArray(names) || names.length < 1 || names.length > 25 || new Set(names).size !== names.length ||
         names.some(name => typeof name !== "string" || !publicRecordName.test(name))) throw new PublicRecordError("PUBLIC_INPUT");
     return this.#call("records/lookup", { records: names.map(recordName => ({ recordName })),
-      ...(metadataOnly ? { desiredKeys: ["schemaVersion", "ownerKey", "erased", "deletionKey"] } : {}) }, names, signal);
+      ...(metadataOnly ? { desiredKeys: ["schemaVersion", "ownerKey", "erased", "deletionKey", "retentionKey"] } : {}) }, names, signal);
   }
   /** Fixed regional index lookup. Results are candidates only; callers must perform exact reads. */
   async regionalCandidates({ kind, coordinate, cutoff, marker = null, signal } = {}) {
