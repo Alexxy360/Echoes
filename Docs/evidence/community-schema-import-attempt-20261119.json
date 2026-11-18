@@ -1,0 +1,44 @@
+{
+  "phase": "CK-05a.4b",
+  "dateEuropeWarsaw": "2026-11-19",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "approvedProposalCommit": "62798c9d0009c9452f79aeb32c2411f9e6c5a82f",
+  "approvedProposalSHA256": "a5d491ea66ce111485cfd69393bcba3da873216e689dc0ce578d707e029edf55",
+  "freshBeforeExportSHA256": "869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27",
+  "freshBeforeMatchedOriginal": true,
+  "appleUploadValidation": "Validation Passed",
+  "finalImportSubmissions": 1,
+  "importSucceeded": false,
+  "error": "invalid attempt to set field flags for field 'recordName', flags are not compatible with type REFERENCE",
+  "afterExport": {
+    "path": "gateway/schema/development-after-failed-import-20261119.ckdb",
+    "sha256": "0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd",
+    "bytes": 2396,
+    "unchangedTypes": [
+      "EchoesAccessProbeV1",
+      "EchoesGatewayProbeV1",
+      "EchoesPrivateProfileV1",
+      "EchoesPrivateScopeV1",
+      "Users"
+    ],
+    "unchangedTypeFieldsIndexesGrants": true,
+    "onlyAddedRole": "EchoesCommunityService",
+    "communityTypesAdded": 0
+  },
+  "roleAssignmentsPerformed": false,
+  "membershipsVerified": false,
+  "recordOperationsPerformed": false,
+  "newKeysOrSecrets": false,
+  "gatewayActivationOrDeployment": false,
+  "productionChanged": false,
+  "screenshot": {
+    "path": "Docs/evidence/community-schema-import-error.jpg",
+    "sha256": "c0525e2c1dd6eab0cf1aafcc25e528bef5ebe633dc829f471b003b5d51db8976",
+    "visuallyReviewed": true
+  },
+  "conclusion": "Import failure was partial: role persisted, eight new record types did not. No automatic reset or deletion performed. Corrected candidate requires separate approval and fresh export comparison."
+}

@@ -4,8 +4,8 @@
     "container": "iCloud.mpvEcho.Echo",
     "environment": "development"
   },
-  "inputSHA256": "869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27",
-  "proposedSHA256": "a5d491ea66ce111485cfd69393bcba3da873216e689dc0ce578d707e029edf55",
+  "inputSHA256": "0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd",
+  "proposedSHA256": "26b06f38f2de80269d7e1c73d5e439294df3016298a990aa41704ecade1b45f3",
   "preservedTypes": [
     "EchoesAccessProbeV1",
     "EchoesGatewayProbeV1",
@@ -13,7 +13,11 @@
     "EchoesPrivateScopeV1",
     "Users"
   ],
-  "addedRole": "EchoesCommunityService",
+  "preservedRoles": [
+    "EchoesGatewayProbeService",
+    "EchoesCommunityService"
+  ],
+  "addedRole": null,
   "addedTypes": [
     {
       "name": "EchoesPublicProfileV1",
@@ -76,8 +80,7 @@
         "___recordID": {
           "type": "REFERENCE",
           "options": [
-            "QUERYABLE",
-            "SORTABLE"
+            "QUERYABLE"
           ]
         },
         "schemaVersion": {
@@ -123,6 +126,12 @@
         "retentionKey": {
           "type": "STRING",
           "options": []
+        },
+        "recordSortKey": {
+          "type": "STRING",
+          "options": [
+            "SORTABLE"
+          ]
         },
         "active": {
           "type": "INT64",
@@ -186,8 +195,7 @@
         "___recordID": {
           "type": "REFERENCE",
           "options": [
-            "QUERYABLE",
-            "SORTABLE"
+            "QUERYABLE"
           ]
         },
         "schemaVersion": {
@@ -234,6 +242,12 @@
         "retentionKey": {
           "type": "STRING",
           "options": []
+        },
+        "recordSortKey": {
+          "type": "STRING",
+          "options": [
+            "SORTABLE"
+          ]
         },
         "name": {
           "type": "STRING",

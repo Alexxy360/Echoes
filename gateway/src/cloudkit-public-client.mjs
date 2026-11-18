@@ -113,7 +113,7 @@ export class CloudKitPublicClient {
     if (kind === "presence") filterBy.push({ fieldName: "active", comparator: "EQUALS", fieldValue: { type: "INT64", value: 1 } });
     else filterBy.push({ fieldName: "createdAt", comparator: "LESS_THAN_OR_EQUALS", fieldValue: { type: "INT64", value: cutoff } });
     const result = await this.#call("records/query", { query: { recordType: publicRecordTypes[kind], filterBy,
-      sortBy: [{ fieldName: kind === "message" ? "createdAt" : "updatedAt", ascending: false }, { systemFieldName: "recordName", ascending: false }] },
+      sortBy: [{ fieldName: kind === "message" ? "createdAt" : "updatedAt", ascending: false }, { fieldName: "recordSortKey", ascending: false }] },
       resultsLimit: communityPolicy.queryPage, desiredKeys: ["ownerKey"], ...(marker === null ? {} : { continuationMarker: marker }) }, null, signal);
     for (const record of result.records.values()) if (record.serverErrorCode || record.recordType !== publicRecordTypes[kind] ||
         !record.recordName.startsWith("community-v1-" + kind + "-")) throw new PublicRecordError("PUBLIC_RESPONSE");

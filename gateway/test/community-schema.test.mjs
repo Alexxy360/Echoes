@@ -98,6 +98,7 @@ test("unsupported exports, duplicate definitions and undeclared roles fail the l
   for (const bad of [original + "\nRESET SCHEMA;", original + "\nCREATE ROLE EchoesGatewayProbeService;",
     original.replace("nonce           STRING,", "nonce           STRING,\nnonce STRING,"),
     original.replace("nonce           STRING,", "nonce BYTES,"),
+    original.replace('"___recordID"   REFERENCE,', '"___recordID" REFERENCE SORTABLE,'),
     original.replace("QUERYABLE SEARCHABLE SORTABLE", "QUERYABLE QUERYABLE"),
     original.replace('TO "_world"', 'TO "_unknown"'),
     original.replace("TO EchoesGatewayProbeService", "TO MissingRole")]) assert.throws(() => inspectSchema(bad));
@@ -135,5 +136,32 @@ test("read-back comparison detects missing/extra types, old rights drift, builti
     withImplicitSystemFields.replace('"___createTime" TIMESTAMP,\n        "___createdBy"', '"___createTime" TIMESTAMP QUERYABLE,\n        "___createdBy"'),
     prepared.schema.replace("retentionKey STRING,", '"___future" STRING,\n retentionKey STRING,')]) {
     assert.throws(() => verifyInstalledCommunitySchema(original, changed));
+  }
+});
+
+test("partial-import recovery preserves the existing service role only after an explicit comparison option", async () => {
+  const partial = await readFile(new URL("../schema/development-after-failed-import-20261119.ckdb", import.meta.url), "utf8");
+  const snapshot = inspectSchema(partial);
+  assert.deepEqual(snapshot.types, before.types); assert.deepEqual(snapshot.roles, [...before.roles, communitySchemaRole]);
+  assert.throws(() => prepareCommunitySchema(partial), /explicit comparison/);
+  const recovered = prepareCommunitySchema(partial, { preserveExistingServiceRole: true });
+  assert.equal(recovered.inputSHA256, "0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd");
+  assert.equal(recovered.addedRole, null); assert.deepEqual(recovered.preservedRoles, snapshot.roles);
+  assert.ok(recovered.schema.startsWith(partial));
+  assert.equal(inspectSchema(recovered.schema).roles.filter(role => role === communitySchemaRole).length, 1);
+  assert.equal(verifyInstalledCommunitySchema(partial, recovered.schema, { preserveExistingServiceRole: true }).types, 13);
+  assert.throws(() => prepareCommunitySchema(recovered.schema, { preserveExistingServiceRole: true }), /explicit comparison/);
+});
+
+test("regional tie keys are server-derived, match record IDs and disappear from deletion/retention fences", () => {
+  for (const kind of ["message", "presence"]) {
+    const c = context(kind), input = kind === "message" ? { name: "Test", text: "Test", latitude: 0, longitude: 0 } : { active: false, generation: 0 };
+    assert.throws(() => normalizePublicInput(kind, { ...input, recordSortKey: "forged" }, now));
+    const fields = liveFields(c, normalizePublicInput(kind, input, now));
+    assert.deepEqual(fields.recordSortKey, { type: "STRING", value: c.recordName });
+    assert.ok(types.get(c.recordType).fields.recordSortKey.options.includes("SORTABLE"));
+    assert.equal(types.get(c.recordType).fields.___recordID.options.includes("SORTABLE"), false);
+    assert.equal(Object.hasOwn(erasedFields(c, randomUUID()), "recordSortKey"), false);
+    assert.equal(Object.hasOwn(expiredPublicFields(c), "recordSortKey"), false);
   }
 });

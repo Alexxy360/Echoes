@@ -1,6 +1,7 @@
 DEFINE SCHEMA
 
     CREATE ROLE EchoesGatewayProbeService;
+    CREATE ROLE EchoesCommunityService;
 
     RECORD TYPE EchoesAccessProbeV1 (
         "___createTime" TIMESTAMP,
@@ -71,8 +72,6 @@ DEFINE SCHEMA
         GRANT READ TO "_world"
     );
 
-    CREATE ROLE EchoesCommunityService;
-
     RECORD TYPE EchoesPublicProfileV1 (
         schemaVersion INT64,
         ownerKey STRING,
@@ -88,7 +87,7 @@ DEFINE SCHEMA
     );
 
     RECORD TYPE EchoesPresenceV1 (
-        "___recordID" REFERENCE QUERYABLE SORTABLE,
+        "___recordID" REFERENCE QUERYABLE,
         schemaVersion INT64,
         ownerKey STRING,
         erased INT64 QUERYABLE,
@@ -99,6 +98,7 @@ DEFINE SCHEMA
         updatedAt INT64 SORTABLE,
         deletionKey STRING,
         retentionKey STRING,
+        recordSortKey STRING SORTABLE,
         active INT64 QUERYABLE,
         generation INT64,
         name STRING,
@@ -112,7 +112,7 @@ DEFINE SCHEMA
     );
 
     RECORD TYPE EchoesLocalMessageV1 (
-        "___recordID" REFERENCE QUERYABLE SORTABLE,
+        "___recordID" REFERENCE QUERYABLE,
         schemaVersion INT64,
         ownerKey STRING,
         erased INT64 QUERYABLE,
@@ -123,6 +123,7 @@ DEFINE SCHEMA
         updatedAt INT64,
         deletionKey STRING,
         retentionKey STRING,
+        recordSortKey STRING SORTABLE,
         name STRING,
         text STRING,
         latitude DOUBLE,

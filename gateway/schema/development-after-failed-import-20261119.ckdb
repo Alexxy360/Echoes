@@ -1,0 +1,73 @@
+DEFINE SCHEMA
+
+    CREATE ROLE EchoesGatewayProbeService;
+    CREATE ROLE EchoesCommunityService;
+
+    RECORD TYPE EchoesAccessProbeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        nonce           STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE EchoesGatewayProbeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        nonce           STRING,
+        schemaVersion   INT64,
+        GRANT READ, CREATE, WRITE TO EchoesGatewayProbeService
+    );
+
+    RECORD TYPE EchoesPrivateProfileV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        displayName     STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE EchoesPrivateScopeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        deleted         INT64 QUERYABLE SORTABLE,
+        deletionID      STRING QUERYABLE SEARCHABLE SORTABLE,
+        mutation        STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        scopeDigest     STRING QUERYABLE SEARCHABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE Users (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        roles           LIST<INT64>,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );

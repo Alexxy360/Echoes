@@ -44,8 +44,15 @@ export class PublicCloudKitModel {
         const value = record.fields[filter.fieldName]?.value, compared = filter.fieldValue.value;
         return filter.comparator === "NEAR" ? value && distanceMeters(value, compared) <= filter.distance :
           filter.comparator === "EQUALS" ? value === compared : filter.comparator === "GREATER_THAN" ? value > compared : value <= compared;
-      })).sort((a, b) => (b.fields[body.query.sortBy[0].fieldName].value - a.fields[body.query.sortBy[0].fieldName].value) ||
-        (a.recordName < b.recordName ? 1 : a.recordName > b.recordName ? -1 : 0));
+      })).sort((a, b) => {
+        for (const sort of body.query.sortBy) {
+          assert.equal(sort.systemFieldName, undefined);
+          const left = a.fields[sort.fieldName]?.value, right = b.fields[sort.fieldName]?.value;
+          const compared = left < right ? -1 : left > right ? 1 : 0;
+          if (compared) return sort.ascending ? compared : -compared;
+        }
+        return 0;
+      });
       const offset = body.continuationMarker ? Number(body.continuationMarker.split(":")[1]) : 0;
       const page = records.slice(offset, offset + body.resultsLimit).map(record => ({ ...structuredClone(record),
         fields: Object.fromEntries(Object.entries(record.fields).filter(([key]) => body.desiredKeys.includes(key))) }));

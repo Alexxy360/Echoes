@@ -86,6 +86,10 @@ export function liveFields(context, input) {
   if (context.kind === "presence") values.expiresAt = context.startedAt + (input.active === 0 ? 0 : 600000);
   if (context.kind === "message") values.expiresAt = context.createdAt + 7200000;
   const fields = fieldValues(values);
+  if (context.kind === "message" || context.kind === "presence") {
+    if (!publicRecordName.test(context.recordName ?? "")) throw new PublicRecordError("PUBLIC_SCOPE");
+    fields.recordSortKey = { type: "STRING", value: context.recordName };
+  }
   if (context.kind === "message" || context.kind === "presence" && input.active === 1) {
     fields.location = { type: "LOCATION", value: { latitude: input.latitude, longitude: input.longitude } };
   }

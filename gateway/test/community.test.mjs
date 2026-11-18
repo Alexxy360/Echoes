@@ -175,6 +175,29 @@ test("125 messages paginate without duplicates, cursor plaintext, new arrivals o
   } finally { f.close(); }
 });
 
+test("125 messages with identical timestamps paginate by the derived string key without loss or duplicate IDs", async () => {
+  const f = await setup();
+  try {
+    const ids = [];
+    // Different authors each send once at the same instant, keeping the real policy and per-author limits.
+    for (let i = 0; i < 125; i++) {
+      const author = await f.session("tie.author." + i), saved = await f.call(author, "send", f.sendBody("Tie " + i));
+      ids.push(saved.id);
+      assert.equal(f.model.records.get(saved.id).fields.recordSortKey.value, saved.id);
+    }
+    const reader = await f.session("reader"), received = []; let cursor = null;
+    for (let page = 0; page < 3; page++) {
+      const result = await f.call(reader, "messages", { coordinate: center, ...(cursor ? { cursor } : {}) });
+      received.push(...result.messages.map(row => row.id).reverse()); cursor = result.cursor; f.advance(1000);
+    }
+    assert.equal(cursor, null); assert.equal(received.length, 125); assert.equal(new Set(received).size, 125);
+    assert.deepEqual(received, [...ids].sort().reverse());
+    for (const call of f.model.requests.filter(call => call.operation === "query")) {
+      assert.deepEqual(call.body.query.sortBy[1], { fieldName: "recordSortKey", ascending: false });
+    }
+  } finally { f.close(); }
+});
+
 test("known message IDs are removed after movement, expiry, deletion or moderation, without accepting another record kind", async () => {
   const f = await setup();
   try {

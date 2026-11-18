@@ -11,12 +11,12 @@ const retained = { retentionKey: "STRING" };
 const variants = Object.fromEntries(["image", "thumbnail"].flatMap(name => [
   [name, "ASSET"], [name + "ByteCount", "INT64"], [name + "Width", "INT64"], [name + "Height", "INT64"], [name + "Sha256", "STRING"],
 ]));
-const query = { location: ["QUERYABLE", "SORTABLE"], erased: ["QUERYABLE"], expiresAt: ["QUERYABLE", "SORTABLE"] };
+const query = { location: ["QUERYABLE", "SORTABLE"], erased: ["QUERYABLE"], expiresAt: ["QUERYABLE", "SORTABLE"], recordSortKey: ["SORTABLE"] };
 const catalog = [
   { name: publicRecordTypes.profile, fields: { ...common, name: "STRING" } },
-  { name: publicRecordTypes.presence, fields: { ...common, ...retained, active: "INT64", generation: "INT64", name: "STRING",
+  { name: publicRecordTypes.presence, fields: { ...common, ...retained, recordSortKey: "STRING", active: "INT64", generation: "INT64", name: "STRING",
     latitude: "DOUBLE", longitude: "DOUBLE", location: "LOCATION", song: "STRING", songID: "STRING", expiresAt: "INT64" }, indexes: { ...query, active: ["QUERYABLE"], updatedAt: ["SORTABLE"] } },
-  { name: publicRecordTypes.message, fields: { ...common, ...retained, name: "STRING", text: "STRING", latitude: "DOUBLE", longitude: "DOUBLE",
+  { name: publicRecordTypes.message, fields: { ...common, ...retained, recordSortKey: "STRING", name: "STRING", text: "STRING", latitude: "DOUBLE", longitude: "DOUBLE",
     location: "LOCATION", expiresAt: "INT64" }, indexes: { ...query, createdAt: ["QUERYABLE", "SORTABLE"] } },
   { name: publicRecordTypes.block, fields: { ...common, targetID: "STRING", blocked: "INT64" } },
   { name: publicRecordTypes.report, fields: { ...common, ...retained, messageID: "STRING", reason: "STRING" } },
@@ -43,6 +43,7 @@ export function inspectSchema(text) {
       const name = field[1].replaceAll('"', ""); if (Object.hasOwn(fields, name)) throw new Error("Duplicate schema field.");
       const options = field[3]?.trim().split(/\s+/) ?? [];
       if (new Set(options).size !== options.length) throw new Error("Duplicate schema field option.");
+      if (field[2] === "REFERENCE" && options.includes("SORTABLE")) throw new Error("REFERENCE cannot have SORTABLE: rejected by Apple import.");
       fields[name] = { type: field[2], options };
     }
     return { name: match[1], fields, grants };
@@ -54,16 +55,18 @@ export function inspectSchema(text) {
   if (types.some(type => type.grants.some(grant => !permittedRoles.has(grant.role)))) throw new Error("Unknown schema role.");
   return { roles, types };
 }
-export function prepareCommunitySchema(original) {
+export function prepareCommunitySchema(original, { preserveExistingServiceRole = false } = {}) {
   const before = inspectSchema(original), known = new Set(before.types.map(type => type.name));
-  if (before.roles.includes(communitySchemaRole) || catalog.some(type => known.has(type.name))) throw new Error("Existing community definitions require an explicit comparison, never replacement.");
+  const roleExists = before.roles.includes(communitySchemaRole);
+  if (typeof preserveExistingServiceRole !== "boolean" || preserveExistingServiceRole && !roleExists ||
+      roleExists && !preserveExistingServiceRole || catalog.some(type => known.has(type.name))) throw new Error("Existing community definitions require an explicit comparison, never replacement.");
   const additions = catalog.map(type => {
     const fields = Object.entries(type.fields).map(([name, kind]) => `        ${name} ${kind}${type.indexes?.[name] ? " " + type.indexes[name].join(" ") : ""}`);
-    if (type.indexes) fields.unshift('        "___recordID" REFERENCE QUERYABLE SORTABLE');
+    if (type.indexes) fields.unshift('        "___recordID" REFERENCE QUERYABLE');
     fields.push(`        GRANT READ, CREATE, WRITE TO ${communitySchemaRole}`);
     return `    RECORD TYPE ${type.name} (\n${fields.join(",\n")}\n    );`;
   });
-  const schema = original + `\n    CREATE ROLE ${communitySchemaRole};\n\n` + additions.join("\n\n") + "\n";
+  const schema = original + (roleExists ? "\n" : `\n    CREATE ROLE ${communitySchemaRole};\n\n`) + additions.join("\n\n") + "\n";
   const after = inspectSchema(schema);
   const originalTypes = after.types.filter(type => known.has(type.name));
   if (JSON.stringify(originalTypes) !== JSON.stringify(before.types)) throw new Error("Existing schema changed.");
@@ -72,17 +75,17 @@ export function prepareCommunitySchema(original) {
   }
   return { schema, scope: { team: "22YC9RAP4P", container: "iCloud.mpvEcho.Echo", environment: "development" },
     inputSHA256: createHash("sha256").update(original).digest("hex"), proposedSHA256: createHash("sha256").update(schema).digest("hex"),
-    preservedTypes: before.types.map(type => type.name), addedRole: communitySchemaRole, addedTypes: after.types.filter(type => !known.has(type.name)),
+    preservedTypes: before.types.map(type => type.name), preservedRoles: before.roles, addedRole: roleExists ? null : communitySchemaRole, addedTypes: after.types.filter(type => !known.has(type.name)),
     remoteValidation: "not performed", remoteImport: false, roleAssignments: [], dataOperations: [] };
 }
-export function verifyCommunityProposal(original, proposed) {
-  const expected = prepareCommunitySchema(original);
+export function verifyCommunityProposal(original, proposed, options) {
+  const expected = prepareCommunitySchema(original, options);
   if (proposed !== expected.schema) throw new Error("Proposed schema differs from the reviewed additive contract.");
   return { inputSHA256: expected.inputSHA256, proposedSHA256: expected.proposedSHA256 };
 }
 /** Read-back comparison only; the caller must independently verify the console scope. */
-export function verifyInstalledCommunitySchema(original, installed) {
-  const expected = inspectSchema(prepareCommunitySchema(original).schema), actual = inspectSchema(installed);
+export function verifyInstalledCommunitySchema(original, installed, options) {
+  const expected = inspectSchema(prepareCommunitySchema(original, options).schema), actual = inspectSchema(installed);
   const newTypes = new Set(catalog.map(type => type.name));
   const implicit = { ___createTime: "TIMESTAMP", ___createdBy: "REFERENCE", ___etag: "STRING", ___modTime: "TIMESTAMP",
     ___modifiedBy: "REFERENCE", ___recordID: "REFERENCE" };
@@ -98,8 +101,8 @@ export function verifyInstalledCommunitySchema(original, installed) {
   return { types: expected.types.length, roles: expected.roles.length, installedSHA256: createHash("sha256").update(installed).digest("hex") };
 }
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  if (process.argv.length !== 5) throw new Error("Provide original schema, proposed schema and report paths. This command performs no network operations.");
-  const result = prepareCommunitySchema(await readFile(process.argv[2], "utf8"));
+  if (process.argv.length !== 5 && !(process.argv.length === 6 && process.argv[5] === "--preserve-existing-service-role")) throw new Error("Provide original schema, proposed schema and report paths; optional --preserve-existing-service-role. This command performs no network operations.");
+  const result = prepareCommunitySchema(await readFile(process.argv[2], "utf8"), { preserveExistingServiceRole: process.argv.length === 6 });
   await writeFile(process.argv[3], result.schema);
   const { schema, ...report } = result; await writeFile(process.argv[4], JSON.stringify(report, null, 2) + "\n");
 }

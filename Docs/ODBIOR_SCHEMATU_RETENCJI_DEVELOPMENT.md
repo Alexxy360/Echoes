@@ -1,6 +1,6 @@
 # Odbiór schematu retencji w Development — przygotowanie CK-05a.4
 
-Status, 19 listopada 2026: po ponownym logowaniu właściciela **odczytano i wyeksportowano rzeczywisty schemat Development; nie zmieniono go w Apple**. W konsoli potwierdzono zespół `22YC9RAP4P`, kontener `iCloud.mpvEcho.Echo`, Development i publiczną bazę. Eksport ma 2356 bajtów, SHA-256 `869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27`; zawiera pięć istniejących typów, bez wszystkich ośmiu typów społecznościowych/checkpointu. Przygotowano [pełną propozycję i zakres zatwierdzenia](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md). Import, walidacja Apple i odbiór działania pozostają otwarte.
+Status, 19 listopada 2026: po ponownym logowaniu właściciela odczytano schemat Development i przygotowano pełną propozycję. Po konkretnej zgodzie właściciela Apple pokazał `Validation Passed`, lecz właściwy import odrzucił indeks SORTABLE dla systemowego REFERENCE. **Wynik częściowy: powstała rola EchoesCommunityService, ale nie dodano żadnego z ośmiu nowych typów.** Eksport kontrolny ma 2396 bajtów, SHA-256 `0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd`; pięć wcześniejszych typów, ich pola/indeksy/prawa i rola diagnostyczna są zachowane. Nie przypisywano roli tożsamościom ani nie wykonywano operacji na rekordach. Przygotowano [poprawiony pełny plik i zakres ponowienia](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md). Działający import i odbiór zapytań/ACL pozostają otwarte.
 
 Wcześniejsza próba `cktool export-schema` odmówiła lokalnie z powodu braku management tokenu. Eksport pobrano następnie przez zalogowaną konsolę; nie tworzono tokenu, klucza ani nie odczytywano pól rekordów użytkowników.
 
@@ -17,7 +17,7 @@ Ten dokument nie jest plikiem do importu. Nie wolno zastępować nim pełnego sc
 
 Wspólne pola blokady to `schemaVersion: INT64`, `ownerKey: STRING`, `erased: INT64`. Mechanizm usuwania konta używa osobnego `deletionKey: STRING`. `retentionKey` nie jest uprawnieniem ani terminem — jest skrótem konkretnej intencji z rejestru serwera. Samo dodanie tych czterech pól nie przygotowuje całego schematu społecznościowego.
 
-Retencja wybiera rekordy z własnego SQLite i odczytuje dokładne ID; nie potrzebuje nowego indeksu wyszukiwania CloudKit po `retentionKey`. Zapytania mapy/czatu wymagają niezależnego odbioru indeksów pól `location`, `erased`, `expiresAt`, `active`, `createdAt`, `updatedAt` oraz sortowania po systemowym `recordName`, zgodnie z konkretnym zapytaniem klienta. Nie przyznaje to dostępu do tych danych klientowi iOS.
+Retencja wybiera rekordy z własnego SQLite i odczytuje dokładne ID; nie potrzebuje nowego indeksu wyszukiwania CloudKit po `retentionKey`. Zapytania mapy/czatu wymagają niezależnego odbioru indeksów pól `location`, `erased`, `expiresAt`, `active`, `createdAt`, `updatedAt` oraz nowego `recordSortKey: STRING SORTABLE`, zgodnie z konkretnym zapytaniem klienta. Pole tekstowe jest nadawane przez serwer i równe ID rekordu; zastępuje odrzucone przez Apple sortowanie systemowego REFERENCE. Nie przyznaje to dostępu do tych danych klientowi iOS.
 
 ## Kolejność wykonania
 

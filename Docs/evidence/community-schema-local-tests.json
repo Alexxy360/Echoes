@@ -72,5 +72,7 @@
     "separate service identity and real A/B ACL",
     "exact synthetic record/asset protocol acceptance",
     "hosted alarms and Free resource measurements"
-  ]
+  ],
+  "snapshotCommit": "62798c9d0009c9452f79aeb32c2411f9e6c5a82f",
+  "historicalSnapshotNote": "8/8 applies to the original prepared proposal at this commit; subsequent Apple import failed partially. Current repair results are in community-schema-repair-local-tests.json."
 }

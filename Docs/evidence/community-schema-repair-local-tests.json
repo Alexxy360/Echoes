@@ -1,0 +1,94 @@
+{
+  "phase": "CK-05a.4b",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "62798c9d0009c9452f79aeb32c2411f9e6c5a82f",
+  "status": "repair prepared locally; revised proposal has not been sent to Apple",
+  "fullSuite": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-schema-repair-full-node22.log",
+      "sha256": "33568035e3470d95c7199178b38784f73c1cdbdcc6925c1b66d14629292f0e8c",
+      "tests": 643,
+      "passed": 643,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-schema-repair-full-node24.log",
+      "sha256": "d2bc09cc9f2dd75a4d719a5a219c7b9a1213618b0eaa18a41747162ae284db14",
+      "tests": 643,
+      "passed": 643,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "targetedFinal": {
+    "path": "/private/tmp/echoes-community-schema-repair-targeted-final3.log",
+    "sha256": "011e57f801281b6691950a1d748327abbebb6dd3403c721ddaaa5d2ca550ff6f",
+    "passed": 32,
+    "failed": 0
+  },
+  "newFunctionsSinceBaseline": {
+    "schema": 2,
+    "community": 1
+  },
+  "schemaContractTestsInFullSuite": 10,
+  "coverage": [
+    "actual live/inactive/deletion/retention/avatar/checkpoint field serializers and regional Request indexes",
+    "server-derived recordSortKey equals ID and disappears from fences; client cannot supply it",
+    "125 simultaneous messages from distinct authors through the real coordinator, sorted by actual Request fields; complete pagination and unique IDs",
+    "preserve partial-import role only with explicit option and refuse replacing existing community types",
+    "reject known REFERENCE SORTABLE failure; strict proposal and post-import read-back comparison"
+  ],
+  "syntax": {
+    "trackedGatewayMJS": 141,
+    "runtimes": [
+      "22.23.5",
+      "24.22.1"
+    ],
+    "log": "/private/tmp/echoes-community-schema-repair-syntax.log",
+    "sha256": "7a9ad9d15b43c26cefd1d89923031b7db7462835d104fafbca6acb65035171db",
+    "jsonFiles": 4,
+    "passed": true
+  },
+  "filesSHA256": {
+    "gateway/src/public-record-schema.mjs": "c9338f6a8582029c35c0467c7c15a84a9768a5ed878157392fd50202058d3e9e",
+    "gateway/src/cloudkit-public-client.mjs": "3fb7368f1f21445bd241e25cb00ce62556481f7974a6800045b94048dafe8843",
+    "gateway/test/support/public-record-fixture.mjs": "da8d29cb175a15eb588f7194cd564f03f0523cb609f4e7a0925af6a0fda5d908",
+    "gateway/test/community.test.mjs": "f776c7d185197fd2f54927cf096652c633860d17ee951cbd77816f3ebbebaa26",
+    "gateway/test/community-schema.test.mjs": "ac6261c50aab1d99c4fd3458604e5a1ca8019cda71491fd2f2a119533d66f9cf",
+    "gateway/scripts/prepare-community-schema.mjs": "f0c9e22724abec1ceddb9a96f74648981c4f2db105305e29abbb0cd1d194e694",
+    "gateway/schema/community-development-proposed.ckdb": "26b06f38f2de80269d7e1c73d5e439294df3016298a990aa41704ecade1b45f3",
+    "gateway/schema/development-export-20261119.ckdb": "869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27",
+    "gateway/schema/development-after-failed-import-20261119.ckdb": "0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd",
+    "Docs/evidence/community-development-schema-proposal.json": "c5996b24190f52e4fd16d4f2f10bc2bf405eeeac71e21af843c54915a797b8cf",
+    "Docs/evidence/community-schema-import-attempt-20261119.json": "9821a53d9c2dd9fece6818103053852c10491962e600240a2a480d2499df9599",
+    "Docs/evidence/community-schema-import-error.jpg": "c0525e2c1dd6eab0cf1aafcc25e528bef5ebe633dc829f471b003b5d51db8976"
+  },
+  "initialTestCorrections": [
+    "read requests needed a 1000 ms interval",
+    "direct repository fixture did not establish coordinator visibility policy; replaced with 125 distinct authors using the coordinator",
+    "returned chat page uses ascending presentation; normalized page order in assertion"
+  ],
+  "remote": {
+    "firstApprovedImport": "failed partially; existing role created; no new community types",
+    "attemptEvidence": "community-schema-import-attempt-20261119.json",
+    "revisedProposalValidation": false,
+    "revisedProposalImport": false,
+    "roleAssignmentPerformed": false,
+    "recordOperationsPerformed": false,
+    "newKeysOrSecrets": false,
+    "serviceDeploymentOrActivation": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "Swift/iOS/UI/Debug/Release; external app DTO unchanged",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "revised Apple schema/index validation and import; fresh source comparison first",
+    "post-import export comparison even after failure",
+    "regional query/asset behavior",
+    "separate service identity and real A/B ACL",
+    "hosted alarm and Free resource measurements"
+  ]
+}
