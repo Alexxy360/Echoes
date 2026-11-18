@@ -76,7 +76,7 @@ test("approval ABA and republish invalidate an already prepared response", async
     const finalize = await f.reader.prepare(f.input()), status = f.policy.snapshot(f.signedIn.accountID);
     await f.call("prepareReview", f.review(status, "rejected"));
     await f.call("prepareReview", f.review(f.policy.snapshot(f.signedIn.accountID), "approved"));
-    await f.call("preparePublish", f.credentials({ requestID: status.requestID }));
+    await f.call("preparePublish", f.credentials(f.publication()));
     assert.throws(() => finalize(), notFound); assert.equal(f.downloads.length, 1);
   } finally { f.close(); }
 });

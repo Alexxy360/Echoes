@@ -1,0 +1,162 @@
+{
+  "stage": "CK-04e.3j.3c.4a",
+  "observedAtUTC": "2026-11-18T08:06:49.537931+00:00",
+  "baselineCommit": "0bf2b3f041897a08892eb6435771b29f5b5517a8",
+  "checks": {
+    "newGatewayFunctions": 8,
+    "gatewayNode22": {
+      "passed": 518,
+      "failed": 0
+    },
+    "gatewayNode24": {
+      "passed": 518,
+      "failed": 0
+    },
+    "newSwiftFunctions": 7,
+    "defined": 497,
+    "macOS": {
+      "passed": 495,
+      "failed": 0,
+      "skipped": 2
+    },
+    "iOSSimulator": {
+      "passed": 495,
+      "failed": 0,
+      "skipped": 2
+    },
+    "newIndividualCompletionsVerifiedBothPlatforms": true,
+    "existingEditorUI": {
+      "passed": 1,
+      "failed": 0
+    },
+    "swiftFormatFiles": 5,
+    "syntaxMJSBothNode": 117,
+    "concreteLocalWireCases": 10
+  },
+  "builds": {
+    "debug": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "binarySHA256": {
+        "Echoes": "0b432f87ac09d4aaa8193bc88ef55d11e96ab92be6e3c520ce59560b3dbc01f6",
+        "Echoes.debug.dylib": "d7e3df880ea50245e7965669bc73488a4c62f4b236101ec4421294d1717f100a"
+      }
+    },
+    "release": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "binarySHA256": {
+        "Echoes": "98f4559c3af5e3e93744c45bf438e853d061156e47fd560b25232c1b20406bc0"
+      }
+    }
+  },
+  "newSwiftTestNames": [
+    "avatarPublicationAcknowledgementMustMatchVersionGenerationAndReviewRevision",
+    "avatarPublicationChoiceRejectsInvalidIDsGenerationAndConsentBeforeHTTP",
+    "avatarPublicationHTTPUsesClosedJSONAndAcceptsOnlyExactPublishedSnapshot",
+    "avatarPublicationWireCarriesExactMetadataAndRedactsReflection",
+    "avatarOwnerPublicationCannotAdoptAChangedRevisionFromItsFreshStatusLookup",
+    "avatarOwnerPublicationKeepsOldRevisionWhenApprovalChangesAfterTheStatusRead",
+    "avatarOwnerPublicationRequiresAnAlreadyObservedApprovedSnapshot"
+  ],
+  "implemented": [
+    "closed five-field author publication choice, request-only input rejected",
+    "coordinator version/generation binding and initial selected reviewRevision check without adopting current approval",
+    "existing lease/CAS/checkpoint/finalizer checks retain revision/descriptor/staged-tag binding",
+    "typed native metadata intent and full published acknowledgement correlation",
+    "existing controller captures already-observed approval before first await; explicit refresh required after changes",
+    "prepared direct native API models enforce full selection and model actual review revision changes",
+    "concrete local Runtime exporter renewed10 wire cases for native client/controller without retransmission"
+  ],
+  "actualComponents": [
+    "local SQLite policy/registry, local HTTP Runtime/edge orchestration, Wasm normalization and complete gateway regression including workerd",
+    "actual native HTTP closed codecs with newly exported local response bytes, real journal/filesystem and actor scope guards",
+    "actual iOS Simulator editor/controller/display/withdrawal touches with synthetic API",
+    "full native packages on Mac and iOS Simulator, Debug test build and Release compilation"
+  ],
+  "modeledComponents": [
+    "Apple accounts/SIWA/CloudKit data and provider IO, Cloudflare platform bindings in Runtime HTTP fixture",
+    "UI provider implements synthetic API rather than actual hosted HTTP gateway",
+    "native wire transport uses saved concrete local Runtime replies",
+    "not a hosted Free resource/role/separate service identity/two ordinary accounts acceptance"
+  ],
+  "negativeControl": {
+    "isolatedCopy": true,
+    "removed": "initial expected reviewRevision guard in publish lease only",
+    "failedTests": 1,
+    "failure": "Missing expected rejection.",
+    "originalSourceSHA256Unchanged": "edafbb3ebeff4c123a74c429217dff2df888f5c2511f07f87f61595d50f3290c"
+  },
+  "knownLimits": [
+    "existing upload journal still required by controller; publication reviewRevision not yet a separate durable intent",
+    "next metadata-only publication journal/recovery plus protected owner preview and conscious confirmation without upload source",
+    "current consentVersion declaration cannot prove human interaction at the server",
+    "prior11 frame warnings unresolved; selected unchanged editor scenario has no runtime warning",
+    "physical Keychain/PhotosPicker/iCloud Photos/protection and real schema/roles/SIWA/hosts/service identity/Free/A-B remain open",
+    "reports/contact/retention/orphans and full migration incomplete; standard entry Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote activation/deployment/schema/roles/new credentials/permissions/paid services",
+    "phone SDK or any expansion of expired approval windows",
+    "Production/TestFlight/Firebase changes",
+    "unchanged fullCore/all41UI/dependency audit repetition"
+  ],
+  "uiRuntimeWarnings": [],
+  "packageRuntimeWarnings": [],
+  "sourceDocsSHA256": {
+    "Docs/HTTP_UPLOAD_AVATAROW.md": "4ca9f0fed97b1f24c16f29d6dd8cd381e14a5340a1c4703fcd0a17eec974622b",
+    "Docs/NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md": "f660e050a6b4ec354252be9664be3b99c2c08e2a6b4e88dea04b59dc587b242d",
+    "Docs/NATYWNY_UPLOAD_AVATAROW_HTTP.md": "0d9e875dcd9df7fb5ed36337fa8df215b75243d8450fafd36451ae5a8d2924ef",
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "a451d7310d0075663e15675cdc15e2e090290e474ed9466506d64fb146e4f930",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarMutationAPI.swift": "a25ce963c9f8c32760078634611881f6d9d46ed9b2fc585fcae05bf48983fa9f",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "9d152ebd8ed0a4b1f6128333a83657311bc0f59b6f2275741fc7fa0686302de3",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-mutation/responses.json": "f9ef32437587d0dfd72a29ebd710592beb003be57fb07968e69fe9ca02cae8eb",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarMutationTests.swift": "d6eeef5868c6944cc243903f2a23e949537516fe09b1766ea4ef6ff133587769",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "7072db6aa6311f2a0af8492ebdc7deac17f445aeabb7b6a78e29dd144d031c17",
+    "gateway/scripts/export-avatar-mutation-native-fixture.mjs": "c31010b112bb841cb73f91cc43256816f3a2d7d0154fa583998d3468119ecd1d",
+    "gateway/src/avatar-policy-state.mjs": "edafbb3ebeff4c123a74c429217dff2df888f5c2511f07f87f61595d50f3290c",
+    "gateway/src/avatar-publication-coordinator.mjs": "33c8956f277692f0163bd7fe823d1fe936752418e201d31aaa174e2faf3d93be",
+    "gateway/src/avatar-upload-http.mjs": "7ea2719cc60b1ecf79ce2a86d57ad841c816b5f7f014acf61a83c5370e224d1f",
+    "gateway/test/avatar-publication.test.mjs": "454d92207a6ae4353afc74283840ea26fcd2a864a72cc99a2a08a82e45270487",
+    "gateway/test/avatar-read.test.mjs": "8611d533ab165d08ae4b37f2fa4af82079b54f37205522eded00234e433f190f",
+    "gateway/test/community-avatar-references.test.mjs": "7305e04ccd5a89af278f9c8988bdb6698678b0d2af8ba09eeaf739fec71ca7e0",
+    "gateway/test/support/avatar-publication-fixture.mjs": "d3d8d79143e39e998876117c87dea5d85e6e29fd708bc396d34681f30a9ceb5c",
+    "gateway/test/support/avatar-read-fixture.mjs": "a34506c14f063bd244941b12d7cccdc6ae4ff2b7927444052ff56f515e3c2a7f",
+    "gateway/test/support/avatar-upload-http-fixture.mjs": "84970dfe702f7d3d5916a1330c2dcae17389234388fd0d4f3fabaffd156fb4c1",
+    "gateway/src/avatar-publication-intent.mjs": "0c4534a02c9c5f519c058f2d04f715d6ffa7c8425ef021415b33fcde7b0d1c5f",
+    "gateway/test/avatar-publication-selection.test.mjs": "63da3ddc32132724a0cb780ea72b147cb5a6e724fd4f946836bfd2bce5fed6e1",
+    "Docs/KONTRAKT_PUBLIKACJI_ZDJECIA.md": "b117fd0bface16b22119aa12f702104c6c4a874c45aa7ebb4a4ae39cd9916e78",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "b48e2b12ea84ae663df72e19c518f9415dad82ded75e879ac5b89763bb0b32b9",
+    "Docs/DZIENNIK_ZMIAN.md": "83c2547d6d1bc0d1c4f742e7f337405bafcc4c70268bed05187acbf36181aedc"
+  },
+  "localLogSHA256": {
+    "echoes-publication-selection-focused.log": "c84ce58e2cd32269b2a1f3fb27fa0b9681a14035d0cbcdfca60680142c0db397",
+    "echoes-publication-selection-focused-second.log": "31954aeec048f13d9169ed041311138fa7f24f0482366dced8a8e6ea521ae468",
+    "echoes-publication-selection-swift-focused.log": "459bee9d08120a621aeeb80fcfeaefd92020ae31b0d8cef61c78648e48b8d71b",
+    "echoes-publication-selection-swift-focused-second.log": "4ff52229ba48980f974295109f070fa161810d004c136fcb7cfb04059d357d8b",
+    "echoes-publication-selection-node22-full.log": "122882a8fc3ed5787f0212e6c6f0f5147f5ac25f4c9c841468ec98a68ac9dcf4",
+    "echoes-publication-selection-node24-full.log": "ca8c6e99a809209bed84b55d9c47290acddd96486305ab0b9898d3178e5b088b",
+    "echoes-publication-selection-swift-full-mac.log": "925c0c72b721bc6bee5230c641505524d74d28053087f8929dfb30c5b9e2ce9d",
+    "echoes-publication-selection-package-simulator.log": "c6428e19c9396f8c08ebd3151286eb404689f44907cbcebfca9810df0f54a43b",
+    "echoes-publication-selection-package-simulator-summary.json": "50fea18a417d1295ec68fc66470ea0edf82573a24dfa4587fe2bf0d91c8f02b8",
+    "echoes-publication-selection-release.log": "b1ef52d5012fdd746442a0229b1d7777dc59a1c7b4614c7645defe4a2159b33c",
+    "echoes-publication-selection-editor-ui.log": "3fcb41f0e0158a3eeb41a3a1b84248475ed86b5551dd43b14efef6477b746437",
+    "echoes-publication-selection-editor-ui-summary.json": "cb315fd6afd939fb7442d1f74a68941823b2454dedc6fd6f4851786ff2882e18",
+    "echoes-publication-selection-wire-export.log": "59158c59ccd2082c58cccdf29d9bdee1e574269fcf28c29c791839f6315f55bd",
+    "echoes-publication-selection-negative.log": "02233f5e963ef29b10fff995cc9e6d46c712de24e53a1ff0783ca247f524d6ea"
+  },
+  "localScreenshotSHA256": {
+    "8AB117B0-0CFF-4D3C-AAF6-B2B6CCBEF7D8.png": {
+      "label": "owner-photo-withdrawn_0_F655096E-7054-4E91-862B-08E9A8D2118C.png",
+      "sha256": "7dab81edd0894b92c2be67b5bba3b103981d5cec8d0565e1353e800d96ece36a"
+    },
+    "9536A9A5-80FB-486F-BF97-151B80E0E2AA.png": {
+      "label": "owner-photo-published_0_87A8CCF8-41EA-4870-825C-375EC658D318.png",
+      "sha256": "f389efbc7dd62679a216c968a1f5457d2076a3f69060c3b3a24c6b5e46c759ae"
+    }
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

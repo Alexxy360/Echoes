@@ -106,7 +106,9 @@
             case .recover(let id):
                 guard old.requestID == id else { throw GatewayAvatarMutationFailure.stale }
                 return old
-            case .publish(let id):
+            case .publish(let publication):
+                let id = publication.requestID
+                guard publication.matches(old) else { throw GatewayAvatarMutationFailure.stale }
                 guard old.requestID == id, old.status == .approved || old.status == .published else {
                     throw GatewayAvatarMutationFailure.pending
                 }

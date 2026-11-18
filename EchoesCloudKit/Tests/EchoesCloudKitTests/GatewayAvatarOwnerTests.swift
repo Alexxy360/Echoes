@@ -74,14 +74,15 @@ actor OwnerFlowJournal: GatewayAvatarUploadJournaling {
 
 private func ownerSnapshot(
     generation: Int = 0, request: String? = nil, version: String? = nil,
-    status: GatewayAvatarOwnerStatus = .none
+    status: GatewayAvatarOwnerStatus = .none,
+    reviewRevision: String = "6b000000-0000-4000-8000-000000000099"
 ) throws -> GatewayAvatarOwnerSnapshot {
     try .init(
         data: JSONSerialization.data(withJSONObject: [
             "protocolVersion": 1, "generation": generation, "requestID": request as Any? ?? NSNull(),
             "versionID": version as Any? ?? NSNull(),
             "publishedVersionID": status == .published ? version as Any? ?? NSNull() : NSNull(),
-            "reviewRevision": version == nil ? NSNull() : "6b000000-0000-4000-8000-000000000099",
+            "reviewRevision": version == nil ? NSNull() : reviewRevision,
             "status": status.rawValue,
         ]))
 }
@@ -113,7 +114,8 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
     func review(_ status: GatewayAvatarOwnerStatus, account: String = ownerFlowA) throws {
         let old = try values[account] ?? ownerSnapshot()
         values[account] = try ownerSnapshot(
-            generation: old.generation, request: old.requestID, version: old.versionID, status: status)
+            generation: old.generation, request: old.requestID, version: old.versionID, status: status,
+            reviewRevision: UUID().uuidString.lowercased())
     }
     func perform(_ operation: GatewayAvatarMutation, token: GatewaySecret) async throws
         -> GatewayAvatarOwnerSnapshot
@@ -139,12 +141,15 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
         case .recover(let id):
             guard old.requestID == id else { throw GatewayAvatarMutationFailure.stale }
             result = old
-        case .publish(let id):
+        case .publish(let publication):
+            let id = publication.requestID
+            guard publication.matches(old) else { throw GatewayAvatarMutationFailure.stale }
             guard old.requestID == id, old.status == .approved || old.status == .published else {
                 throw GatewayAvatarMutationFailure.pending
             }
             result = try ownerSnapshot(
-                generation: old.generation, request: id, version: old.versionID, status: .published)
+                generation: old.generation, request: id, version: old.versionID, status: .published,
+                reviewRevision: try #require(old.reviewRevision))
         case .clear(let id, let previous):
             guard old.generation == previous || old.requestID == id && old.generation == previous + 1 else {
                 throw GatewayAvatarMutationFailure.stale
@@ -312,6 +317,7 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
     try await f.controller.connect()
     try await f.controller.submit(f.avatar, consentVersion: 1)
     try await f.api.review(.approved)
+    try await f.controller.refresh()
     await f.api.fail("publish", .lostReply)
     await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
     #expect(try await f.journal.read()?.phase == .publishing)
@@ -566,6 +572,7 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
             if action == "publish" {
                 try await f.controller.submit(f.avatar, consentVersion: 1)
                 try await f.api.review(.approved)
+                try await f.controller.refresh()
             }
             await f.api.fail(action, fault)
             await #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
@@ -652,9 +659,10 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
         if accepted {
             try await f.controller.recover()
             try await f.api.review(.approved)
+            try await f.controller.refresh()
             try await f.controller.publish()
             #expect(f.controller.snapshot?.status == .published && f.controller.pendingOperation == nil)
-            #expect(await f.actions() == ["recover", "status", "publish"])
+            #expect(await f.actions() == ["recover", "status", "status", "publish"])
         } else {
             await #expect(throws: GatewayAvatarUploadJournalFailure.sourceUnavailable) {
                 try await f.controller.retryUpload()
@@ -696,6 +704,7 @@ actor OwnerFlowAPI: GatewayAvatarMutationAPI {
     try await f.controller.connect()
     try await f.controller.submit(f.avatar, consentVersion: 1)
     try await f.api.review(.approved)
+    try await f.controller.refresh()
     await f.journal.fail(remove: true)
     await #expect(throws: GatewayAvatarUploadJournalFailure.unavailable) { try await f.controller.publish() }
     #expect(try await f.journal.read()?.phase == .publishing)
@@ -757,7 +766,8 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
         throw GatewayAvatarMutationFailure.invalidInput
     }
     let transport = try OwnerWireSequence([
-        wire.entry("recover-pending"), wire.entry("status-approved"), wire.entry("publish-published"),
+        wire.entry("recover-pending"), wire.entry("status-approved"), wire.entry("status-approved"),
+        wire.entry("publish-published"),
     ])
     let configuration = try GatewayConfiguration(origin: mutationOrigin)
     let source = try GatewayAvatarUploadScope(
@@ -775,15 +785,75 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
     try await controller.connect()
     try await controller.recover()
     #expect(controller.snapshot?.status == .pendingReview && controller.pendingOperation?.phase == .staged)
+    try await controller.refresh()
     try await controller.publish()
     #expect(controller.snapshot?.status == .published && controller.pendingOperation == nil)
-    #expect(await transport.sent == ["recover", "status", "publish"])
+    #expect(await transport.sent == ["recover", "status", "status", "publish"])
     #expect(try await f.journal.read() == nil)
 }
 
 @MainActor private final class OwnerPresentationEvents {
     var values: [(String, GatewayAvatarOwnerSnapshot?)] = []
     func record(_ owner: String, _ snapshot: GatewayAvatarOwnerSnapshot?) { values.append((owner, snapshot)) }
+}
+
+@Test @MainActor func avatarOwnerPublicationRequiresAnAlreadyObservedApprovedSnapshot() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    await #expect(throws: GatewayAvatarMutationFailure.stale) { try await f.controller.publish() }
+    #expect(!(await f.actions()).contains("publish") && f.controller.needsRefresh)
+    #expect(try await f.journal.read() != nil)
+    try await f.controller.refresh()
+    try await f.controller.publish()
+    #expect(f.controller.snapshot?.status == .published && f.controller.pendingOperation == nil)
+}
+
+@Test @MainActor func avatarOwnerPublicationCannotAdoptAChangedRevisionFromItsFreshStatusLookup() async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    try await f.controller.refresh()
+    let shown = try #require(f.controller.snapshot)
+    let pending = try await f.journal.read()
+    try await f.api.review(.approved)
+    await #expect(throws: GatewayAvatarMutationFailure.stale) { try await f.controller.publish() }
+    #expect(!(await f.actions()).contains("publish"))
+    #expect(try await f.journal.read() == pending)
+    #expect(await f.api.values[ownerFlowA]?.reviewRevision != shown.reviewRevision)
+    #expect(f.controller.snapshot == nil && f.controller.needsRefresh)
+}
+
+@Test @MainActor func avatarOwnerPublicationKeepsOldRevisionWhenApprovalChangesAfterTheStatusRead()
+    async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    try await f.controller.refresh()
+    let shown = try #require(f.controller.snapshot)
+    await f.api.pause("status")
+    let publication = Task { try await f.controller.publish() }
+    try await f.api.gate.wait()
+    defer { Task { await f.api.gate.release() } }
+    try await f.api.review(.approved)
+    await f.api.gate.release()
+    await #expect(throws: GatewayAvatarMutationFailure.stale) { try await publication.value }
+    let calls = await f.api.captured()
+    let choices = calls.compactMap { call -> GatewayAvatarPublishIntent? in
+        if case .publish(let choice) = call.action { return choice }
+        return nil
+    }
+    #expect(choices.count == 1 && choices.first?.reviewRevision == shown.reviewRevision)
+    #expect(await f.api.values[ownerFlowA]?.status == .approved)
+    #expect(try await f.journal.read()?.phase == .publishing)
 }
 
 @Test @MainActor func avatarOwnerPresentationFencesBeforeAwaitAndOnlyRestoresVerifiedPublishedState()
@@ -825,6 +895,7 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
     try await f.controller.connect()
     try await f.controller.submit(f.avatar, consentVersion: 1)
     try await f.api.review(.approved)
+    try await f.controller.refresh()
     await f.api.fail("publish", .lostReply)
     await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
     #expect(events.values.last?.1?.status != .published)

@@ -65,6 +65,7 @@ export async function avatarPublicationFixture(options = {}) {
     upload(changes = {}) { return { accessToken: session.sessionToken, requestID: randomUUID(), versionID: randomUUID(), bytes: sourceBytes,
       expectedGeneration: initial.policy.snapshot(session.accountID).generation, consentVersion: 1, ...changes }; },
     credentials(changes = {}) { return { accessToken: session.sessionToken, ...changes }; },
+    publication(status = initial.policy.snapshot(session.accountID)) { return { requestID: status.requestID, versionID: status.versionID, generation: status.generation, reviewRevision: status.reviewRevision, consentVersion: 1 }; },
     review(status, verdict = "approved", changes = {}) { return { accountID: session.accountID, requestID: status.requestID, expectedRevision: status.reviewRevision, decisionID: randomUUID(), verdict, ...changes }; },
     async call(method, body, instance = initial) { const finalize = await instance.coordinator[method](body); await instance.checkpoint.advance(); return finalize(); },
     reopen() { return make({ registry: new PublicRecordRegistry(f.storage, { clock: f.clock }) }); },

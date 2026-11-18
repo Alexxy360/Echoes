@@ -16,12 +16,12 @@ try {
   }
   await run("status-empty", "status");
   const intent = f.body("upload"), staged = await run("upload-pending", "upload", intent);
-  const waiting = await run("publish-pending", "publish", { requestID: intent.requestID }, 409);
+  const waiting = await run("publish-pending", "publish", f.body("publish"), 409);
   assert.equal(waiting.error, "AVATAR_PENDING");
   await run("recover-pending", "recover", { requestID: intent.requestID });
   const review = await f.coordinator.prepareReview(f.review(staged)); await f.checkpoint.advance(); review();
   await run("status-approved", "status");
-  await run("publish-published", "publish", { requestID: intent.requestID });
+  await run("publish-published", "publish", f.body("publish"));
   f.env.AVATAR_UPLOAD_ENABLED = "0";
   await run("clear-upload-disabled", "clear", { requestID: randomUUID(), expectedGeneration: 1 });
   await run("status-cleared", "status");

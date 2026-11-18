@@ -44,12 +44,54 @@ public struct GatewayAvatarUploadIntent: Equatable, Sendable, CustomStringConver
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
 
+/// Metadata for one explicit publication choice. A snapshot or this value is not an access grant.
+public struct GatewayAvatarPublishIntent: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
+    public let requestID: String
+    public let versionID: String
+    public let generation: Int
+    public let reviewRevision: String
+    public let consentVersion: Int
+    public init(
+        requestID: String, versionID: String, generation: Int, reviewRevision: String, consentVersion: Int = 1
+    ) throws {
+        guard gatewayUUID(requestID), gatewayUUID(versionID), gatewayUUID(reviewRevision),
+            (1..<9_007_199_254_740_991).contains(generation), consentVersion == 1
+        else {
+            throw GatewayAvatarMutationFailure.invalidInput
+        }
+        self.requestID = requestID
+        self.versionID = versionID
+        self.generation = generation
+        self.reviewRevision = reviewRevision
+        self.consentVersion = consentVersion
+    }
+    public init(snapshot: GatewayAvatarOwnerSnapshot) throws {
+        guard let request = snapshot.requestID, let version = snapshot.versionID,
+            let revision = snapshot.reviewRevision
+        else { throw GatewayAvatarMutationFailure.invalidInput }
+        try self.init(
+            requestID: request, versionID: version, generation: snapshot.generation, reviewRevision: revision)
+    }
+    public func matches(_ snapshot: GatewayAvatarOwnerSnapshot) -> Bool {
+        requestID == snapshot.requestID && versionID == snapshot.versionID
+            && generation == snapshot.generation && reviewRevision == snapshot.reviewRevision
+    }
+    var fields: [String: Any] {
+        [
+            "requestID": requestID, "versionID": versionID, "generation": generation,
+            "reviewRevision": reviewRevision, "consentVersion": consentVersion,
+        ]
+    }
+    public var description: String { "GatewayAvatarPublishIntent(<redacted>)" }
+    public var customMirror: Mirror { Mirror(self, children: [:]) }
+}
+
 /// Closed owner actions. The future owner host must persist the intent before any mutation dispatch.
 /// image is the prepared, metadata-stripped JPEG; the server independently normalizes it again.
 public enum GatewayAvatarMutation: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
     case upload(intent: GatewayAvatarUploadIntent, image: Data)
     case recover(requestID: String)
-    case publish(requestID: String)
+    case publish(intent: GatewayAvatarPublishIntent)
     case clear(requestID: String, expectedGeneration: Int)
     case status
     var action: String {
@@ -74,9 +116,10 @@ public enum GatewayAvatarMutation: Equatable, Sendable, CustomStringConvertible,
                 let header = String(data: data, encoding: .utf8)
             else { throw GatewayAvatarMutationFailure.invalidInput }
             return (image, header)
-        case .recover(let id), .publish(let id):
+        case .recover(let id):
             guard gatewayUUID(id) else { throw GatewayAvatarMutationFailure.invalidInput }
             fields = ["requestID": id]
+        case .publish(let intent): fields = intent.fields
         case .clear(let id, let generation):
             guard gatewayUUID(id), (0..<9_007_199_254_740_991).contains(generation) else {
                 throw GatewayAvatarMutationFailure.invalidInput
@@ -163,8 +206,8 @@ public struct GatewayAvatarOwnerSnapshot: Equatable, Sendable, CustomStringConve
             guard requestID == id, status != .uploading, status != .clearing else {
                 throw GatewayAvatarMutationFailure.invalidResponse
             }
-        case .publish(let id):
-            guard requestID == id, status == .published else {
+        case .publish(let intent):
+            guard intent.matches(self), status == .published else {
                 throw GatewayAvatarMutationFailure.invalidResponse
             }
         case .clear(let id, let previous):

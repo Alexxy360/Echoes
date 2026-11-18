@@ -1,5 +1,6 @@
 import { plain, publicUUID } from "./public-record-schema.mjs";
 import { avatarEdgeErrorResponse } from "./gateway-avatar-http.mjs";
+import { avatarPublicationKeys, validAvatarPublicationIntent } from "./avatar-publication-intent.mjs";
 
 export const avatarIntentHeader = "X-Echoes-Avatar-Intent";
 export const avatarUploadLimit = 256000;
@@ -14,10 +15,10 @@ function exact(value, keys) { return plain(value) && Object.keys(value).sort().j
 function id(value) { return typeof value === "string" && publicUUID.test(value); }
 export function avatarMutationInput(action, value) {
   const keys = { upload: ["requestID", "versionID", "expectedGeneration", "consentVersion"], clear: ["requestID", "expectedGeneration"],
-    recover: ["requestID"], publish: ["requestID"], status: [] }[action];
+    recover: ["requestID"], publish: avatarPublicationKeys, status: [] }[action];
   if (!keys || !exact(value, keys) || keys.includes("requestID") && !id(value.requestID) || keys.includes("versionID") && !id(value.versionID) ||
       keys.includes("expectedGeneration") && (!Number.isSafeInteger(value.expectedGeneration) || value.expectedGeneration < 0 || value.expectedGeneration >= Number.MAX_SAFE_INTEGER) ||
-      action === "upload" && value.consentVersion !== 1) throw new AvatarIntakeError("AVATAR_INPUT");
+      action === "upload" && value.consentVersion !== 1 || action === "publish" && !validAvatarPublicationIntent(value)) throw new AvatarIntakeError("AVATAR_INPUT");
   return Object.freeze({ ...value });
 }
 /** Headers bind one bounded JPEG to a closed intent, never an account, host, receipt or manifest. */

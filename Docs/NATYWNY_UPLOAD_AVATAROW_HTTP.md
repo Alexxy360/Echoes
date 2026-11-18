@@ -1,5 +1,7 @@
 # CK-04e.3j.2a — natywny kontrakt i transport uploadu zdjęcia
 
+Dokument opisuje pierwotny etap transportu. Aktualną pełną korelację publikacji po requestID/versionID/generation/reviewRevision oraz obowiązkowe consentVersion=1 wprowadza [CK-04e.3j.3c.4a](KONTRAKT_PUBLIKACJI_ZDJECIA.md); host i UI dodano w dalszych etapach.
+
 GatewayAvatarMutationHTTPClient obsługuje przygotowane [API serwera](HTTP_UPLOAD_AVATAROW.md): upload JPEG z intencją, recover, publish, clear i status. Jest domyślnie wyłączony i nie jest jeszcze tworzony przez Runtime/AppServices. To warstwa HTTP przed trwałym journalem i sterownikiem właściciela, nie gotowy ekran ustawiania zdjęcia ani zgoda na uruchomienie usługi.
 
 ## Zamknięte dane i potwierdzenia

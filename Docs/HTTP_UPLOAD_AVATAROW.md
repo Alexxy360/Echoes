@@ -1,5 +1,7 @@
 # CK-04e.3j.1 — ograniczony upload i odzyskiwanie zdjęcia przez HTTP
 
+Opis i wyniki pierwotnego etapu zachowano poniżej; bieżący kontrakt publish wzmocniono w [CK-04e.3j.3c.4a](KONTRAKT_PUBLIKACJI_ZDJECIA.md). Integrację journala, hosta i UI opisują dalsze etapy.
+
 Nowe API łączy publiczny edge, jeden prywatny CommunityAuthority, istniejący AvatarPublicationCoordinator, normalizację JPEG, szyfrowane potwierdzenia assetów i CAS wskazania profilu. Kontrolowana konfiguracja nadal ma `AVATAR_UPLOAD_ENABLED=0`. Kod i testy są lokalne; nie włączono usługi ani dostępu do rzeczywistych zdjęć użytkowników.
 
 ## Kontrakt aplikacji
@@ -10,7 +12,7 @@ Wszystkie operacje to POST HTTPS z pełnym bearerem bieżącej sesji, bez query/
 | --- | --- | --- |
 | `upload` | `Content-Type: image/jpeg`, do 256000 bajtów; nagłówek `X-Echoes-Avatar-Intent` do 512 znaków ASCII, zawierający JSON z dokładnie requestID, versionID, expectedGeneration, consentVersion=1 | Zapis/odzyskanie tej samej intencji; po sukcesie normalnie pending-review, bez automatycznej publikacji |
 | `recover` | JSON `{requestID}` | Odczyt zapisanej operacji i ewentualne dokończenie rekordu z istniejących potwierdzeń; bez ponawiania transferu plików |
-| `publish` | JSON `{requestID}` | CAS wskazania tylko po istniejącym zatwierdzeniu przez zaufanego operatora |
+| `publish` | JSON `{requestID, versionID, generation, reviewRevision, consentVersion: 1}` | CAS wskazania dla dokładnego wyboru i rewizji zatwierdzonej przez operatora; brak automatycznego przyjęcia nowszej oceny |
 | `clear` | JSON `{requestID, expectedGeneration}` | Cofnięcie wyboru/zgody i zapis pustego wskazania; nie jest fizycznym usunięciem historycznych plików |
 | `status` | JSON `{}` | Bieżący stan własnego zdjęcia |
 

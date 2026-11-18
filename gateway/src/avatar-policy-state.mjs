@@ -218,6 +218,7 @@ export class AvatarPolicyState {
   #publishLease(intent) {
     this.#current(intent); if (intent.kind !== "select") throw new AvatarPolicyError("AVATAR_STALE");
     const job = this.#job(intent.accountID, intent.requestID), descriptor = this.#descriptor(intent);
+    if (intent.reviewRevision !== undefined && intent.reviewRevision !== job.moderation_revision) throw new AvatarPolicyError("AVATAR_STALE");
     if (!validTag(job.staged_tag) || job.moderation_state === "pending") throw new AvatarPolicyError("AVATAR_PENDING");
     if (job.moderation_state !== "approved") throw new AvatarPolicyError("AVATAR_REJECTED");
     return Object.freeze({ ...intent, reviewRevision: job.moderation_revision, payloadHash: avatarDescriptorHash(descriptor), stagedTag: job.staged_tag });

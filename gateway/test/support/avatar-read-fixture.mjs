@@ -16,7 +16,7 @@ export async function avatarReadFixture(options = {}) {
   };
   const pending = await f.call("prepareUpload", f.upload());
   await f.call("prepareReview", f.review(pending));
-  const photo = await f.call("preparePublish", f.credentials({ requestID: pending.requestID }));
+  const photo = await f.call("preparePublish", f.credentials(f.publication()));
   const presenceBody = (changes = {}) => ({ requestID: randomUUID(), generation: 0, name: "Maja", coordinate, measuredAt: f.clock(), song: "", songID: "", ...changes });
   await callCommunity(f.signedIn, "publish", presenceBody());
   const downloadFetch = async (request, opts) => {

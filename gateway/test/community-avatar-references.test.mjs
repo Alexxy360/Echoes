@@ -91,7 +91,7 @@ test("a replacement never gets added to an already prepared response", async () 
     const finalize = await f.prepare(f.viewer, "nearby", { coordinate: f.coordinate });
     const next = await f.publicationCall("prepareUpload", f.upload());
     await f.publicationCall("prepareReview", f.review(next));
-    const published = await f.publicationCall("preparePublish", f.credentials({ requestID: next.requestID }));
+    const published = await f.publicationCall("preparePublish", f.credentials(f.publication()));
     await f.checkpoint.advance(); assert.equal(finalize().users[0].avatarVersionID, null);
     f.advance(3000);
     assert.equal((await f.call(f.viewer, "nearby", { coordinate: f.coordinate })).users[0].avatarVersionID, published.versionID);

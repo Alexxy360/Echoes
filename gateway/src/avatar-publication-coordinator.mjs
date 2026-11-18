@@ -1,6 +1,7 @@
 import { AvatarPolicyError } from "./avatar-policy-state.mjs";
 import { plain, publicUUID, digest } from "./public-record-schema.mjs";
 import { normalizedAvatarManifest } from "./avatar-normalizer.mjs";
+import { avatarPublicationKeys, validAvatarPublicationIntent } from "./avatar-publication-intent.mjs";
 
 /** Server-only orchestration. Public HTTP/upload admission and operator UI remain separate gates.
  * prepare methods return a synchronous finalizer for the host to call AFTER its last checkpoint.
@@ -96,9 +97,13 @@ export class AvatarPublicationCoordinator {
   async preparePublish(value = {}) {
     try {
       if (this.#withdrawalOnly) throw new AvatarPolicyError("AVATAR_SCOPE");
-      const o = this.#options(value, ["accessToken", "signal", "requestID"]), { accountID } = this.#identity(o);
+      const o = this.#options(value, ["accessToken", "signal", ...avatarPublicationKeys]), { accountID } = this.#identity(o);
+      const selected = Object.fromEntries(avatarPublicationKeys.map(key => [key, o[key]]));
+      if (!validAvatarPublicationIntent(selected)) throw new AvatarPolicyError("AVATAR_INPUT");
       await this.#checkpoint.verify({ signal: o.signal }); this.#identity(o, accountID);
-      return await this.#writePointer(o, this.#state.intent(accountID, o.requestID));
+      const intent = this.#state.intent(accountID, selected.requestID);
+      if (intent.versionID !== selected.versionID || intent.generation !== selected.generation) throw new AvatarPolicyError("AVATAR_STALE");
+      return await this.#writePointer(o, { ...intent, reviewRevision: selected.reviewRevision });
     } catch (e) { throw this.#error(e); }
   }
   async prepareClear(value = {}) {

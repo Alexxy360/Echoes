@@ -28,8 +28,8 @@
       "label": "upload-pending",
       "action": "upload",
       "input": {
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
-        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
         "expectedGeneration": 0,
         "consentVersion": 1
       },
@@ -43,18 +43,22 @@
       "body": {
         "protocolVersion": 1,
         "generation": 1,
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
-        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
         "publishedVersionID": null,
         "status": "pending-review",
-        "reviewRevision": "fe1e52ed-fe15-404e-8b8f-50af9cc991b0"
+        "reviewRevision": "c8956d6a-7d70-4669-96ea-c1e085afcfe1"
       }
     },
     {
       "label": "publish-pending",
       "action": "publish",
       "input": {
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
+        "generation": 1,
+        "reviewRevision": "c8956d6a-7d70-4669-96ea-c1e085afcfe1",
+        "consentVersion": 1
       },
       "status": 409,
       "headers": {
@@ -72,7 +76,7 @@
       "label": "recover-pending",
       "action": "recover",
       "input": {
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37"
       },
       "status": 200,
       "headers": {
@@ -84,11 +88,11 @@
       "body": {
         "protocolVersion": 1,
         "generation": 1,
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
-        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
         "publishedVersionID": null,
         "status": "pending-review",
-        "reviewRevision": "fe1e52ed-fe15-404e-8b8f-50af9cc991b0"
+        "reviewRevision": "c8956d6a-7d70-4669-96ea-c1e085afcfe1"
       }
     },
     {
@@ -105,18 +109,22 @@
       "body": {
         "protocolVersion": 1,
         "generation": 1,
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
-        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
         "publishedVersionID": null,
         "status": "approved",
-        "reviewRevision": "a3e34884-0016-4288-be58-1f230e626ee4"
+        "reviewRevision": "dcd6adea-0a34-47ca-a1c0-1e1c5eae40bd"
       }
     },
     {
       "label": "publish-published",
       "action": "publish",
       "input": {
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5"
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
+        "generation": 1,
+        "reviewRevision": "dcd6adea-0a34-47ca-a1c0-1e1c5eae40bd",
+        "consentVersion": 1
       },
       "status": 200,
       "headers": {
@@ -128,18 +136,18 @@
       "body": {
         "protocolVersion": 1,
         "generation": 1,
-        "requestID": "ae17dc19-1547-4551-b59e-c21a939fb6b5",
-        "versionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
-        "publishedVersionID": "58f5970c-20f9-44d2-86c1-817831c59d86",
+        "requestID": "f47e243e-7768-426a-a49f-b48825624d37",
+        "versionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
+        "publishedVersionID": "373ff5a0-5f5e-47b0-bb54-d41f635e85fe",
         "status": "published",
-        "reviewRevision": "a3e34884-0016-4288-be58-1f230e626ee4"
+        "reviewRevision": "dcd6adea-0a34-47ca-a1c0-1e1c5eae40bd"
       }
     },
     {
       "label": "clear-upload-disabled",
       "action": "clear",
       "input": {
-        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "requestID": "b4b7014f-8e17-49b6-9aab-a6d53cf1b723",
         "expectedGeneration": 1
       },
       "status": 200,
@@ -152,7 +160,7 @@
       "body": {
         "protocolVersion": 1,
         "generation": 2,
-        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "requestID": "b4b7014f-8e17-49b6-9aab-a6d53cf1b723",
         "versionID": null,
         "publishedVersionID": null,
         "status": "none",
@@ -173,7 +181,7 @@
       "body": {
         "protocolVersion": 1,
         "generation": 2,
-        "requestID": "f2e8dc5b-b0c1-4706-b7d6-c345b231c4aa",
+        "requestID": "b4b7014f-8e17-49b6-9aab-a6d53cf1b723",
         "versionID": null,
         "publishedVersionID": null,
         "status": "none",
@@ -184,8 +192,8 @@
       "label": "upload-disabled",
       "action": "upload",
       "input": {
-        "requestID": "8eb75aea-0a9f-4e6d-a54b-28fa838ea2a2",
-        "versionID": "95d632b0-af57-40ac-94c5-d4af6a12df0d",
+        "requestID": "c4157971-3441-42a5-841d-f6333fca5b7b",
+        "versionID": "a942cfa6-21c2-424b-b82d-cd11a24149c7",
         "expectedGeneration": 2,
         "consentVersion": 1
       },
@@ -205,7 +213,7 @@
       "label": "clear-stale",
       "action": "clear",
       "input": {
-        "requestID": "cbb4dbbd-ffce-411c-90a3-a64183273272",
+        "requestID": "abcfd8db-17f0-4582-b3d5-06f5bb26552c",
         "expectedGeneration": 0
       },
       "status": 409,

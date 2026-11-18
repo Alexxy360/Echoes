@@ -9,7 +9,7 @@ const photoWrite = call => call.operation === "modify" && call.body.operations[0
 const pause = () => { let resolve; const promise = new Promise(r => { resolve = r; }); return { promise, resolve }; };
 async function stage(f, input = f.upload()) { return f.call("prepareUpload", input); }
 async function approve(f, status) { await f.call("prepareReview", f.review(status)); return f.call("prepareStatus", f.credentials()); }
-async function publish(f, status) { return f.call("preparePublish", f.credentials({ requestID: status.requestID })); }
+async function publish(f, status) { return f.call("preparePublish", f.credentials(f.publication(status))); }
 
 test("actual pipeline persists consent and server descriptor, awaits review and writes an independent CloudKit photo profile", async () => {
   const f = await avatarPublicationFixture();
@@ -123,7 +123,8 @@ test("review rejection, reapproval and stale decision IDs cannot finish a previo
     assert.deepEqual(await f.call("prepareReview", body), review);
     let approved = f.policy.snapshot(f.signedIn.accountID), lease = f.policy.publishLease(f.policy.intent(f.signedIn.accountID, approved.requestID));
     await f.call("prepareReview", f.review(approved, "rejected"));
-    await assert.rejects(() => publish(f, approved), code("AVATAR_REJECTED"));
+    await assert.rejects(() => publish(f, approved), code("AVATAR_STALE"));
+    await assert.rejects(() => publish(f, f.policy.snapshot(f.signedIn.accountID)), code("AVATAR_REJECTED"));
     await assert.rejects(() => f.call("prepareReview", body), code("AVATAR_STALE"));
     approved = await approve(f, f.policy.snapshot(f.signedIn.accountID));
     assert.throws(() => f.policy.assertPublishCurrent(lease), code("AVATAR_STALE"));
@@ -147,7 +148,7 @@ test("a finalizer captured before clear cannot return an old publication as the 
   const f = await avatarPublicationFixture();
   try {
     const approved = await approve(f, await stage(f));
-    const final = await f.coordinator.preparePublish(f.credentials({ requestID: approved.requestID }));
+    const final = await f.coordinator.preparePublish(f.credentials(f.publication(approved)));
     await f.call("prepareClear", f.credentials({ requestID: randomUUID(), expectedGeneration: approved.generation }));
     assert.throws(() => final(), code("AVATAR_STALE"));
   } finally { f.close(); }
@@ -160,7 +161,7 @@ test("lost pointer acknowledgement reopens and publishes without new file upload
     f.setRecordHook(call => { if (photoWrite(call)) throw new Error("SYNTHETIC lost pointer response"); });
     await assert.rejects(() => publish(f, approved), code("AVATAR_UNAVAILABLE")); f.setRecordHook(undefined);
     assert.equal(f.policy.snapshot(f.signedIn.accountID).publishedVersionID, null);
-    const result = await f.call("preparePublish", f.credentials({ requestID: approved.requestID }), f.reopen());
+    const result = await f.call("preparePublish", f.credentials(f.publication(approved)), f.reopen());
     assert.equal(result.publishedVersionID, approved.versionID); assert.equal(f.assetCalls.length, 4);
   } finally { f.close(); }
 });
@@ -284,7 +285,7 @@ test("another application account cannot recover, publish or review the owner's 
     const pending = await stage(f), other = await f.session("synthetic.reader");
     const input = { accessToken: other.sessionToken, requestID: pending.requestID };
     await assert.rejects(() => f.call("prepareRecovery", input), code("AVATAR_STALE"));
-    await assert.rejects(() => f.call("preparePublish", input), code("AVATAR_STALE"));
+    await assert.rejects(() => f.call("preparePublish", { ...f.publication(pending), ...input }), code("AVATAR_STALE"));
     const status = await f.call("prepareStatus", { accessToken: other.sessionToken }); assert.equal(status.generation, 0); assert.equal(status.versionID, null);
     await assert.rejects(() => f.call("prepareReview", { ...f.review(pending), accessToken: other.sessionToken }), code("AVATAR_INPUT"));
     assert.equal(f.assetCalls.length, 4);

@@ -385,9 +385,12 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         }
     }
     public func publish() async throws {
+        let selected: GatewayAvatarPublishIntent? = snapshot.flatMap {
+            $0.status == .approved ? try? GatewayAvatarPublishIntent(snapshot: $0) : nil
+        }
         try await exclusive {
             let context = try self.bound()
-            guard let entry = try await self.pending(context), case .upload(let intent) = entry.intent else {
+            guard let entry = try await self.pending(context), case .upload = entry.intent else {
                 throw GatewayAvatarUploadJournalFailure.invalidTransition
             }
             let status = try await self.dispatch(.status, context: context, expected: entry)
@@ -399,12 +402,13 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
                 throw status.status == .rejected
                     ? GatewayAvatarMutationFailure.rejected : GatewayAvatarMutationFailure.pending
             }
+            guard let selected, selected.matches(status) else { throw GatewayAvatarMutationFailure.stale }
             guard let staged = try await self.pending(context) else {
                 throw GatewayAvatarUploadJournalFailure.superseded
             }
             let publishing = try await self.transition(staged, to: .publishing, context: context)
             let value = try await self.dispatch(
-                .publish(requestID: intent.requestID), context: context, expected: publishing)
+                .publish(intent: selected), context: context, expected: publishing)
             try await self.reconcile(value, entry: publishing, context: context)
         }
     }

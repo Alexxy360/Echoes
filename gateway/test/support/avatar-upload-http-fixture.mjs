@@ -59,7 +59,7 @@ export async function avatarUploadHTTPFixture({ runtime = false, readEnabled = f
   const body = (action, changes = {}) => {
     const state = f.policy.snapshot(f.signedIn.accountID), requestID = state.requestID ?? randomUUID();
     return { ...({ upload: { requestID: randomUUID(), versionID: randomUUID(), expectedGeneration: state.generation, consentVersion: 1 },
-      clear: { requestID: randomUUID(), expectedGeneration: state.generation }, recover: { requestID }, publish: { requestID }, status: {} }[action]), ...changes };
+      clear: { requestID: randomUUID(), expectedGeneration: state.generation }, recover: { requestID }, publish: f.publication(state), status: {} }[action]), ...changes };
   };
   const request = (action, changes = {}, options = {}) => {
     const value = body(action, changes), upload = action === "upload";

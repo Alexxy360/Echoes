@@ -14,6 +14,80 @@ let mutationHeaders = [
     "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
 ]
 
+private func publicationIntent() throws -> GatewayAvatarPublishIntent {
+    try .init(
+        requestID: mutationRequestID, versionID: mutationVersionID, generation: 1,
+        reviewRevision: mutationRevisionID)
+}
+
+@Test func avatarPublicationChoiceRejectsInvalidIDsGenerationAndConsentBeforeHTTP() throws {
+    for generation in [-1, 0, 9_007_199_254_740_991] {
+        #expect(throws: GatewayAvatarMutationFailure.invalidInput) {
+            try GatewayAvatarPublishIntent(
+                requestID: mutationRequestID, versionID: mutationVersionID,
+                generation: generation, reviewRevision: mutationRevisionID)
+        }
+    }
+    for field in ["requestID", "versionID", "reviewRevision", "consent"] {
+        #expect(throws: GatewayAvatarMutationFailure.invalidInput) {
+            try GatewayAvatarPublishIntent(
+                requestID: field == "requestID" ? "bad" : mutationRequestID,
+                versionID: field == "versionID" ? "bad" : mutationVersionID, generation: 1,
+                reviewRevision: field == "reviewRevision" ? "bad" : mutationRevisionID,
+                consentVersion: field == "consent" ? 0 : 1)
+        }
+    }
+}
+
+@Test func avatarPublicationWireCarriesExactMetadataAndRedactsReflection() throws {
+    let selected = try publicationIntent()
+    let operation = GatewayAvatarMutation.publish(intent: selected)
+    let wire = try operation.wire()
+    let body = try #require(JSONSerialization.jsonObject(with: wire.body) as? [String: Any])
+    #expect(
+        Set(body.keys) == Set(["requestID", "versionID", "generation", "reviewRevision", "consentVersion"]))
+    #expect(
+        body["requestID"] as? String == selected.requestID
+            && body["versionID"] as? String == selected.versionID)
+    #expect(
+        body["generation"] as? Int == selected.generation
+            && body["reviewRevision"] as? String == selected.reviewRevision)
+    #expect(body["consentVersion"] as? Int == 1 && wire.body.count <= 512 && wire.intentHeader == nil)
+    #expect(!selected.description.contains(selected.requestID) && selected.customMirror.children.isEmpty)
+}
+
+@Test func avatarPublicationAcknowledgementMustMatchVersionGenerationAndReviewRevision() async throws {
+    let selected = try publicationIntent()
+    for changes: [String: Any] in [
+        ["requestID": mutationVersionID], ["versionID": mutationRequestID],
+        ["generation": 2], ["reviewRevision": mutationRequestID], ["status": "approved"],
+    ] {
+        let response = try mutationResponse(mutationBody(.published).merging(changes) { _, value in value })
+        let transport = MutationHTTPStub(response)
+        await #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
+            try await mutationClient(transport).perform(.publish(intent: selected), token: mutationBearer)
+        }
+        #expect(await transport.requests.count == 1)
+    }
+}
+
+@Test func avatarPublicationHTTPUsesClosedJSONAndAcceptsOnlyExactPublishedSnapshot() async throws {
+    let selected = try publicationIntent()
+    let transport = MutationHTTPStub(try mutationResponse(mutationBody(.published)))
+    let result = try await mutationClient(transport).perform(
+        .publish(intent: selected), token: mutationBearer)
+    #expect(selected.matches(result) && result.status == .published)
+    let request = try #require(await transport.requests.first)
+    let bytes = try #require(request.httpBody)
+    let body = try #require(JSONSerialization.jsonObject(with: bytes) as? [String: Any])
+    #expect(
+        body["reviewRevision"] as? String == selected.reviewRevision && body["consentVersion"] as? Int == 1)
+    #expect(
+        request.url?.path == "/v1/community/avatar/publish"
+            && request.value(forHTTPHeaderField: "Content-Type") == "application/json; charset=utf-8")
+    #expect(await transport.uploads == [false])
+}
+
 func mutationBody(_ status: GatewayAvatarOwnerStatus = .pendingReview) -> [String: Any] {
     [
         "protocolVersion": 1, "generation": status == .none ? 0 : 1,
@@ -88,7 +162,14 @@ struct MutationWireFixture: Sendable {
                         expectedGeneration: #require(input["expectedGeneration"] as? Int),
                         consentVersion: #require(input["consentVersion"] as? Int)), image: source)
             case "recover": operation = .recover(requestID: try #require(input["requestID"] as? String))
-            case "publish": operation = .publish(requestID: try #require(input["requestID"] as? String))
+            case "publish":
+                operation = .publish(
+                    intent: try .init(
+                        requestID: #require(input["requestID"] as? String),
+                        versionID: #require(input["versionID"] as? String),
+                        generation: #require(input["generation"] as? Int),
+                        reviewRevision: #require(input["reviewRevision"] as? String),
+                        consentVersion: #require(input["consentVersion"] as? Int)))
             case "clear":
                 operation = .clear(
                     requestID: try #require(input["requestID"] as? String),
@@ -201,7 +282,7 @@ struct MutationWireFixture: Sendable {
     let intent = try GatewayAvatarUploadIntent(
         requestID: mutationRequestID, versionID: mutationVersionID, expectedGeneration: 0)
     for operation in [
-        GatewayAvatarMutation.recover(requestID: "bad"), .publish(requestID: "bad"),
+        GatewayAvatarMutation.recover(requestID: "bad"),
         .clear(requestID: mutationRequestID, expectedGeneration: -1), .upload(intent: intent, image: Data()),
         .upload(intent: intent, image: Data(repeating: 0, count: 256001)),
         .upload(intent: intent, image: Data([0xff, 0xd8, 0, 0])),
@@ -278,7 +359,12 @@ struct MutationWireFixture: Sendable {
     let pairs: [(GatewayAvatarMutation, [String: Any])] = [
         (.recover(requestID: mutationRevisionID), mutationBody()),
         (.recover(requestID: mutationRequestID), mutationBody(.clearing)),
-        (.publish(requestID: mutationRequestID), mutationBody(.approved)),
+        (
+            .publish(
+                intent: try GatewayAvatarPublishIntent(
+                    requestID: mutationRequestID, versionID: mutationVersionID, generation: 1,
+                    reviewRevision: mutationRevisionID)), mutationBody(.approved)
+        ),
         (.clear(requestID: mutationRequestID, expectedGeneration: 0), clear),
         (.clear(requestID: mutationRevisionID, expectedGeneration: 1), clear),
     ]
