@@ -1,6 +1,8 @@
 # Odbiór schematu retencji w Development — przygotowanie CK-05a.4
 
-Status: plan gotowy do porównania z rzeczywistym eksportem; **schemat nie został odczytany ani zmieniony**. `cktool export-schema` odmówił lokalnie z powodu braku management tokenu. Otwarta konsola Apple wymaga ponownego logowania właściciela. Nie utworzono tokenu ani nowego klucza.
+Status, 19 listopada 2026: po ponownym logowaniu właściciela **odczytano i wyeksportowano rzeczywisty schemat Development; nie zmieniono go w Apple**. W konsoli potwierdzono zespół `22YC9RAP4P`, kontener `iCloud.mpvEcho.Echo`, Development i publiczną bazę. Eksport ma 2356 bajtów, SHA-256 `869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27`; zawiera pięć istniejących typów, bez wszystkich ośmiu typów społecznościowych/checkpointu. Przygotowano [pełną propozycję i zakres zatwierdzenia](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md). Import, walidacja Apple i odbiór działania pozostają otwarte.
+
+Wcześniejsza próba `cktool export-schema` odmówiła lokalnie z powodu braku management tokenu. Eksport pobrano następnie przez zalogowaną konsolę; nie tworzono tokenu, klucza ani nie odczytywano pól rekordów użytkowników.
 
 Ten dokument nie jest plikiem do importu. Nie wolno zastępować nim pełnego schematu kontenera. Najpierw potrzebny jest bieżący eksport, ponieważ zawiera również istniejące typy diagnostyczne oraz prywatne i ich uprawnienia.
 

@@ -1,0 +1,76 @@
+{
+  "phase": "CK-05a.4a",
+  "dateEuropeWarsaw": "2026-11-19",
+  "status": "prepared locally; no remote validation or import",
+  "exportSource": "CloudKit Console Export Schema; team/container/development/public observed; no record contents read",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "runtimes": {
+    "node22": "22.23.5",
+    "node24": "24.22.1"
+  },
+  "tests": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-schema-node22.log",
+      "sha256": "4207dbef4b53b0ad005301f9445ae8c33c37e31090329855c7ae8ddcdec5a367",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-schema-node24.log",
+      "sha256": "592c5e7589bb67f750f1c77edeb159a83749c6a75ed53943dc91c92c52955add",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "coverage": [
+    "unchanged source types, indexes and grants; eight new types and empty service role",
+    "actual live, inactive, clear, deletion, retention, avatar metadata and checkpoint field serializers",
+    "actual regional Request fields, filters and sort descriptors",
+    "stop on existing community role/type, malformed input or duplicate definitions",
+    "reject proposal/source drift or added ordinary access",
+    "post-import semantic export comparison allows only known unindexed implicit system fields; rejects missing/extra types, fields, changed indexes or access"
+  ],
+  "syntax": {
+    "mjsFiles": 2,
+    "runtimes": [
+      "22.23.5",
+      "24.22.1"
+    ],
+    "jsonFiles": 2,
+    "passed": true
+  },
+  "filesSHA256": {
+    "gateway/scripts/prepare-community-schema.mjs": "ddbe74d2c92a0e0cc15d846506b1e2c418348525710915df742ed7e7e4f886aa",
+    "gateway/test/community-schema.test.mjs": "d55fa9135c09acb57643508f66e0979cbc39230ccdb268384b83658511ad3789",
+    "gateway/schema/development-export-20261119.ckdb": "869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27",
+    "gateway/schema/community-development-proposed.ckdb": "a5d491ea66ce111485cfd69393bcba3da873216e689dc0ce578d707e029edf55",
+    "Docs/evidence/community-development-schema-proposal.json": "034a21680c06ea164091865361db78c33443ff8e133671b66fa97c6d877e9878"
+  },
+  "remote": {
+    "schemaValidation": false,
+    "schemaImport": false,
+    "roleAssignment": false,
+    "recordOperations": false,
+    "newKeysOrSecrets": false,
+    "serviceDeploymentOrActivation": false,
+    "production": false
+  },
+  "notRerun": [
+    "unchanged product gateway full suite",
+    "Swift/iOS/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "Apple schema/index validation and read-back",
+    "regional query behavior",
+    "separate service identity and real A/B ACL",
+    "exact synthetic record/asset protocol acceptance",
+    "hosted alarms and Free resource measurements"
+  ]
+}

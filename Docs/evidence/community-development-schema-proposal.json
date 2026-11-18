@@ -1,0 +1,608 @@
+{
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "inputSHA256": "869adb25159e1575a2ed848b491b7170f5fe0c0e661716e60e4b9da49d747b27",
+  "proposedSHA256": "a5d491ea66ce111485cfd69393bcba3da873216e689dc0ce578d707e029edf55",
+  "preservedTypes": [
+    "EchoesAccessProbeV1",
+    "EchoesGatewayProbeV1",
+    "EchoesPrivateProfileV1",
+    "EchoesPrivateScopeV1",
+    "Users"
+  ],
+  "addedRole": "EchoesCommunityService",
+  "addedTypes": [
+    {
+      "name": "EchoesPublicProfileV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "name": {
+          "type": "STRING",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesPresenceV1",
+      "fields": {
+        "___recordID": {
+          "type": "REFERENCE",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        },
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE"
+          ]
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": [
+            "SORTABLE"
+          ]
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "active": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE"
+          ]
+        },
+        "generation": {
+          "type": "INT64",
+          "options": []
+        },
+        "name": {
+          "type": "STRING",
+          "options": []
+        },
+        "latitude": {
+          "type": "DOUBLE",
+          "options": []
+        },
+        "longitude": {
+          "type": "DOUBLE",
+          "options": []
+        },
+        "location": {
+          "type": "LOCATION",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        },
+        "song": {
+          "type": "STRING",
+          "options": []
+        },
+        "songID": {
+          "type": "STRING",
+          "options": []
+        },
+        "expiresAt": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesLocalMessageV1",
+      "fields": {
+        "___recordID": {
+          "type": "REFERENCE",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        },
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE"
+          ]
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "name": {
+          "type": "STRING",
+          "options": []
+        },
+        "text": {
+          "type": "STRING",
+          "options": []
+        },
+        "latitude": {
+          "type": "DOUBLE",
+          "options": []
+        },
+        "longitude": {
+          "type": "DOUBLE",
+          "options": []
+        },
+        "location": {
+          "type": "LOCATION",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        },
+        "expiresAt": {
+          "type": "INT64",
+          "options": [
+            "QUERYABLE",
+            "SORTABLE"
+          ]
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesBlockV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "targetID": {
+          "type": "STRING",
+          "options": []
+        },
+        "blocked": {
+          "type": "INT64",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesReportV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "messageID": {
+          "type": "STRING",
+          "options": []
+        },
+        "reason": {
+          "type": "STRING",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesAvatarV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "normalizationVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "versionID": {
+          "type": "STRING",
+          "options": []
+        },
+        "moderationState": {
+          "type": "STRING",
+          "options": []
+        },
+        "image": {
+          "type": "ASSET",
+          "options": []
+        },
+        "imageByteCount": {
+          "type": "INT64",
+          "options": []
+        },
+        "imageWidth": {
+          "type": "INT64",
+          "options": []
+        },
+        "imageHeight": {
+          "type": "INT64",
+          "options": []
+        },
+        "imageSha256": {
+          "type": "STRING",
+          "options": []
+        },
+        "thumbnail": {
+          "type": "ASSET",
+          "options": []
+        },
+        "thumbnailByteCount": {
+          "type": "INT64",
+          "options": []
+        },
+        "thumbnailWidth": {
+          "type": "INT64",
+          "options": []
+        },
+        "thumbnailHeight": {
+          "type": "INT64",
+          "options": []
+        },
+        "thumbnailSha256": {
+          "type": "STRING",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesAvatarProfileV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "versionID": {
+          "type": "STRING",
+          "options": []
+        },
+        "generation": {
+          "type": "INT64",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "EchoesRegistryCheckpointV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "registryID": {
+          "type": "STRING",
+          "options": []
+        },
+        "anchorID": {
+          "type": "STRING",
+          "options": []
+        },
+        "parentAnchorID": {
+          "type": "STRING",
+          "options": []
+        },
+        "registeredCount": {
+          "type": "INT64",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    }
+  ],
+  "remoteValidation": "not performed",
+  "remoteImport": false,
+  "roleAssignments": [],
+  "dataOperations": []
+}
