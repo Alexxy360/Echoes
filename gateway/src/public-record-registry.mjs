@@ -1,6 +1,7 @@
-import { PublicRecordError, publicUUID, recordIdentity, recordIdentityFromKey, validTag } from "./public-record-schema.mjs";
+import { PublicRecordError, publicUUID, publicRecordName, recordIdentity, recordIdentityFromKey, validTag } from "./public-record-schema.mjs";
 import { randomUUID } from "node:crypto";
 import { validCheckpoint, sameCheckpoint } from "./public-registry-checkpoint.mjs";
+import { publicRetentionDeadline, publicRetentionIntentKey, publicRetentionLeaseMilliseconds, publicRetentionSchema } from "./public-retention-policy.mjs";
 
 const schema = [
   `CREATE TABLE IF NOT EXISTS public_records_v1 (
@@ -34,7 +35,7 @@ export class PublicRecordRegistry {
       const existed = this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='public_records_v1'").length;
       if (existed && !this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='avatar_asset_transfers_v1'").length &&
           this.#rows("SELECT record_name FROM public_records_v1 WHERE kind='avatar' LIMIT 1").length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
-      for (const statement of schema) storage.sql.exec(statement);
+      for (const statement of [...schema, ...publicRetentionSchema]) storage.sql.exec(statement);
       if (!this.#rows("PRAGMA table_info(public_records_v1)").some(row => row.name === "asset_claims")) {
         // NULL marks legacy avatar attempts: unknown claim history cannot safely authorize new uploads.
         storage.sql.exec("ALTER TABLE public_records_v1 ADD COLUMN asset_claims INTEGER CHECK(asset_claims IS NULL OR asset_claims IN (0,1,2,3))");
@@ -154,6 +155,33 @@ export class PublicRecordRegistry {
       expectedTag: row.expected_tag, recordTag: row.record_tag, generation: row.generation,
       createdAt: row.created_at, startedAt: row.started_at });
   }
+  #retention(context) {
+    const dueAt = publicRetentionDeadline(context);
+    if (dueAt === null) return null;
+    const row = this.#rows("SELECT * FROM public_retention_v1 WHERE record_name=?", context.recordName)[0];
+    if (row && (row.intent_key !== publicRetentionIntentKey(context) || row.due_at !== dueAt ||
+        !["pending", "fencing", "fenced"].includes(row.state) ||
+        (row.state === "fencing" ? !publicUUID.test(row.lease_id ?? "") || !Number.isSafeInteger(row.lease_at) || row.lease_at < 0 :
+          row.lease_id !== null || row.lease_at !== null) ||
+        (row.state === "fenced" ? !validTag(row.fence_tag) || context.kind !== "presence" || context.phase !== "settled" ||
+          context.recordTag !== row.fence_tag : row.fence_tag !== null))) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    return row;
+  }
+  #enqueueRetention(context) {
+    const dueAt = publicRetentionDeadline(context);
+    if (dueAt === null) return;
+    if (context.startedAt > this.#now() || dueAt <= this.#now()) throw new PublicRecordError("PUBLIC_ERASED");
+    this.#storage.sql.exec(`INSERT INTO public_retention_v1(record_name,intent_key,due_at,state) VALUES(?,?,?,'pending')
+      ON CONFLICT(record_name) DO UPDATE SET intent_key=excluded.intent_key,due_at=excluded.due_at,
+      state='pending',lease_id=NULL,lease_at=NULL,fence_tag=NULL`, context.recordName, publicRetentionIntentKey(context), dueAt);
+  }
+  #assertRetentionWritable(context, sameRequest = true) {
+    const dueAt = publicRetentionDeadline(context);
+    if (dueAt === null) return;
+    const row = this.#retention(context);
+    if (row?.state === "fencing") throw new PublicRecordError("PUBLIC_PENDING");
+    if (sameRequest && (row?.state === "fenced" || context.startedAt > this.#now() || dueAt <= this.#now())) throw new PublicRecordError("PUBLIC_ERASED");
+  }
   async reserve({ accountID, kind, logicalID, requestID, payloadHash, expectedTag = null } = {}) {
     const identity = recordIdentity(accountID, kind, logicalID), now = this.#now();
     if (!publicUUID.test(requestID ?? "") || typeof payloadHash !== "string" || !/^[a-f0-9]{64}$/.test(payloadHash) ||
@@ -163,6 +191,7 @@ export class PublicRecordRegistry {
       if (previous) {
         const old = this.#context(previous);
         if (["erasing", "erased"].includes(old.phase)) throw new PublicRecordError("PUBLIC_ERASED");
+        this.#assertRetentionWritable(old, old.requestID === requestID);
         if (old.requestID === requestID) {
           if (old.payloadHash !== payloadHash || old.expectedTag !== expectedTag) throw new PublicRecordError("PUBLIC_CONFLICT");
           this.#storage.sql.exec("UPDATE public_records_v1 SET generation=? WHERE record_name=?", generation, identity.recordName);
@@ -186,13 +215,15 @@ export class PublicRecordRegistry {
           payload_hash,expected_tag,record_tag,generation,created_at,started_at,asset_claims) VALUES(?,?,?,?,'pending',?,?,NULL,NULL,?,?,?,0)`,
         identity.recordName, accountID, kind, identity.logicalKey, requestID, payloadHash, generation, now, now);
       }
-      return this.#context(this.#row(identity.recordName));
+      const context = this.#context(this.#row(identity.recordName));
+      this.#enqueueRetention(context); return context;
     });
     await this.#durable(); return result;
   }
   #mutation(context) {
     const row = this.#context(this.#row(context?.recordName));
     if (row.accountID !== context.accountID || ["erasing", "erased"].includes(row.phase)) throw new PublicRecordError("PUBLIC_ERASED");
+    this.#assertRetentionWritable(row);
     this.#active(row.accountID, context.generation);
     if (row.generation !== context.generation || row.requestID !== context.requestID || row.payloadHash !== context.payloadHash ||
         row.expectedTag !== context.expectedTag) throw new PublicRecordError("PUBLIC_CONFLICT");
@@ -334,6 +365,8 @@ export class PublicRecordRegistry {
       const row = this.#row(name);
       if (!row || row.kind !== kind || row.phase !== "settled") return null;
       const context = this.#context(row);
+      const dueAt = publicRetentionDeadline(context), retention = this.#retention(context);
+      if (dueAt !== null && (context.startedAt > this.#now() || dueAt <= this.#now() || retention && retention.state !== "pending")) return null;
       if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=0", row.account_id).length) return null;
       return context;
     });
@@ -355,6 +388,7 @@ export class PublicRecordRegistry {
       if (!row) return null;
       const context = this.#context(row);
       if (["erasing", "erased"].includes(context.phase)) throw new PublicRecordError("PUBLIC_ERASED");
+      this.#assertRetentionWritable(context, context.requestID === value.requestID);
       if (context.requestID === value.requestID && context.payloadHash !== value.payloadHash) throw new PublicRecordError("PUBLIC_CONFLICT");
       return context;
     });
@@ -365,10 +399,12 @@ export class PublicRecordRegistry {
       const current = this.#context(this.#row(identity.recordName));
       if (["erasing", "erased"].includes(current.phase) || current.requestID !== old.requestID || current.payloadHash !== old.payloadHash ||
           current.expectedTag !== old.expectedTag || current.recordTag !== old.recordTag) throw new PublicRecordError("PUBLIC_CONFLICT");
+      this.#assertRetentionWritable(current, current.requestID === value.requestID);
       this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='pending',request_id=?,payload_hash=?,expected_tag=?,
         generation=?,started_at=? WHERE record_name=?`, value.requestID, value.payloadHash, value.expectedTag,
       this.#active(value.accountID), old.requestID === value.requestID ? old.startedAt : this.#now(), identity.recordName);
-      return this.#context(this.#row(identity.recordName));
+      const context = this.#context(this.#row(identity.recordName));
+      this.#enqueueRetention(context); return context;
     });
     await this.#durable(); return result;
   }
@@ -382,6 +418,79 @@ export class PublicRecordRegistry {
     });
     await this.#durable();
     return this.assertMutationCurrent(context);
+  }
+  /** Bounded migration from the trusted registry, including attempts with unknown provider outcomes. */
+  async backfillRetention(maximumRecords = 100) {
+    if (!Number.isInteger(maximumRecords) || maximumRecords < 1 || maximumRecords > 100) throw new PublicRecordError("PUBLIC_INPUT");
+    const count = this.#tx(() => {
+      const rows = this.#rows(`SELECT p.* FROM public_records_v1 p LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name
+        WHERE p.kind IN ('presence','message','report') AND p.phase IN ('pending','settled') AND r.record_name IS NULL
+        ORDER BY p.record_name LIMIT ?`, maximumRecords);
+      for (const row of rows) {
+        const context = this.#context(row);
+        this.#storage.sql.exec("INSERT INTO public_retention_v1(record_name,intent_key,due_at,state) VALUES(?,?,?,'pending')",
+          context.recordName, publicRetentionIntentKey(context), publicRetentionDeadline(context));
+      }
+      return rows.length;
+    });
+    await this.#durable(); return count;
+  }
+  /** Fair, durable leases. No CloudKit permission or HTTP route is granted by this local API. */
+  async claimExpiredRecords(maximumRecords = 25) {
+    if (!Number.isInteger(maximumRecords) || maximumRecords < 1 || maximumRecords > 25) throw new PublicRecordError("PUBLIC_INPUT");
+    await this.backfillRetention();
+    const leases = this.#tx(() => {
+      const now = this.#now();
+      if (!Number.isSafeInteger(now + publicRetentionLeaseMilliseconds)) throw new PublicRecordError();
+      const cursor = this.#rows("SELECT record_name FROM public_retention_cursor_v1 WHERE singleton=1")[0]?.record_name;
+      if (typeof cursor !== "string" || cursor !== "" && !publicRecordName.test(cursor)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      const select = after => this.#rows(`SELECT p.* FROM public_records_v1 p JOIN public_retention_v1 r ON r.record_name=p.record_name
+        JOIN auth_accounts_v1 a ON a.account_id=p.account_id WHERE a.disabled=0 AND p.phase IN ('pending','settled')
+        AND r.due_at<=? AND (r.state='pending' OR (r.state='fencing' AND r.lease_at+?<=?))
+        AND p.record_name>? ORDER BY p.record_name LIMIT ?`, now, publicRetentionLeaseMilliseconds, now, after, maximumRecords);
+      let rows = select(cursor);
+      if (!rows.length && cursor !== "") rows = select("");
+      const result = rows.map(row => {
+        const context = this.#context(row), retention = this.#retention(context);
+        if (!retention || context.startedAt > now || publicRetentionDeadline(context) > now) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        const leaseID = randomUUID();
+        this.#storage.sql.exec("UPDATE public_retention_v1 SET state='fencing',lease_id=?,lease_at=?,fence_tag=NULL WHERE record_name=?", leaseID, now, context.recordName);
+        return Object.freeze({ context, leaseID, leasedAt: now, expiresAt: now + publicRetentionLeaseMilliseconds });
+      });
+      if (rows.length) this.#storage.sql.exec("UPDATE public_retention_cursor_v1 SET record_name=? WHERE singleton=1", rows.at(-1).record_name);
+      return Object.freeze(result);
+    });
+    await this.#durable();
+    for (const lease of leases) this.assertRetentionCurrent(lease);
+    return leases;
+  }
+  #retentionLease(lease) {
+    if (!publicRecordName.test(lease?.context?.recordName ?? "") || !publicUUID.test(lease?.leaseID ?? "")) throw new PublicRecordError("PUBLIC_SCOPE");
+    const context = this.#context(this.#row(lease.context.recordName)), retention = this.#retention(context), now = this.#now();
+    this.#active(context.accountID);
+    if (!["pending", "settled"].includes(context.phase) || !retention || retention.state !== "fencing" ||
+        retention.intent_key !== publicRetentionIntentKey(lease.context) || retention.lease_id !== lease.leaseID ||
+        retention.lease_at !== lease.leasedAt || lease.expiresAt !== retention.lease_at + publicRetentionLeaseMilliseconds ||
+        now < retention.lease_at || now >= lease.expiresAt || retention.due_at > now) throw new PublicRecordError("PUBLIC_SCOPE");
+    return context;
+  }
+  assertRetentionCurrent(lease) { return this.#tx(() => this.#retentionLease(lease)); }
+  /** Caller must first verify exact content-free CloudKit fields and change tag. */
+  async completeRetention(lease, recordTag) {
+    if (!validTag(recordTag)) throw new PublicRecordError("PUBLIC_RESPONSE");
+    this.#tx(() => {
+      const context = this.#retentionLease(lease);
+      if (context.kind === "presence") {
+        // Keep the singleton reusable, but only a fresh intent can replace its confirmed fence.
+        this.#storage.sql.exec("UPDATE public_records_v1 SET phase='settled',record_tag=? WHERE record_name=?", recordTag, context.recordName);
+        this.#storage.sql.exec("UPDATE public_retention_v1 SET state='fenced',lease_id=NULL,lease_at=NULL,fence_tag=? WHERE record_name=?", recordTag, context.recordName);
+      } else {
+        this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
+          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=? WHERE record_name=?`, recordTag, context.recordName);
+        this.#storage.sql.exec("DELETE FROM public_retention_v1 WHERE record_name=?", context.recordName);
+      }
+    });
+    await this.#durable();
   }
   #deletion(context) {
     if (!publicUUID.test(context?.accountID ?? "") || !publicUUID.test(context?.deletionID ?? "") ||
@@ -420,6 +529,7 @@ export class PublicRecordRegistry {
           receipt_hash=NULL,file_checksum_hash=NULL,receipt_envelope=NULL,receipt_expires_at=NULL,started_at=0 WHERE record_name=?`, name);
         this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
           expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=? WHERE record_name=?`, tag, name);
+        this.#storage.sql.exec("DELETE FROM public_retention_v1 WHERE record_name=?", name);
       }
     });
     await this.#durable();

@@ -1,0 +1,109 @@
+{
+  "stage": "CK-05a.1",
+  "createdAt": "2026-11-18T14:52:51.263371+00:00",
+  "baselineCommit": "da59c542657cbd4c047d7280c565aa6b05e5e4d9",
+  "runs": {
+    "node22": {
+      "tests": 553,
+      "passed": 553,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-retention-state-accepted-node22.log",
+      "SHA256": "45c278b66262b85c1259d8456a906525378890a633b422e46489c892d1ad9fc0"
+    },
+    "node24": {
+      "tests": 553,
+      "passed": 553,
+      "failed": 0,
+      "skipped": 0,
+      "log": "/private/tmp/echoes-retention-state-accepted-node24.log",
+      "SHA256": "8911463a409dd38bff68b2397a0b3b720929910ba8d074b4c3cf173cc35d7f6b"
+    }
+  },
+  "newFunctions": [
+    "retention derives server lifetimes only for presence, messages and reports and rejects overflow",
+    "a durable reservation queues metadata without public content and retries never extend the deadline",
+    "expired records are hidden and cannot dispatch or settle even before queue backfill",
+    "backfill is bounded and excludes persistent profiles, blocks and avatar versions",
+    "claims are due-only, bounded and exclusive and start at the exact lifetime boundary",
+    "expired or rolled-back leases cannot complete and a new claim invalidates the old token",
+    "retiring presence blocks delayed settlement and all fresh intents until its exact fence is confirmed",
+    "a new presence intent replaces only its own pending expiry and cannot inherit a previous request deadline",
+    "immutable expiry preserves consumed identities and quota fences and never erases an unrelated record",
+    "reports expire after thirty days while messages expire after two hours without requiring a live session",
+    "claim durability failure cannot expose a usable lease and preserves the consumed slot for later recovery",
+    "account deletion takes precedence, invalidates existing leases and removes their local queue rows",
+    "lease substitution across records and mismatched private projections fail closed",
+    "an account disabled during claim durability cannot receive the prepared lease",
+    "fair cursor and leases survive a file-backed SQLite reopen and do not starve later records"
+  ],
+  "newFunctionCount": 15,
+  "sourceSHA256": {
+    "gateway/src/public-record-registry.mjs": "9aa10f9d9c72c98e484f9c2cb064c946111efd123c909650d133ab053132e8a2",
+    "gateway/src/public-retention-policy.mjs": "bf2a393ad37305ea30a43efa4d585357ea2f433332de2b55f561aa7412b9df70",
+    "gateway/test/public-retention-state.test.mjs": "ce9633d431729b5934e775b61e9568d22ea76a73dd108731d20f7baeb55f4c5e"
+  },
+  "negativeControl": {
+    "failedTests": 1,
+    "expectedFailure": true,
+    "removed": "dueAt barrier in readable with missing legacy queue row",
+    "log": "/private/tmp/echoes-retention-state-negative.log",
+    "logSHA256": "2c9caa5af26579bc88f641b26e0cca04a4179335a205a5ec3639fe6ef2bf4a8b",
+    "productionSourcesPreserved": true,
+    "sameExactTestCaseInAcceptedVersion": true,
+    "caseSHA256": "b837847110e9529d3fcd23f42ec6ad5ca721449af878e2f64ce50d0162fa89ec",
+    "originalTestFileSHA256": "059a5a7c064074a5668e9e2ab8c7013cb44bdcc298c8821bb616b863290726f6",
+    "acceptedTestHasOneAdditionalAccountRaceCase": true
+  },
+  "syntax": {
+    "v22.23.5": 125,
+    "v24.22.1": 125
+  },
+  "parsedJSONFiles": 2,
+  "newTestsStorage": "real local SQLite via node:sqlite; account/provider models",
+  "fullRegressionIncludesExistingLocalWorkerd": true,
+  "newRetentionProcessorWorkerdAcceptance": false,
+  "policyMilliseconds": {
+    "presence": 600000,
+    "message": 7200000,
+    "report": 2592000000
+  },
+  "bounds": {
+    "backfillReturnedRows": 100,
+    "leaseBatch": 25,
+    "leaseMilliseconds": 60000,
+    "controlledAccountRecordIdentities": 1000,
+    "controlledGlobalRecordIdentities": 10000
+  },
+  "fenceSemantics": "Content-free CloudKit fence contract prepared; no remote fence was written in this stage.",
+  "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "unchanged": [
+    "iOS",
+    "EchoesCloudKit",
+    "EchoesCore",
+    "dependencies",
+    "CI",
+    "activation configuration"
+  ],
+  "notRerun": [
+    "native unit tests",
+    "UI tests",
+    "Debug/Release app builds"
+  ],
+  "remoteOperations": false,
+  "newSecretsOrPermissions": false,
+  "fees": false,
+  "ProductionChanges": false,
+  "FirebaseChanges": false,
+  "TestFlightPublication": false,
+  "openWork": [
+    "CloudKit processor and complete response validation",
+    "late provider IO and retained slot",
+    "account deletion/presence tombstone interoperability",
+    "alarm/quotas/explicit disabled flag",
+    "asset orphan retention and confidential report operations",
+    "real Free/schema/roles/two accounts",
+    "remaining migration and TestFlight gates"
+  ]
+}
