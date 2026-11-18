@@ -1,0 +1,119 @@
+{
+  "stage": "CK-04e.3j.3c.4c.1",
+  "createdAt": "2026-11-18T09:17:00.737793+00:00",
+  "baselineCommit": "297bd6c8e9b45822e0d7a0404f4bbddc26c6b56c",
+  "scope": "Server-only protected approved-owner JPEG preview; source-free publication UI remains closed.",
+  "fullGateway": {
+    "node22": {
+      "defined": 538,
+      "passed": 538,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "defined": 538,
+      "passed": 538,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "newTestFunctions": 20,
+  "newTestNames": [
+    "owner preview reads approved ready=0 JPEG without GPS, pointer, moderator or publication",
+    "concrete owner-preview runtime and fixed edge preserve exact selection and omit all provider authority",
+    "owner preview accepts a closed exact approved tuple and no owner, URL, GPS, hash or consent",
+    "owner preview never lets another native account select the author's staged photo",
+    "preview activation is separate, default closed, and validates exact hosts and dependencies",
+    "owner preview rejects malformed media, bearer, headers and bounded bodies before checkpoint",
+    "owner preview shares persistent image quota before body/checkpoint even across handler restart",
+    "owner preview rechecks moderation, clear, session and flags at download and final response",
+    "owner preview performs its last policy check after HTTP has buffered the JPEG",
+    "owner preview rejects provider redirects, wrong hashes, truncated bodies and unverified hosts",
+    "owner preview correlates the full closed proof and image on both response boundaries",
+    "owner reader retains admission after timed-out lookup until the ignored dependency settles",
+    "owner HTTP admission remains held through an ignored checkpoint after its total timeout",
+    "owner edge rejects an authority response for a different review selection",
+    "owner edge retains admission after cancellation until an ignoring authority returns",
+    "owner preview denies pending/rejected content without provider reads",
+    "owner preview denies clock rollback and changed asset commitment at finalization",
+    "owner preview rejects endless/zero/tiny or over-limit body chunks before checkpoint",
+    "owner preview edge bounds errors, enforces code/status, and strips private headers",
+    "actual local workerd returns the owner's approved unpublished JPEG with moderator and upload disabled"
+  ],
+  "static": {
+    "mjsCheckedEach": 122,
+    "configJSONParsed": 2,
+    "versions": {
+      "node22": "v22.23.5",
+      "node24": "v24.22.1"
+    },
+    "negativeOriginalsPreserved": true
+  },
+  "checked": [
+    "owner derived from synchronous native session; no request owner/GPS/URL/cache/consent or moderator role",
+    "approved current exact request/version/generation/reviewRevision, including ready=0 with absent public pointer record",
+    "closed512B input, full256000B/512px JPEG/manifest/selection; no204/provider headers/cache or publication writes",
+    "current approval/session/activation/commitments after await and during download; final policy recheck after HTTP buffering",
+    "default0 separate flag, strict Development dependencies/exact hosts, withdrawal with only preview enabled",
+    "global/IP heavy budget and persistent shared account12/image4 per minute before authority body/checkpoint/provider",
+    "reader8s/authority12s/edge15s with retained single admission across ignoring dependency timeout/cancel",
+    "bounded2048B error JSON, closed keys, valid code/status, no private cookies/URLs",
+    "pending/rejected/foreign tuple, revision/clear/session/flag races, corruption/redirect/host/length, rollback/commitment and malformed streams"
+  ],
+  "actualComponents": [
+    "real local workerd edge/private Authority/Runtime/SQLite/Wasm and independently verified S2S signatures",
+    "real normalized JPEG upload/moderation/owner preview after disabling upload and reviewer role, unchanged approved-unpublished state and clear",
+    "full local Node22/Node24 suites and isolated negative control"
+  ],
+  "modeledComponents": [
+    "Apple/CloudKit provider, platform metadata and all account/session identities",
+    "loopback workerd with outbound deny is not hosted Cloudflare Free availability/limits or two actual ordinary iCloud accounts"
+  ],
+  "negativeControl": {
+    "isolatedCopy": true,
+    "removed": "last current approved selection barrier in owner reader revalidation",
+    "expectedFailedTests": 1,
+    "originalSourceTestHashesPreserved": true
+  },
+  "knownLimits": [
+    "native preview API/transport/opaque current image/display ACK and explicit confirmation still required; UI publication without journal remains closed",
+    "selection header is response correlation, not an authorization grant or proof that a person viewed pixels",
+    "a response already delivered cannot be remotely erased; native lifecycle/scope/expiry fences remain required",
+    "edge rejects malformed bounded input before Authority budget; not a guarantee against all requests/costs to a platform account",
+    "real schema/roles/hosts/SIWA/separate service identity/hosted Free/two ordinary accounts remain unaccepted",
+    "physical Keychain/FileProtection/locked-device/PhotosPicker/iCloud Photos, reports/contact/retention and other migration remain open",
+    "previous UI frame warnings unresolved; standard entry Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote deployment/activation/schema/roles/new credentials/permissions/paid services",
+    "physical phone SDK or new test windows",
+    "Production/TestFlight/Firebase changes",
+    "unchanged native/Core/UI/dependency/CI retesting"
+  ],
+  "sourceDocsSHA256": {
+    "gateway/src/avatar-policy-state.mjs": "8a46b4476dcbdfcd2858e43b8dde48a4422b1ec7f684380c715df3a186a8ead1",
+    "gateway/src/gateway-http.mjs": "69d83dc4d4c29d12a2e8c3d6781da06329b6777c1837bc7dfb99d889939a7f56",
+    "gateway/src/gateway-runtime.mjs": "006fdb0460158efd09eeff192f14c1b741a24fc3e793318f469d86ed0a8d6a12",
+    "gateway/src/avatar-owner-preview-http.mjs": "0fd0921cdeef80c16a38363c2c091e93cc8d99f1a6d4ccd8ee52c73009bfe31a",
+    "gateway/src/cloudkit-avatar-owner-preview.mjs": "e3be39bd017f1852b8f5ea873330472c81edd0f2d22567370395b7c8966de154",
+    "gateway/src/gateway-avatar-owner-preview.mjs": "2584dfe3a2ff03ea5aa9ae2b22ab4a038af1f4c93c4cc592ff63be5c49959762",
+    "gateway/test/avatar-owner-preview.test.mjs": "6868d8c060ee7cc7db954b7ebea16182e018f97582485ab87ce2f01b35b22809",
+    "gateway/test/support/avatar-owner-preview-fixture.mjs": "bbd5632b20d432f75f9b7a3d6c4255375597a781608c6af1f3e76d0def81048d",
+    "gateway/test/avatar-review-workerd.test.mjs": "2aab4275582680aadc9e2a9d0abbcb3a814f98ff1732a7dbdcd6e5cbfcb82622",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "f5f0b7c90a8bb0406962b1dc63a4fbdefd4befeebfcb2dc15d00bf86ca1d036d",
+    "gateway/wrangler.community.jsonc": "529b10680923694858b90fc13848236acbcafd671260e075ec91916eb2d7a9a5",
+    "Docs/PODGLAD_ZATWIERDZONEGO_ZDJECIA_AUTORA.md": "b7a8ddf5bca79d976dda10fc586fac63d91306c8f8e6aff67abb9491fe3212f3",
+    "Docs/PUBLIKACJA_METADANYCH_IOS.md": "9f8312137af96abda2b2149fde0862049df0fc99695e3eb446fac3a7bc43276f",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "c89ae8ed392e049c77a72c51f9dba1bf6a0aebc96107570c4d86f387a3a1894e",
+    "Docs/PLAN_AVATAROW_CLOUDKIT.md": "479ebb472a72f9b9d064fb909e07efc3d915eb5df50c11e1258143de635d6281",
+    "Docs/DZIENNIK_ZMIAN.md": "6a5ec0a33677de7f5fc52daff401bb6a25976d144d25e6c5467a5047344746fb"
+  },
+  "localLogSHA256": {
+    "echoes-owner-preview-final-node22.log": "ecc1d5857ca2560b1c4ea41eb6ebc6a36f685efa728addeabdf5698fbc3c2ba2",
+    "echoes-owner-preview-final-node24.log": "e6be542420cc7f6d3ed6e9718e2cabd404079061d112f591d5391349116528ab",
+    "echoes-owner-preview-negative.log": "662387e4d38598026ac93bf311eef257bb057528aee162faf475b6a59193a44e",
+    "echoes-owner-preview-static.json": "359028bd8eb336cec96573b710b8108addc0841b89c1e22f9ed9c45017240042"
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

@@ -11,11 +11,14 @@ import { createAvatarUploadHandler } from "./gateway-avatar-upload.mjs";
 import { AvatarReviewError } from "./avatar-review-state.mjs";
 import { avatarReviewPaths } from "./avatar-review-http.mjs";
 import { createAvatarReviewHandler } from "./gateway-avatar-review.mjs";
+import { avatarOwnerPreviewPath } from "./avatar-owner-preview-http.mjs";
+import { createAvatarOwnerPreviewHandler } from "./gateway-avatar-owner-preview.mjs";
 
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
   "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
 for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
 gatewayPaths.add(avatarReadPath);
+gatewayPaths.add(avatarOwnerPreviewPath);
 for (const path of [...avatarMutationPaths.keys(), ...avatarReviewPaths.keys()]) gatewayPaths.add(path);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
@@ -151,6 +154,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
   avatarPublication, isAvatarUploadEnabled = () => false, avatarUploadTimeoutMilliseconds = 20000,
   avatarWithdrawal = avatarPublication, isAvatarWithdrawalEnabled = isAvatarUploadEnabled,
   avatarReview, isAvatarReviewEnabled = () => false, isAvatarReviewer = () => false, reviewTimeoutMilliseconds = 12000, clock = Date.now,
+  avatarOwnerPreview, isAvatarOwnerPreviewEnabled = () => false, previewTimeoutMilliseconds = 12000,
   limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
   let activeAvatar = 0;
   if (typeof authentication?.issueChallenge !== "function" || typeof login?.login !== "function" || typeof renewal?.renew !== "function" ||
@@ -164,12 +168,15 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
     isAvatarUploadEnabled, avatarWithdrawal, isAvatarWithdrawalEnabled, avatarUploadTimeoutMilliseconds, inputTimeoutMilliseconds });
   const reviewHandler = createAvatarReviewHandler({ authentication, limits, checkpoint, avatarReview, isEnabled,
     isAvatarReviewEnabled, isAvatarReviewer, scheduleMaintenance, clock, reviewTimeoutMilliseconds, inputTimeoutMilliseconds });
+  const previewHandler = createAvatarOwnerPreviewHandler({ authentication, limits, checkpoint, avatarOwnerPreview, isEnabled,
+    isAvatarOwnerPreviewEnabled, previewTimeoutMilliseconds, inputTimeoutMilliseconds });
   return async (request, serverBudgetHash) => {
     let avatarDeadline, avatarClaimed = false;
     try {
       const { path } = inspectGatewayRequest(request);
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+      if (path === avatarOwnerPreviewPath) return await previewHandler(request, serverBudgetHash);
       if (avatarReviewPaths.has(path)) return await reviewHandler(request, serverBudgetHash, avatarReviewPaths.get(path));
       if (avatarMutationPaths.has(path)) return await uploadHandler(request, serverBudgetHash, avatarMutationPaths.get(path));
       const avatar = path === avatarReadPath, social = !avatar && path.startsWith("/v1/community/");

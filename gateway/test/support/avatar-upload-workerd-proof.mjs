@@ -11,6 +11,7 @@ import { createWorkerAvatarNormalizer } from "../../src/avatar-codecs-workerd.mj
 import { avatarIntentHeader } from "../../src/avatar-upload-http.mjs";
 import { avatarReviewHeader } from "../../src/avatar-review-coordinator.mjs";
 import { purgeAvatarReviewReceipts } from "../../src/avatar-review-state.mjs";
+import { avatarSelectionHeader } from "../../src/avatar-owner-preview-http.mjs";
 
 /** Loopback-only fixture with actual Worker/SQLite/Wasm and independently verified S2S signatures.
  * Provider, platform metadata and account proof are models. Never imported by production sources.
@@ -78,6 +79,7 @@ export async function avatarUploadWorkerdProof(request, storage) {
   const env = { GATEWAY_ENABLED: "1", GATEWAY_ENVIRONMENT: "development", GATEWAY_EXPIRES_AT: new Date(p.now + 3600000).toISOString(),
     ACCOUNT_DELETION_ENABLED: "1", PUBLIC_RECORDS_ENABLED: "1", COMMUNITY_ENABLED: "1", AVATAR_UPLOAD_ENABLED: "1", AVATAR_UPLOAD_HOSTS_JSON: '["synthetic-avatar.icloud-content.com"]',
     AVATAR_REVIEW_ENABLED: p.review === true ? "1" : "0", AVATAR_REVIEWER_IDS_JSON: JSON.stringify(p.review === true ? [reviewOperatorID] : []),
+    AVATAR_OWNER_PREVIEW_ENABLED: p.ownerPreview === true ? "1" : "0",
     AVATAR_DOWNLOAD_HOSTS_JSON: p.review === true ? '["synthetic-avatar.icloud-content.com"]' : "[]",
     CLOUDKIT_CONTAINER: "iCloud.mpvEcho.Echo", CLOUDKIT_ENVIRONMENT: "development", CLOUDKIT_KEY_ID: "synthetic-public-v1", CLOUDKIT_PRIVATE_KEY: p.privateKeyPEM,
     APPLE_SIGNIN_KEY_ID: "TESTKEY123", APPLE_SIGNIN_PRIVATE_KEY: p.signInPrivateKeyPEM,
@@ -99,7 +101,7 @@ export async function avatarUploadWorkerdProof(request, storage) {
   const uploaded = await invoke("upload", p.intent), firstUploadCount = uploads;
   const recovered = await invoke("recover", { requestID: p.intent.requestID });
   if (uploads !== firstUploadCount) throw new Error("Recovery repeated a synthetic upload");
-  let review;
+  let review, ownerPreview;
   if (p.review === true) {
     const operatorCall = async (action, value, expectedStatus = 200) => {
       const req = new Request("https://synthetic-upload.invalid/v1/moderation/avatar/" + action, { method: "POST", signal: request.signal,
@@ -131,10 +133,27 @@ export async function avatarUploadWorkerdProof(request, storage) {
       confirmedAfterExpiry: outcome.outcome === "confirmed" && outcome.revision === approved.revision,
       expiredReceiptsRemoved: storage.sql.exec("SELECT COUNT(*) n FROM avatar_review_receipts_v1").toArray()[0].n === 0,
       actualSQL: storage.sql.exec("SELECT COUNT(*) n FROM avatar_jobs_v1 WHERE decision_id=? AND moderation_state='approved'", body.decisionID).toArray()[0].n === 1 };
+    if (p.ownerPreview === true) {
+      env.AVATAR_REVIEW_ENABLED = "0"; env.AVATAR_REVIEWER_IDS_JSON = "[]"; env.AVATAR_UPLOAD_ENABLED = "0";
+      const selection = { requestID: observed.requestID, versionID: observed.versionID, generation: observed.generation, reviewRevision: observed.reviewRevision };
+      const req = new Request("https://synthetic-upload.invalid/v1/community/avatar/preview", { method: "POST", signal: request.signal,
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + p.token, "CF-Connecting-IP": "192.0.2.17" }, body: JSON.stringify(selection) });
+      Object.defineProperty(req, "cf", { value: { colo: "WAW" } });
+      const response = await forwardGatewayRequest(req, env, { clock });
+      if (response.status !== 200) throw new Error("Synthetic owner preview: " + (await response.json()).error);
+      const manifest = JSON.parse(response.headers.get("x-echoes-avatar-manifest")), proof = JSON.parse(response.headers.get(avatarSelectionHeader));
+      const bytes = new Uint8Array(await response.arrayBuffer()), after = await invoke("status");
+      ownerPreview = { bytesMatch: createHash("sha256").update(bytes).digest("hex") === manifest.sha256,
+        exactSelection: JSON.stringify(proof) === JSON.stringify({ schemaVersion: 1, ...selection }),
+        ownImage: manifest.ownerID === reviewOperatorID && manifest.versionID === selection.versionID && manifest.variant === "image",
+        privateNoStore: response.headers.get("Cache-Control") === "private, no-store",
+        noModeratorRole: env.AVATAR_REVIEW_ENABLED === "0" && env.AVATAR_REVIEWER_IDS_JSON === "[]",
+        notPublished: after.status === "approved" && after.publishedVersionID === null };
+    }
   }
   const cleared = await invoke("clear", { requestID: randomUUID(), expectedGeneration: uploaded.generation });
   const status = await invoke("status");
-  return Response.json({ ...(review ? { review, downloads } : {}), uploaded, recovered, cleared, status, uploads, grants: grants.size, signatures,
+  return Response.json({ ...(review ? { review, downloads } : {}), ...(ownerPreview ? { ownerPreview } : {}), uploaded, recovered, cleared, status, uploads, grants: grants.size, signatures,
     assetRecords: [...records.values()].filter(r => r.recordType === "EchoesAvatarV1").length,
     actualSQL: storage.sql.exec("SELECT COUNT(*) AS n FROM avatar_jobs_v1").toArray()[0].n === 1 });
 }

@@ -21,15 +21,17 @@ import { CommunityState } from "./community-state.mjs";
 import { CommunityCoordinator } from "./community-coordinator.mjs";
 import { AvatarPolicyState } from "./avatar-policy-state.mjs";
 import { CommunityAvatarReferences } from "./community-avatar-references.mjs";
-import { CloudKitAvatarReader } from "./cloudkit-avatar-reader.mjs";
+import { AvatarReadError, CloudKitAvatarReader } from "./cloudkit-avatar-reader.mjs";
 import { avatarReadPath, avatarReadInputLimit, avatarDownloadHosts, avatarHTTPDeadline, avatarEdgeResponse, avatarEdgeErrorResponse } from "./gateway-avatar-http.mjs";
 import { AvatarReceiptVault } from "./avatar-receipt-vault.mjs";
 import { CloudKitAvatarAssets } from "./cloudkit-avatar-assets.mjs";
 import { CloudKitAvatarRepository } from "./cloudkit-avatar-repository.mjs";
 import { AvatarPublicationCoordinator } from "./avatar-publication-coordinator.mjs";
 import { avatarMutationPaths, avatarIntentHeader, avatarMutationHeaders, avatarMutationDeadline,
-  avatarMutationAdmission, avatarMutationEdgeResponse } from "./avatar-upload-http.mjs";
+  avatarMutationAdmission, avatarMutationEdgeResponse, avatarMutationBody } from "./avatar-upload-http.mjs";
 import { AvatarReviewCoordinator } from "./avatar-review-coordinator.mjs";
+import { CloudKitAvatarOwnerPreview } from "./cloudkit-avatar-owner-preview.mjs";
+import { avatarOwnerPreviewPath, avatarOwnerPreviewHeaders, avatarOwnerPreviewInput, avatarOwnerPreviewAdmission, avatarOwnerPreviewEdgeResponse, avatarOwnerPreviewError } from "./avatar-owner-preview-http.mjs";
 import { AvatarReviewReceipts } from "./avatar-review-state.mjs";
 import { avatarReviewers, avatarReviewPaths, avatarReviewHeaders, avatarReviewAdmission, avatarReviewDeadline, avatarReviewEdgeResponse } from "./avatar-review-http.mjs";
 
@@ -41,6 +43,8 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
       !["0", "1"].includes(env.PUBLIC_RECORDS_ENABLED ?? "0") ||
       !["0", "1"].includes(env.COMMUNITY_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_READ_ENABLED ?? "0") ||
+      !["0", "1"].includes(env.AVATAR_OWNER_PREVIEW_ENABLED ?? "0") ||
+      env.AVATAR_OWNER_PREVIEW_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       !["0", "1"].includes(env.AVATAR_UPLOAD_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_REVIEW_ENABLED ?? "0") ||
       env.AVATAR_REVIEW_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
@@ -57,10 +61,10 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
   try {
     reviewers = avatarReviewers(env.AVATAR_REVIEWER_IDS_JSON);
     if (env.AVATAR_REVIEW_ENABLED === "1" && reviewers.length === 0) return null;
-    if (env.AVATAR_READ_ENABLED === "1" || env.AVATAR_REVIEW_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON);
+    if (env.AVATAR_READ_ENABLED === "1" || env.AVATAR_REVIEW_ENABLED === "1" || env.AVATAR_OWNER_PREVIEW_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON);
     if (env.AVATAR_UPLOAD_ENABLED === "1") uploadHosts = avatarDownloadHosts(env.AVATAR_UPLOAD_HOSTS_JSON);
   } catch { return null; }
-  return Object.freeze({ deadline, avatarReviewEnabled: env.AVATAR_REVIEW_ENABLED === "1", avatarReviewers: reviewers, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
+  return Object.freeze({ deadline, avatarOwnerPreviewEnabled: env.AVATAR_OWNER_PREVIEW_ENABLED === "1", avatarReviewEnabled: env.AVATAR_REVIEW_ENABLED === "1", avatarReviewers: reviewers, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
     avatarUploadEnabled: env.AVATAR_UPLOAD_ENABLED === "1", avatarUploadHosts: uploadHosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
     publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
 }
@@ -102,10 +106,14 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     const apple = new AppleOAuthClient({ clientSecret, fetchImplementation: providerFetch });
     const verifier = new AppleIdentityTokenVerifier({ keySource: new ApplePublicKeySource({ clock, fetchImplementation: providerFetch }), clock });
     const authentication = new AuthenticationState(storage, { clock, renewalProofs });
-    let publicRecords, community, communityState, avatarReader, avatarPublication, avatarWithdrawal, avatarReview;
+    let publicRecords, community, communityState, avatarReader, avatarPublication, avatarWithdrawal, avatarReview, avatarOwnerPreview;
     const isAvatarReadEnabled = () => {
       const active = activeGatewayConfiguration(env, clock());
       return active?.avatarReadEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
+    };
+    const isAvatarOwnerPreviewEnabled = () => {
+      const active = activeGatewayConfiguration(env, clock());
+      return active?.avatarOwnerPreviewEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join();
     };
     const isAvatarUploadEnabled = () => {
       const active = activeGatewayConfiguration(env, clock());
@@ -120,7 +128,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       if (!isAvatarReviewEnabled() || !config.avatarReviewers.includes(id)) return false;
       communityState.assertActive(id); return true;
     };
-    const isAvatarWithdrawalEnabled = () => isAvatarReadEnabled() || isAvatarUploadEnabled() || isAvatarReviewEnabled();
+    const isAvatarWithdrawalEnabled = () => isAvatarReadEnabled() || isAvatarUploadEnabled() || isAvatarReviewEnabled() || isAvatarOwnerPreviewEnabled();
     if (config.publicRecordsEnabled) {
       const registry = new PublicRecordRegistry(storage, { clock });
       const client = new CloudKitPublicClient({ container: env.CLOUDKIT_CONTAINER, environment: env.CLOUDKIT_ENVIRONMENT,
@@ -129,7 +137,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       checkpoint = new PublicRegistryCheckpoint({ registry, client });
       publicRecords = new CloudKitPublicRepository({ authentication, clock, registry, client, checkpoint });
       if (config.communityEnabled || storage.sql.exec("SELECT name FROM sqlite_master WHERE type='table' AND name='community_accounts_v1'").toArray().length) communityState = new CommunityState(storage, { clock });
-      const avatarPolicy = config.avatarReadEnabled || config.avatarUploadEnabled || config.avatarReviewEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
+      const avatarPolicy = config.avatarReadEnabled || config.avatarUploadEnabled || config.avatarReviewEnabled || config.avatarOwnerPreviewEnabled ? new AvatarPolicyState(storage, { registry, clock }) : undefined;
       if (avatarPolicy) avatarWithdrawal = new AvatarPublicationCoordinator({ state: avatarPolicy, authentication, communityState,
         profileRepository: publicRecords, checkpoint, isEnabled: isAvatarWithdrawalEnabled, withdrawalOnly: true });
       const avatarReferences = config.avatarReadEnabled ? new CommunityAvatarReferences({ avatarPolicy, communityState, clock, isEnabled: isAvatarReadEnabled }) : undefined;
@@ -138,6 +146,9 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       if (config.avatarReadEnabled) avatarReader = new CloudKitAvatarReader({ authentication, communityState,
         avatarPolicy, profileRepository: publicRecords, registry, client, checkpoint,
         clock, isEnabled: isAvatarReadEnabled, verifiedDownloadHosts: config.avatarDownloadHosts, fetchImplementation: guardedFetch });
+      if (config.avatarOwnerPreviewEnabled) avatarOwnerPreview = new CloudKitAvatarOwnerPreview({ authentication, communityState,
+        avatarPolicy, registry, client, checkpoint, clock, isEnabled: isAvatarOwnerPreviewEnabled,
+        verifiedDownloadHosts: config.avatarDownloadHosts, fetchImplementation: guardedFetch });
       if (config.avatarReviewEnabled) avatarReview = new AvatarReviewCoordinator({ authentication, communityState,
         avatarPolicy, receipts: new AvatarReviewReceipts(storage, { clock }), registry, client, checkpoint,
         clock, isEnabled: isAvatarReviewEnabled, isOperator: isAvatarReviewer,
@@ -186,7 +197,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
     } } : localProcessor;
     const handle = createGatewayHTTPHandler({ authentication, login, renewal, sessionReset, deletions, deletionCoordinator,
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
-      avatarReader, isAvatarReadEnabled,
+      avatarReader, isAvatarReadEnabled, avatarOwnerPreview, isAvatarOwnerPreviewEnabled,
       avatarPublication, isAvatarUploadEnabled, avatarWithdrawal, isAvatarWithdrawalEnabled,
       avatarReview, isAvatarReviewEnabled, isAvatarReviewer, clock,
       community, isCommunityEnabled: () => activeGatewayConfiguration(env, clock())?.communityEnabled === true,
@@ -214,13 +225,23 @@ export function handleAuthorityRequest(request, { runtime, env, objectID, clock 
 /** Thin public edge: only this boundary reads the platform client IP. All accounts use one private authority. */
 const claimAvatarMutationEdge = avatarMutationAdmission();
 const claimAvatarReviewEdge = avatarReviewAdmission();
+const claimAvatarOwnerPreviewEdge = avatarOwnerPreviewAdmission();
 export async function forwardGatewayRequest(request, env, { clock = Date.now } = {}) {
-  let avatarDeadline, mutationDeadline, mutationAdmission, reviewDeadline, reviewAdmission, reviewAction, reviewRequest;
+  let avatarDeadline, mutationDeadline, mutationAdmission, reviewDeadline, reviewAdmission, reviewAction, reviewRequest, previewDeadline, previewAdmission, previewBytes, previewSelection, previewRequest, isPreview = false;
   try {
     const { path } = inspectGatewayRequest(request);
     if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
     const config = activeGatewayConfiguration(env, clock());
     if (!config) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
+    const preview = isPreview = path === avatarOwnerPreviewPath;
+    if (preview) {
+      if (!config.avatarOwnerPreviewEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      const headers = avatarOwnerPreviewHeaders(request); previewAdmission = claimAvatarOwnerPreviewEdge();
+      previewDeadline = avatarHTTPDeadline(request.signal, 15000);
+      previewBytes = await previewAdmission.run(previewDeadline, () => avatarMutationBody(request, headers, previewDeadline.signal));
+      try { previewSelection = avatarOwnerPreviewInput(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(previewBytes))); }
+      catch { throw new AvatarReadError("AVATAR_READ_INPUT"); }
+    }
     reviewAction = avatarReviewPaths.get(path);
     if (reviewAction) {
       if (!config.avatarReviewEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
@@ -231,7 +252,7 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     const mutation = avatarMutationPaths.get(path);
     const withdrawal = mutation === "status" || mutation === "clear";
     if (mutation) {
-      if (!(config.avatarUploadEnabled || withdrawal && (config.avatarReadEnabled || config.avatarReviewEnabled))) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+      if (!(config.avatarUploadEnabled || withdrawal && (config.avatarReadEnabled || config.avatarReviewEnabled || config.avatarOwnerPreviewEnabled))) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
       avatarMutationHeaders(request, mutation);
       mutationAdmission = claimAvatarMutationEdge(mutation);
       mutationDeadline = avatarMutationDeadline(request.signal, 25000);
@@ -251,13 +272,22 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     if (mutation === "upload") headers.set(avatarIntentHeader, request.headers.get(avatarIntentHeader));
     headers.set("X-Echoes-Request-Budget", budget);
     const forwarded = new Request("https://echoes-authority.internal" + path, {
-      method: request.method, headers, body: request.body, redirect: "manual", duplex: "half",
-      ...(avatar || mutation || reviewAction ? { signal: avatarDeadline?.signal ?? mutationDeadline?.signal ?? reviewDeadline.signal } : {}),
+      method: request.method, headers, body: preview ? previewBytes : request.body, redirect: "manual", duplex: "half",
+      ...(avatar || mutation || reviewAction || preview ? { signal: avatarDeadline?.signal ?? mutationDeadline?.signal ?? reviewDeadline?.signal ?? previewDeadline.signal } : {}),
     });
     if (reviewAction) reviewRequest = forwarded;
+    if (preview) previewRequest = forwarded;
     const id = env.COMMUNITY_AUTHORITY.idFromName(authorityName);
     const fetchAuthority = () => env.COMMUNITY_AUTHORITY.get(id).fetch(forwarded);
-    const response = reviewAction ? await reviewAdmission.run(reviewDeadline, fetchAuthority) : mutation ? await mutationAdmission.run(mutationDeadline, fetchAuthority) : avatar ? await avatarDeadline.run(fetchAuthority) : await fetchAuthority();
+    const response = preview ? await previewAdmission.run(previewDeadline, fetchAuthority) : reviewAction ? await reviewAdmission.run(reviewDeadline, fetchAuthority) : mutation ? await mutationAdmission.run(mutationDeadline, fetchAuthority) : avatar ? await avatarDeadline.run(fetchAuthority) : await fetchAuthority();
+    if (preview) {
+      const enabled = () => { const active = activeGatewayConfiguration(env, clock());
+        return active?.avatarOwnerPreviewEnabled === true && active.avatarDownloadHosts.join() === config.avatarDownloadHosts.join(); };
+      if (!enabled()) { void response?.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503); }
+      const result = await previewAdmission.run(previewDeadline, () => avatarOwnerPreviewEdgeResponse(response, previewDeadline, { selection: previewSelection }));
+      if (!enabled()) { void result.body?.cancel().catch(() => {}); return gatewayJSON({ error: "FEATURE_DISABLED" }, 503); }
+      previewDeadline.check(); return result;
+    }
     if (reviewAction) {
       const enabled = () => {
         const active = activeGatewayConfiguration(env, clock());
@@ -274,6 +304,7 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
         const current = activeGatewayConfiguration(env, clock());
         return current?.avatarUploadEnabled && current.avatarUploadHosts.join() === config.avatarUploadHosts.join() ||
           withdrawal && current?.avatarReadEnabled && current.avatarDownloadHosts.join() === config.avatarDownloadHosts.join() ||
+          withdrawal && current?.avatarOwnerPreviewEnabled && current.avatarDownloadHosts.join() === config.avatarDownloadHosts.join() ||
           withdrawal && current?.avatarReviewEnabled && current.avatarDownloadHosts.join() === config.avatarDownloadHosts.join()
             && current.avatarReviewers.join() === config.avatarReviewers.join();
       };
@@ -304,8 +335,11 @@ export async function forwardGatewayRequest(request, env, { clock = Date.now } =
     if (/^\d{1,6}$/.test(response.headers.get("Retry-After") ?? "")) safe.set("Retry-After", response.headers.get("Retry-After"));
     if (response.headers.get("Allow") === "POST") safe.set("Allow", "POST");
     return new Response(response.body, { status: response.status, headers: safe });
-  } catch (error) { return gatewayFailure(error); }
+  } catch (error) { return gatewayFailure(isPreview ? avatarOwnerPreviewError(error) : error); }
   finally {
+    previewBytes?.fill(0); previewDeadline?.close(); previewAdmission?.close();
+    if (previewRequest?.body && !previewRequest.body.locked) void previewRequest.body.cancel().catch(() => {});
+    if (previewDeadline && request.body && !request.body.locked) void request.body.cancel().catch(() => {});
     avatarDeadline?.close(); mutationDeadline?.close(); mutationAdmission?.close(); reviewDeadline?.close(); reviewAdmission?.close();
     if (reviewAction && request.body && !request.body.locked) void request.body.cancel().catch(() => {});
     if (reviewRequest?.body && !reviewRequest.body.locked) void reviewRequest.body.cancel().catch(() => {});

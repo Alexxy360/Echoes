@@ -26,6 +26,8 @@ Istniejący edytor rozpoznaje zapisaną publikację, pokazuje potrzebę sprawdze
 
 Publikacja bez upload journala pozostaje zamknięta w interfejsie. Następny etap musi dodać chroniony podgląd własnego zatwierdzonego pliku, powiązanie rzeczywiście wyświetlonego obrazu z wyborem oraz osobne potwierdzenie autora. Nawet programowe perform(.publish) istniejącego edytora sprawdza canPublish przed rozpoczęciem pracy. Sam test bezpośredniego API sterownika nie jest odbiorem tego przepływu użytkownika.
 
+CK-04e.3j.3c.4c.1 dodał [serwerowy podgląd zatwierdzonego wyboru autora](PODGLAD_ZATWIERDZONEGO_ZDJECIA_AUTORA.md), także ready=0, bez GPS/roli moderatora. Nie połączono go jeszcze z natywnym transportem, wyświetleniem i osobnym potwierdzeniem; powyższa blokada UI nadal obowiązuje.
+
 ## Dowody i otwarte wymagania
 
 [Raport etapu](evidence/avatar-publication-journal-local-tests.json) zapisuje końcowe wyniki i SHA. Siedem nowych testów magazynu sprawdza zapis bez JPEG, ponowne otwarcie plików i brak TTL, atomowe zastąpienie staged uploadu, zakazane podmiany/fazy, uszkodzone pola/bajty, erasure oraz błędy przed/po rename. Dziesięć nowych testów sterownika obejmuje trwałość przed dispatch, nowy store/controller po utracie ACK, read-only recovery, zachowanie unknown przy approved, dokładne jawne ponowienie, supersession, rollback, błędy IO i zmianę prywatnego scope. Dodatkowy test edytora utrzymuje zamkniętą publikację bez podglądu, zachowując recovery i withdrawal.

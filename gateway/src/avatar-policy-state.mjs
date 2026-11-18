@@ -162,6 +162,18 @@ export class AvatarPolicyState {
     if (["versionID", "generation", "payloadHash", "stagedTag", ...(includeRevision ? ["reviewRevision"] : [])].some(key => current[key] !== value[key])) throw new AvatarPolicyError("AVATAR_STALE");
     return current;
   }
+  /** Own approved selection, including staged/ready=0 content. Not a peer or moderator grant. */
+  readApprovedOwnerSelection(accountID, selection) {
+    const current = this.reviewContent(accountID, selection?.requestID);
+    if (["requestID", "versionID", "generation", "reviewRevision"].some(key => current[key] !== selection?.[key])) throw new AvatarPolicyError("AVATAR_STALE");
+    this.publishLease(current); // Reuse approval, generation and current-intent barriers; no pointer write.
+    return current;
+  }
+  assertApprovedOwnerSelection(value) {
+    const current = this.readApprovedOwnerSelection(value?.accountID, value);
+    if (["payloadHash", "stagedTag"].some(key => current[key] !== value[key])) throw new AvatarPolicyError("AVATAR_STALE");
+    return current;
+  }
   reviewQueue() {
     return this.#tx(() => this.#rows(`SELECT j.account_id,j.request_id FROM avatar_jobs_v1 j
       JOIN avatar_profiles_v1 p ON p.account_id=j.account_id AND p.request_id=j.request_id AND p.version_id=j.version_id AND p.generation=j.generation
