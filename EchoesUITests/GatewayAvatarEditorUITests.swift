@@ -117,6 +117,29 @@ import XCTest
         status(app, contains: "Brak opublikowanego")
         attach(app, "owner-photo-withdrawn")
     }
+    func testLostPublicationReplyKeepsMetadataAndRecoversWithoutBlindPublishOrDiscard() {
+        let app = application("avatar-owner-publish-lost")
+        open(app)
+        choose(app)
+        acceptAndSend(app)
+        status(app, contains: "zatwierdzone")
+        tap(app, "avatar.editor.publish")
+        status(app, contains: "Sprawdź aktualny stan")
+        XCTAssertTrue(element(app, "avatar.editor.pendingPublication").waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["avatar.editor.publish"].exists)
+        XCTAssertFalse(app.buttons["avatar.editor.discard"].exists)
+        XCTAssertFalse(app.buttons["avatar.editor.retry"].exists)
+        XCTAssertFalse(element(app, "avatar.editor.preview").exists)
+        attach(app, "owner-photo-publication-unknown-metadata")
+        tap(app, "avatar.editor.recover")
+        status(app, contains: "jest opublikowane")
+        XCTAssertFalse(element(app, "avatar.editor.pendingPublication").exists)
+        let loaded = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", "Wczytane"),
+            object: element(app, "community.avatar.ownerEditor"))
+        XCTAssertEqual(XCTWaiter.wait(for: [loaded], timeout: 10), .completed)
+        attach(app, "owner-photo-publication-metadata-recovered")
+    }
     func testClosingDraftDropsItsPreviewAndConsentOnReopen() {
         let app = application()
         open(app)

@@ -12,6 +12,10 @@ public protocol GatewayAvatarUploadJournaling: Sendable {
         requestID: String, expectedGeneration: Int, replacing: GatewayAvatarUploadJournalEntry?,
         lease: GatewayAvatarUploadJournalLease
     ) async throws -> GatewayAvatarUploadJournalEntry
+    func preparePublication(
+        intent: GatewayAvatarPublishIntent, replacing: GatewayAvatarUploadJournalEntry?,
+        lease: GatewayAvatarUploadJournalLease
+    ) async throws -> GatewayAvatarUploadJournalEntry
     func source(for entry: GatewayAvatarUploadJournalEntry, lease: GatewayAvatarUploadJournalLease)
         async throws -> Data
     func transition(
@@ -276,11 +280,26 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
             try observe(value, context: context)
             return false
         }
+        if case .publish(let selected) = entry.intent {
+            try selected.validateProgress(value)
+            guard selected.matches(value) else {
+                try observe(value, context: context)
+                return false
+            }
+            switch value.status {
+            case .published: try await complete(entry, context: context)
+            case .approved: break  // Current visibility does NOT prove that no request is still in flight.
+            default: throw GatewayAvatarMutationFailure.invalidResponse
+            }
+            try observe(value, context: context)
+            return true
+        }
         let id: String
         let generation: Int
         switch entry.intent {
         case .upload(let intent): (id, generation) = (intent.requestID, intent.expectedGeneration)
         case .clear(let requestID, let expected): (id, generation) = (requestID, expected)
+        case .publish: throw GatewayAvatarUploadJournalFailure.invalidTransition
         }
         guard value.generation >= generation else { throw GatewayAvatarMutationFailure.invalidResponse }
         if value.requestID != id {
@@ -308,6 +327,7 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
                 guard entry.phase == .dispatched else { throw GatewayAvatarMutationFailure.invalidResponse }
             default: throw GatewayAvatarMutationFailure.invalidResponse
             }
+        case .publish: throw GatewayAvatarUploadJournalFailure.invalidTransition
         }
         try observe(value, context: context)
         return true
@@ -376,6 +396,11 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
                 try await self.sendClear(entry, context: context)
                 return
             }
+            if case .publish = entry.intent {
+                let value = try await self.dispatch(.status, context: context, expected: entry)
+                try await self.reconcile(value, entry: entry, context: context)
+                return
+            }
             guard case .upload(let intent) = entry.intent, entry.phase != .prepared else {
                 throw GatewayAvatarUploadJournalFailure.invalidTransition
             }
@@ -390,25 +415,33 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
         }
         try await exclusive {
             let context = try self.bound()
-            guard let entry = try await self.pending(context), case .upload = entry.intent else {
-                throw GatewayAvatarUploadJournalFailure.invalidTransition
-            }
+            let entry = try await self.pending(context)
+            if let entry, case .clear = entry.intent { throw GatewayAvatarUploadJournalFailure.pendingExists }
             let status = try await self.dispatch(.status, context: context, expected: entry)
-            guard try await self.reconcile(status, entry: entry, context: context) else {
+            let same = try await self.reconcile(status, entry: entry, context: context)
+            guard entry == nil || same else {
                 throw GatewayAvatarMutationFailure.stale
             }
-            if status.status == .published { return }
+            if status.status == .published {
+                guard let selected, selected.matches(status) else { throw GatewayAvatarMutationFailure.stale }
+                return
+            }
             guard status.status == .approved else {
                 throw status.status == .rejected
                     ? GatewayAvatarMutationFailure.rejected : GatewayAvatarMutationFailure.pending
             }
             guard let selected, selected.matches(status) else { throw GatewayAvatarMutationFailure.stale }
-            guard let staged = try await self.pending(context) else {
-                throw GatewayAvatarUploadJournalFailure.superseded
+            let staged = try await self.pending(context)
+            let prepared = try await self.journal.preparePublication(
+                intent: selected, replacing: staged, lease: context.lease)
+            try self.check(context)
+            self.storedPending = prepared
+            guard case .publish(let saved) = prepared.intent, saved == selected else {
+                throw GatewayAvatarUploadJournalFailure.invalidData
             }
-            let publishing = try await self.transition(staged, to: .publishing, context: context)
+            let publishing = try await self.transition(prepared, to: .publishing, context: context)
             let value = try await self.dispatch(
-                .publish(intent: selected), context: context, expected: publishing)
+                .publish(intent: saved), context: context, expected: publishing)
             try await self.reconcile(value, entry: publishing, context: context)
         }
     }
@@ -426,6 +459,7 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
                 switch entry.intent {
                 case .upload(let intent): previous = intent.expectedGeneration
                 case .clear(_, let generation): previous = generation
+                case .publish(let selected): previous = selected.generation
                 }
                 guard status.generation >= previous else {
                     throw GatewayAvatarMutationFailure.invalidResponse
@@ -455,11 +489,25 @@ public enum GatewayAvatarOwnerFailure: Error, Equatable, Sendable, LocalizedErro
             let context = try self.bound()
             guard let entry = try await self.pending(context) else { return }
             let status = try await self.dispatch(.status, context: context, expected: entry)
+            if case .publish(let selected) = entry.intent {
+                try selected.validateProgress(status)
+                guard
+                    selected.isSuperseded(by: status)
+                        || (entry.phase == .prepared && selected.matches(status)
+                            && status.status == .approved)
+                else {
+                    throw GatewayAvatarMutationFailure.pending
+                }
+                try await self.complete(entry, context: context)
+                try self.observe(status, context: context)
+                return
+            }
             let id: String
             let generation: Int
             switch entry.intent {
             case .upload(let intent): (id, generation) = (intent.requestID, intent.expectedGeneration)
             case .clear(let requestID, let expected): (id, generation) = (requestID, expected)
+            case .publish: throw GatewayAvatarUploadJournalFailure.invalidTransition
             }
             guard status.requestID != id,
                 status.generation > generation || entry.phase == .prepared && status.generation == generation

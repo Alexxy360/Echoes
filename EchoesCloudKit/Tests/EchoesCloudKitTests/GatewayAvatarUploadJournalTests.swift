@@ -56,6 +56,14 @@ private struct UploadJournalFixture {
     func intent(_ id: String = "6a000000-0000-4000-8000-000000000003") throws -> GatewayAvatarUploadIntent {
         try .init(requestID: id, versionID: "6a000000-0000-4000-8000-000000000004", expectedGeneration: 0)
     }
+    func publication(revision: String = "6a000000-0000-4000-8000-000000000005") throws
+        -> GatewayAvatarPublishIntent
+    {
+        let selected = try intent()
+        return try .init(
+            requestID: selected.requestID, versionID: selected.versionID, generation: 1,
+            reviewRevision: revision)
+    }
     func alternate(
         account: String? = nil, origin: URL? = nil, apple: String = "synthetic-upload-apple",
         cloud: String = "synthetic-upload-cloud"
@@ -68,6 +76,185 @@ private struct UploadJournalFixture {
             privateScope: owner, binding: binding)
     }
     func cleanup() { try? FileManager.default.removeItem(at: root) }
+}
+
+@Test func avatarPublicationJournalStoresOnlyMetadataAndSurvivesRestartWithoutTTL() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    let choice = try f.publication()
+    let prepared = try await f.journal.preparePublication(intent: choice, lease: lease)
+    #expect(prepared.intent == .publish(choice) && prepared.phase == .prepared && !prepared.hasSource)
+    #expect(prepared.sourceSHA256 == nil && prepared.sourceByteCount == nil)
+    let bytes = try Data(contentsOf: f.file(f.scope))
+    let decoded = try AvatarUploadRecordCodec.decode(bytes, scope: f.scope)
+    #expect(bytes.count < 4096 && decoded.source.isEmpty)
+    #expect(decoded.record.entry?.reviewRevision == choice.reviewRevision)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.sourceUnavailable) {
+        try await f.journal.source(for: prepared, lease: lease)
+    }
+    let dispatched = try await f.journal.transition(prepared, to: .publishing, lease: lease)
+    f.clock.advance(30 * 86400)
+    #expect(try await f.journal.pending(lease: lease) == dispatched)
+    await f.journal.close()
+    let reopened = try GatewayAvatarUploadJournal(root: f.root, clock: { f.clock.now() })
+    let fresh = try await reopened.open(scope: f.scope)
+    #expect(fresh.id != lease.id)
+    #expect(try await reopened.pending(lease: fresh) == dispatched)
+    await reopened.close()
+}
+
+@Test func avatarPublicationJournalAtomicallyReplacesOnlyTheExactStagedUploadAndDropsJPEG() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    let source = try await f.journal.prepareUpload(intent: f.intent(), avatar: f.avatar, lease: lease)
+    let sent = try await f.journal.transition(source, to: .dispatched, lease: lease)
+    let staged = try await f.journal.transition(sent, to: .staged, lease: lease)
+    let metadata = try await f.journal.preparePublication(
+        intent: f.publication(), replacing: staged, lease: lease)
+    #expect(metadata.phase == .prepared && !metadata.hasSource && metadata.sourceSHA256 == nil)
+    let bytes = try Data(contentsOf: f.file(f.scope))
+    #expect(bytes.count < 4096 && bytes.range(of: f.avatar.image) == nil)
+    #expect(try AvatarUploadRecordCodec.decode(bytes, scope: f.scope).source.isEmpty)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.superseded) {
+        try await f.journal.source(for: staged, lease: lease)
+    }
+}
+
+@Test func avatarPublicationJournalRefusesUnsettledUploadsClearAndMismatchedPublication() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    let prepared = try await f.journal.prepareUpload(intent: f.intent(), avatar: f.avatar, lease: lease)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.pendingExists) {
+        try await f.journal.preparePublication(intent: f.publication(), replacing: prepared, lease: lease)
+    }
+    let dispatched = try await f.journal.transition(prepared, to: .dispatched, lease: lease)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.pendingExists) {
+        try await f.journal.preparePublication(intent: f.publication(), replacing: dispatched, lease: lease)
+    }
+    let staged = try await f.journal.transition(dispatched, to: .staged, lease: lease)
+    let choice = try f.publication()
+    let other = try GatewayAvatarPublishIntent(
+        requestID: choice.requestID, versionID: UUID().uuidString.lowercased(), generation: 1,
+        reviewRevision: choice.reviewRevision)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.pendingExists) {
+        try await f.journal.preparePublication(intent: other, replacing: staged, lease: lease)
+    }
+    #expect(try await f.journal.pending(lease: lease) == staged)
+    let clear = try await f.journal.prepareClear(
+        requestID: UUID().uuidString.lowercased(), expectedGeneration: 1, replacing: staged, lease: lease)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.pendingExists) {
+        try await f.journal.preparePublication(intent: choice, replacing: clear, lease: lease)
+    }
+}
+
+@Test func avatarPublicationJournalNeverRenewsUnknownChoiceOrAllowsUploadTransitions() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    let choice = try f.publication()
+    let prepared = try await f.journal.preparePublication(intent: choice, lease: lease)
+    #expect(
+        try await f.journal.preparePublication(intent: choice, replacing: prepared, lease: lease) == prepared)
+    for phase in [GatewayAvatarJournalPhase.dispatched, .staged] {
+        await #expect(throws: GatewayAvatarUploadJournalFailure.invalidTransition) {
+            try await f.journal.transition(prepared, to: phase, lease: lease)
+        }
+    }
+    let pending = try await f.journal.transition(prepared, to: .publishing, lease: lease)
+    let changed = try f.publication(revision: UUID().uuidString.lowercased())
+    await #expect(throws: GatewayAvatarUploadJournalFailure.pendingExists) {
+        try await f.journal.preparePublication(intent: changed, replacing: pending, lease: lease)
+    }
+    let retry = try await f.journal.transition(pending, to: .publishing, lease: lease)
+    #expect(
+        retry.intent == pending.intent && retry.revision != pending.revision
+            && retry.createdAt == pending.createdAt)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.superseded) {
+        try await f.journal.remove(pending, lease: lease)
+    }
+    #expect(try await f.journal.pending(lease: lease) == retry)
+}
+
+@Test func avatarPublicationJournalClosedVariantRejectsInventedSourceAndCorruptMetadata() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    _ = try await f.journal.preparePublication(intent: f.publication(), lease: lease)
+    let original = try Data(contentsOf: f.file(f.scope))
+    let start = AvatarUploadRecordCodec.magic.count + 4
+    let root = try #require(
+        JSONSerialization.jsonObject(with: original.subdata(in: start..<original.count)) as? [String: Any])
+    for change: [String: Any] in [
+        ["sourcePresent": false], ["sourceSHA256": String(repeating: "a", count: 64)],
+        ["sourceByteCount": 0], ["reviewRevision": "bad"], ["consentVersion": 0], ["phase": "staged"],
+        ["unknown": true],
+    ] {
+        var corrupted = root
+        corrupted["entry"] = try #require(root["entry"] as? [String: Any]).merging(change) { _, new in new }
+        let body = try JSONSerialization.data(withJSONObject: corrupted)
+        let count = UInt32(body.count)
+        var bytes = AvatarUploadRecordCodec.magic
+        bytes.append(contentsOf: [
+            UInt8(count >> 24), UInt8((count >> 16) & 255), UInt8((count >> 8) & 255), UInt8(count & 255),
+        ])
+        bytes.append(body)
+        #expect(throws: GatewayAvatarUploadJournalFailure.invalidData) {
+            try AvatarUploadRecordCodec.decode(bytes, scope: f.scope)
+        }
+    }
+    #expect(throws: GatewayAvatarUploadJournalFailure.invalidData) {
+        try AvatarUploadRecordCodec.decode(original + Data([0xff, 0xd8, 0xff, 0xd9]), scope: f.scope)
+    }
+    #expect(try Data(contentsOf: f.file(f.scope)) == original)
+}
+
+@Test func avatarPublicationJournalOwnerErasureRemovesEveryOriginAndPreservesAnotherAccount() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let originB = try f.alternate(origin: URL(string: "https://other-upload.example.invalid")!)
+    let other = try f.alternate(account: "6a000000-0000-4000-8000-000000000099")
+    for scope in [f.scope, originB, other] {
+        let lease = try await f.journal.open(scope: scope)
+        _ = try await f.journal.preparePublication(intent: f.publication(), lease: lease)
+    }
+    try await f.journal.fenceForAccountDeletion(binding: f.binding, accountID: f.owner.accountID)
+    try await f.journal.erase(scope: f.owner)
+    #expect(!FileManager.default.fileExists(atPath: f.file(f.scope).path))
+    #expect(!FileManager.default.fileExists(atPath: f.file(originB).path))
+    await #expect(throws: GatewayAvatarUploadJournalFailure.inactive) {
+        try await f.journal.open(scope: f.scope)
+    }
+    let lease = try await f.journal.open(scope: other)
+    #expect(try await f.journal.pending(lease: lease)?.intent == .publish(f.publication()))
+}
+
+@Test func avatarPublicationJournalInterruptedPreparationKeepsOnlyOldOrNewWholeMetadata() async throws {
+    let f = try UploadJournalFixture()
+    defer { f.cleanup() }
+    let lease = try await f.journal.open(scope: f.scope)
+    let choice = try f.publication()
+    let empty = try Data(contentsOf: f.file(f.scope))
+    f.fault.install(.beforeRename)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.unavailable) {
+        try await f.journal.preparePublication(intent: choice, lease: lease)
+    }
+    #expect(try Data(contentsOf: f.file(f.scope)) == empty)
+    #expect(try await f.journal.pending(lease: lease) == nil)
+    f.fault.install(.afterRename)
+    await #expect(throws: GatewayAvatarUploadJournalFailure.unavailable) {
+        try await f.journal.preparePublication(intent: choice, lease: lease)
+    }
+    f.fault.install(nil)
+    let unknown = try #require(await f.journal.pending(lease: lease))
+    #expect(unknown.intent == .publish(choice) && unknown.phase == .prepared && !unknown.hasSource)
+    await f.journal.close()
+    let reopened = try GatewayAvatarUploadJournal(root: f.root, clock: { f.clock.now() })
+    let fresh = try await reopened.open(scope: f.scope)
+    #expect(try await reopened.pending(lease: fresh) == unknown)
+    await reopened.close()
 }
 
 @Test func avatarUploadJournalAtomicallyStoresPreparedJPEGAndPreservesIDsAcrossEveryPhase() async throws {

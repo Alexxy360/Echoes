@@ -1,5 +1,7 @@
 # CK-04e.3j.2b — trwała lokalna operacja zdjęcia
 
+Opis zachowuje pierwotny zakres upload/clear. [CK-04e.3j.3c.4b](PUBLIKACJA_METADANYCH_IOS.md) dodaje zamknięty wariant publish bez JPEG, z dokładną rewizją moderacji i zachowaniem niepewnych operacji bez TTL.
+
 GatewayAvatarUploadJournal przechowuje jedną niezakończoną intencję zdjęcia i przygotowany JPEG w pojedynczym atomowo zastępowanym pliku. Jest fundamentem przyszłego sterownika właściciela nad [transportem HTTP](NATYWNY_UPLOAD_AVATAROW_HTTP.md). Nie wysyła żądań, nie wznawia ich automatycznie i nie jest samodzielnym dowodem zalogowania. GatewayDevelopmentRuntime tworzy jedną instancję współdzieloną między przyszłymi domenami foreground i uwzględnia ją w usuwaniu konta; ekran wyboru zdjęcia i sterownik sieciowy pozostają następnym etapem.
 
 ## Trwałość i rozdzielenie kont

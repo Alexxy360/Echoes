@@ -111,6 +111,11 @@ public enum GatewayAvatarEditorAction: Sendable {
     }
     fileprivate func perform(_ action: GatewayAvatarEditorAction, session: GatewayAvatarEditorSession) async {
         do {
+            // Source-free publication needs the upcoming protected author preview/confirmation UI.
+            // Keep the existing editor limited to its already selected staged upload meanwhile.
+            if case .publish = action, !session.canPublish {
+                throw GatewayAvatarUploadJournalFailure.invalidTransition
+            }
             let token = try begin(session.id)
             defer { finish(token) }
             cancelWork = { [controller] in controller.invalidate() }
@@ -199,6 +204,7 @@ private struct AvatarEditorDraft: Sendable {
     public var canRecover: Bool {
         guard isConnected, !isBusy, let entry = pendingOperation else { return false }
         if case .clear = entry.intent { return true }
+        if case .publish = entry.intent { return true }
         return entry.phase != .prepared
     }
     public var canRetryUpload: Bool {
@@ -224,6 +230,9 @@ private struct AvatarEditorDraft: Sendable {
         switch entry.intent {
         case .upload(let intent): (id, generation) = (intent.requestID, intent.expectedGeneration)
         case .clear(let request, let expected): (id, generation) = (request, expected)
+        case .publish(let selected):
+            return selected.isSuperseded(by: value)
+                || (entry.phase == .prepared && selected.matches(value) && value.status == .approved)
         }
         return value.requestID != id
             && (value.generation > generation || entry.phase == .prepared && value.generation == generation)

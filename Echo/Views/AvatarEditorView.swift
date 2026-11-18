@@ -84,7 +84,9 @@ struct AvatarEditorStatusSection: View {
         case .uploading: return "Wysyłka wymaga sprawdzenia."
         case .clearing: return "Wycofywanie wymaga sprawdzenia."
         case .pendingReview: return "Zdjęcie czeka na sprawdzenie przez obsługę."
-        case .approved: return "Zdjęcie zatwierdzone. Możesz je opublikować."
+        case .approved:
+            return session.canPublish
+                ? "Zdjęcie zatwierdzone. Możesz je opublikować." : "Zdjęcie zostało zatwierdzone."
         case .rejected: return "Zdjęcie nie zostało zatwierdzone. Możesz je wycofać."
         case .published: return "Zdjęcie jest opublikowane."
         }
@@ -108,6 +110,10 @@ struct AvatarEditorStatusSection: View {
             if let pending = session.pendingOperation, case .upload = pending.intent, !pending.hasSource {
                 Text("Lokalna kopia zdjęcia wygasła. Nadal możesz sprawdzić wynik lub wycofać zdjęcie.").font(
                     .caption)
+            }
+            if let pending = session.pendingOperation, case .publish = pending.intent {
+                Text("Zapisana publikacja czeka na potwierdzenie. Sprawdź jej stan lub wycofaj zdjęcie.")
+                    .font(.caption).accessibilityIdentifier("avatar.editor.pendingPublication")
             }
         }
     }

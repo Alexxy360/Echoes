@@ -42,6 +42,7 @@ public struct GatewayAvatarUploadJournalLease: Sendable, CustomStringConvertible
 }
 public enum GatewayAvatarJournalIntent: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
     case upload(GatewayAvatarUploadIntent)
+    case publish(GatewayAvatarPublishIntent)
     case clear(requestID: String, expectedGeneration: Int)
     public var description: String { "GatewayAvatarJournalIntent(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
@@ -70,11 +71,19 @@ struct StoredAvatarUpload: Codable {
     var versionID: String?, consentVersion: Int?, sourceSHA256: String?, sourceByteCount: Int?, width: Int?,
         height: Int?
     var sourcePresent: Bool?
+    var reviewRevision: String?
     func intent() throws -> GatewayAvatarJournalIntent {
         if kind == "upload", let versionID, let consentVersion {
             return .upload(
                 try .init(
                     requestID: requestID, versionID: versionID, expectedGeneration: expectedGeneration,
+                    consentVersion: consentVersion))
+        }
+        if kind == "publish", let versionID, let reviewRevision, let consentVersion {
+            return .publish(
+                try .init(
+                    requestID: requestID, versionID: versionID,
+                    generation: expectedGeneration, reviewRevision: reviewRevision,
                     consentVersion: consentVersion))
         }
         guard kind == "clear", gatewayUUID(requestID),
@@ -199,7 +208,7 @@ enum AvatarUploadRecordCodec {
                         ? [
                             "versionID", "consentVersion", "sourceSHA256", "sourceByteCount", "width",
                             "height", "sourcePresent",
-                        ] : [])
+                        ] : entry.kind == "publish" ? ["versionID", "reviewRevision", "consentVersion"] : [])
                 guard Set(item.keys) == Set(fields), gatewayUUID(entry.revision), entry.createdAt.isFinite,
                     entry.createdAt >= 0,
                     entry.createdAt < 9_007_199_254_740
@@ -220,6 +229,10 @@ enum AvatarUploadRecordCodec {
                         guard actual.width == width, actual.height == height else {
                             throw GatewayAvatarUploadJournalFailure.invalidData
                         }
+                    }
+                } else if entry.kind == "publish" {
+                    guard source.isEmpty, entry.phase == .prepared || entry.phase == .publishing else {
+                        throw GatewayAvatarUploadJournalFailure.invalidData
                     }
                 } else {
                     guard source.isEmpty, entry.phase == .prepared || entry.phase == .dispatched else {

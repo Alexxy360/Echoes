@@ -1,5 +1,7 @@
 # CK-04e.3j.2c — natywne operacje właściciela zdjęcia
 
+Osobną trwałą publikację bez upload journala oraz read-only recovery wprowadza [CK-04e.3j.3c.4b](PUBLIKACJA_METADANYCH_IOS.md). Poniższe wyniki starszego etapu pozostają historyczne; interfejs nowego wyboru autora wymaga jeszcze chronionego podglądu i potwierdzenia.
+
 Poniżej zachowano zakres i wyniki pierwotnego etapu. [CK-04e.3j.3c.4a](KONTRAKT_PUBLIKACJI_ZDJECIA.md) dodaje wybór zatwierdzonego snapshotu przed pierwszym await oraz pełną korelację rewizji przy publikacji. Sam świeży status nie może zastąpić wyboru autora.
 
 GatewayAvatarOwnerController łączy [trwały journal](NATYWNY_JOURNAL_UPLOADU_AVATAROW.md) z [kontraktem HTTP](NATYWNY_UPLOAD_AVATAROW_HTTP.md) i natywnym źródłem tożsamości. GatewayDevelopmentRuntime tworzy jeden sterownik, jeden magazyn i jeden jego transport. Nadal nie ma ekranu wyboru/wysyłania zdjęcia w zwykłym przepływie aplikacji. Domyślne isEnabled sterownika jest false; Runtime korzysta z istniejącej kontrolowanej aktywacji Development. Nie dodano konfiguracji włączającej usługę.

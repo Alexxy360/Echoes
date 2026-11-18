@@ -59,6 +59,7 @@
         nonisolated let origin = "https://community-preview.example.invalid"
         private let approved: Bool
         private var loseUpload: Bool
+        private var losePublication: Bool
         private var delayed: Bool
         private var waiting: CheckedContinuation<Void, Never>?
         private var states: [String: GatewayAvatarOwnerSnapshot] = [:]
@@ -66,8 +67,11 @@
         private var selectedOwner = "11111111-1111-4111-8111-111111111111"
         func selectOwner(_ value: String) { selectedOwner = value }
         init(mode: String) {
-            approved = mode == "avatar-owner-approved" || mode == "avatar-owner-no-location"
+            approved =
+                mode == "avatar-owner-approved" || mode == "avatar-owner-no-location"
+                || mode == "avatar-owner-publish-lost"
             loseUpload = mode == "avatar-owner-lost"
+            losePublication = mode == "avatar-owner-publish-lost"
             delayed = mode == "avatar-owner-delayed"
         }
         func release() {
@@ -120,6 +124,10 @@
                 value = try snapshot(generation: generation + 1, request: id)
             }
             states[owner] = value
+            if case .publish = action, losePublication {
+                losePublication = false
+                throw GatewayAvatarMutationFailure.unavailable
+            }
             if action.isUploadForPreview {
                 if delayed { await withCheckedContinuation { waiting = $0 } }
                 if loseUpload {

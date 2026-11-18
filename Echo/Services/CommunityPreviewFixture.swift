@@ -29,7 +29,7 @@
                     "profile-unknown", "profile-delayed", "profile-empty",
                     "avatars", "avatars-denied", "avatars-corrupt", "avatars-delayed",
                     "avatar-owner", "avatar-owner-approved", "avatar-owner-lost", "avatar-owner-delayed",
-                    "avatar-owner-no-location",
+                    "avatar-owner-no-location", "avatar-owner-publish-lost",
                 ].contains(mode)
             else { throw GatewayFailure.configuration }
             self.mode = mode

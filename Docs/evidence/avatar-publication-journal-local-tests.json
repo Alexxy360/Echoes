@@ -1,0 +1,170 @@
+{
+  "stage": "CK-04e.3j.3c.4b",
+  "observedAtUTC": "2026-11-18T08:53:59.352110+00:00",
+  "baselineCommit": "6ef7522f8c9bb09b7b19c9b2e9931f8e2ea8b686",
+  "checks": {
+    "newNativeFunctions": 18,
+    "journal": 7,
+    "owner": 10,
+    "editor": 1,
+    "defined": 515,
+    "macOS": {
+      "passed": 513,
+      "failed": 0,
+      "skipped": 2
+    },
+    "iOSSimulator": {
+      "passed": 513,
+      "failed": 0,
+      "skipped": 2
+    },
+    "allNewIndividualCompletionsVerifiedBothPlatforms": true,
+    "editorUI": {
+      "passed": 9,
+      "failed": 0,
+      "new": 1
+    },
+    "swiftFormatFiles": 12
+  },
+  "builds": {
+    "debug": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "lostPublicationFixtureAbsent": false,
+      "binarySHA256": {
+        "Echoes": "c83bfd6431f27661ba31bd21b964f2066f0cc2557c781dfc41ffc29c1d9497fc",
+        "Echoes.debug.dylib": "397cf937ac255e8501299615cc740ff217bf8ad5e59f8d697f41b19e04d5bb82"
+      }
+    },
+    "release": {
+      "passed": true,
+      "activationAbsent": true,
+      "privacyManifestMatches": true,
+      "lostPublicationFixtureAbsent": true,
+      "binarySHA256": {
+        "Echoes": "7b5db6cff42dfa9a8bc8c54ba163cde3b56ed70f2e1a1c6bc8423cb8250dfe2e"
+      }
+    }
+  },
+  "newTestNames": [
+    "avatarEditorMetadataPublicationStaysClosedUntilAuthorPreviewButAllowsRecoveryAndClear",
+    "avatarOwnerApprovedStatusNeverForgetsOrRetriesAnUnknownPublication",
+    "avatarOwnerExplicitPublicationRetryKeepsExactRevisionAndDoesNotUpload",
+    "avatarOwnerPrivateScopeChangeDuringPublicationStoragePreventsDispatch",
+    "avatarOwnerPublicationDropsTheStagedJPEGBeforeAnyPublicationDispatch",
+    "avatarOwnerPublicationLostReplySurvivesNewStoreAndReadOnlyRecoveryWithoutResend",
+    "avatarOwnerPublicationPersistenceFailureNeverDispatchesAndRetainsDurableChoice",
+    "avatarOwnerPublicationRejectsRolledBackOrContradictoryStatusWithoutRemovingIDs",
+    "avatarOwnerPublishesExistingApprovalWithDurableMetadataAndNoUploadSource",
+    "avatarOwnerSourceFreePublicationCannotAdoptAnotherAlreadyPublishedChoice",
+    "avatarOwnerSupersededPublicationRequiresExplicitDiscardBeforeNewRevision",
+    "avatarPublicationJournalAtomicallyReplacesOnlyTheExactStagedUploadAndDropsJPEG",
+    "avatarPublicationJournalClosedVariantRejectsInventedSourceAndCorruptMetadata",
+    "avatarPublicationJournalInterruptedPreparationKeepsOnlyOldOrNewWholeMetadata",
+    "avatarPublicationJournalNeverRenewsUnknownChoiceOrAllowsUploadTransitions",
+    "avatarPublicationJournalOwnerErasureRemovesEveryOriginAndPreservesAnotherAccount",
+    "avatarPublicationJournalRefusesUnsettledUploadsClearAndMismatchedPublication",
+    "avatarPublicationJournalStoresOnlyMetadataAndSurvivesRestartWithoutTTL"
+  ],
+  "implemented": [
+    "closed metadata-only publish variant in same private/native/origin scoped durable envelope",
+    "actual generation stored in expectedGeneration field only for publish; full reviewRevision and consentVersion persisted",
+    "source/checksum/dimension/sourcePresent fields forbidden; empty binary suffix and no TTL discard",
+    "atomic replacement only of exact staged upload, dropping active JPEG before network",
+    "prepared/publishing marker and local revision before dispatch; exact repeat preserves intent and createdAt",
+    "controller accepts previously observed approved selection without an upload journal after fresh exact status validation",
+    "readonly status recovery; approved retains unknown/prepared intent and never proves historical non-application",
+    "explicit same-intent retry, authoritative clear and narrowly permitted local discard",
+    "rollback and same-generation contradictory IDs rejected; changed review/generation retained until explicit action",
+    "native/private scope checks after IO; owner erasure across origins preserves another account",
+    "existing editor rejects source-free publication until future protected preview/confirmation, while recovery/withdrawal remain available",
+    "UI pending-publication feedback and synthetic lost-ACK mode excluded from Release"
+  ],
+  "actualComponents": [
+    "real durable codec, atomic filesystem writes and reopen with new store/controller",
+    "real native actor/session/lease guards, error/fault gates and ImageIO for initial staged upload",
+    "real SwiftUI/Simulator touch/display/journal with new lost-publication acknowledgement scenario and8 existing editor regressions",
+    "full Mac/iOS package, Debug test build and final Release compilation"
+  ],
+  "modeledComponents": [
+    "all identities/tokens/Apple/CloudKit/gateway API responses and background source changes",
+    "new store/controller restart is within one test process, not device/process crash",
+    "fault injection does not prove power-loss filesystem behavior or hardware encryption",
+    "UI fixture server is synthetic in-memory API, not real HTTP/hosted Free/provider"
+  ],
+  "negativeControl": {
+    "isolatedCopy": true,
+    "removed": "retain unknown on approved; instead remove durable entry",
+    "failedTests": 1,
+    "issues": 3,
+    "originalNativeSourceTestHashesPreserved": true
+  },
+  "knownLimits": [
+    "source-free publication UI still closed until protected approved-owner preview and exact displayed-image confirmation",
+    "current approved status cannot prove historical failure or cancel an in-flight server request",
+    "v1 closed union extension is fail-closed for older clients; not a permissive downgrade path",
+    "physical Keychain/PhotosPicker/iCloud Photos/FileProtection/locked-device remain unaccepted",
+    "real roles/schema/SIWA/hosts/separate service identity/hosted Free/two ordinary accounts and remaining migration remain open",
+    "prior frame warnings unresolved; editor regression still reports an existing frame warning",
+    "reports/contact/retention/orphans incomplete; standard entry Firebase; not TestFlight ready"
+  ],
+  "notPerformed": [
+    "remote activation/deployment/schema/roles/new credentials/permissions/paid services",
+    "phone SDK or new physical approval windows",
+    "Production/TestFlight/Firebase changes",
+    "unchanged518 gateway/Core/remaining UI/dependency audit repetition"
+  ],
+  "uiRuntimeWarnings": [
+    {
+      "issueType": "Runtime Warning",
+      "message": "Invalid frame dimension (negative or non-finite)."
+    }
+  ],
+  "packageRuntimeWarnings": [],
+  "sourceDocsSHA256": {
+    "Echo/Services/AvatarEditorPreviewFixture.swift": "714924a24fb7ba9286812ed6a4b7d775151ce1d19f408dc90d9e826c6833f316",
+    "Echo/Services/CommunityPreviewFixture.swift": "00158abe2cb4f1b91fe0dc288c840dd68cfa619e3ec03b20255fb56f86d26c67",
+    "Echo/Views/AvatarEditorView.swift": "c45b0c7ad35a2d0624193aea0b4c6d76f7d94761c4f3012c1eef0893b4ffc79e",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarEditor.swift": "05d4c92b377fa268be2e0537ac186b70ed5692198761c15e65e2ebae861a431d",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarMutationAPI.swift": "1ff5b38dc1b156ff030972bd5f33d728fce81a81c75e2b8d64997a99be1b60fc",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarOwnerController.swift": "bb33fab393b513357120b2d67f50fdc520d3a13301e37091e204b31a92d0dbec",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarUploadJournal.swift": "e52c0a3f553354cd26a88a0a260663ed6d8cda0748508684cc712391e4d23ac4",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarUploadRecord.swift": "e457c36a243795f7e7a44952c58cb9a9a51beb928981c3e5ba3f0470bdcb16b9",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarEditorTests.swift": "9eb98186ab3e8943dc8dd1190508916ed57cd4108cc8c4ccc4262705c09d5a4a",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarOwnerTests.swift": "a0b81a5f8e3adabd777d6642f288366cf86631f455811a6febf5c156fb9c405e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarUploadJournalTests.swift": "351342f3ee6c3bff4ece1728463a8dc08f44a5bd3495404958f2fe4490ab7381",
+    "EchoesUITests/GatewayAvatarEditorUITests.swift": "d7ab96e74334854e94eafcd7ecd0f359404f6d6bfb2deb23313510fa4a71566a",
+    "Docs/PUBLIKACJA_METADANYCH_IOS.md": "71536a6c98358ca70976588dd340e164c699c4bf0a1c1293d5ff53ac6058fdd3",
+    "Docs/NATYWNY_JOURNAL_UPLOADU_AVATAROW.md": "209acb90655c735db8462cd396ba33c61e3af446a22a3e5b6cf66bfdc228a154",
+    "Docs/NATYWNY_STEROWNIK_WLASNEGO_ZDJECIA.md": "ebc7eb82fff25407ff565561018a6e58ffe352ec709e1722db825b8239dbced4",
+    "Docs/KONTRAKT_PUBLIKACJI_ZDJECIA.md": "b5197024873234c57590b35196da3d661f57d025d571cf59a28dd8243581a591",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "47d3579a2e12a7a2d777c88b4f0af72259750da7dc298da414bbf7af1457458c",
+    "Docs/DZIENNIK_ZMIAN.md": "769a96166d67eab16d5ddac9d5e18f49b7a5a2c4784e69d44a57e54be4573945"
+  },
+  "localLogSHA256": {
+    "echoes-publication-journal-verified-debug.log": "8772ec6a4ac9fad865897cfe95ec7155a4603074482e81a107af8752a09c4177",
+    "echoes-publication-journal-first.log": "5ee6385a026bd6857c5b46e0d41435f9333dc07d1ab4f750929bf0470631e30d",
+    "echoes-publication-journal-focused.log": "140c75cf55ecb83d959d9e298c9c7c53e25f0f259f502af24fbed1407addc1cc",
+    "echoes-publication-journal-verified-full-mac.log": "989bb9eff486939ec5f7173e3cda427c7c524384e055f905de17efc6a22e67ec",
+    "echoes-publication-journal-verified-package-simulator.log": "88de40ab1f927046e23d0f789b1b7d18f5050dd2d9eaba62117f3d6f78eb9126",
+    "echoes-publication-journal-verified-package-simulator-summary.json": "50cf19af85113a5dbc038c9a51d22aa7546b9783afab1397c469f1f5c31ee55c",
+    "echoes-publication-journal-release.log": "0dc20056f1322d6b08b2e068070e650535858613938e457385f0373562c22733",
+    "echoes-publication-journal-verified-release.log": "1a2e5da33a4453a5058707981c9935266d98944af261d0479aeeda100369fb6d",
+    "echoes-publication-journal-verified-negative.log": "b2e4e29d74160c0a2b6a51bcdb10352096f2bebf2c49aab9ec3d8732f4d63fc6",
+    "echoes-publication-journal-editor-ui.log": "28aa58d93f4b881eb50c446604fe2c2b399e305c7fd7d08431960d9938326d60",
+    "echoes-publication-journal-editor-ui-summary.json": "0ed2a23c3e183912f5f73fdb7a280b279d9275935cda9a2d690d2c65f4cd895d"
+  },
+  "localScreenshotSHA256": {
+    "367D291D-BD5B-4D52-88A7-B7EBA62BE865.png": {
+      "label": "owner-photo-publication-metadata-recovered_0_BDC40D48-5DB0-4158-912A-0703D6FE4FE2.png",
+      "sha256": "24f0f8eabd1162ab7d9429d9738cada7500fd22a36931a50a243896f4641b8f0"
+    },
+    "40CF3928-A9D5-4940-8123-F89D95C8173C.png": {
+      "label": "owner-photo-publication-unknown-metadata_0_7CAB74BB-82AD-4131-89C7-FD5DD0DAE0FC.png",
+      "sha256": "bcac84a9c2244fb62173befc57bd35b279cde314d323fa9118db5e65c9594447"
+    }
+  },
+  "preservedUserProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+}

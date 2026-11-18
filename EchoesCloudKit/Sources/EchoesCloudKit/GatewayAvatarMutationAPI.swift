@@ -76,6 +76,20 @@ public struct GatewayAvatarPublishIntent: Equatable, Sendable, CustomStringConve
         requestID == snapshot.requestID && versionID == snapshot.versionID
             && generation == snapshot.generation && reviewRevision == snapshot.reviewRevision
     }
+    func validateProgress(_ snapshot: GatewayAvatarOwnerSnapshot) throws {
+        guard snapshot.generation >= generation,
+            snapshot.generation != generation
+                || (snapshot.requestID == requestID && snapshot.versionID == versionID)
+        else {
+            throw GatewayAvatarMutationFailure.invalidResponse
+        }
+    }
+    func isSuperseded(by snapshot: GatewayAvatarOwnerSnapshot) -> Bool {
+        snapshot.generation > generation
+            || (snapshot.generation == generation
+                && snapshot.requestID == requestID && snapshot.versionID == versionID
+                && snapshot.reviewRevision != reviewRevision)
+    }
     var fields: [String: Any] {
         [
             "requestID": requestID, "versionID": versionID, "generation": generation,

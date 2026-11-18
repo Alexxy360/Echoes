@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.4a — publikacja dokładnego zatwierdzonego wyboru
 
+Następny [etap 3c.4b](PUBLIKACJA_METADANYCH_IOS.md) dodaje osobny trwały wariant publikacji i odzyskiwanie bez uploadu. Poniżej zachowano zakres oraz wyniki etapu kontraktu; nowy przepływ interfejsu nadal wymaga podglądu i potwierdzenia autora.
+
 Przed umożliwieniem ponownej publikacji bez lokalnego upload journala wzmocniono kontrakt istniejącego `publish`. Sam requestID pozwalał serwerowi przyjąć najnowsze zatwierdzenie, nawet gdy autor rozpoczął akcję dla wcześniejszej rewizji moderacji tego samego zdjęcia. Nowy kontrakt zachowuje dokładny wybór autora także podczas oczekiwania na status, checkpoint lub zapis wskazania.
 
 ## Żądanie i serwer

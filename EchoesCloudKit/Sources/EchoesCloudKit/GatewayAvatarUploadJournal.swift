@@ -151,6 +151,41 @@ public actor GatewayAvatarUploadJournal {
         try save(value, scope: lease.scope)
         return try value.record.entry!.entry()
     }
+    /// One explicit publication choice, with no image/checksum invented from a server snapshot.
+    /// Only an exact staged upload may be replaced. An existing publication keeps its exact IDs.
+    public func preparePublication(
+        intent: GatewayAvatarPublishIntent,
+        replacing expected: GatewayAvatarUploadJournalEntry? = nil,
+        lease: GatewayAvatarUploadJournalLease
+    ) throws -> GatewayAvatarUploadJournalEntry {
+        var value = try current(lease)
+        guard try value.record.entry?.entry() == expected else {
+            throw GatewayAvatarUploadJournalFailure.superseded
+        }
+        if let old = value.record.entry {
+            switch try old.intent() {
+            case .publish(let selected):
+                guard selected == intent else { throw GatewayAvatarUploadJournalFailure.pendingExists }
+                return try old.entry()
+            case .upload(let uploaded):
+                guard old.phase == .staged, uploaded.requestID == intent.requestID,
+                    uploaded.versionID == intent.versionID,
+                    uploaded.expectedGeneration + 1 == intent.generation
+                else {
+                    throw GatewayAvatarUploadJournalFailure.pendingExists
+                }
+            case .clear: throw GatewayAvatarUploadJournalFailure.pendingExists
+            }
+        }
+        value.record.entry = .init(
+            revision: UUID().uuidString.lowercased(), kind: "publish",
+            requestID: intent.requestID, expectedGeneration: intent.generation, phase: .prepared,
+            createdAt: try timestamp(), versionID: intent.versionID, consentVersion: intent.consentVersion,
+            reviewRevision: intent.reviewRevision)
+        value.source = Data()
+        try save(value, scope: lease.scope)
+        return try value.record.entry!.entry()
+    }
     /// Explicit withdrawal may replace an exact pending entry, atomically dropping its local JPEG.
     /// Native host must obtain fresh server generation and user intent before requesting replacement.
     public func prepareClear(
@@ -210,6 +245,8 @@ public actor GatewayAvatarUploadJournal {
         let allowed: Bool
         if entry.kind == "clear" {
             allowed = phase == .dispatched && (entry.phase == .prepared || entry.phase == .dispatched)
+        } else if entry.kind == "publish" {
+            allowed = phase == .publishing && (entry.phase == .prepared || entry.phase == .publishing)
         } else {
             switch (entry.phase, phase) {
             case (.prepared, .dispatched), (.dispatched, .dispatched), (.dispatched, .staged),

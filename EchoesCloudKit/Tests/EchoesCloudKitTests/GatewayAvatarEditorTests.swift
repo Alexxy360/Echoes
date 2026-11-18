@@ -9,6 +9,35 @@ import Testing
         controller: f.controller, cloudKit: f.cloudKit, authorization: f.authorization,
         isEnabled: { f.flags.enabled })
 }
+
+@Test @MainActor func avatarEditorMetadataPublicationStaysClosedUntilAuthorPreviewButAllowsRecoveryAndClear()
+    async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    await f.api.set(
+        try GatewayAvatarOwnerSnapshot(data: JSONSerialization.data(withJSONObject: mutationBody(.approved))))
+    let host = try editorHost(f)
+    let session = try host.open(isCurrent: { true })
+    await session.perform(.refresh)
+    #expect(session.snapshot?.status == .approved && session.pendingOperation == nil)
+    #expect(!session.canPublish)
+    await session.perform(.publish)
+    #expect(await f.actions() == ["status"])
+    // Trusted controller caller models the future preview, without claiming UI acceptance here.
+    await f.api.fail("publish", .beforeAccept)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let pending = try #require(session.pendingOperation)
+    guard case .publish = pending.intent else {
+        Issue.record("Expected saved publication")
+        return
+    }
+    #expect(session.canRecover && !session.canRetryUpload && !session.canPublish && !session.canChoosePhoto)
+    await session.perform(.recover)
+    #expect(session.pendingOperation == pending && !session.canDiscardPending)
+    await session.perform(.clear)
+    #expect(session.pendingOperation == nil && session.snapshot?.status == GatewayAvatarOwnerStatus.none)
+}
 @Test @MainActor func avatarEditorSelectionDoesNotUploadAndConsentIsBoundToTheExactDraft() async throws {
     let f = try OwnerFlowFixture()
     defer { f.cleanup() }

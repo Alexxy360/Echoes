@@ -52,6 +52,15 @@ actor OwnerFlowJournal: GatewayAvatarUploadJournaling {
         try await real.prepareClear(
             requestID: requestID, expectedGeneration: expectedGeneration, replacing: replacing, lease: lease)
     }
+    func preparePublication(
+        intent: GatewayAvatarPublishIntent, replacing: GatewayAvatarUploadJournalEntry?,
+        lease: GatewayAvatarUploadJournalLease
+    ) async throws -> GatewayAvatarUploadJournalEntry {
+        let result = try await real.preparePublication(intent: intent, replacing: replacing, lease: lease)
+        await preparing.enter()
+        if failPrepare { throw GatewayAvatarUploadJournalFailure.unavailable }
+        return result
+    }
     func source(for entry: GatewayAvatarUploadJournalEntry, lease: GatewayAvatarUploadJournalLease)
         async throws -> Data
     { try await real.source(for: entry, lease: lease) }
@@ -795,6 +804,267 @@ private actor OwnerWireSequence: GatewayAvatarMutationTransport {
 @MainActor private final class OwnerPresentationEvents {
     var values: [(String, GatewayAvatarOwnerSnapshot?)] = []
     func record(_ owner: String, _ snapshot: GatewayAvatarOwnerSnapshot?) { values.append((owner, snapshot)) }
+}
+
+@Test @MainActor func avatarOwnerSourceFreePublicationCannotAdoptAnotherAlreadyPublishedChoice() async throws
+{
+    for replacedSelection in [true, false] {
+        let f = try OwnerFlowFixture()
+        defer { f.cleanup() }
+        let old = try await f.observeApprovalWithoutUpload()
+        await f.api.set(
+            try ownerSnapshot(
+                generation: replacedSelection ? 2 : 1,
+                request: replacedSelection ? UUID().uuidString.lowercased() : old.requestID,
+                version: replacedSelection ? UUID().uuidString.lowercased() : old.versionID,
+                status: .published, reviewRevision: UUID().uuidString.lowercased()))
+        await #expect(throws: GatewayAvatarMutationFailure.stale) { try await f.controller.publish() }
+        #expect(try await f.journal.read() == nil)
+        #expect(!(await f.actions()).contains("publish"))
+        #expect(f.controller.snapshot == nil && f.controller.needsRefresh)
+    }
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    let same = try await f.observeApprovalWithoutUpload()
+    await f.api.set(
+        try ownerSnapshot(
+            generation: same.generation, request: same.requestID,
+            version: same.versionID, status: .published, reviewRevision: #require(same.reviewRevision)))
+    try await f.controller.publish()
+    #expect(f.controller.snapshot?.status == .published && f.controller.pendingOperation == nil)
+    #expect(!(await f.actions()).contains("publish"))
+}
+
+@MainActor extension OwnerFlowFixture {
+    fileprivate func observeApprovalWithoutUpload(generation: Int = 1) async throws
+        -> GatewayAvatarOwnerSnapshot
+    {
+        let value = try ownerSnapshot(
+            generation: generation, request: mutationRequestID,
+            version: mutationVersionID, status: .approved)
+        await api.set(value)
+        try await controller.connect()
+        try await controller.refresh()
+        return value
+    }
+}
+
+@Test @MainActor func avatarOwnerPublishesExistingApprovalWithDurableMetadataAndNoUploadSource() async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    let approved = try await f.observeApprovalWithoutUpload()
+    #expect(f.controller.pendingOperation == nil)
+    await f.api.beforeEach { action in
+        if case .publish(let selected) = action {
+            let saved = try #require(await f.journal.read())
+            #expect(saved.intent == .publish(selected) && saved.phase == .publishing)
+            #expect(!saved.hasSource && saved.sourceSHA256 == nil && saved.sourceByteCount == nil)
+        }
+    }
+    try await f.controller.publish()
+    #expect(
+        f.controller.snapshot?.status == .published
+            && f.controller.snapshot?.reviewRevision == approved.reviewRevision)
+    #expect(f.controller.pendingOperation == nil)
+    #expect(try await f.journal.read() == nil)
+    #expect(await f.actions() == ["status", "status", "publish"])
+}
+
+@Test @MainActor func avatarOwnerPublicationDropsTheStagedJPEGBeforeAnyPublicationDispatch() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    try await f.controller.connect()
+    try await f.controller.submit(f.avatar, consentVersion: 1)
+    try await f.api.review(.approved)
+    try await f.controller.refresh()
+    let old = try #require(f.controller.pendingOperation)
+    await f.api.beforeEach { action in
+        if case .publish = action {
+            let saved = try #require(await f.journal.read())
+            guard case .publish = saved.intent else {
+                Issue.record("Expected publication metadata before HTTP")
+                return
+            }
+            #expect(!saved.hasSource && saved.sourceSHA256 == nil)
+            let path = f.root.appendingPathComponent(AvatarUploadJournalFiles.namespace)
+                .appendingPathComponent(f.scope.privateScope.digest).appendingPathComponent(f.scope.digest)
+                .appendingPathComponent("record.bin")
+            #expect(try Data(contentsOf: path).range(of: f.avatar.image) == nil)
+            await #expect(throws: GatewayAvatarUploadJournalFailure.superseded) {
+                try await f.real.source(for: old, lease: #require(await f.journal.lease))
+            }
+        }
+    }
+    try await f.controller.publish()
+    #expect((await f.actions()).filter { $0 == "upload" }.count == 1)
+}
+
+@Test @MainActor func avatarOwnerPublicationLostReplySurvivesNewStoreAndReadOnlyRecoveryWithoutResend()
+    async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    _ = try await f.observeApprovalWithoutUpload()
+    await f.api.fail("publish", .lostReply)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let saved = try #require(await f.journal.read())
+    guard case .publish = saved.intent else {
+        Issue.record("Expected durable publication metadata")
+        return
+    }
+    f.controller.invalidate()
+    await f.real.close()
+    let journal = try GatewayAvatarUploadJournal(root: f.root)
+    let controller = try GatewayAvatarOwnerController(
+        api: f.api, configuration: f.configuration,
+        cloudKit: f.cloudKit, authorization: f.authorization, journal: journal, isEnabled: { true })
+    defer {
+        controller.invalidate()
+        Task { await journal.close() }
+    }
+    let before = await f.actions()
+    try await controller.connect()
+    #expect(await f.actions() == before)
+    #expect(controller.pendingOperation == saved)
+    try await controller.recover()
+    #expect(controller.snapshot?.status == .published && controller.pendingOperation == nil)
+    #expect(await f.actions() == ["status", "status", "publish", "status"])
+}
+
+@Test @MainActor func avatarOwnerApprovedStatusNeverForgetsOrRetriesAnUnknownPublication() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    _ = try await f.observeApprovalWithoutUpload()
+    await f.api.fail("publish", .beforeAccept)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let pending = try #require(await f.journal.read())
+    try await f.controller.recover()
+    #expect(f.controller.snapshot?.status == .approved && f.controller.pendingOperation == pending)
+    await #expect(throws: GatewayAvatarMutationFailure.pending) {
+        try await f.controller.discardUnsentOrSuperseded()
+    }
+    await #expect(throws: GatewayAvatarUploadJournalFailure.invalidTransition) {
+        try await f.controller.retryUpload()
+    }
+    #expect(try await f.journal.read() == pending)
+    #expect((await f.actions()).filter { $0 == "publish" }.count == 1)
+    try await f.controller.clear()
+    #expect(
+        f.controller.snapshot?.status == GatewayAvatarOwnerStatus.none && f.controller.pendingOperation == nil
+    )
+}
+
+@Test @MainActor func avatarOwnerExplicitPublicationRetryKeepsExactRevisionAndDoesNotUpload() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    _ = try await f.observeApprovalWithoutUpload()
+    await f.api.fail("publish", .beforeAccept)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let pending = try #require(await f.journal.read())
+    try await f.controller.refresh()
+    #expect(f.controller.pendingOperation == pending)
+    try await f.controller.publish()
+    let choices = await f.api.captured().compactMap { call -> GatewayAvatarPublishIntent? in
+        if case .publish(let selected) = call.action { return selected }
+        return nil
+    }
+    #expect(choices.count == 2 && choices[0] == choices[1])
+    let actions = await f.actions()
+    #expect(!actions.contains("upload") && !actions.contains("recover"))
+    #expect(f.controller.snapshot?.status == .published && f.controller.pendingOperation == nil)
+}
+
+@Test @MainActor func avatarOwnerSupersededPublicationRequiresExplicitDiscardBeforeNewRevision() async throws
+{
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    _ = try await f.observeApprovalWithoutUpload()
+    await f.api.fail("publish", .beforeAccept)
+    await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+    let pending = try #require(await f.journal.read())
+    try await f.api.review(.approved)
+    try await f.controller.recover()
+    #expect(f.controller.pendingOperation == pending)
+    await #expect(throws: GatewayAvatarMutationFailure.stale) { try await f.controller.publish() }
+    #expect((await f.actions()).filter { $0 == "publish" }.count == 1)
+    try await f.controller.discardUnsentOrSuperseded()
+    #expect(f.controller.pendingOperation == nil && f.controller.snapshot?.status == .approved)
+    try await f.controller.publish()
+    #expect(f.controller.snapshot?.status == .published)
+}
+
+@Test @MainActor func avatarOwnerPublicationRejectsRolledBackOrContradictoryStatusWithoutRemovingIDs()
+    async throws
+{
+    for contradiction in [false, true] {
+        let f = try OwnerFlowFixture()
+        defer { f.cleanup() }
+        _ = try await f.observeApprovalWithoutUpload(generation: 2)
+        await f.api.fail("publish", .beforeAccept)
+        await #expect(throws: GatewayAvatarMutationFailure.unavailable) { try await f.controller.publish() }
+        let pending = try await f.journal.read()
+        await f.api.set(
+            try ownerSnapshot(
+                generation: contradiction ? 2 : 1,
+                request: contradiction ? UUID().uuidString.lowercased() : mutationRequestID,
+                version: mutationVersionID, status: .approved))
+        await #expect(throws: GatewayAvatarMutationFailure.invalidResponse) {
+            try await f.controller.recover()
+        }
+        #expect(try await f.journal.read() == pending)
+    }
+}
+
+@Test @MainActor func avatarOwnerPublicationPersistenceFailureNeverDispatchesAndRetainsDurableChoice()
+    async throws
+{
+    for duringPrepare in [true, false] {
+        let f = try OwnerFlowFixture()
+        defer { f.cleanup() }
+        _ = try await f.observeApprovalWithoutUpload()
+        await f.journal.fail(prepare: duringPrepare, transition: !duringPrepare)
+        await #expect(throws: GatewayAvatarUploadJournalFailure.unavailable) {
+            try await f.controller.publish()
+        }
+        let pending = try #require(await f.journal.read())
+        guard case .publish = pending.intent else {
+            Issue.record("Expected persisted choice after ambiguous IO")
+            return
+        }
+        #expect(pending.phase == (duringPrepare ? .prepared : .publishing))
+        #expect(!(await f.actions()).contains("publish"))
+        await f.journal.fail()
+        try await f.controller.recover()
+        #expect(f.controller.pendingOperation == pending)
+        if duringPrepare {
+            try await f.controller.discardUnsentOrSuperseded()
+            #expect(f.controller.pendingOperation == nil)
+        } else {
+            await #expect(throws: GatewayAvatarMutationFailure.pending) {
+                try await f.controller.discardUnsentOrSuperseded()
+            }
+        }
+    }
+}
+
+@Test @MainActor func avatarOwnerPrivateScopeChangeDuringPublicationStoragePreventsDispatch() async throws {
+    let f = try OwnerFlowFixture()
+    defer { f.cleanup() }
+    _ = try await f.observeApprovalWithoutUpload()
+    await f.journal.preparing.arm()
+    let publication = Task { try await f.controller.publish() }
+    defer {
+        publication.cancel()
+        Task { await f.journal.preparing.release() }
+    }
+    try await f.journal.preparing.wait()
+    f.authorization.cloudName = "different-private-cloud"
+    #expect(!f.controller.isConnected && f.controller.snapshot == nil)
+    await f.journal.preparing.release()
+    await #expect(throws: GatewayAvatarOwnerFailure.superseded) { try await publication.value }
+    #expect(!(await f.actions()).contains("publish"))
+    #expect(try await f.journal.read()?.phase == .prepared)
 }
 
 @Test @MainActor func avatarOwnerPublicationRequiresAnAlreadyObservedApprovedSnapshot() async throws {
