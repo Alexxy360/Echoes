@@ -19,12 +19,14 @@
   ],
   "inference": "An ordinary second Apple Account invited to App Store Connect is not a verified route to a separate S2S creator identity in this Individual team.",
   "proposedAlternative": "owner account is explicitly privileged administrator; separate credentials remain tied to the same iCloud identity; ordinary A/B accounts remain required",
-  "alternativeAccepted": false,
+  "alternativeAccepted": true,
   "separateServiceIdentityRequirementSatisfied": false,
   "roleAssignmentsPerformed": false,
   "credentialChangesPerformed": false,
   "remoteAccountChangesPerformed": false,
   "servicesActivated": false,
   "productionChanged": false,
-  "personalContactDetailsStored": false
+  "personalContactDetailsStored": false,
+  "userDecision": "Tak, przyjmuję rekomendowany wariant",
+  "requirementDecision": "Separate server Apple ID requirement explicitly superseded by owner administrator identity and separate credentials; ordinary A/B still required."
 }

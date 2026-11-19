@@ -928,3 +928,10 @@ Opisano wymagania przyszłego wykonawcy: trwały dziennik przed IO, preflight ni
 Pliki: gateway/scripts/community-protocol-plan.mjs, gateway/test/community-protocol-plan.test.mjs, Docs/PLAN_TESTU_PROTOKOLU_CLOUDKIT.md, Docs/evidence/community-protocol-plan-local-tests.json oraz ten dziennik i plan. Weryfikacja:4/4 Node22.23.5 i4/4 Node24.22.1; pola porównane z faktycznym eksportem Apple, minimalne bariery/anchor chain, hash/zmiana zakresu, odrębne tożsamości/błędny seed. JSON poprawny. Bez zmian produktu/iOS/deps/CI i powtarzania wcześniejszych643 testów lub kompilacji.
 
 Bez wywołań Apple/Cloudflare, kluczy/ról, rekordów, plików aktywacji, opłat, SDK telefonu, Production/Firebase/TestFlight. Decyzja modelu konta Individual i zgoda na przyszłe rzeczywiste operacje pozostają otwarte; zastany projekt zachowujemy. [Dokładny status](PLAN_TESTU_PROTOKOLU_CLOUDKIT.md).
+
+
+## CK-01l.1 — 2026-11-19 — zatwierdzony model konta administracyjnego
+
+Po pytaniu właściciela o rekomendację wyjaśniono wariant obecnego konta Individual i osobnej tożsamości, w tym dostęp konta administratora także poza ograniczeniami bramki oraz dziedziczenie praw przez S2S. Właściciel jawnie odpowiedział „Tak, przyjmuję rekomendowany wariant”. Zaktualizowano model i raport: konto właściciela jako administrator oraz osobne klucze zastępują wcześniejszy wymóg osobnego Apple ID serwera. Nie oznaczono nieutworzonej tożsamości jako zaliczonej. Testy dwóch nieuprzywilejowanych kont nadal wymagane.
+
+Pliki: Docs/MODEL_UPRAWNIEN_INDIVIDUAL.md, Docs/evidence/service-identity-membership-assessment.json oraz ten dziennik i plan. Weryfikacja: konkretna odpowiedź właściciela, ponowne sprawdzenie oficjalnych zasad Apple, poprawny JSON. Kod/testy/usługi bez zmian; testów/kompilacji nie ponawiano. Zgoda dotyczy modelu, nie operacji nadania roli, odwołania/rejestracji/przekazania kluczy, uruchomienia testu lub wdrożenia. Bez opłat, operacji na rekordach, SDK telefonu, Production/Firebase/TestFlight. Zastana zmiana projektu zachowana.

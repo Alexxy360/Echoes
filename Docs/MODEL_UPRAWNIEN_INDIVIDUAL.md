@@ -1,6 +1,6 @@
 # Konto Individual i tożsamość serwera — decyzja do zatwierdzenia
 
-19 listopada 2026. **Analiza przygotowana; model z kontem właściciela jako administratorem nie jest jeszcze zatwierdzony.** Nie nadano nowych ról, nie utworzono klucza ani nie aktywowano gateway. Właściciel potwierdził, że wydaje jako osoba fizyczna i nie dysponuje organizacją.
+19 listopada 2026. **Model zatwierdzony przez właściciela: konto Individual z właścicielem jako administratorem backendu i oddzielnymi kluczami.** Nie nadano nowych ról, nie utworzono klucza ani nie aktywowano gateway. Właściciel potwierdził, że wydaje jako osoba fizyczna i nie dysponuje organizacją.
 
 ## Ustalone fakty
 
@@ -16,6 +16,8 @@ Organization ma osobne wymagania, w tym kwalifikację podmiotu przez Apple; nie 
 
 ## Proponowany wariant dla obecnego konta
 
+Po przedstawieniu skutków i rekomendacji właściciel odpowiedział „Tak, przyjmuję rekomendowany wariant”. Ta decyzja zastępuje wcześniejszy wymóg osobnego Apple ID serwera; nie jest dowodem jego utworzenia ani zgodą na konkretne operacje ról/kluczy. Testy dwóch nieuprzywilejowanych kont pozostają wymagane.
+
 Zachowujemy CloudKit i projekt bramki Workers Free. Konto Apple Developer właściciela pełni również rolę administratora danych społecznościowych. Dla bramki przygotowujemy oddzielne klucze i sekrety, ale dokumentujemy, że ich tożsamość iCloud pozostaje tożsamością właściciela.
 
 Nowe typy mają już zadeklarowane READ/CREATE/WRITE wyłącznie dla `EchoesCommunityService`, bez grantów `_world`, `_icloud` i `_creator`. Po osobnym przygotowaniu i zatwierdzeniu nadania roli konto właściciela mogłoby wykonywać operacje na tych typach. **Ta analiza sama nie upoważnia do takiego przypisania.** Dotychczasowy klucz diagnostyczny również dziedziczyłby nowe prawa tego samego konta; przed jakimkolwiek nadaniem trzeba przygotować jego kontrolowane unieważnienie/rozliczenie pozostałych kopii oraz nowy klucz Development. Nie wolno rozszerzyć jego praw w tle.
@@ -27,12 +29,12 @@ Nowe typy mają już zadeklarowane READ/CREATE/WRITE wyłącznie dla `EchoesComm
 | Klucz serwera | Pozostaje poza aplikacją/Git. S2S dotyczy publicznej bazy konkretnego kontenera/środowiska; nie daje tym kluczem dostępu do prywatnych profili. Sam oddzielny klucz nie odbiera praw kontu właściciela. |
 | Testy użytkowników | Wymagają dwóch nieuprzywilejowanych kont, różnych od konta właściciela. Dotychczasowy iPhone właściciela nie zastąpi tych kont. Nie wylogowujemy go automatycznie. |
 | Koszt i publikacja | Propozycja nie wymaga nowej organizacji ani aktywacji płatnej usługi. Limity Free i rzeczywiste zużycie nadal wymagają odbioru; nie stanowi obietnicy bezpłatności przy dowolnej skali. Brak zmian Production. |
-| Wcześniejszy wymóg osobnej tożsamości | Nie jest spełniony. Przyjęcie tego modelu wymaga jawnej decyzji właściciela o zastąpieniu go udokumentowanym kontem administracyjnym i osobnymi kluczami. Nie oznaczamy go po prostu jako zaliczony. |
+| Wcześniejszy wymóg osobnej tożsamości | Zastąpiony jawną decyzją właściciela przez udokumentowane konto administracyjne i osobne klucze. Osobnej tożsamości iCloud nie utworzono i nie oznaczamy jej jako zaliczonej. |
 
 ## Zakres decyzji i kolejność dalszej pracy
 
 Decyzja dotyczy modelu uprawnień dla obecnego członkostwa Individual. Jej przyjęcie nie jest zgodą na przypisanie roli, rejestrację/przekazanie klucza, unieważnienie starego klucza, zapis/usuwanie rekordów ani uruchomienie hostowanej usługi. Te operacje wymagają przygotowanego, konkretnego zakresu.
 
-Po przyjęciu modelu: przygotować inwentarz i ograniczony test protokołu Development; opisać skutki wycofania starego klucza diagnostycznego i nowego klucza, dokładne nadanie roli oraz okno testu/oczyszczania. Potem konkretne zatwierdzenie operacji, testy kont i odbierania praw. Zwykłe konta A/B, SIWA, realne zapytania/assety, alarm/Free i reszta planu nadal pozostają wymagane przed przygotowaniem wydania.
+Następnie: przygotować inwentarz i ograniczony test protokołu Development; opisać skutki wycofania starego klucza diagnostycznego i nowego klucza, dokładne nadanie roli oraz okno testu/oczyszczania. Potem konkretne zatwierdzenie operacji, testy kont i odbierania praw. Zwykłe konta A/B, SIWA, realne zapytania/assety, alarm/Free i reszta planu nadal pozostają wymagane przed przygotowaniem wydania.
 
 Jeżeli właściciel zachowa wymaganie całkowicie osobnej tożsamości iCloud serwera, nie aktywujemy opisanej alternatywy. Potrzebne jest potwierdzenie przez Apple dopuszczalnej ścieżki na takim członkostwie albo osobna decyzja architektoniczna. Nie kupujemy innego członkostwa i nie zamieniamy backendu samodzielnie.
