@@ -1,0 +1,202 @@
+{
+  "stage": "CK-05d.1c.1",
+  "createdAt": "2026-11-19T18:20:58.437213+00:00",
+  "baselineCommit": "035b81fc4cac25d4a3e5ec9f53615b28711175f6",
+  "native": {
+    "definedEach": 668,
+    "passedEach": 666,
+    "skippedEach": 2,
+    "failedEach": 0,
+    "newFunctions": [
+      "avatarReportNativeDecodesConcreteRuntimeSubmissionAndBothRecoveryOutcomes",
+      "avatarReportNativeWireOmitsReporterPrivilegesHashGenerationAndRecoveryMaterial",
+      "avatarReportNativeDefaultDisabledMalformedTokenAndCancelledTaskDoNotDispatch",
+      "avatarReportNativeReasonUsesServerNFCTrimUTF16AndControlRules",
+      "avatarReportNativeModelsRejectSelfInvalidCoordinatesAndMalformedIDsAndRedactMaterial",
+      "avatarReportNativeResponsePinsExactOwnRequestAndRejectsExtraGPSOrWrongOutcomes",
+      "avatarReportNativeResponseRejectsBooleanOrMissingVersionNullAndInvalidUTF8",
+      "avatarReportNativeBoundaryRejectsCacheCompressionRangeMIMEHeaderCollisionsAndLengths",
+      "avatarReportNativeErrorsBindStatusDomainAndNeverExposeProviderErrorsOrRetryWrite",
+      "avatarReportNativeLateDisabledRollbackAndExpiredResponsesCannotClaimAccepted",
+      "avatarReportNativeUnknownTransportErrorIsRedactedAndRecoveryUsesOnlyOriginalIdentity",
+      "avatarReportURLSessionConcreteRuntimeWireAndReadOnlyRecoveryUseExactOriginalAttempt",
+      "avatarReportURLSessionPinsURLMethodExactBodyAndHeadersBeforeSystemDispatch",
+      "avatarReportURLSessionRejectsRedirectAndForeignResponseURLWithoutForwardingBearer",
+      "avatarReportURLSessionValidatesHeadersBeforeBodyOrEOF",
+      "avatarReportURLSessionBoundsActualBytesAndExactAdvertisedLength",
+      "avatarReportURLSessionBusyAndCancellationNeverDispatchAnotherWrite",
+      "avatarReportURLSessionDoesNotReuseCookiesOrOfflineResults",
+      "avatarReportNetworkGateRetainsFailureUntilExactSystemTaskCompletion",
+      "avatarReportNetworkGateBoundsNonemptyChunksAndRetainsRejectedBodyUntilCompletion",
+      "avatarReportURLSessionRealDeadlineStopsUnfinishedBodyWithoutRetry"
+    ],
+    "initialFocusedPassed": 21,
+    "finalFullIncludesAllNewFunctions": true,
+    "platforms": [
+      "macOS",
+      "iPhone 17 Pro / iOS26.1 Simulator"
+    ],
+    "skipReasons": [
+      "physical file Data Protection",
+      "physical upload journal FileProtection"
+    ],
+    "physicalEvidenceNotClaimed": true
+  },
+  "builds": {
+    "Debug": "build-for-testing Simulator passed",
+    "Release": "unsigned generic iOS build passed",
+    "UIChanged": false,
+    "UITestsRerun": false,
+    "XcodeBuildMCPAvailable": false,
+    "fallback": "xcodebuild CLI on already booted and authorized simulator"
+  },
+  "protocol": {
+    "defaultEnabled": false,
+    "hostRuntimeJournalFormConnected": false,
+    "reportIDDerivedFromAccountAndRequestUUIDWithSameServerSHA256": true,
+    "submitFields": [
+      "requestID",
+      "ownerID",
+      "versionID",
+      "reason",
+      "coordinate"
+    ],
+    "recoveryFields": [
+      "requestID"
+    ],
+    "closedResponse": [
+      "protocolVersion",
+      "schemaVersion",
+      "requestID",
+      "reportID",
+      "outcome"
+    ],
+    "sameOwnRequestAndReportIdentityChecked": true,
+    "canonicalReason": "ECMAScript whitespace trim, NFC,500 UTF16",
+    "selfReportAndInvalidCoordinatesRefused": true,
+    "successOutcomes": {
+      "submit": [
+        "accepted"
+      ],
+      "recover": [
+        "accepted",
+        "unconfirmed"
+      ]
+    },
+    "noAutomaticApplicationRetryOrUUIDChange": true,
+    "noSessionErasureByClient": true,
+    "publicModelsAndHTTPResponseRedactReflection": true,
+    "submitMayHaveCommittedBeforeAnyError": "journal/host must retain unknown outcome; not implemented in this stage"
+  },
+  "transport": {
+    "actual": "URLSession + URLProtocol and native delegate",
+    "externalNetwork": false,
+    "pinnedRequest": "origin/path/POST/canonical body and six exact headers before system task",
+    "ephemeral": true,
+    "cookiesCredentialsCacheConnectivityWaitRedirects": false,
+    "maximumResponseBytes": 2048,
+    "maximumNonemptyChunks": 128,
+    "maximumResponseHeaders": 64,
+    "maximumResponseHeaderBytes": 8192,
+    "absoluteDeadlineSeconds": 15,
+    "actualLengthAndUTF8AndStatusCodesChecked": true,
+    "cancellationRetainsAdmissionUntilExactTaskCompletion": true,
+    "gateCompletionFaults": "controlled completion events with actual URLSession tasks; not a hosted network trace",
+    "foreignOrLateCallbackCannotReleaseNewTask": true,
+    "activationCancellationAndBothClocksCheckedAfterIO": true,
+    "sharedModeratorAuthorizationOrStorage": false,
+    "sharedPureHelpers": [
+      "bearer format",
+      "canonical text validation"
+    ]
+  },
+  "fixture": {
+    "source": "concrete local gateway Runtime/edge/HTTP/SQLite and signed provider client",
+    "providerAndAccounts": "explicit synthetic model",
+    "script": "gateway/scripts/generate-avatar-report-wire-fixtures.mjs",
+    "cases": [
+      "submit",
+      "recover-accepted",
+      "recover-unconfirmed",
+      "scope",
+      "input"
+    ],
+    "existingBackendSourcesChanged": false,
+    "fullBackendNotRepeated": "unchanged baseline035b81f already accepted814/814 both; new fixture generator executed, new script syntax checked Node22.23.5/24.22.1"
+  },
+  "negativeControl": {
+    "mutation": "isolated native client omits equality against exact derived own reportID",
+    "executedFunctions": 1,
+    "failedFunctions": 1,
+    "issues": 2,
+    "originalSourcesPreserved": true
+  },
+  "correctedPreparationErrors": [
+    "Initial test compilation rejected nested #require macros; separated optional body extraction, then tests compiled and passed.",
+    "Removed a redundant task on a separate transport from the cancellation test to avoid an unnecessary race; both final full suites rerun on final tests. An earlier path replacement missed the formatted text and stopped before editing; the explicit exact replacement succeeded."
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportModels.swift": "ee11cc96fb2cce139f1f26699552cb8c83d6c030538d0557632e3311db8fbf0a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportHTTPClient.swift": "f0dc85d13a6d668195718f104b526bbcbb1428df957e03e5f1197072c943f7d3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportTransport.swift": "85e230c06f45f74ba2f0475697c1eb409a7a752c8d1a0d3ac286d1746769d506",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportTests.swift": "9523a2a2ec1367e9a1e29f27233924e858a1998f27ab3425a582b93f584a7ed7",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportTransportTests.swift": "94232242291073f61c9ee2049364d2c020cc33e0c3141713c3c1e80e7cfef3a8",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report/responses.json": "16425839df808a2ec86e25aeb3b9470d98c1a822710e765215308ef53c6cf744",
+    "gateway/scripts/generate-avatar-report-wire-fixtures.mjs": "8c24ec4af2b2944d1e3009a417cba546c297066f271da0b45ae4cec7f8ef2d52"
+  },
+  "logs": {
+    "macOS": {
+      "path": "/private/tmp/echoes-avatar-report-native-full-mac-final.log",
+      "SHA256": "deb488b50dd9b7071c5415a05e7275d001907c025c794dc3741c63df0b443911"
+    },
+    "iOSSimulator": {
+      "path": "/private/tmp/echoes-avatar-report-native-package-ios-final.log",
+      "SHA256": "0fd32d4fce06cf93f03fe6756f8d18c6c4fd04cd2c5c1eec5c17c547f5f2f612"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-avatar-report-native-package-ios-final-summary.json",
+      "SHA256": "172ffd4fbfc96ebdd54b2f57e68ea3f2328eafa10cb14ea03ea26b1cc99f003c"
+    },
+    "debug": {
+      "path": "/private/tmp/echoes-avatar-report-native-debug-build.log",
+      "SHA256": "80137bc7cc5052ed57ca8bfe35b64b9dc09f92be8378a5fddf21c68347016851"
+    },
+    "release": {
+      "path": "/private/tmp/echoes-avatar-report-native-release-build.log",
+      "SHA256": "bc440efdf102953930775fbd7283964926288ea21d4adf01d31722b37d919911"
+    },
+    "focusedBeforeTestCleanup": {
+      "path": "/private/tmp/echoes-avatar-report-native-target2.log",
+      "SHA256": "dd115980c9a0961dd49dfc90e0bd980f3946c9cfe26bedc3ac26755f5742afdc"
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-avatar-report-native-negative.log",
+      "SHA256": "7888713f505e629979088e1e69ad137adea3cd6d2e22e887f6f9344fc919994b"
+    },
+    "fixture": {
+      "path": "/private/tmp/echoes-avatar-report-native-fixture.log",
+      "SHA256": "dacbf31006722efecac3712a735447f41e11c0d928cc6d38c42ef83c6eaf8edb"
+    },
+    "format": {
+      "path": "/private/tmp/echoes-avatar-report-native-format-final.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "initialCompilation": {
+      "path": "/private/tmp/echoes-avatar-report-native-target1.log",
+      "SHA256": "00ff7f20fa5c10c60929bef7e3a2534d97182ae07cd278445bcd2211ec9f3ebc"
+    }
+  },
+  "dependenciesCIChanged": false,
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "externalChanges": [],
+  "notAccepted": [
+    "durable photo report journal/Keychain/erasure",
+    "foreground native host with exact rendered version consent",
+    "photo report form and UI tests",
+    "photo report moderator",
+    "actual CloudKit schema import/privileges/assets/CDN/queries/retention",
+    "hosted Runtime/SIWA/ordinary A-B/Free",
+    "physical device",
+    "Firebase removal/TestFlight readiness"
+  ]
+}

@@ -1,0 +1,71 @@
+{
+  "synthetic": "owned-local-avatar-report-runtime-v1",
+  "now": 1794603600000,
+  "accountID": "70c42ee3-e359-4e37-bff7-b13d60e44276",
+  "token": "e7d6b718-5ae4-497e-aee1-bfd34c7ebb25.FyogL59kb7MIcQ07UzmdoOg6jkUd-aWgJo_5RE5dsVo",
+  "submit": {
+    "requestID": "24744d4a-ff74-417d-bc2c-f3d3946de655",
+    "ownerID": "20eafbcc-7319-498e-9315-b55eae396453",
+    "versionID": "a4f1e19a-2b71-480f-b363-5251d9f13504",
+    "reason": "PRIVATE_SYNTHETIC_PHOTO_REASON",
+    "coordinate": {
+      "latitude": 51.1123456,
+      "longitude": 17.0345678
+    }
+  },
+  "unknown": {
+    "requestID": "5be91b88-26d9-4e21-9614-95ebd3f0bfc0"
+  },
+  "responses": {
+    "submit": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"requestID\":\"24744d4a-ff74-417d-bc2c-f3d3946de655\",\"reportID\":\"community-v1-avatarreport-7eab923ef8b53911bbfa79073137dff72a16282f0ddeecd45267c8a44f73b922\",\"outcome\":\"accepted\"}"
+    },
+    "recover-accepted": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-7eab923ef8b53911bbfa79073137dff72a16282f0ddeecd45267c8a44f73b922\",\"outcome\":\"accepted\",\"requestID\":\"24744d4a-ff74-417d-bc2c-f3d3946de655\"}"
+    },
+    "recover-unconfirmed": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-fb58bb10c8daf6b8434238dc835ee8fc1db88fcd3ae8e718de8716691dfc6872\",\"outcome\":\"unconfirmed\",\"requestID\":\"5be91b88-26d9-4e21-9614-95ebd3f0bfc0\"}"
+    },
+    "scope": {
+      "status": 401,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"error\":\"AVATAR_REPORT_SCOPE\"}"
+    },
+    "input": {
+      "status": 400,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"error\":\"AVATAR_REPORT_INPUT\"}"
+    }
+  }
+}
