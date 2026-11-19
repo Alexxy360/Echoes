@@ -1,0 +1,64 @@
+{
+  "phase": "CK-05a.4f",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "44a76417720449ee4b272ad13bf4587721920854",
+  "status": "signed transport library tested locally; CLI/permit and real Apple test remain",
+  "runtimes": {
+    "node22": "22.23.5",
+    "node24": "24.22.1"
+  },
+  "fullSuite": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-protocol-http-full-node22.log",
+      "sha256": "960ca0b9637110ac81f0f5437fbcd47f548b7a57337dd2a5ecc4205bbc552bae",
+      "tests": 679,
+      "passed": 679,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-protocol-http-full-node24.log",
+      "sha256": "c0ce606708caa81a6da2a99c3c622e98a3bee62c797347f6fc04e141deabb156",
+      "tests": 679,
+      "passed": 679,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "newTestFunctions": 11,
+  "filesSHA256": {
+    "gateway/scripts/community-protocol-transport.mjs": "68738ea9adb6413d8f9fff639754dffd467cc0394815689f759578c51ef3dc58",
+    "gateway/test/community-protocol-transport.test.mjs": "51c8daf42726b3088ea1017695f2a653c72bd3a10f2e33455ff50ab5c0540bc0",
+    "gateway/scripts/community-protocol-runner.mjs": "f430e8a0dfa555932ce6ab2ae35f9177664b398eb7f831394ce51662658c28c8",
+    "gateway/scripts/community-protocol-plan.mjs": "c8933c3e20991862376c0cfff4d49eaf4f2496a7600a3f8b28476cb7d5d45926",
+    "gateway/src/cloudkit-request.mjs": "8c2bc156f88657afc9effed53eb6bf4f4d52eed6f429f78addd09b7431382ba7"
+  },
+  "coverage": [
+    "nine independently verified P-256/SHA256 signatures through HTTP JSON parser and engine to explicit synthetic provider",
+    "fixed Development/public URL, exact reviewed IDs/types/fields/tags, uniform create/replace/delete batches, no query/assets/forceDelete",
+    "default disabled and other-container signer rejected before fetch",
+    "HTTP/JSON/UTF-8/Content-Length/64KiB/1024-fragment limits and redacted errors",
+    "actual uncooperative fetch and response cancellation retain slot and pending promises",
+    "failed cancellation refuses positive drain and subsequent IO; revoke refuses response",
+    "actual native fetch and two loopback servers: redirected destination received zero requests"
+  ],
+  "syntax": "both new MJS modules imported by both full suites",
+  "provider": "synthetic; crypto/Response/streams/native loopback fetch are real; no Apple contact",
+  "testCredentials": "fresh ephemeral in-memory key only; no user credential file read or registered",
+  "remote": {
+    "apple": false,
+    "cloudflare": false,
+    "roleOrKeyChanges": false,
+    "serviceActivation": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "Swift/iOS/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "local CLI with reviewed permit/inventory and safe reports",
+    "specific old-key retirement/new-key/role/test approval",
+    "real Apple CRUD/query/ASSET/A-B and hosted Free acceptance"
+  ]
+}

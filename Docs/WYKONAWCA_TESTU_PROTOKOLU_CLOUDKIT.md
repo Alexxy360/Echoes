@@ -1,6 +1,6 @@
 # Lokalny wykonawca testu protokołu — CK-05a.4e
 
-19 listopada 2026. **Silnik i trwały dziennik są zaimplementowane lokalnie. Adapter podpisanego HTTP, CLI i próba w Apple pozostają do przygotowania.** Nie zmieniono ról lub kluczy, nie wysłano rekordów do CloudKit. Zatwierdzony model Individual nie jest zgodą na te operacje.
+19 listopada 2026. **Silnik, trwały dziennik i adapter podpisanego HTTP są zaimplementowane lokalnie. CLI/permit i próba w Apple pozostają do przygotowania.** [Adapter i jego granice](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). Nie zmieniono ról lub kluczy, nie wysłano rekordów do CloudKit. Zatwierdzony model Individual nie jest zgodą na te operacje.
 
 ## Dziennik przed IO
 
@@ -36,6 +36,6 @@ Timeout nie oznacza zakończenia transportu. Przed sprzątaniem silnik czeka zar
 
 Pięć testów dziennika oraz16 funkcji wykonawcy obejmują plik/reopen, uprawnienia/symlink/skróty, blokadę dwóch połączeń, faktyczny SIGKILL własnego procesu w fazie create_pending, rollback transakcji, null-field removal, collision w niepełnej odpowiedzi, unknown create z zapisem i bez zapisu, późny zapis/recovery, revoke, oba zegary/expiry, cancel/drain, czas pozostały po wolnym commicie i zakaz nieutrwalonego terminalnego sukcesu.
 
-Końcowe pełne przebiegi: **668/668 Node22.23.5 i668/668 Node24.22.1**. Wyniki i SHA są w [raporcie](evidence/community-protocol-engine-local-tests.json). Provider jest jawnym modelem zdekodowanego protokołu. Lokalny SQLite jest rzeczywisty. To nie test podpisów HTTP, parsera body, Apple CRUD/indeksów, assetów, uprawnień dwóch zwykłych kont, hostowanego alarmu ani Free.
+Końcowe pełne przebiegi etapu CK-05a.4e: **668/668 Node22.23.5 i668/668 Node24.22.1**. Wyniki i SHA są w [raporcie](evidence/community-protocol-engine-local-tests.json). Provider jest jawnym modelem zdekodowanego protokołu. Lokalny SQLite jest rzeczywisty. To nie test podpisów HTTP, parsera body, Apple CRUD/indeksów, assetów, uprawnień dwóch zwykłych kont, hostowanego alarmu ani Free.
 
-Następny krok: adapter Development z podpisywaniem, ścisłym allowlist payloadów/URL, ograniczeniami odpowiedzi/body i prawdziwym drain fetch/body/cancel, następnie lokalny CLI z planem, dziennikiem i permit. Dopiero potem przygotowanie wycofania starego klucza diagnostycznego, nowego klucza i nadania roli oraz konkretna zgoda na kontrolowaną próbę. Nie odłączamy Firebase na podstawie lokalnego modelu.
+Adapter Development z podpisywaniem, ścisłym inwentarzem payloadów/URL, ograniczeniami odpowiedzi/body i drain fetch/body/cancel wykonano lokalnie w CK-05a.4f. Następny krok to CLI z planem, dziennikiem i permit. Dopiero potem przygotowanie wycofania starego klucza diagnostycznego, nowego klucza i nadania roli oraz konkretna zgoda na kontrolowaną próbę. Nie odłączamy Firebase na podstawie lokalnego modelu.

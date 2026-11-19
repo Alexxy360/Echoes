@@ -952,3 +952,16 @@ Pliki: gateway/scripts/community-protocol-journal.mjs, gateway/scripts/community
 Weryfikacja: pełne668/668 Node22.23.5 i668/668 Node24.22.1, pięć nowych MJS importowanych na obu wersjach, raport JSON poprawny; SQLite i child process rzeczywiste, provider syntetyczny. Kod produktu/iOS/deps/CI niezmieniony; ich kompilacji/testów iOS nie ponawiano. Szczegóły: [kontrakt](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md), [dowody](evidence/community-protocol-engine-local-tests.json).
 
 Granice: brak adaptera podpisanego HTTP/parsera body/CLI i realnego testu Apple, nadania ról lub zmian kluczy. Callback autoryzacji i hash inwentarza nie zastępują zatwierdzonego permit. Bez usług/aktywacji/opłat, SDK telefonu, Production/Firebase/TestFlight; zastany projekt zachowany. Następnie adapter/CLI, konkretny zakres wycofania starego klucza i nowego klucza/roli/próby; A/B/ASSET/Free pozostają otwarte.
+
+
+## CK-05a.4f — 2026-11-19 — podpisany adapter HTTP ograniczonej próby
+
+Dodano CommunityProtocolTransport dla jednego przejrzanego planu/SHA. Wyłącznie lookup i jednorodne mutacje po1–8 własnych ID; ścisłe klucze, pola i typy, dokładny początkowy payload albo pusta bariera/checkpoint, conditional tag dla replace/delete. Odrzucono query/assets/forceDelete, nieznane ID, mieszane operacje, dodatkowe pola nawet null, pominięty typ lub zmienioną wartość. Default enabled odmawia. Nie ma odczytu klucza/aktywacji/import-time IO ani endpointu proxy.
+
+Użyto bazowej implementacji CloudKitDevelopmentSigner; Request musi mieć POST/manual i dokładny docelowy URL Development/public. Podpisy sprawdzono niezależnym verify, inny kontener blokowany przed fetch. HTTP2xx/JSON/body, poprawny Content-Length oraz realne64KiB/1024fragmenty i fatalUTF8. Jeden slot i pending do rzeczywistego końca fetch/body/cancel; własny timer8s i propagacja sygnału silnika. Nieudana cancellation trwale blokuje dalsze IO i pozytywny drain, zamiast udawać zwolnienie. Wyjątki nie odsłaniają surowych danych.
+
+11 nowych funkcji testowych: pełny silnik/dziennik z9 podpisanymi requestami przez rzeczywisty parser do jawnego modelu; ścisły zakres i zamknięty default, inny kontener, błędne odpowiedzi/limity, niekooperujący fetch, cancellation i odmowa drain, revoke oraz realny native fetch między dwoma własnymi serwerami loopback. Cel redirectu otrzymał0żądań. Target11/11 obu Node i pełne679/679 Node22.23.5 oraz679/679 Node24.22.1, bez błędów. Klucz testowy efemeryczny tylko w pamięci, provider syntetyczny; nie kontaktowano Apple.
+
+Pliki: gateway/scripts/community-protocol-transport.mjs, gateway/test/community-protocol-transport.test.mjs, Docs/HTTP_TESTU_PROTOKOLU_CLOUDKIT.md, Docs/WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md, Docs/PLAN_TESTU_PROTOKOLU_CLOUDKIT.md, Docs/evidence/community-protocol-http-local-tests.json oraz ten dziennik i plan. [Kontrakt](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md), [dowody](evidence/community-protocol-http-local-tests.json). Kod produktu/iOS/deps/CI bez zmian; kompilacji/testów iOS nie ponawiano.
+
+Granice: CLI/permit i rzeczywisty protokół Apple nadal do przygotowania/odbioru; brak zmian ról, starych/nowych kluczy lub sekretów, aktywacji/usług/opłat, SDK telefonu, Production/Firebase/TestFlight. Odbiór A/B/ASSET/Free pozostaje wymagany. Zastana zmiana projektu zachowana.
