@@ -35,7 +35,7 @@ export class CommunityState {
   }
   #row(accountID, kind, logicalID) { return this.#rows("SELECT * FROM community_intents_v1 WHERE account_id=? AND kind=? AND logical_id=?", accountID, kind, logicalID)[0]; }
   #rate(accountID, kind, delay) {
-    const columns = { presence: "presence_at", message: "send_at", nearby: "nearby_at", messages: "messages_at", block: "block_at", report: "report_at" };
+    const columns = { presence: "presence_at", message: "send_at", nearby: "nearby_at", messages: "messages_at", block: "block_at", report: "report_at", avatarreport: "report_at" };
     const column = columns[kind]; if (!column) throw new CommunityError();
     const now = this.#now(), previous = this.#rows(`SELECT ${column} AS time FROM community_accounts_v1 WHERE account_id=?`, accountID)[0]?.time;
     if (previous !== null && previous !== undefined && previous + delay > now) throw new CommunityError("COMMUNITY_RATE_LIMITED");
@@ -50,8 +50,8 @@ export class CommunityState {
   }
   async begin({ accountID, kind, logicalID, requestID, payloadHash, generation, active = true }) {
     communityUUID(requestID);
-    if (!["presence", "message", "block", "report"].includes(kind) || typeof logicalID !== "string" || logicalID.length > 100 ||
-        !/^[a-f0-9]{64}$/.test(payloadHash ?? "") || typeof active !== "boolean") throw new CommunityError("COMMUNITY_INPUT");
+    if (!["presence", "message", "block", "report", "avatarreport"].includes(kind) || typeof logicalID !== "string" || logicalID.length > 100 ||
+        !/^[a-f0-9]{64}$/.test(payloadHash ?? "") || typeof active !== "boolean" || kind === "avatarreport" && !active) throw new CommunityError("COMMUNITY_INPUT");
     const intent = this.#tx(() => {
       this.#ensure(accountID); const account = this.#account(accountID), old = this.#row(accountID, kind, logicalID);
       if (kind === "presence" && (generation !== account.generation || !Number.isSafeInteger(generation))) throw new CommunityError("COMMUNITY_STALE");
@@ -60,7 +60,7 @@ export class CommunityState {
         return old;
       }
       if (kind === "block" && (!Number.isSafeInteger(generation) || generation < 0 || generation >= Number.MAX_SAFE_INTEGER || generation !== (old?.generation ?? 0))) throw new CommunityError("COMMUNITY_STALE");
-      this.#rate(accountID, kind, { presence: 5000, message: 5000, block: 1000, report: 10000 }[kind]);
+      this.#rate(accountID, kind, { presence: 5000, message: 5000, block: 1000, report: 10000, avatarreport: 10000 }[kind]);
       if (kind === "block") {
         communityUUID(logicalID);
         if (logicalID === accountID) throw new CommunityError("COMMUNITY_INPUT");
@@ -75,6 +75,17 @@ export class CommunityState {
       return this.#row(accountID, kind, logicalID);
     });
     await this.#durable(); this.assertCurrent(intent); return intent;
+  }
+  /** Exact own immutable photo-report intent for receipt reconciliation, never a new write. */
+  avatarReportIntent(accountID, requestID) {
+    communityUUID(requestID);
+    return this.#tx(() => {
+      this.#account(accountID); const row = this.#row(accountID, "avatarreport", requestID);
+      if (!row) return null;
+      if (row.request_id !== requestID || row.active !== 1 || row.hidden !== 0 || ![0, 1].includes(row.ready) ||
+          !/^[a-f0-9]{64}$/.test(row.payload_hash ?? "")) throw new CommunityError("COMMUNITY_STALE");
+      return Object.freeze({ ...row });
+    });
   }
   async stop(accountID, requestID, generation, payloadHash) {
     communityUUID(requestID);

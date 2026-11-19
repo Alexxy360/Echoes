@@ -8,6 +8,7 @@ import { CommunityState } from "../../src/community-state.mjs";
 import { PublicRecordRegistry } from "../../src/public-record-registry.mjs";
 import { AvatarPolicyState } from "../../src/avatar-policy-state.mjs";
 import { avatarReadWorkerdProof } from "./avatar-read-workerd-proof.mjs";
+import { avatarReportWorkerdProof } from "./avatar-report-workerd-proof.mjs";
 import { avatarUploadWorkerdProof } from "./avatar-upload-workerd-proof.mjs";
 import { createGatewayLocalMaintenance } from "../../src/gateway-runtime.mjs";
 
@@ -39,6 +40,7 @@ export class AvatarCodecTestAuthority extends DurableObject {
   async fetch(request) {
     try {
       if (request.method !== "POST") return new Response(null, { status: 405 });
+      if (new URL(request.url).pathname === "/photo-report-proof") return await avatarReportWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/read-proof") return await avatarReadWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/http-proof") return await avatarReadWorkerdProof(request, this.ctx.storage, { http: true });
       if (new URL(request.url).pathname === "/upload-proof") return await avatarUploadWorkerdProof(request, this.ctx.storage);

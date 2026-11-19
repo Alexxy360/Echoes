@@ -17,12 +17,16 @@ import { CommunityReportReviewError } from "./community-report-review-state.mjs"
 import { reportReviewPaths, reportReviewErrorStatuses } from "./report-review-http.mjs";
 import { createReportReviewHandler } from "./gateway-report-review.mjs";
 
+import { AvatarReportError } from "./avatar-report-domain.mjs";
+import { avatarReportPaths, avatarReportErrorStatuses } from "./avatar-report-http.mjs";
+import { createAvatarReportHandler } from "./gateway-avatar-report.mjs";
+
 export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v1/auth/renew", "/v1/auth/session",
   "/v1/auth/logout", "/v1/auth/logout-all", "/v1/auth/session-reset", "/v1/account/deletion", "/v1/account/deletion/recover", "/v1/account/deletion/status", "/v1/account/deletion/private-cleanup"]);
 for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
 gatewayPaths.add(avatarReadPath);
 gatewayPaths.add(avatarOwnerPreviewPath);
-for (const path of [...avatarMutationPaths.keys(), ...avatarReviewPaths.keys(), ...reportReviewPaths.keys()]) gatewayPaths.add(path);
+for (const path of [...avatarMutationPaths.keys(), ...avatarReviewPaths.keys(), ...reportReviewPaths.keys(), ...avatarReportPaths.keys()]) gatewayPaths.add(path);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -33,6 +37,10 @@ export class GatewayHTTPError extends Error {
   constructor(code = "INVALID_REQUEST", status = 400) { super("Gateway request could not be processed."); this.code = code; this.status = status; }
 }
 export function gatewayFailure(error) {
+  if (error instanceof AvatarReportError) {
+    const status = avatarReportErrorStatuses[error.code] ?? 503;
+    return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
+  }
   if (error instanceof CommunityReportReviewError) {
     const status = reportReviewErrorStatuses[error.code] ?? 503;
     return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
@@ -162,6 +170,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
   avatarWithdrawal = avatarPublication, isAvatarWithdrawalEnabled = isAvatarUploadEnabled,
   avatarReview, isAvatarReviewEnabled = () => false, isAvatarReviewer = () => false, reviewTimeoutMilliseconds = 12000, clock = Date.now,
   avatarOwnerPreview, isAvatarOwnerPreviewEnabled = () => false, previewTimeoutMilliseconds = 12000,
+  avatarReports, isAvatarReportEnabled = () => false, avatarReportTimeoutMilliseconds = 12000,
   reportReview, isReportReviewEnabled = () => false, isReportReviewer = () => false, reportTimeoutMilliseconds = 12000,
   limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
   let activeAvatar = 0;
@@ -178,6 +187,8 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
     isAvatarReviewEnabled, isAvatarReviewer, scheduleMaintenance, clock, reviewTimeoutMilliseconds, inputTimeoutMilliseconds });
   const previewHandler = createAvatarOwnerPreviewHandler({ authentication, limits, checkpoint, avatarOwnerPreview, isEnabled,
     isAvatarOwnerPreviewEnabled, previewTimeoutMilliseconds, inputTimeoutMilliseconds });
+  const photoReportHandler = createAvatarReportHandler({ authentication, limits, checkpoint, avatarReports, isEnabled,
+    isAvatarReportEnabled, isAvatarReadEnabled, scheduleMaintenance, avatarReportTimeoutMilliseconds, inputTimeoutMilliseconds });
   const reportHandler = createReportReviewHandler({ authentication, limits, checkpoint, reportReview, isEnabled,
     isReportReviewEnabled, isReportReviewer, scheduleMaintenance, clock, reportTimeoutMilliseconds, inputTimeoutMilliseconds });
   return async (request, serverBudgetHash) => {
@@ -187,6 +198,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
       if (path === "/health") return gatewayJSON({ status: "ok", mode: "development-gateway" });
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
       if (path === avatarOwnerPreviewPath) return await previewHandler(request, serverBudgetHash);
+      if (avatarReportPaths.has(path)) return await photoReportHandler(request, serverBudgetHash, avatarReportPaths.get(path));
       if (reportReviewPaths.has(path)) return await reportHandler(request, serverBudgetHash, reportReviewPaths.get(path));
       if (avatarReviewPaths.has(path)) return await reviewHandler(request, serverBudgetHash, avatarReviewPaths.get(path));
       if (avatarMutationPaths.has(path)) return await uploadHandler(request, serverBudgetHash, avatarMutationPaths.get(path));

@@ -1,0 +1,173 @@
+{
+  "stage": "CK-05d.1b",
+  "createdAt": "2026-11-19T18:04:46.000408+00:00",
+  "baselineCommit": "11b4c1820084c1c06a8ab5aee6f5d37fd396a35e",
+  "backend": {
+    "Node22": "22.23.5",
+    "Node24": "24.22.1",
+    "previousFullEach": 780,
+    "fullEach": 814,
+    "passedEach": 814,
+    "failedEach": 0,
+    "cancelledEach": 0,
+    "skippedEach": 0,
+    "focusedNode22": 52,
+    "newFunctions": 34,
+    "newFunctionsByFile": {
+      "avatar-report-intake.test.mjs": 16,
+      "avatar-report-http.test.mjs": 17,
+      "avatar-report-workerd.test.mjs": 1
+    },
+    "syntaxMJSCountEach": 179
+  },
+  "intake": {
+    "closedSubject": [
+      "requestID",
+      "ownerID",
+      "versionID",
+      "reason",
+      "coordinate"
+    ],
+    "reporterDerivedFromSession": true,
+    "exactCurrentPublicationPointerVersionGenerationHashAndAssetCommitmentsChecked": true,
+    "requiresActiveNearbyOwnerAndBothBlockDirections": true,
+    "declaredCoordinateIsNotPhysicalGPSAttestation": true,
+    "noCDNOrPixelDownload": true,
+    "allIOAndFinalACKRecheckOriginalAccountAndPublicationScope": true,
+    "retentionAndImmutableTagRecheckedAfterFinalCheckpoint": true,
+    "sameRequestDifferentReasonConflicts": true,
+    "oneRetainedSlotUntilActualProviderDrain": true,
+    "unsafeDrainLatchesClosed": true,
+    "realTimerAndRollbackChecks": true,
+    "staleFinalizerCannotReleaseNewSlot": true,
+    "recoveryOwnRequestOnlyAndNeverCreatesReport": true,
+    "recoveryWorksAfterPhotoWithdrawalOrReadFlagOff": true,
+    "acceptedMeansStoredNotModerated": true,
+    "unconfirmedDoesNotProvePermanentNonCommit": true
+  },
+  "HTTP": {
+    "paths": [
+      "/v1/community/avatar/report",
+      "/v1/community/avatar/report/recover"
+    ],
+    "defaultAVATAR_REPORT_ENABLED": "0",
+    "requiresCommunityAndPublicRecordsAndDeletion": true,
+    "onlySubmitRequiresAvatarRead": true,
+    "noModeratorRoleRequiredOrInherited": true,
+    "bodyMaximumBytes": 4096,
+    "bodyMaximumChunks": 128,
+    "bodyDeadlineMilliseconds": 3000,
+    "responseMaximumBytes": 2048,
+    "coreDeadlineMilliseconds": 8000,
+    "authorityDeadlineMilliseconds": 12000,
+    "edgeDeadlineMilliseconds": 15000,
+    "accountAttemptsPerMinute": 6,
+    "accountSubmitAttemptsPerMinute": 3,
+    "sharedTextAndPhotoReportMinimumIntervalMilliseconds": 10000,
+    "limitsBeforeBodyParsingAndProvider": true,
+    "deniedAttemptsCanSpendCombinedQuota": true,
+    "lateResponseAndCancellationRetainAdmission": true,
+    "noProviderErrorsOrPrivateFieldsReturned": true,
+    "reportOnlyRuntimeAllowsOwnerStatusClearButNoPublishUploadModeration": true
+  },
+  "workerd": {
+    "version": "1.20260730.1",
+    "actual": [
+      "workerd",
+      "DurableObject",
+      "SQLite",
+      "Runtime",
+      "edge-forwarding-code",
+      "authentication",
+      "P-256 signing and independent verification",
+      "checkpoint",
+      "intake coordinator",
+      "report repository",
+      "durable limits"
+    ],
+    "synthetic": [
+      "Apple provider",
+      "accounts and sessions",
+      "platform cf/IP metadata"
+    ],
+    "externalOutbound": "denied",
+    "creates": 2,
+    "lostACKRecoveredWithoutAdditionalCreate": true,
+    "foreignSameUUIDReturnsOwnUnconfirmedID": true,
+    "runtimeReinstantiation": "same process and Durable Object storage; not process restart/power-loss proof",
+    "delayedAndRejectedCancellationFaults": "Node Web Streams; not hosted acceptance"
+  },
+  "negativeControl": {
+    "mutation": "isolated copy omits submit final publication/block guard",
+    "executedFunctions": 1,
+    "failedAsIntended": 1,
+    "assertion": "Missing expected exception after a block is applied between preparation and final ACK",
+    "originalSourcesPreserved": true
+  },
+  "correctedPreparationErrors": [
+    "Initial core intent inspection nested a SQLite transaction; replaced with a single atomic validated read.",
+    "Tests initially used incorrect field names/retention columns and expiry assumptions; corrected fixtures to actual schema and exercised real expiry with fresh sessions.",
+    "Busy edge claim initially escaped domain error mapping; moved claim under guarded try/finally and added late-fetch/cancel regression.",
+    "Initial full Node22 had 813 passes, zero assertion failures and one cancelled test: a 25ms deadline elapsed before the deliberately held provider was reached under full parallel load. Increased only test deadline to 1000ms (core proof 500ms), made entry wait also observe early completion, then both final full suites passed814/814. Production deadlines remain unchanged."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-report-domain.mjs": "4183a52435eb6c34f8351bc15cd24085b54158b1594e99d67d7a1725082e905e",
+    "gateway/src/avatar-report-coordinator.mjs": "a455407f8bfe353cd21f7b15348ca37d51dfd750a1918924d30142ec3a0f69a5",
+    "gateway/src/avatar-report-http.mjs": "b871ab402115f59a7b919e7f5bb6463d7b6f40c46e1ccaac246451b0f086a5aa",
+    "gateway/src/gateway-avatar-report.mjs": "adc5255a58c233183c68b154955d8e70348dd3bd6f642413e1eb0aaa786c019d",
+    "gateway/src/community-state.mjs": "eb2c52d9284c5f30f21006db960c19f75d35d6a95e4ac3b6009d1966e6135d99",
+    "gateway/src/gateway-limits.mjs": "8fd0610a5d802a65b62779320b2e8f4fae6c045ffed214ff6e735396ea54138c",
+    "gateway/src/gateway-http.mjs": "e3143d5f7121805e30f1c2a3ed0125580240b6488704a9907e48eb801c666125",
+    "gateway/src/gateway-runtime.mjs": "8a82df18f47d1ad9fb9cbd0e2ffd6d072631d5c1f60983b60eda5e997fa13601",
+    "gateway/wrangler.community.jsonc": "dc36f45666031575008ba6450e5593dc7a3ae4a0fc8d2e438ad3e6de972f2d37",
+    "gateway/test/avatar-report-intake.test.mjs": "434e393580e5a32471e099b599a47b10fc982a3a0c6296704c3464444fe5ecef",
+    "gateway/test/avatar-report-http.test.mjs": "c50002d9a315d9e62995c44eb888b49843b887df2a34f2edf1d2246542ef06c3",
+    "gateway/test/avatar-report-workerd.test.mjs": "118e995ae49959b319c0c8310b3f0d050a86d6f15fcbf20f37401e6427678d00",
+    "gateway/test/support/avatar-report-fixture.mjs": "549d0867f811ef65ad9e646a552a54cf30e1218df0cc347acfc6176c8f35b435",
+    "gateway/test/support/avatar-report-http-fixture.mjs": "ecaefb9c27e98b09c31fa76aa252d8dc17b64d79b5b38581425115e7303a64f9",
+    "gateway/test/support/avatar-report-workerd-proof.mjs": "286a8713274423681a64bb11f991623528a25a17c5188b20a2d14dd7430f0c08",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "bcecc9be6228a4cdf7b32eb0e55af6d625f0ed789ff0c19385838ac88dd79b71"
+  },
+  "logs": {
+    "fullNode22": {
+      "path": "/private/tmp/echoes-avatar-report-intake-full22-final.log",
+      "SHA256": "a4fe97c4dac28d3c64d5f27c12f6bae496766256aad36f2d843218af45164bf9"
+    },
+    "fullNode24": {
+      "path": "/private/tmp/echoes-avatar-report-intake-full24-final.log",
+      "SHA256": "9f1996d7d6cad2ae514a2cbbb67056c673558d484cb910a4af15af6f84ac39bc"
+    },
+    "focused": {
+      "path": "/private/tmp/echoes-avatar-report-intake-focused-final.log",
+      "SHA256": "c479b4bcb763902496fbc85208ce52ed0f6b253c592aae49a446391a86e9be7b"
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-avatar-report-intake-negative.log",
+      "SHA256": "792d67d888afff85ad7a80d670c678bd6a53ece984f94c384e5a59fa492addf0"
+    },
+    "syntax": {
+      "path": "/private/tmp/echoes-avatar-report-intake-syntax-final.json",
+      "SHA256": "1c898dc0ecd43ccdb517b9cb10f20f0a5c53f7286c2578ec8af3c8c410e0ea63"
+    },
+    "initialFull22": {
+      "path": "/private/tmp/echoes-avatar-report-intake-full22.log",
+      "SHA256": "e9ca6449efbc1b346b604f099ee90b1fc819bae52da2c899e49e7758e4e514e2"
+    }
+  },
+  "nativeSwiftCoreUIChanged": false,
+  "nativeBuildsAndUITestsRerun": false,
+  "dependenciesCIChanged": false,
+  "schemaChangedOrImported": false,
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "externalChanges": [],
+  "notAccepted": [
+    "native photo report DTO/journal/form",
+    "photo report moderator queue/inspection/decision/recovery",
+    "Apple schema validation/import and actual privileges",
+    "hosted Runtime/SIWA/Workers Free capacity",
+    "ordinary A/B",
+    "actual regional queries/ASSET/CDN/retention",
+    "physical device behavior",
+    "Firebase removal and TestFlight readiness"
+  ]
+}
