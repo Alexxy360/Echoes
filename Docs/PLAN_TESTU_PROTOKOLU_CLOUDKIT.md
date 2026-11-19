@@ -1,6 +1,6 @@
 # Przygotowanie testu protokołu Development — CK-05a.4d
 
-19 listopada 2026. **Gotowy lokalny generator i weryfikator inwentarza; wykonawca sieciowy oraz rzeczywisty test nadal do przygotowania.** Nie uruchomiono operacji CloudKit, nie nadano roli i nie uzyskano nowego klucza. Decyzja o modelu konta Individual pozostaje osobna.
+19 listopada 2026. **Generator, weryfikator inwentarza oraz lokalny silnik z trwałym dziennikiem są gotowe. Adapter podpisanego HTTP, CLI i rzeczywisty test pozostają do przygotowania.** [Stan wykonawcy](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md). Nie uruchomiono operacji CloudKit, nie nadano roli i nie uzyskano nowego klucza. Model Individual zatwierdzono osobno w CK-01l.1.
 
 `gateway/scripts/community-protocol-plan.mjs` tworzy deterministyczny plan z nowego losowego runID, syntetycznego accountID i czasu. Nie ma transportu, dostępu do plików, sekretów, automatycznego uruchomienia ani aktywacji. Zwraca zamrożony plan i SHA-256; `verifyCommunityProtocolPlan` odtwarza jego treść z seed i odrzuca zmianę hash/scope/rekordów/pól/ograniczeń. **Hash wiąże inwentarz, nie dowodzi zgody użytkownika.**
 
@@ -21,12 +21,12 @@ Plan zastąpienia czterech rekordów retencji zawiera tylko schemaVersion, owner
 3. Jedno create, exact lookup i porównanie wszystkich pól/tagów; potem replace z bieżącym tagiem, exact lookup oraz potwierdzenie usunięcia treści, także przy odpowiedzi z null dla usuniętych pól. Starego tagu użyć z już pustym payloadem bariery; oczekiwany CONFLICT nie może przywracać treści.
 4. Sprzątanie wyłącznie znanych własnych ID po ponownej weryfikacji dokładnych pól początkowych lub zastąpionych oraz świeżego tagu. Conditional delete i exact lookup potwierdzający nieobecność. Bez forceDelete, resetu, globalnego query, usuwania typu/roli lub dowolnych URL.
 5. Nieznany wynik wymaga reconciliation dokładnego ID; nie uruchamia nowego create. Nierozstrzygnięty konflikt, brak dopasowania, anulowanie, upływ zgody lub błąd IO pozostawia jawny stan cleanup-pending i inwentarz do osobnego kontrolowanego odzyskania. Nie deklarować automatycznej skuteczności sprzątania.
-6. Plan przewiduje do dziewięciu wywołań batch, po maksymalnie osiem rekordów. Wykonawca musi dopiero egzekwować ten limit, deadline, ograniczone response/body i brak równoległego cleanup do rzeczywistego zakończenia wcześniejszego IO. Samo pole constraints nie jest takim zabezpieczeniem.
+6. Plan przewiduje do dziewięciu wywołań batch, po maksymalnie osiem rekordów. Lokalny silnik egzekwuje licznik, okno, zegary, timer i czekanie na faktyczne IO; osobne cleanup wymaga nowego zatwierdzonego okna. Adapter HTTP musi jeszcze egzekwować ograniczone response/body i rzeczywisty drain fetch/body/cancel. Samo pole constraints nie jest takim zabezpieczeniem.
 
-Po przygotowaniu wykonawcy potrzebne są jego lokalne testy failure/recovery, przygotowanie klucza/uprawnień i konkretna zgoda na operacje. Żadna dotychczasowa zgoda na import schematu nie upoważnia do uruchomienia tego testu.
+Lokalne failure/recovery opisuje [CK-05a.4e](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md). Nadal potrzebne są adapter/CLI z własnymi testami, przygotowanie klucza/uprawnień i konkretna zgoda na operacje. Żadna dotychczasowa zgoda na import schematu lub model konta nie upoważnia do uruchomienia tego testu.
 
 ## Weryfikacja przygotowania
 
-Cztery nowe testy zaliczone **4/4 na Node22.23.5 i 4/4 na Node24.22.1**: zgodność pól z rzeczywistym eksportem, minimalne bariery i odrębne intencje, odtworzenie/hash i odmowa zmiany zakresu oraz nowe tożsamości i błędny seed. [Dowody](evidence/community-protocol-plan-local-tests.json).
+Cztery testy generatora w CK-05a.4d zaliczone **4/4 na Node22.23.5 i 4/4 na Node24.22.1**: zgodność pól z rzeczywistym eksportem, minimalne bariery i odrębne intencje, odtworzenie/hash i odmowa zmiany zakresu oraz nowe tożsamości i błędny seed. [Historyczne dowody przygotowania](evidence/community-protocol-plan-local-tests.json). W późniejszym CK-05a.4e pełny gateway wraz z generatorem, dziennikiem i silnikiem zaliczył **668/668 na obu wersjach Node**; [aktualne wyniki](evidence/community-protocol-engine-local-tests.json).
 
-Kod produktu iOS/gateway, zależności i CI są niezmienione; ich wcześniejszych 643 testów/kompilacji nie powtarzano. To sprawdzenie przygotowania inwentarza, bez testu rzeczywistego protokołu, ACL, assetów lub Free. Pełny plan migracji i wszystkie te odbiory pozostają wymagane.
+Kod produktu iOS/gateway, zależności i CI są niezmienione; testów/kompilacji iOS nie ponawiano. W przygotowaniu generatora sprawdzano sam inwentarz, a później również lokalny wykonawca przeszedł opisane testy. Nadal nie wykonano rzeczywistego protokołu Apple, ACL, assetów lub Free. Pełny plan migracji i wszystkie te odbiory pozostają wymagane.

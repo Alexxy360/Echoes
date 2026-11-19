@@ -1,0 +1,73 @@
+{
+  "phase": "CK-05a.4e",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "1349c4b26838826373259c0786520a1dc98f306d",
+  "status": "local journal and decoded-protocol engine implemented; signed HTTP adapter and CLI remain",
+  "runtimes": {
+    "node22": "22.23.5",
+    "node24": "24.22.1"
+  },
+  "fullSuite": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-protocol-engine-final2-node22.log",
+      "sha256": "6aafed829d57bd25c890c98db38ee7e01b3e46d83f59d3caef78e7082685c11d",
+      "tests": 668,
+      "passed": 668,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-protocol-engine-final2-node24.log",
+      "sha256": "196532d5767a67df859ff8e8e26097a8bc9fad970e68101f134be4283eee2f24",
+      "tests": 668,
+      "passed": 668,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "newTestFunctions": {
+    "journal": 5,
+    "runner": 16
+  },
+  "filesSHA256": {
+    "gateway/scripts/community-protocol-journal.mjs": "821f41551047cb8f115a7de92ed22f2bad2bacab4e903916ab40c9c92aa02a8d",
+    "gateway/scripts/community-protocol-runner.mjs": "f430e8a0dfa555932ce6ab2ae35f9177664b398eb7f831394ce51662658c28c8",
+    "gateway/test/community-protocol-journal.test.mjs": "79a0513c4f369042ce74b130fc8dc57511b55824aed715af8962f347b6b76677",
+    "gateway/test/community-protocol-runner.test.mjs": "c33917860456ad56369f3bfd9b197b197324e6d12f5cf798129a7aaa0e35895e",
+    "gateway/test/support/community-protocol-fixture.mjs": "3d90183b67015aa8bb8f96d0be2000d4f4821e130b75c4adb5271a84a5993fa8",
+    "gateway/scripts/community-protocol-plan.mjs": "c8933c3e20991862376c0cfff4d49eaf4f2496a7600a3f8b28476cb7d5d45926",
+    "gateway/schema/development-installed-20261119.ckdb": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025"
+  },
+  "coverage": [
+    "private 0700/0600 owned local files, plan/revision/hash and atomic state transactions",
+    "separate SQLite process lease, two connections and actual owned child SIGKILL at durable create_pending",
+    "single create, conditional replace, null-field removal, stale-tag conflict, exact conditional cleanup in nine calls",
+    "explicit EXISTS protected in malformed partial response; unknown committed/missing create and fresh cleanup after reopen",
+    "revoke, wall/monotonic rollback, expiry, cancellation and retained actual IO/lease",
+    "failed drain retains lease until explicit local completion check; no new network call",
+    "SQL abort before create prevents dispatch; failed final commit cannot expose volatile terminal success",
+    "unexpected content never erased and report error details redacted; default authorization closed and window IDs cannot replay",
+    "dispatch timer rechecks remaining authorization after durable journal commit; slow storage cannot extend the window"
+  ],
+  "reviewFollowup": "Initial 15/15 targeted and 667/667 full suites passed on both Node versions. Review added parent-directory synchronization and then a post-commit remaining-window check with a regression test. Final exact sources above passed 668/668 on both versions; no source changes followed.",
+  "syntax": "all five new MJS modules imported by both final test runs",
+  "provider": "explicit in-memory decoded protocol model; no Apple HTTP/signatures/body handling",
+  "storage": "real local Node SQLite files with DELETE/EXTRA/fullfsync settings checked; not a power-loss test",
+  "remote": {
+    "appleRecords": false,
+    "cloudflare": false,
+    "roleOrKeyChanges": false,
+    "serviceActivation": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "Swift/iOS/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "signed Development HTTP transport allowlist, bounded body and actual fetch/body/cancel drain",
+    "local CLI with explicit reviewed permit and durable inventory",
+    "specific key retirement/new-key/role approval and controlled live protocol test",
+    "real regional queries/ASSET/A-B and hosted Free acceptance"
+  ]
+}
