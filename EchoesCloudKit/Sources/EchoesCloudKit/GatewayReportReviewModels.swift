@@ -82,7 +82,12 @@ public struct GatewayReportReviewReceipt: Equatable, Sendable, CustomStringConve
         guard self.origin == origin, sessionFingerprint == Self.fingerprint(token) else {
             throw GatewayReportReviewFailure.invalidInput
         }
-        guard stamp.milliseconds >= observed.milliseconds, stamp.uptime >= observed.uptime,
+        try validateTime(stamp)
+    }
+    func validateTime(_ stamp: ReportReviewStamp) throws {
+        guard expiresAtMilliseconds > observed.milliseconds,
+            expiresAtMilliseconds - observed.milliseconds <= 90_000,
+            stamp.milliseconds >= observed.milliseconds, stamp.uptime >= observed.uptime,
             stamp.milliseconds < expiresAtMilliseconds,
             (stamp.uptime - observed.uptime) * 1000 < Double(expiresAtMilliseconds - observed.milliseconds)
         else { throw GatewayReportReviewFailure.stale }

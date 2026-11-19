@@ -303,12 +303,12 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
         try save(value, scope: lease.scope)
     }
     private func erase(owner: PrivateAccountScope) throws {
-        guard erasedOwners.count < 32 || erasedOwners.contains(owner.digest) else {
+        if erasedOwners.count >= 32 && !erasedOwners.contains(owner.digest) {
             saturated = true
             active = nil
-            throw GatewayAvatarReviewJournalFailure.unavailable
+        } else {
+            erasedOwners.insert(owner.digest)
         }
-        erasedOwners.insert(owner.digest)
         if active?.scope.owner == owner { active = nil }
         do { try storage.erase(owner: owner) } catch { throw GatewayAvatarReviewJournalFailure.unavailable }
     }
@@ -465,13 +465,12 @@ private enum AvatarReviewJournalReply: Sendable {
         if Task.isCancelled { throw GatewayFailure.cancelled }
     }
     public func erase(owner: PrivateAccountScope) async throws {
-        guard erasedOwners.count < 32 || erasedOwners.contains(owner.digest) else {
+        if erasedOwners.count >= 32 && !erasedOwners.contains(owner.digest) {
             saturated = true
             active = nil
-            epoch = UUID()
-            throw GatewayAvatarReviewJournalFailure.unavailable
+        } else {
+            erasedOwners.insert(owner.digest)
         }
-        erasedOwners.insert(owner.digest)
         epoch = UUID()
         if active?.scope.owner == owner { active = nil }
         _ = try await backend.execute(.erase(owner))

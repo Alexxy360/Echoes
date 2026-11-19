@@ -282,7 +282,7 @@ func reportReviewToken(_ token: String) -> Bool {
                 || $0 == 95
         }
 }
-private func reportReviewText(_ text: String, maximum: Int) -> Bool {
+func reportReviewText(_ text: String, maximum: Int) -> Bool {
     let white: (UInt32) -> Bool = { value in
         [9, 10, 11, 12, 13, 32, 160, 5760, 8232, 8233, 8239, 8287, 12288, 65279].contains(value)
             || (8192...8202).contains(value)
@@ -317,7 +317,8 @@ private func reportReviewServerFailure(_ response: GatewayReportReviewHTTPRespon
     }
     switch value.error {
     case "REPORT_REVIEW_INPUT": return .invalidInput
-    case "REPORT_REVIEW_SCOPE", "INVALID_SESSION", "ACCOUNT_DISABLED", "DELETION_IN_PROGRESS": return .denied
+    case "INVALID_SESSION": throw GatewayFailure.signInRequired
+    case "REPORT_REVIEW_SCOPE", "ACCOUNT_DISABLED", "DELETION_IN_PROGRESS": return .denied
     case "REPORT_REVIEW_STALE": return .stale
     case "REPORT_REVIEW_CAPACITY", "RATE_LIMITED": return .limited(retryAfterSeconds: retry)
     default: return .unavailable

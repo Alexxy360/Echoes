@@ -12,9 +12,11 @@
         weak var avatarEditor: GatewayAvatarEditorHost?
         weak var avatars: GatewayCommunityAvatarHost?
         weak var avatarReviews: GatewayAvatarReviewHost?
+        weak var reportReviews: GatewayReportReviewHost?
         func clearServices() {
             avatarEditor?.invalidate()
             avatarReviews?.invalidate()
+            reportReviews?.invalidate()
             services?.invalidateNativePresentation()
         }
     }
@@ -30,6 +32,8 @@
         let avatars: GatewayCommunityAvatarHost
         let avatarReviewJournal: GatewayAvatarReviewJournal
         let avatarReviews: GatewayAvatarReviewHost
+        let reportReviewJournal: GatewayReportReviewJournal
+        let reportReviews: GatewayReportReviewHost
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private(set) var openingCommunity = false
@@ -42,6 +46,7 @@
             openingCommunity = true
             defer { openingCommunity = false }
             avatarReviews.setForeground(false)
+            reportReviews.setForeground(false)
             let auth = authentication
             let configuration = profileConfiguration
             guard let native = auth.communityAuthorization,
@@ -165,6 +170,16 @@
                 publicationChanged: { [weak avatars = self.avatars] in avatars?.observeModeration($0) })
             avatarReviews = reviews
             relay.avatarReviews = reviews
+            let reportJournal = GatewayReportReviewJournal(
+                storage: KeychainGatewayReportReviewJournalStorage())
+            reportReviewJournal = reportJournal
+            let reports = try GatewayReportReviewHost(
+                api: GatewayReportReviewHTTPClient(
+                    configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, journal: reportJournal, isEnabled: { activation.isActive() })
+            reportReviews = reports
+            relay.reportReviews = reports
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),
@@ -195,7 +210,9 @@
                         isEnabled: { activation.isActive() },
                         fenceLocalAccess: { binding, accountID in
                             reviews.invalidate()
+                            reports.invalidate()
                             try reviewJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
+                            try reportJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             do {
                                 try await auth.prepareForAccountDeletion(
                                     binding: binding, accountID: accountID)
@@ -216,6 +233,7 @@
                             try await avatarCache.erase(scope: scope)
                             try await avatarUploads.erase(scope: scope)
                             try await reviewJournal.erase(owner: scope)
+                            try await reportJournal.erase(owner: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )

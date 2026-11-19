@@ -1,0 +1,201 @@
+{
+  "stage": "CK-05c.4b.2a",
+  "createdAt": "2026-11-19T12:28:03.109743+00:00",
+  "baselineCommit": "721be2cbff452190bc48289a3ade31f9194cdefc",
+  "native": {
+    "defined": 647,
+    "passed": 645,
+    "skipped": 2,
+    "failed": 0,
+    "newFunctions": [
+      "reportReviewHostRequiresActualCurrentDisplayAndPersistsDispatchedIntentBeforeAPI",
+      "reportReviewHostLostACKSurvivesRestartAndOnlyReadsExactSavedDecision",
+      "reportReviewHostPendingResultBlocksNewInspectionQueueAndReplacementVerdict",
+      "reportReviewHostNotAppliedAndSupersededNeedExplicitResultAcknowledgement",
+      "reportReviewHostOldPresentationCannotAuthorizeFreshInspectionOrExpiredText",
+      "reportReviewHostBackgroundParentAndNativeIdentityFenceEveryGetter",
+      "reportReviewHostLateInspectionKeepsUnsettledSlotAndCannotRestoreAfterBackground",
+      "reportReviewHostAccountSwapDuringNativeTokenStopsBeforeInspectAndPreservesNewAccount",
+      "reportReviewHostLateDecisionRemainsDurableButCannotCrossAccountOrScene",
+      "reportReviewHostRoleDenialDoesNotSignOutButInvalidSessionDoes",
+      "reportReviewHostStorageFailureBeforeDispatchNeverSendsAndAmbiguousIntentCanBeRecovered",
+      "reportReviewHostDeletionFencesLateWorkAndNeverRestoresErasedJournal",
+      "reportReviewHostRestoredResolvedRecordNeedsFreshOutcomeAndRejectsOldAcknowledgement",
+      "reportReviewHostReadsConcreteServerRecoveryIntoRealJournalWithoutAnyDecision",
+      "reportReviewHostJournalFenceAloneImmediatelyHidesTextAndStopsDecisions",
+      "reportReviewHostReplacingSharedJournalLeaseRevokesOldDisplayWithoutAwait",
+      "reportReviewHostAmbiguousAcknowledgementForcesReopenWithoutNewDecision",
+      "reportReviewHostStorageRunsOffMainThreadAndNativeScopeStillFencesDuringWrite",
+      "reportReviewHostPausedStorageCannotRestoreAfterDeletionAndOldQueuedWrite",
+      "reportReviewHostExplicitCancellationDuringStoragePreservesUnknownIntentAndRequiresReopen",
+      "reportReviewHostPagesReplaceTwentyRowsAndAllowEmptyProgressWithoutRetainingHistory",
+      "reportReviewHostRejectsInvalidPagesEvenFromCustomAPIAndNeverInspectsExpiredMetadata",
+      "reportReviewHostMissingMessageCanBeDismissedButNeverHiddenOrSentToDecisionAPI",
+      "reportReviewHostRejectsAccountChangeDuringTheLastJournalReadBeforeInspectOrAfterResponse",
+      "reportReviewHostSlowDurableWriteCannotSendExpiredInspectionAndKeepsIDsForRecovery",
+      "reportReviewHostACKAfterReceiptExpiryNeverClaimsSuccessAndOnlyRecoversExactIntent",
+      "reportReviewHostObservedScopeAndExpiryCannotReviveAfterABAReturn",
+      "reportReviewHostActualHTTP401RejectsSessionWhileRole403PreservesOrdinaryAccount",
+      "reportReviewHostLocalDeadlineNotifiesAndClosesTextWithoutNetworkPolling",
+      "avatarReviewHostLastJournalReadRechecksNativeScopeBeforeAnyInspectDispatch",
+      "avatarReviewJournalFullErasedOwnerMemoryClosesAdmissionButStillRetriesExactCleanup"
+    ],
+    "newReportFunctions": 29,
+    "newExistingAvatarRegressionFunctions": 2,
+    "platforms": [
+      "macOS",
+      "iPhone 17 Pro / iOS 26.1 Simulator"
+    ],
+    "physicalFileProtectionAccepted": false,
+    "resultBundle": "/private/tmp/echoes-report-host-package-ios-final.xcresult"
+  },
+  "UI": {
+    "defined": 3,
+    "passed": 3,
+    "failed": 0,
+    "feature": "existing avatar review only, no report UI acceptance",
+    "functions": [
+      "GatewayAvatarReviewUITests/testApprovalRequiresRenderedImageAndExplicitConfirmation",
+      "GatewayAvatarReviewUITests/testLostReplySurvivesRealProcessRestartAndRecoveryDoesNotResendDecision",
+      "GatewayAvatarReviewUITests/testLateInspectionCannotRestoreImageAfterSwitchingNativeAccount"
+    ],
+    "resultBundle": "/private/tmp/echoes-report-host-avatar-ui.xcresult",
+    "providerAndIdentity": "synthetic preview",
+    "externalNetwork": false,
+    "screenshots": {
+      "Docs/evidence/review-io-avatar-approved.png": "1ba13db0c070ee7fd7e734cb844066a107ae44dae133fee219a6008d4324dc79",
+      "Docs/evidence/review-io-avatar-recovered.png": "cb408e4a3ed76e1d3d939e924d17f2025120ab7004982261ce831e92ee58f973"
+    },
+    "visuallyReviewed": true
+  },
+  "builds": [
+    "Debug build-for-testing Simulator",
+    "unsigned Release generic iOS"
+  ],
+  "reportHost": {
+    "defaultDisabled": true,
+    "actualReportUIRenderingAccepted": false,
+    "nativeDisplayAcknowledgementContractTested": true,
+    "realLocalExpiryNotificationWithoutNetworkPolling": true,
+    "boundedRows": 20,
+    "afterAwaitNativeScopeRecheckBeforeDispatch": true,
+    "pendingPreventsNewInspectAndDecide": true,
+    "readOnlyRecoveryUsesExactMetadata": true,
+    "receiptRecheckedAfterStorageAndACK": true,
+    "observedScopeOrExpiryCannotReviveByABA": true,
+    "strictHTTP401DiffersFromRole403": true,
+    "wrongStatusErrorPairDoesNotRejectSession": true
+  },
+  "Runtime": {
+    "DebugOnlyCompositionCompiled": true,
+    "nativeInvalidationAndCommunityOpeningFenceConnected": true,
+    "accountDeletionFenceAndExactOwnerErasureConnected": true,
+    "realCloudAccountDeletionAccepted": false,
+    "reportNavigationAndViewAdded": false
+  },
+  "existingAvatarFixes": [
+    "post-await context recheck after last journal read before API",
+    "saturated erased-owner memory closes admission but permits exact cleanup/retry"
+  ],
+  "negativeControl": {
+    "changed": "isolated exact final source copy omits native-scope recheck after journal.pending await",
+    "expectedFailedFunctions": 1,
+    "recordedIssues": 1,
+    "originalSourcesPreserved": true
+  },
+  "correctedFailures": [
+    {
+      "issue": "Initial test file generator failed before creating new tests; the resulting empty filter run was not accepted.",
+      "resolution": "Fixed identifier transformation, then executed actual 20/29/31 targeted functions and final full 647 suite."
+    },
+    {
+      "issue": "Two inspection overrides used a different synthetic bearer from the native authorization source and were correctly refused with invalidInput.",
+      "resolution": "Build fixture receipts with the actual synthetic source token; retain the token binding checks."
+    }
+  ],
+  "logs": {
+    "mac": {
+      "path": "/private/tmp/echoes-report-host-full-mac-final.log",
+      "SHA256": "5d626183b5250fef8398576f328c18f7b999239d0a12a6910ea735c3b4870468"
+    },
+    "iOSSimulator": {
+      "path": "/private/tmp/echoes-report-host-package-ios-final.log",
+      "SHA256": "dbe0193832b10f732eadbb1e7a744c25b4c2dfe53be4983385cec77baea8e0c0"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-report-host-package-ios-summary.json",
+      "SHA256": "5946db0f9962b62e53ebf406432852f5a23a92227f27405a3910c068fb0c99a0"
+    },
+    "Debug": {
+      "path": "/private/tmp/echoes-report-host-app-debug-final.log",
+      "SHA256": "f163731f9da56b47420d4e52fe8d6a89c0481abd05437b6fd55d9d96aff292c0"
+    },
+    "unsignedRelease": {
+      "path": "/private/tmp/echoes-report-host-release.log",
+      "SHA256": "72674a58bbfce8229ba5f7ccbdf98b663c96791c9ca9294e6613449bb4d8f6cb"
+    },
+    "UI": {
+      "path": "/private/tmp/echoes-report-host-avatar-ui.log",
+      "SHA256": "26b4018a103e18e2197d0cc84dd2bd71b2624174dd48fc9d08f7114dfe19a50f"
+    },
+    "UISummary": {
+      "path": "/private/tmp/echoes-report-host-avatar-ui-summary.json",
+      "SHA256": "fe50aa76105851ebf2eb8d84d1f7d36cbaa5b08257f27b4aa799dfd8f346cff0"
+    },
+    "negativeControl": {
+      "path": "/private/tmp/echoes-report-host-negative-final.log",
+      "SHA256": "026a5444df20260dc1cac4d244cfdffb6bbe9b388c85e98d542999e722b6384f"
+    },
+    "strictFormat": {
+      "path": "/private/tmp/echoes-report-host-format.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "initialMissingTests": {
+      "path": "/private/tmp/echoes-report-host-target-early.log",
+      "SHA256": "dab8eaeac69633059403d82a7cce4b42e23d5da530081980af2f9e98512642a4"
+    },
+    "initialFixtureTokenMismatch": {
+      "path": "/private/tmp/echoes-report-host-target.log",
+      "SHA256": "59ffaaa00e913ad1c2c66f053af17cec428ff12a21bca5b9340c5727d892d938"
+    },
+    "correctedTarget31": {
+      "path": "/private/tmp/echoes-report-host-target-final.log",
+      "SHA256": "1e8b7fcc4f49378296d49ee9746887a9745b56ccc6a386dc6559402536ea83e3"
+    }
+  },
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHost.swift": "3bcbb84276d07ce1c69ef7f3a0d09857281fc64e5551a302980c56ec9bc4d68c",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHTTPClient.swift": "cfca1dbeb139dbf55152209a07f66b85736e6af1c4f66b6cc053a9468ed3b8a3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewModels.swift": "dd7e174aabd5dd73fc45743082afa9da200c374fa137069b5712af39742f9a94",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewHost.swift": "0d9751830e2c99cc65c989e2e4cd3b666333102d93fd5a0aecce8e5459cd65d1",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewJournal.swift": "3b7e63211d7abb2aacbb565d1f8e59212a858a12b8dc6e97fb2e939db4c62e96",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewHostTests.swift": "97bed4ea27532df4dc1027c739bd0556a3e0546c2e60394627ae1016cfc0f038",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewHostBoundaryTests.swift": "592e6176c160e73de14561d09b2754449139f731a0466c5d2cf8f4354943fb9e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReviewIOBoundaryTests.swift": "759b599fe565764e1cdc9763b032774e6946cc876c4dbbb8df84a7a8cdfd0f58",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "6f2f73d8c705e12950b4ab4df216b1534166a203fbc287f99a0f865569c4f052"
+  },
+  "backendProductionCodeChanged": false,
+  "backendFullSuiteRerun": false,
+  "previousBackendBaseline": {
+    "commit": "1a611f6fea3d9e1012c9f8a26689d856a2e1893c",
+    "node22": 750,
+    "node24": 750
+  },
+  "preservation": {
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "dependenciesCIChanged": false
+  },
+  "notAccepted": [
+    "report SwiftUI screen/navigation and actual display/confirmation",
+    "report workflow through real process restart",
+    "hosted Runtime and real SIWA",
+    "ordinary accounts A/B",
+    "physical locked-device behavior",
+    "CloudKit query/indices/ASSET/CDN",
+    "Free CPU/SQL/RSS/alarms/capacity",
+    "real account deletion including new report journal",
+    "Firebase removal or TestFlight readiness"
+  ],
+  "externalChanges": []
+}

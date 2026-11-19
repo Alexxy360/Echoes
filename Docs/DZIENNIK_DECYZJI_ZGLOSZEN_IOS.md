@@ -2,7 +2,7 @@
 
 `GatewayReportReviewJournal` zapisuje jedną intencję decyzji moderatora w lokalnym zakresie: origin bramki, kontener/Development, konto Echoes, konto iCloud i natywna tożsamość Apple. Zmiana sesji tego samego konta nie zmienia klucza magazynu. Zakres ten nie nadaje roli moderatora i nie zastępuje autoryzacji hosta lub serwera.
 
-To część przepływu [natywnego klienta zgłoszeń](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md). Host, panel, faktyczna prezentacja materiału i podłączenie do Runtime/usuwania konta pozostają kolejnym etapem CK-05c.4b.2. Dziennik nie jest jeszcze tworzony przez AppServices i nie uruchamia HTTP.
+To część przepływu [natywnego klienta zgłoszeń](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md). Host i połączenia z Runtime/usuwaniem konta dodaje [CK-05c.4b.2a](STEROWNIK_MODERACJI_ZGLOSZEN_IOS.md). Panel i faktyczna prezentacja materiału pozostają w CK-05c.4b.2b. Dziennik jest współdzielony wyłącznie w izolowanym Runtime Development i sam nie uruchamia HTTP; zwykłe wejście aplikacji nadal korzysta z adaptera Firebase.
 
 ## Przejścia i nieznany wynik
 

@@ -2,7 +2,7 @@
 
 Dokument zachowuje zakres i wyniki etapu 3c.2b. Ekran i lokalne blokady zdjęć dodane w następnym etapie opisuje [panel moderacji iOS](PANEL_MODERACJI_ZDJEC_IOS.md).
 
-GatewayAvatarReviewJournal i GatewayAvatarReviewHost łączą [HTTP moderatora](NATYWNA_MODERACJA_HTTP.md) z [odczytem niepewnego wyniku](ODZYSKIWANIE_DECYZJI_MODERACJI.md). Kontrolowany Debug Runtime ma wspólny magazyn/host, native invalidation relay i erasure. Nie dodano jeszcze ekranu lub przycisków moderatora i nie aktywowano usługi. Zwykłe wejście pozostaje Firebase.
+GatewayAvatarReviewJournal i GatewayAvatarReviewHost łączą [HTTP moderatora](NATYWNA_MODERACJA_HTTP.md) z [odczytem niepewnego wyniku](ODZYSKIWANIE_DECYZJI_MODERACJI.md). Kontrolowany Debug Runtime ma wspólny magazyn/host, native invalidation relay i erasure. Istniejący AvatarReviewView i syntetyczny podgląd służą kontrolowanym testom; usługa nie została zdalnie aktywowana. Zwykłe wejście pozostaje Firebase.
 
 ## Zapis i IO
 
@@ -37,3 +37,8 @@ Keychain OS zastępuje w tych testach pamięciowy storage z blokadą i błędami
 Pierwszy24-testowy run odrzucił10 przypadków z innym origin w testowym adapterze: poprawiono adapter, zachowując produkcyjną kontrolę. Kolejne24/26/27 przechodzą. Przegląd Apple wykazał blokujące Security IO; początkową konwersję actor+global lock sprawdzono testami wstrzymania. Zapisany sample potwierdził oczekiwanie wątków cooperative executor na NSRecursiveLock; zatrzymano wyłącznie potwierdzony test helper. Końcowy backend GCD usuwa tę blokadę:29, potem30 i obie pełne481 przechodzą. Dwie brakujące adnotacje await w testach poprawiono bez rozluźniania zabezpieczeń. Wcześniejsze478 testów/buildy sprzed tej poprawki nie są końcowym dowodem.
 
 Następny3c.3: ekran moderatora, faktyczne renderowanie/świadome decyzje, lifecycle/expiry/AX i testy UI; przed udostępnieniem decide spiąć willDecide z lokalnym odcięciem zdjęcia celu na pozostałych powierzchniach. Nadal wymagana świadoma ponowna publikacja zatwierdzonego zdjęcia autora bez dawnego journala. Ostrzeżenia izolacji MainActor/Sendable istniejących preview/edytora oraz wcześniejsze ramek SwiftUI pozostają do naprawy/odbioru przed TestFlight. Dalej zgłoszenia/kontakt/retencja/orphans i pełny rzeczywisty odbiór migracji. Nie powtarzano niezmienionych510 gateway/Core/UI/audytu; brak nowych aktywacji, uprawnień, sekretów, opłat, SDK telefonu, Production/Firebase/TestFlight. User project zachowany, cel aktywny.
+
+
+## Aktualizacja CK-05c.4b.2a
+
+Po ostatnim await journal.pending host ponownie sprawdza natywny scope przed API. Zmiana iCloud podczas tego odczytu nie wysyła inspect poprzedniego konta. Zapełnienie pamięci usuniętych właścicieli zamyka przyjmowanie operacji, ale nadal pozwala na dokładne sprzątanie i retry erasure; wcześniejsze bariery pozostają zachowane. Dwie nowe funkcje wymuszają te warunki, a trzy regresje istniejącego UI obejmują potwierdzenie, utratę odpowiedzi/restart procesu i zmianę syntetycznego konta. Pełne wyniki/ograniczenia: [sterownik zgłoszeń i wspólne granice IO](STEROWNIK_MODERACJI_ZGLOSZEN_IOS.md), [dowody](evidence/report-review-host-local-tests.json).

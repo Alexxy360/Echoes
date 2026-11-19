@@ -306,7 +306,9 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
     }
     private func match(_ expected: GatewayAvatarReviewJournalEntry?, _ context: Context) async throws {
         try check(context)
-        guard try await journal.pending(lease: context.lease) == expected else {
+        let actual = try await journal.pending(lease: context.lease)
+        try check(context)
+        guard actual == expected else {
             throw GatewayAvatarReviewJournalFailure.inactive
         }
     }
