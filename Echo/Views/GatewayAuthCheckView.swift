@@ -70,6 +70,9 @@
                                         "gateway.auth.community")
                             }
                             Section("Konto") {
+                                NavigationLink("Zgłoszenia", value: Destination.reports)
+                                    .disabled(host.phase != .ready || runtime.openingCommunity)
+                                    .accessibilityIdentifier("gateway.auth.reports")
                                 NavigationLink("Ocena zdjęć", value: Destination.moderation)
                                     .disabled(host.phase != .ready || runtime.openingCommunity)
                                     .accessibilityIdentifier("gateway.auth.moderation")
@@ -124,6 +127,10 @@
                 .navigationDestination(for: Destination.self) { destination in
                     if let runtime {
                         switch destination {
+                        case .reports:
+                            ReportReviewView(
+                                host: runtime.reportReviews, isCurrent: { path.last == .reports },
+                                beforeOpening: { runtime.prepareReportReview() })
                         case .moderation:
                             AvatarReviewView(host: runtime.avatarReviews)
                         case .deletion: GatewayAccountDeletionView(host: runtime.deletion)
@@ -206,6 +213,7 @@
         }
 
         private enum Destination: Hashable {
+            case reports
             case deletion
             case moderation
             case community(UUID)

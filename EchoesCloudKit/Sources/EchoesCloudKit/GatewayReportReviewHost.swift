@@ -21,7 +21,7 @@ public struct GatewayReportReviewPageHandle: Equatable, Sendable, CustomStringCo
     public var description: String { "GatewayReportReviewPageHandle(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
-public struct GatewayReportReviewPresentation: Equatable, Sendable, CustomStringConvertible, CustomReflectable
+public struct GatewayReportReviewPresentation: Hashable, Sendable, CustomStringConvertible, CustomReflectable
 {
     fileprivate let id: UUID
     public var description: String { "GatewayReportReviewPresentation(<redacted>)" }

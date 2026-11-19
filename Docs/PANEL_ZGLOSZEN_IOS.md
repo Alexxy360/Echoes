@@ -1,0 +1,29 @@
+# Panel zgłoszeń iOS — CK-05c.4b.2b
+
+`ReportReviewView` pokazuje kolejkę, powód zgłoszenia i dostępną wiadomość przez [sterownik](STEROWNIK_MODERACJI_ZGLOSZEN_IOS.md). W izolowanym Runtime Development wejście „Zgłoszenia” znajduje się obok oceny zdjęć i usuwania konta, po zalogowaniu. Otwarcie zamyka poprzednią domenę mapy/czatu przed tworzeniem dzierżawy moderatora. Rola nadal pochodzi z backendu; brak roli wyświetla odmowę bez wylogowania zwykłego konta. Zwykłe wejście aplikacji pozostaje przy adapterze Firebase, a zdalna aktywacja nowych usług jest wyłączona.
+
+## Odczyt i jawna decyzja
+
+- Stan widoku zawiera wyłącznie uchwyty, wybrany element kolejki, numer strony, błąd i czas życia ekranu. Treść powodu, nazwy autora, wiadomości, receipt i tokenu nie trafia do `@State` ani trwałego magazynu UI. Każdy render rozwiązuje materiał przez bieżący handle hosta; treść jest oznaczona privacySensitive i ma pełną wysokość bez skracania.
+- Nowa inspekcja przewija do początku materiału. Koniec treści ma znacznik widoczności; dopiero jego prezentacja w aktualnym aktywnym ekranie przekazuje lokalne potwierdzenie do hosta. To odnotowanie renderowania i dojścia do końca, nie dowód przeczytania przez człowieka.
+- „Odrzuć zgłoszenie” pozostawia wiadomość, „Ukryj wiadomość” odbiera jej widoczność. Brak wiadomości blokuje ukrycie. W obu przypadkach osobne potwierdzenie ponownie pokazuje aktualny materiał i skutek wybranej akcji, wymaga dojścia do końca oraz oferuje Anuluj. Nie ma akcji blokowania konta autora.
+- Potwierdzenie jest osobną treścią tego samego ekranu w nadrzędnym NavigationStack, z przewijanym materiałem. Przy zwykłej czcionce przyciski pozostają na dole; w rozmiarach dostępności są częścią przewijanej treści, aby wielowierszowe akcje nie zabierały większości obszaru czytania. Nie korzysta z systemowego alertu obcinającego długi tekst przy AX XXXL. Przyciski mają wielowierszowe etykiety bez zmniejszania czcionki.
+- Uchwyt prezentacji ma Hashable dla stabilnej tożsamości podwidoku. Nowa inspekcja resetuje lokalną obserwację końca materiału. Expiry/zmiana handle zamyka potwierdzenie; significantTimeChange również prosi host o sprawdzenie czasu.
+
+Znacznik używa `onGeometryChange`: sprawdza, czy co najmniej 90% szerokości i wysokości końca materiału mieści się w globalnym prostokącie obszaru czytania już ułożonym przez nadrzędny GeometryReader w safe area. Uwzględnia nawigację, stałe akcje i dolne insets bez ich powtórnego odejmowania. Do stanu trafia wyłącznie zmiana Bool, nie każda pozycja przewijania. Sam systemowy callback widoczności nie wystarczył w bardzo wysokim wierszu Form: przy AX XXXL odnotował widoczność końca poza ekranem; regresja UI wymaga obecnie braku ACK przed przewinięciem. Użyto SwiftUI [onGeometryChange](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)) i obecnego minimum aplikacji iOS 26.1; platformy biblioteki EchoesCloudKit pozostają bez zmian.
+
+## Nieznany wynik, tło i strony
+
+Decyzja od początku operacji usuwa materiał z widoku i korzysta z zapisu prepared/dispatched przed HTTP. Utrata odpowiedzi pokazuje zapisane metadane wyboru oraz ręczne „Sprawdź wynik”. Nie ma przycisku ponownego wysłania lub odtworzenia dawnego tekstu. Odtworzony wpis po restarcie nie pokazuje wyniku przed świeżym recovery. Panel przewija do nowej zapisanej intencji i następnie aktualnego wyniku; potwierdzenie wyniku pozostaje ręczne. Dopiero bieżący wynik ma „Rozumiem”, usuwające dokładną lokalną intencję; kolejna ocena wymaga nowego odczytu.
+
+Wyjście z aktywnej sceny usuwa treść i potwierdzenie oraz odcina host. Powrót wymaga jawnego otwarcia panelu; początkowa aktywacja nie tworzy pętli automatycznych prób. Zmiana natywnego konta zamyka panel także podczas niekooperującej odpowiedzi. Czas życia ekranu i sprawdzenie po await nie pozwalają starej operacji zapisać błędu/treści w nowszym ekranie.
+
+Kolejka pokazuje jedną stronę do 20 elementów, numer strony, ręczne odświeżenie i opcjonalne przejście dalej. Pusta strona z postępem markera ma czytelny komunikat i zachowuje możliwość przejścia dalej. Błąd odczytu nie jest przedstawiany jako poprawna pusta kolejka. ID użytkowników, ID zgłaszającego, GPS i techniczne identyfikatory nie są wyświetlane.
+
+## Izolowany podgląd i dowody
+
+DEBUG-only `ReportReviewPreviewFixture/View` działa przez rzeczywisty host, journal i typowany klient JSON oraz lokalny transport syntetyczny. Native identity to model; provider i journal mają osobne pliki w katalogu cache z losowym UUID uruchomienia UI. Provider utrwala tylko datę/identyfikatory/skróty/werdykt/revision/licznik, a journal swoje zamknięte metadane. Nie zapisują powodu lub tekstu. Restart testowego procesu używa tego samego UUID i odtwarza stan, aby sprawdzić recovery bez drugiej decyzji.
+
+Wejście `ECHOES_REPORT_REVIEW_UI_PREVIEW` omija konfigurację Firebase i używa AppServices.inactive. Nie ma URLSession, CloudKit SDK, GPS, muzyki, zdjęć ani rzeczywistych kont w tym podglądzie. Syntetyczne konta nie zastępują zwykłego A/B. Produkcyjny Runtime nadal ma osobny rzeczywisty adapter Keychain. Kod podglądu i jego wejście nie są częścią Release.
+
+Testy UI obejmują potwierdzenie/anulowanie, dismiss, brak wiadomości, utratę ACK i prawdziwy restart procesu, not-applied/superseded, expiry, tło, zmianę konta przy późnej odpowiedzi, strony/empty page, odmowę/błąd i maksymalne 500 znaków powodu i 500 znaków wiadomości z AX XXXL. Dokładne wyniki, zrzuty i jawne korekty: [dowody](evidence/report-review-ui-local-tests.json). Testy na modelu nie odbierają rzeczywistego SIWA/hosted Runtime/CloudKit/uprawnień/Free/urządzenia, pełnej migracji Firebase lub gotowości TestFlight. Nowych operacji zdalnych, ról, kluczy, sekretów, opłat i zmian Production nie wykonano.

@@ -1,0 +1,211 @@
+{
+  "stage": "CK-05c.4b.2b",
+  "createdAt": "2026-11-19T17:00:03.454691+00:00",
+  "baselineCommit": "0f1d04b432da39823639a7f0841ccd2286a25040",
+  "native": {
+    "defined": 647,
+    "passed": 645,
+    "skipped": 2,
+    "failed": 0,
+    "newPackageTestFunctions": 0,
+    "platforms": [
+      "macOS",
+      "iPhone 17 Pro / iOS 26.1 Simulator"
+    ],
+    "physicalFileProtectionAccepted": false,
+    "iOSResultBundle": "/private/tmp/echoes-report-ui-package-ios.xcresult"
+  },
+  "UI": {
+    "defined": 16,
+    "passed": 16,
+    "failed": 0,
+    "newReportFunctions": 12,
+    "functions": [
+      "testHideRequiresMaterialAndSeparateCancelableConfirmation",
+      "testDismissAndAcknowledgementCloseOnlyResolvedReport",
+      "testLostACKSurvivesRealProcessRestartAndRecoveryDoesNotResend",
+      "testNotAppliedNeedsAcknowledgementAndNewInspection",
+      "testSupersededDoesNotClaimSuccessAndCannotRestoreOldMaterial",
+      "testMissingMessageAllowsOnlyDismissal",
+      "testExpiryClosesConfirmationAndRequiresFreshMaterial",
+      "testBackgroundDropsMaterialAndRequiresExplicitReopen",
+      "testLateResponseCannotShowMaterialAfterNativeAccountChange",
+      "testPaginationReplacesPageAndPassesEmptyPageWithProgress",
+      "testEmptyDeniedAndFailedReadNeverClaimMaterialOrSignOut",
+      "testLongestMaterialAndConfirmationRemainReachableAtLargestText"
+    ],
+    "existingRegressionFunctions": [
+      "GatewayAvatarReviewUITests/testApprovalRequiresRenderedImageAndExplicitConfirmation",
+      "GatewayAvatarReviewUITests/testLostReplySurvivesRealProcessRestartAndRecoveryDoesNotResendDecision",
+      "GatewayAvatarReviewUITests/testLateInspectionCannotRestoreImageAfterSwitchingNativeAccount",
+      "GatewayDeletionUITests/testUnconfiguredNativeGatewayDoesNotOfferADeletionOrSignInFallback"
+    ],
+    "resultBundle": "/private/tmp/echoes-report-ui-safe-area-final.xcresult",
+    "screenshots": {
+      "Docs/evidence/report-ui-confirmation.png": "cfa088f2f48c20ecf43c13f728644df3b9a2759b6b6cf5ffc3c5647ecc2ca253",
+      "Docs/evidence/report-ui-recovered.png": "6f7c7d862b5106bd2acd114259a42fdcb8040f885baebe36ed3a798a62de2a38",
+      "Docs/evidence/report-ui-largest-before-end.png": "4f28a2b86b1c932e662dd6456534c4e78fe80d06a1a667e92a25dbba8d5ea661",
+      "Docs/evidence/report-ui-largest-confirmation.png": "4e1454ecbff9311cb80177be4f634f9148a9c09098bfdb360146daa933a838da"
+    },
+    "visuallyReviewed": true,
+    "identityAndProvider": "synthetic local preview; real host, journal and typed JSON client",
+    "externalNetwork": false,
+    "actualPreviewProcessTerminationAndRestart": true,
+    "journalRestartStorage": "isolated metadata-only cache files, not physical Keychain",
+    "reasonUTF16UnitsAtLargestText": 500,
+    "messageUTF16UnitsAtLargestText": 500,
+    "largestDynamicType": "UICTContentSizeCategoryAccessibilityXXXL",
+    "runtimeWarningsFromXCResult": [],
+    "verboseXcodeSysdiagnose": "disabled for final run; assertions and explicit screenshot attachments retained"
+  },
+  "builds": [
+    "Debug build-for-testing Simulator",
+    "unsigned Release generic iOS"
+  ],
+  "strictFormatFiles": 10,
+  "presentation": {
+    "textInViewStateOrPersistentPreviewStorage": false,
+    "currentOpaqueHandleCheckedAtRender": true,
+    "beforeEndDecisionAcknowledgementRefused": true,
+    "endMarkerMustIntersectActualViewportBy90PercentBothDimensions": true,
+    "safeAreaAlreadyAppliedByParentGeometryReader": true,
+    "confirmationRequiresCurrentMaterialAndOwnEndMarker": true,
+    "accessibilityActionsInsideScrollContent": true,
+    "backgroundAndNativeAccountChangeClosePanel": true,
+    "reopenRequiresExplicitAction": true,
+    "pendingUsesReadOnlyExactRecoveryWithoutNewDecision": true,
+    "missingMessageAllowsDismissOnly": true,
+    "oneQueuePageLimit": 20
+  },
+  "Runtime": {
+    "DebugOnlyReportRouteAdded": true,
+    "openingClosesPreviousCommunityAndAvatarReview": true,
+    "backendRoleStillRequired": true,
+    "remoteActivationChanged": false,
+    "ordinaryEntryStillFirebase": true,
+    "realCloudAccountDeletionAccepted": false
+  },
+  "correctedFailures": [
+    {
+      "issue": "Root Group identifier propagated over confirmation controls.",
+      "fix": "Removed root identifier; retain specific control identifiers."
+    },
+    {
+      "issue": "Largest-type helper expected offscreen lazy Form rows to exist.",
+      "fix": "Scroll to actual elements; adapt distance to frames."
+    },
+    {
+      "issue": "onScrollVisibilityChange reported the footer visible inside an oversized Form row while its frame was thousands of points offscreen.",
+      "fix": "Check geometric intersection with the actual viewport; retain the pre-scroll no-ack assertion."
+    },
+    {
+      "issue": "Fixed action inset occupied most of the AX XXXL viewport.",
+      "fix": "Place actions in scroll content for accessibility sizes, with full multiline labels."
+    },
+    {
+      "issue": "Outcome helper searched in the direction of the page top when the lazy result was below the intro.",
+      "fix": "Find through directional scroll; real view also scrolls to pending/result."
+    },
+    {
+      "issue": "Full 16-function attempt was interrupted after detecting a disabled ordinary-size confirmation. A narrow diagnostic reproduced the failure.",
+      "fix": "GeometryReader already respected safe area. Removed the second inset subtraction; removed all temporary geometry diagnostics."
+    }
+  ],
+  "logs": {
+    "mac": {
+      "path": "/private/tmp/echoes-report-ui-native-mac.log",
+      "SHA256": "8805c4ff3a0904ac2fe42a1a630d09c388f1a01c88f83c3ce8d610dd5c3b4025"
+    },
+    "iOSSimulator": {
+      "path": "/private/tmp/echoes-report-ui-package-ios.log",
+      "SHA256": "e950faac93013d8d604acc2abfd37187a3de6c61646a4539fcdefaf4b4e6aa22"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-report-ui-package-ios-summary.json",
+      "SHA256": "2b421e7279ca3a638f567d0b5d7fdc2362d08bc0fd60e95bc9339019c4aa46df"
+    },
+    "UI": {
+      "path": "/private/tmp/echoes-report-ui-safe-area-final.log",
+      "SHA256": "2c0c812426a99c66dad45b2c9501cf4e1336d8641ee5b08e982469bcf0bfbdf9"
+    },
+    "UISummary": {
+      "path": "/private/tmp/echoes-report-ui-safe-area-summary.json",
+      "SHA256": "c2ca0794cb17995deebb61b9a45d4eda5714d14a1483cc5f6b95d6f24675d00d"
+    },
+    "Debug": {
+      "path": "/private/tmp/echoes-report-ui-safe-area-debug.log",
+      "SHA256": "234097739f8df4e412d5442698ab1c793435756ff7e3c2263e358180562ecfda"
+    },
+    "unsignedRelease": {
+      "path": "/private/tmp/echoes-report-ui-safe-area-release.log",
+      "SHA256": "c125f9d4951decf297fa58a40b348d2e93eeafe0ec700700d7331d26bed702a2"
+    },
+    "strictFormat": {
+      "path": "/private/tmp/echoes-report-ui-format-final.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "initialAccessibilityPropagationFailure": {
+      "path": "/private/tmp/echoes-report-ui-smoke.log",
+      "SHA256": "c5fd80db44fa096548f1eab2e7cba0b24a7a2dae1a898ef6cb7c7e072449ff1a"
+    },
+    "initialLargestLazyRowFailure": {
+      "path": "/private/tmp/echoes-report-ui-full.log",
+      "SHA256": "a8633f375cdc148de5c77c0f0dae191787cecd78acdc3171316c4cdb73d50400"
+    },
+    "visibilityCallbackRegression": {
+      "path": "/private/tmp/echoes-report-ui-largest-fixed.log",
+      "SHA256": "c0e62df4f8caacfbd62894191af4c3987cdc1908e8c7347ff67232db5146c43b"
+    },
+    "correctedGeometryButOutcomeLookupFailure": {
+      "path": "/private/tmp/echoes-report-ui-largest-geometry.log",
+      "SHA256": "89a85f7881fd070470a24546e1facd00d58e67c4fdbcef654435e25b0b274e09"
+    },
+    "largestBeforeResultAutoscrollPassed": {
+      "path": "/private/tmp/echoes-report-ui-largest-final.log",
+      "SHA256": "a1891392e115c8a4ecbb046b0db462095fcd27a5109e26656e19ed54724913b5"
+    },
+    "interruptedFullSuiteSafeAreaFailure": {
+      "path": "/private/tmp/echoes-report-ui-final.log",
+      "SHA256": "8845b6db236fc3746be26f7c78e66235ac6dfb496310d8ff77e285ae6c9cb79d"
+    },
+    "safeAreaDiagnosticFailure": {
+      "path": "/private/tmp/echoes-report-ui-geometry-diagnostic.log",
+      "SHA256": "62d174614454df5b57fcbf6aa0d3b75ebb69c56190a7bd5c9be2ea95388b6011"
+    }
+  },
+  "sourceSHA256": {
+    "Echo/Views/ReportReviewView.swift": "f8c890bf07b97589318b743ef00ae0d30f996705dac48a8817d84b1acd695ff5",
+    "Echo/Views/ReportReviewMaterialView.swift": "a8be0095cb9673cf88655d6270699bcba1f4ba9e836aad3e80ad9dba9e591a1e",
+    "Echo/Views/ReportReviewConfirmationView.swift": "54ca035020302bb2fdcd8e57450d95d2da432c9328e8129590c409fd165be4f4",
+    "Echo/Services/ReportReviewPreviewFixture.swift": "454cfbf01c47efb27a45b40f47fa03eda1e22dd291ca30aa8af913c54e46b553",
+    "Echo/Views/ReportReviewPreviewView.swift": "655bd558f237ed4cefafe52f768bbbad228926acad5a2c104c919491b264c103",
+    "EchoesUITests/GatewayReportReviewUITests.swift": "a59060d68c65898aa161c6893ce95d8573526c91f5ddf370eb0a836a5d6925f6",
+    "Echo/EchoApp.swift": "1e99f2911f68ee4b28dde8ca9225b0c908fbc7007fd9ae9d36dd164bfe60ee24",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "7417eb52aea77dd88055168214b773e7402eb9ca67a2ab387c7e7ad4e16938b8",
+    "Echo/Views/GatewayAuthCheckView.swift": "c2bd6c32415532183c16da0d0b95ebcb83c6f2d851f3191731edfc8b59c891e5",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHost.swift": "18480d95f0494a17b61ddef04002e1587abb7ad59362a2b50b0e951ca180970d"
+  },
+  "backendProductionCodeChanged": false,
+  "backendFullSuiteRerun": false,
+  "previousBackendBaseline": {
+    "commit": "1a611f6fea3d9e1012c9f8a26689d856a2e1893c",
+    "node22": 750,
+    "node24": 750
+  },
+  "preservation": {
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "dependenciesCIChanged": false
+  },
+  "notAccepted": [
+    "real SIWA/hosted Runtime",
+    "ordinary accounts A/B",
+    "physical locked-device Keychain/FileProtection/PhotosPicker",
+    "CloudKit query/indices/ASSET/CDN",
+    "Free CPU/SQL/RSS/alarms/capacity",
+    "real account deletion including report journal",
+    "photo reporting/support contact",
+    "Firebase removal or TestFlight readiness"
+  ],
+  "externalChanges": []
+}

@@ -11,6 +11,7 @@ struct EchoApp: App {
     init() {
         #if DEBUG
             if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1"
+                || ProcessInfo.processInfo.environment["ECHOES_REPORT_REVIEW_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_AVATAR_REVIEW_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_COMMUNITY_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_GATEWAY_DELETION_UI_PREVIEW"] != nil
@@ -35,6 +36,8 @@ struct EchoApp: App {
             #if DEBUG
                 if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1" {
                     PrivateProfileSDKProbeView()
+                } else if let mode = ProcessInfo.processInfo.environment["ECHOES_REPORT_REVIEW_UI_PREVIEW"] {
+                    ReportReviewPreviewView(mode: mode)
                 } else if let mode = ProcessInfo.processInfo.environment["ECHOES_AVATAR_REVIEW_UI_PREVIEW"] {
                     AvatarReviewPreviewView(mode: mode)
                 } else if let mode = ProcessInfo.processInfo.environment[

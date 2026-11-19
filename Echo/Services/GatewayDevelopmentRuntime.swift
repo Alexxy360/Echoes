@@ -41,6 +41,14 @@
         private let profileConfiguration: CloudKitConfiguration
         private let gatewayConfiguration: GatewayConfiguration
 
+        /// Close the old community domain synchronously before the report panel starts a new lease.
+        func prepareReportReview() {
+            community.invalidate()
+            communityServices = nil
+            communityPresentationID = nil
+            avatarReviews.setForeground(false)
+        }
+
         @discardableResult func openCommunity() async throws -> UUID {
             guard !openingCommunity else { throw GatewayAvatarReviewFailure.busy }
             openingCommunity = true
