@@ -61,6 +61,7 @@
                 try verifyAttributes(deletionQuery)
             } catch { deletionReport = "storage-failed" }
             let communityReport = await checkCommunity(configuration: config, cloudKit: cloudKit)
+            let reportReview = await checkReportReview(configuration: config, cloudKit: cloudKit)
             print("ECHOES_GATEWAY_STORAGE_BEFORE_CLEANUP session=" + report + " deletion=" + deletionReport)
             for (index, item) in [sessionQuery, deletionQuery].enumerated() {
                 let cleanup = SecItemDelete(item as CFDictionary)
@@ -89,6 +90,7 @@
             }
             if deletionReport != "passed" { report = deletionReport }
             if communityReport != "passed" { report = communityReport }
+            if reportReview != "passed" { report = reportReview }
             // Fixed outcomes only; no synthetic token, encoded payload, attributes or native IDs.
             print("ECHOES_GATEWAY_DELETION_STORAGE_CHECK result=" + deletionReport)
             print("ECHOES_GATEWAY_COMMUNITY_STORAGE_CHECK result=" + communityReport)

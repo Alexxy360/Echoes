@@ -1,0 +1,186 @@
+{
+  "stage": "CK-05c.4b.1",
+  "createdAt": "2026-11-19T12:03:24.445664+00:00",
+  "baselineCommit": "6a86433fd70e244ca7a609b2f95abb77c7b7d6a7",
+  "native": {
+    "defined": 616,
+    "passed": 614,
+    "skipped": 2,
+    "failed": 0,
+    "newFunctions": [
+      "reportReviewJournalPreservesExactPendingMetadataAcrossRestartAndRotatesLease",
+      "reportReviewJournalNeverOverwritesPendingOrRemovesUnresolvedDecision",
+      "reportReviewJournalResolvesAllOutcomesAndOnlyExactResolvedEntryCanBeAcknowledged",
+      "reportReviewJournalScopesSeparateOriginNativeAppleICloudAndGatewayAccount",
+      "reportReviewJournalRejectsCorruptOverlongCrossScopeAndExtraFieldsWithoutDeletingIntent",
+      "reportReviewJournalAmbiguousWritesPreserveIDsAndReadbackMismatchFailsClosed",
+      "reportReviewJournalDeletionFenceSurvivesFailedEraseAndBlocksQueuedReopen",
+      "reportReviewJournalErasesAllOriginsForExactOwnerWithoutTouchingOtherAccount",
+      "reportReviewJournalRejectsMismatchedResolutionAndInvalidConfirmedRevision",
+      "reportReviewKeychainNamespaceAccessibilityAndOwnerEraseScopeAreExplicit",
+      "reportReviewJournalPeekDoesNotCreateRecordOrRotateLiveLease",
+      "reportReviewJournalPeekRejectsErasedAndCorruptScopeWithoutRepair",
+      "reportReviewJournalStorageNeverBlocksMainActorAndFencedWriteCannotReturnNewAccountData",
+      "reportReviewJournalCancelledWritePreservesOriginalIDsForExplicitRecovery",
+      "reportReviewJournalPreCancelledCommandsNeverReadWriteOrRotateExistingLease",
+      "reportReviewJournalAmbiguousDispatchAndResolutionAreReopenedWithoutInventingAnotherDecision",
+      "reportReviewJournalPersistedPayloadRejectsWrongIntentPhaseOrOutcomeWithoutRepair",
+      "reportReviewJournalAccountDeletionDuringWriteRejectsLateResultAndKeepsOtherAccount",
+      "reportReviewJournalSeparateNamespaceCannotLoadAvatarJournalOrMismatchedNativeBinding",
+      "reportReviewJournalDeletionFenceCapacityFailsClosedInsteadOfForgettingEarlierOwners",
+      "reportReviewJournalConcreteRuntimeRecoveryIsPersistedAndReopenedWithSameDecisionIdentity",
+      "reportReviewJournalErasedOwnerCapacityClosesAdmissionButStillAllowsExactCleanup",
+      "reportReviewJournalInvalidDeletionFenceCannotInvalidateUnrelatedLiveLease",
+      "reportReviewJournalFreshResolutionCannotBeAcknowledgedByAnEarlierResult",
+      "reportReviewJournalLateFenceForOldLeaseCannotCloseReopenedScope"
+    ],
+    "platforms": [
+      "macOS",
+      "iPhone 17 Pro / iOS 26.1 Simulator"
+    ],
+    "physicalFileProtectionAccepted": false,
+    "resultBundle": "/private/tmp/echoes-report-journal-package-ios-final.xcresult"
+  },
+  "UI": {
+    "defined": 1,
+    "passed": 1,
+    "failed": 0,
+    "function": "GatewayReportJournalStorageUITests/testAppKeychainReportDecisionRoundTripRecoveryAndExactOwnerCleanup",
+    "resultBundle": "/private/tmp/echoes-report-journal-app-ui.xcresult",
+    "realAppKeychain": true,
+    "sameProcessJournalRecreation": true,
+    "syntheticOwners": 2,
+    "originsForFirstOwner": 2,
+    "oversizeWriteRejected": true,
+    "unrelatedSyntheticOwnerPreserved": true,
+    "allOwnRecordsAbsentAfterCleanup": true,
+    "externalNetwork": false,
+    "providerAndRecoveryResponse": "canned local Swift transport, not hosted HTTP or CloudKit",
+    "screenshot": {
+      "path": "Docs/evidence/report-journal-app-keychain.png",
+      "SHA256": "3afc6a590d6ed309c45c301f3cfa1b4f39b43ee1191f3c86bc84935893af948e",
+      "visuallyReviewed": true
+    }
+  },
+  "builds": [
+    "Debug build-for-testing Simulator",
+    "unsigned Release generic iOS"
+  ],
+  "newDebugDiagnosticAbsentInRelease": true,
+  "negativeControl": {
+    "changed": "isolated /tmp copy removes unresolved-intent overwrite guard",
+    "expectedFailedFunctions": 1,
+    "recordedIssues": 4,
+    "originalSourcesPreserved": true
+  },
+  "correctedFailures": [
+    {
+      "issue": "Privacy assertion matched the allowed verdict hide_message instead of a message JSON field.",
+      "resolution": "Assert forbidden field syntax and message sentinel; final privacy test passes."
+    },
+    {
+      "issue": "Direct Security test in standalone package XCTest returned -34018.",
+      "authority": "Installed Apple Security SecBase.h:341 errSecMissingEntitlement = -34018, required entitlement absent.",
+      "resolution": "Actual Keychain test moved to existing isolated app-hosted Debug diagnostic; passed without adding a skip or weakening adapter checks."
+    },
+    {
+      "issue": "Temporary diagnostic Issue.record(String) did not compile.",
+      "resolution": "Corrected to literal interpolation before obtaining the OSStatus evidence; temporary package diagnostic removed after app-hosted acceptance."
+    },
+    {
+      "issue": "One diagnostic filter selected zero tests.",
+      "resolution": "Not accepted; corrected function identifier with parentheses ran exactly one failing entitlement diagnostic."
+    }
+  ],
+  "logs": {
+    "mac": {
+      "path": "/private/tmp/echoes-report-journal-full-mac.log",
+      "SHA256": "c56ce336ba77dc1731df6c011ad981e1248c6b74c2ebbdf9d4f38f801b92d37c"
+    },
+    "iOSSimulator": {
+      "path": "/private/tmp/echoes-report-journal-package-ios-final.log",
+      "SHA256": "9b72653ea35cb44ff8d9a77063a29d836e41647e8db5994047141a7e49355948"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-report-journal-package-ios-summary.json",
+      "SHA256": "924f74946fa188c2e12f281fa246a4c12acf00b95941dac6f503dea2f6ddbe95"
+    },
+    "UI": {
+      "path": "/private/tmp/echoes-report-journal-app-ui.log",
+      "SHA256": "4ca2577e9961c6e47d715bd0ca704d45f53280748c2efd1dc84030acc9444d54"
+    },
+    "UISummary": {
+      "path": "/private/tmp/echoes-report-journal-app-ui-summary.json",
+      "SHA256": "f3930588511687f870685a90a38ed8958ab08a0f672378bff29b6df5117a9990"
+    },
+    "Debug": {
+      "path": "/private/tmp/echoes-report-journal-app-debug.log",
+      "SHA256": "fc0cdd4253459ab3230998bb15d54564c72cdf7084c495e95366401e282dd7f2"
+    },
+    "unsignedRelease": {
+      "path": "/private/tmp/echoes-report-journal-release.log",
+      "SHA256": "7487ba6380aa318f3c3a415fde200d5ac62579f07e65960b9fc6839398eb5380"
+    },
+    "negativeControl": {
+      "path": "/private/tmp/echoes-report-journal-negative.log",
+      "SHA256": "588c22078c9e905e124a00bad0a2ef87f527fafc46d5fbe369220e5d6e1b824f"
+    },
+    "strictFormat": {
+      "path": "/private/tmp/echoes-report-journal-format.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "initialFaultAssertion": {
+      "path": "/private/tmp/echoes-report-journal-target-early.log",
+      "SHA256": "4eddc5c56213f2c5e09e19eb031ece337add414976cb96b3737480e06b32e5ba"
+    },
+    "initialPackageKeychain": {
+      "path": "/private/tmp/echoes-report-journal-package-ios.log",
+      "SHA256": "5c63ba40835baef32d68954a0f8d48b3fdcfa56d8c058052a03a07944291e480"
+    },
+    "diagnosticCompileFailure": {
+      "path": "/private/tmp/echoes-report-journal-keychain-diagnostic.log",
+      "SHA256": "407b749bbf5b6b25c377a9d92cd6d27c25bed30e59a94489a110c9563595aa8e"
+    },
+    "emptyFilterNotAccepted": {
+      "path": "/private/tmp/echoes-report-journal-keychain-diagnostic-verified.log",
+      "SHA256": "bbd3027ff09b29ffc924c3779fc304e9debc3e81803a74b628bd6134c1a4ad16"
+    },
+    "verifiedMissingEntitlement": {
+      "path": "/private/tmp/echoes-report-journal-keychain-diagnostic-selected.log",
+      "SHA256": "512e88f6f0ea50814d5d184a07cfeaa2d0ad498a4cf4682274391bdd7db454f7"
+    }
+  },
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewJournal.swift": "825196457fcb3907d901292912a34c1de72a7990e2a722563cd069877d0f5c6d",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewKeychain.swift": "c55322d483d177c1eb9af71dbc03400fba3d3e7b4361bc207da77186d596bb62",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewJournalTests.swift": "c26ae87d2ca1089e395da39d9d84dea5459053d2945038e757a68f5a7a11a9b1",
+    "Echo/Services/ReportReviewJournalStorageCheck.swift": "16e102f8a6a710bf132755051f405979a5e922d398ad7d668381f802f748a7b8",
+    "Echo/Services/GatewayStorageCheck.swift": "2ecd35ad5407168394bf7eeff00e277c3ecd8d93728fe70b923a9e755f6e18d1",
+    "Echo/Views/GatewayStorageCheckView.swift": "24caa91395568c2ceeb6c3ade5ee54cfccd1792ff71c57a867cd8d4be3f05b51",
+    "EchoesUITests/GatewayReportJournalStorageUITests.swift": "14b05a99fccbe5a0521867679daea2d9abee0f8ff677787813801bb491657e34"
+  },
+  "backendProductionCodeChanged": false,
+  "backendFullSuiteRerun": false,
+  "previousBackendBaseline": {
+    "commit": "1a611f6fea3d9e1012c9f8a26689d856a2e1893c",
+    "node22": 750,
+    "node24": 750
+  },
+  "preservation": {
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "dependenciesCIChanged": false
+  },
+  "notAccepted": [
+    "native moderator host/panel and real display/session/foreground scope",
+    "ordinary Runtime and account-deletion composition of new report journal",
+    "real process kill/power-loss durability",
+    "physical locked-device Keychain behavior",
+    "real SIWA and hosted Runtime",
+    "ordinary accounts A/B",
+    "CloudKit query/indices/ASSET/CDN",
+    "Free CPU/SQL/RSS/alarms/capacity",
+    "Firebase removal or TestFlight readiness"
+  ],
+  "externalChanges": []
+}

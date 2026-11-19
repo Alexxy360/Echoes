@@ -1,6 +1,6 @@
 # Natywny klient poufnych zgłoszeń — CK-05c.4a
 
-Klient `GatewayReportReviewHTTPClient` udostępnia typowane operacje kolejki, inspekcji, decyzji i odzyskania wyniku kontraktu [HTTP](HTTP_POUFNYCH_ZGLOSZEN.md). Jest domyślnie wyłączony. Ten etap nie podłącza go do AppServices, ekranu ani konta moderatora. Panel, trwały dziennik i kontrola zakresu konta/ekranu pozostają kolejnym etapem CK-05c.4b; samo API nie jest kompletnym przepływem moderacji.
+Klient `GatewayReportReviewHTTPClient` udostępnia typowane operacje kolejki, inspekcji, decyzji i odzyskania wyniku kontraktu [HTTP](HTTP_POUFNYCH_ZGLOSZEN.md). Jest domyślnie wyłączony. Ten etap nie podłącza go do AppServices, ekranu ani konta moderatora. Trwały dziennik dodaje [CK-05c.4b.1](DZIENNIK_DECYZJI_ZGLOSZEN_IOS.md). Panel, host i kontrola zakresu konta/ekranu pozostają kolejnym etapem CK-05c.4b.2; samo API i dziennik nie są kompletnym przepływem moderacji.
 
 ## Kontrakt i decyzje
 

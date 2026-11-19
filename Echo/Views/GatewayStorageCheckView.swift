@@ -8,7 +8,7 @@
                 Form {
                     Section("Lokalna kontrola Keychain") {
                         Text(
-                            "Sprawdza zapis sesji, biletu usuwania i żądań społecznościowych, wznowienie oraz usunięcie syntetycznych wpisów."
+                            "Sprawdza zapis sesji, biletu usuwania, żądań społecznościowych i decyzji zgłoszeń, wznowienie oraz usunięcie syntetycznych wpisów."
                         )
                         Text("Bez połączenia z serwerem i bez danych konta.")
                             .font(.caption).foregroundStyle(.secondary)

@@ -1050,3 +1050,23 @@ Weryfikacja: 27 nowych funkcji; pełne591 zdefiniowanych / 589 zaliczonych / 2 j
 Ograniczenia: host konta/foreground/ekranu, faktyczna prezentacja, trwały dziennik i panel są jeszcze do implementacji CK-05c.4b. To API, nie kompletny przepływ moderatora. Brak nowych zdalnych operacji, prób Development, ról/kluczy/sekretów/usług/opłat, zmian Production/Firebase lub TestFlight; urządzenia i A/B nie zaliczono. UI/deps/CI niezmienione; testów UI nie ponawiano. Zastany project.pbxproj zachowany.
 
 Pliki: trzy Sources/GatewayReportReview*.swift, Tests/GatewayReportReview{,Transport}Tests.swift, Tests/Fixtures/report-review/responses.json, gateway/scripts/export-report-review-native-fixture.mjs, ten dziennik, plan, [kontrakt](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md), [dowody](evidence/report-review-native-local-tests.json).
+
+
+## CK-05c.4b.1 — 2026-11-19 — trwały dziennik decyzji zgłoszeń i rzeczywisty Keychain
+
+Cel: zachować dokładną intencję moderatora przed wysłaniem i odzyskać wynik bez ponownego tworzenia decyzji. Nie podłączono jeszcze zwykłego hosta/panelu lub Runtime/usuwania konta.
+
+Zmiany:
+
+- GatewayReportReviewJournal/Scope/Lease/Entry: jeden metadany wpis reportID/decisionID/verdict/contentHash, prepared/dispatched/resolved, exact lease/revision, potwierdzenie tylko rozstrzygniętego wpisu. Nie zapisuje treści/powodu, profilu/GPS, bearer, inspectionID lub uprawnienia mutacji. Osobne namespace od zdjęć/community/credentials.
+- Serializowany backend GCD poza MainActor, bez await w read/check/write/readback. Frontend odcina dzierżawę natychmiast i odrzuca stary wynik po await; precancel nie rozpoczyna IO, rozpoczęty cancel nie udaje cofnięcia zapisu. Uszkodzony/obcy/rozszerzony payload daje błąd bez naprawy lub usunięcia.
+- Bariera usuwania/erasure dokładnego prywatnego właściciela, przez wszystkie origin, bez dotykania drugiego konta. Do 32 zapamiętanych właścicieli/barier; przy zapełnieniu odmawia nowego dostępu i nadal wykonuje jawne sprzątanie. Keychain WhenUnlockedThisDeviceOnly, Data Protection, synchronizacja wyłączona, limit 4096 B.
+- Rozszerzono istniejącą izolowaną diagnostykę GatewayStorageCheck Debug o faktyczny Keychain dziennika: dwa losowe syntetyczne konta, trzy scope, zapis/dispatch, odtworzenie obiektu, lokalny canned recovery, atrybuty, odmowa oversize, dokładna erasure i potwierdzenie nieobecności wszystkich własnych wpisów. Inicjalizator tego trybu omija konfigurację Firebase; brak połączeń z CloudKit/HTTP, GPS, muzyki i danych użytkowników. Dodano 1 test UI i obejrzany zrzut. Diagnostyka nie występuje w Release.
+
+Weryfikacja: 25 nowych funkcji pakietu; pełne 616 zdefiniowanych / 614 zaliczonych / 2 dotychczasowe sprzętowe pominięcia / 0 błędów na Macu i iOS 26.1/iPhone 17 Pro Simulator. UI 1/1, Debug build-for-testing i unsigned Release poprawne, strict format 7 plików poprawny. Negatywna kopia /tmp bez ochrony pending oblewa 1 test / 4 problemy; właściwe źródła zachowane. Wire recovery z konkretnego lokalnego Runtime/SQLite przechodzi przez klienta do journal; dostawcy/tożsamości są modelami. Backend produkcyjny/deps/CI niezmienione; 750 testów Node z ostatniego etapu backendu nie powtarzano.
+
+Jawne korekty testów: pierwszy zakaz pola message łapał też poprawny werdykt hide_message; doprecyzowano składnię pola i sentinel treści. Bezpośredni Keychain w standalone XCTest zwrócił -34018 (brak uprawnienia procesu potwierdzony kodem Security SDK); rzeczywisty test przeniesiono do app host i zaliczono bez skipu. Tymczasowy komunikat diagnostyczny wymagał literal interpolation; jeden filtr wybrał 0 testów i nie został zaliczony. Poprawiony filtr uruchomił dokładnie test wykazujący -34018; wszystkie końcowe wyniki powyżej po tych korektach.
+
+Granice: odtworzenie obiektu nie oznacza testu zabicia procesu/utraty zasilania, a Simulator nie potwierdza zachowania Keychain na zablokowanym fizycznym telefonie. Dwa syntetyczne lokalne scope nie zaliczają realnego A/B. Nadal potrzebne host/foreground/sesja/faktyczna prezentacja, panel i podłączenie journal do zwykłej kompozycji/usuwania (CK-05c.4b.2) oraz SIWA/hosted Runtime/CloudKit query/ASSET/CDN/Free i reszta planu. Bez nowych zdalnych operacji/prób Development/ról/kluczy/sekretów/usług/opłat/Production/Firebase/TestFlight. Zastany project.pbxproj zachowany.
+
+Pliki: GatewayReportReviewJournal.swift, GatewayReportReviewKeychain.swift, GatewayReportReviewJournalTests.swift, ReportReviewJournalStorageCheck.swift, GatewayStorageCheck.swift/View.swift, GatewayReportJournalStorageUITests.swift, ten dziennik, plan, uaktualniony kontrakt klienta, [kontrakt dziennika](DZIENNIK_DECYZJI_ZGLOSZEN_IOS.md), [dowody](evidence/report-review-journal-local-tests.json) i report-journal-app-keychain.png.
