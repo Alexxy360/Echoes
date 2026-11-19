@@ -1,0 +1,54 @@
+{
+  "phase": "CK-05c.1",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "5432db807436f83709c21d3ab010d2bde2a0277d",
+  "status": "private read-only report queue/inspection implemented and tested locally; runtime HTTP/operator UI/decisions remain",
+  "newTestFunctions": 14,
+  "filesSHA256": {
+    "gateway/src/community-report-review.mjs": "566cc923c5e497d258cb81204ea64c00602551c3b64672f10a4f650ba7d54f95",
+    "gateway/src/public-record-registry.mjs": "73fe8bcc544f0d37dadeaa513fec490f49d9c80e5a0ffa7d8cc22c7bcb98ca38",
+    "gateway/test/community-report-review.test.mjs": "6e55edebe124cc5766db54c2235d95e53aabeae8bfb7ce410e708692ada4fc60"
+  },
+  "fullSuite": {
+    "node22": {
+      "runtime": "22.23.5",
+      "tests": 705,
+      "passed": 705,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-community-report-review-full-node22.log",
+      "sha256": "b455e1d55fe0e14f23a25043357d270fad1a59c87aba3d916d39d3dd3b612e87"
+    },
+    "node24": {
+      "runtime": "24.22.1",
+      "tests": 705,
+      "passed": 705,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-community-report-review-full-node24.log",
+      "sha256": "9ff13465e64ce45aa682e329bf57dc0dacb38aa9e32407f01ba5dfb326360daa"
+    }
+  },
+  "coverage": [
+    "43-report bounded keyset pagination without provider query or reason/reporter disclosure in queue",
+    "separate default-denied synchronous operator predicate before any provider IO",
+    "exact authenticated report and optional message, no reporter ID/GPS/profile expansion",
+    "original moderator/session binding, role revocation, disabled account and final checkpoint races",
+    "tampered fields/provider errors redacted, message expiry before or after prepare yields null without snapshot retention",
+    "unsettled/expired/deleted reports omitted; one-use finalizers and clock barriers",
+    "uncooperative aborted provider retains the only slot through client actual drain; old finalizer cannot release a later slot"
+  ],
+  "providers": "real local SQLite/crypto/signatures; account identities and Apple responses explicitly synthetic",
+  "runtimeOrHTTPInstalled": false,
+  "operatorPrivilegesGrantedByThisCode": false,
+  "notTested": [
+    "real CloudKit report data or operator session",
+    "ordinary accounts A/B",
+    "actual HTTP/Workers/Free execution of this coordinator",
+    "decision receipts, moderation actions/recovery and UI"
+  ],
+  "unchangedNotRerun": [
+    "iOS/Swift/UI/Debug/Release",
+    "dependencies/CI"
+  ]
+}

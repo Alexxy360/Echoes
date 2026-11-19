@@ -61,3 +61,6 @@ Kod gateway zmienia pole techniczne i descriptor zapytania; odpowiedzi aplikacji
 5. Dalej: osobno przygotować ograniczony test syntetycznych rekordów/assetów oraz uprawnienia tożsamości serwerowej. Zgoda na sam schemat **nie obejmuje** rekordów, przypisania ról, nowych kluczy lub przekazania sekretów.
 
 Zaimportowane definicje typów pozostają w Development. Nie planujemy ich automatycznego usuwania przy wyłączeniu funkcji. Odbiór ACL dwóch zwykłych kont, odrębna tożsamość serwera, rzeczywiste zapytania/assety i pomiary Free pozostają otwarte. Dysponujemy jednym kontem operatora, które nie zastępuje tych testów. Flagi usług pozostają `0`; brak Production, migracji danych Firebase, wdrożenia gateway, nowych usług lub opłat.
+
+
+Aktualizacja CK-05a.4h: po osobnej zgodzie wycofano stary klucz, zarejestrowano nowy lokalny Development i przypisano właścicielowi rolę EchoesCommunityService według przyjętego modelu Individual. Rzeczywisty protokół metadanych wszystkich8typów i sprzątanie przeszły. [Wynik i granice](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md). Nie zastępuje to regionalnych query/ASSET/ACL dwóch zwykłych kont i Free; opis importu powyżej zachowuje historyczny zakres bez przypisywania ról.

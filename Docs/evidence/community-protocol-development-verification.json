@@ -1,0 +1,105 @@
+{
+  "phase": "CK-05a.4h",
+  "dateEuropeWarsaw": "2026-11-19",
+  "testedCommit": "5432db807436f83709c21d3ab010d2bde2a0277d",
+  "status": "real CloudKit Development metadata protocol verified and all eight own records confirmed absent",
+  "approval": {
+    "reply": "Tak, zatwierdzam cały opisany zakres",
+    "questionCall": "call_26cbbb7414c84da6b7d8fcdb98f97f99",
+    "scopeDocument": "Docs/ZAKRES_PROBY_COMMUNITY_DEVELOPMENT.md",
+    "scopeCommit": "5432db8"
+  },
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development",
+    "database": "public",
+    "reviewedSchemaSHA256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025"
+  },
+  "inventorySHA256": "529f04556a612b06513b5418186345dd53b0fef3114ae416c20790d0622fbd26",
+  "window": {
+    "id": "143d2191-2053-4544-aff6-9cf554627c2b",
+    "issuedAt": 1795084127563,
+    "expiresAt": 1795085927563,
+    "mode": "full"
+  },
+  "oldKey": {
+    "keyID": "0663e7ddc1124c0522589f5db7d0786c19f80c35ac158199db561f6e79a80919",
+    "revoked": true,
+    "consoleResult": "No Server-to-Server Keys before new registration"
+  },
+  "newKey": {
+    "name": "Echoes Community Development 2026-11-19",
+    "keyID": "e601721628f60c732d866bf669dcea4c2dfc7e99cb7dc9f68643a5a778330b10",
+    "publicSPKISHA256": "dff346013b6931700abe67b7b2358fcd2f36c8c9dd22481dbadbae9f5b9aee60",
+    "developmentOnly": true,
+    "privateKeyOutsideGit": true,
+    "cloudflareTransfer": false,
+    "remainsLocallyRegistered": true,
+    "guardScansBothKnownPrivateKeys": true
+  },
+  "role": {
+    "name": "EchoesCommunityService",
+    "ownerAccountOnly": true,
+    "ownerRecordNameSHA256": "5e9be85fb3d474fca50733d0d6c1dfa1bca4009c5d7e107a0c2b1ed0bccb3c85",
+    "consoleToast": "Role “EchoesCommunityService” has been added to the user.",
+    "previousDiagnosticRolePreserved": true,
+    "ordinaryAccountACLVerified": false
+  },
+  "result": {
+    "status": "protocol_verified",
+    "protocolSucceeded": true,
+    "cleanupSucceeded": true,
+    "storageHealthy": true,
+    "callsTotal": 9,
+    "windowCalls": 9,
+    "errorCode": null,
+    "cleanupWarning": null,
+    "pendingRecordNames": [],
+    "skippedExistingRecordNames": [],
+    "pendingIO": false
+  },
+  "durableReopen": {
+    "phase": "settled",
+    "protocolPassed": true,
+    "cleanupComplete": true,
+    "recordsConfirmedCreatedThenAbsent": 8,
+    "newNetworkRequests": 0
+  },
+  "rawPrivateReportSHA256": "30ec7731447822c5691e8ab910f79bc564c1de3c7ec054fd274ceeb29558419e",
+  "rawPrivateJournalSHA256": "aa6f0adf6067c36a231f96e5501f688ce277dcdaa83b0261ced8c87a3e402e6e",
+  "rawInventoryAndReportPublishedToGit": false,
+  "proofs": {
+    "old-key-before-change.jpg": {
+      "path": "/Users/alex/Documents/ChatGPT/Echoes/PrivateCloudKitProtocol/old-key-before-change.jpg",
+      "sha256": "e9a440b78cb41b730d2c1d641225e2c08dff44e26f50a4ae4acbd77f91339980"
+    },
+    "old-key-revoked.jpg": {
+      "path": "/Users/alex/Documents/ChatGPT/Echoes/PrivateCloudKitProtocol/old-key-revoked.jpg",
+      "sha256": "3e53677a80d8bd053256134bdddda2284501fe25456cfa8f119f48da0a0baaf4"
+    },
+    "new-key-registered.jpg": {
+      "path": "/Users/alex/Documents/ChatGPT/Echoes/PrivateCloudKitProtocol/new-key-registered.jpg",
+      "sha256": "00a6f49dbec5f9a51acd30ba50ea37329e27d875d63ccee5d8ad1ea4980a8832"
+    },
+    "community-role-assigned.jpg": {
+      "path": "/Users/alex/Documents/ChatGPT/Echoes/PrivateCloudKitProtocol/community-role-assigned.jpg",
+      "sha256": "9024d7f207dfe5841368c34dfa2776c700ea8e4703395faf5a5acef1238ac22b"
+    }
+  },
+  "activation": {
+    "processExited": true,
+    "permitRemoved": true,
+    "gatewayOrWorkerActivated": false
+  },
+  "notPerformed": [
+    "private database access",
+    "GPS/Music/ASSET/upload/query",
+    "user or Firebase data changes",
+    "Cloudflare secret transfer/deploy",
+    "Production/TestFlight",
+    "paid service activation",
+    "ordinary accounts A/B",
+    "regional indexes/Free/physical asset deletion acceptance"
+  ]
+}

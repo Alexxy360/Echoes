@@ -13,6 +13,7 @@ const schema = [
     created_at INTEGER NOT NULL,started_at INTEGER NOT NULL,asset_claims INTEGER CHECK(asset_claims IS NULL OR asset_claims IN (0,1,2,3)),
     UNIQUE(account_id,kind,logical_key))`,
   `CREATE INDEX IF NOT EXISTS public_record_owner_v1 ON public_records_v1(account_id,phase,record_name)`,
+  `CREATE INDEX IF NOT EXISTS public_report_review_v1 ON public_records_v1(record_name) WHERE kind='report' AND phase='settled'`,
   `CREATE TABLE IF NOT EXISTS avatar_asset_transfers_v1 (
     record_name TEXT NOT NULL,variant TEXT NOT NULL CHECK(variant IN ('image','thumbnail')),
     transfer_id TEXT,request_id TEXT,payload_hash TEXT,generation INTEGER,content_sha256 TEXT,byte_count INTEGER,
@@ -364,15 +365,28 @@ export class PublicRecordRegistry {
   }
   /** A settled row is necessary for declassification. Unknown or incomplete content stays hidden. */
   readable(name, kind) {
+    return this.#tx(() => this.#readable(name, kind));
+  }
+  #readable(name, kind) {
+    const row = this.#row(name);
+    if (!row || row.kind !== kind || row.phase !== "settled") return null;
+    const context = this.#context(row);
+    const dueAt = this.#retentionDeadline(context), retention = this.#retention(context);
+    if (context.kind === "avatar" && dueAt !== null) return null;
+    if (dueAt !== null && (context.startedAt > this.#now() || dueAt <= this.#now() || retention && retention.state !== "pending")) return null;
+    if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=0", row.account_id).length) return null;
+    return context;
+  }
+  /** Trusted moderation metadata only. No report contents, provider query, or user-facing route. */
+  reviewReportPage(after = null) {
+    if (after !== null && (typeof after !== "string" || !/^community-v1-report-[a-f0-9]{64}$/.test(after))) throw new PublicRecordError("PUBLIC_INPUT");
     return this.#tx(() => {
-      const row = this.#row(name);
-      if (!row || row.kind !== kind || row.phase !== "settled") return null;
-      const context = this.#context(row);
-      const dueAt = this.#retentionDeadline(context), retention = this.#retention(context);
-      if (context.kind === "avatar" && dueAt !== null) return null;
-      if (dueAt !== null && (context.startedAt > this.#now() || dueAt <= this.#now() || retention && retention.state !== "pending")) return null;
-      if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=0", row.account_id).length) return null;
-      return context;
+      const now = this.#now(), rows = this.#rows(`SELECT p.record_name FROM public_records_v1 p
+        JOIN auth_accounts_v1 a ON a.account_id=p.account_id AND a.disabled=0
+        WHERE p.kind='report' AND p.phase='settled' AND p.record_name>? AND p.started_at<=? AND p.started_at>?
+        ORDER BY p.record_name LIMIT 21`, after ?? "", now, now - 2592000000);
+      const scanned = rows.slice(0, 20), items = scanned.map(row => this.#readable(row.record_name, "report")).filter(Boolean);
+      return Object.freeze({ items: Object.freeze(items), after: rows.length > 20 ? scanned.at(-1).record_name : null });
     });
   }
   owned(accountID, kind, logicalID) {

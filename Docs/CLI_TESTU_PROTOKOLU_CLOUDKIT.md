@@ -1,6 +1,6 @@
 # Kontrolowane polecenia Development — CK-05a.4g
 
-19 listopada 2026. CLI, prywatny permit, raport i odzyskiwanie są zaimplementowane i sprawdzone lokalnie. **Nie wykonano próby Apple i nie zmieniono kluczy ani ról.** Model Individual został przyjęty osobno. [Zakres przygotowanej próby](ZAKRES_PROBY_COMMUNITY_DEVELOPMENT.md).
+19 listopada 2026. CLI, prywatny permit, raport i odzyskiwanie są zaimplementowane i sprawdzone lokalnie. **Późniejsza, osobno zatwierdzona próba Apple CK-05a.4h przeszła: [odbiór metadanych i granice](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md).** Poniżej opis implementacji i testów lokalnych CK-05a.4g. Model Individual został przyjęty osobno. [Zakres przygotowanej próby](ZAKRES_PROBY_COMMUNITY_DEVELOPMENT.md).
 
 ## Polecenia i granica aktywacji
 

@@ -1,6 +1,6 @@
 # Podpisany transport próby Development — CK-05a.4f
 
-19 listopada 2026. **Adapter biblioteczny przygotowany i sprawdzany lokalnie; CLI/permit oraz rzeczywista próba Apple pozostają do przygotowania.** Nie rejestrowano klucza, nie zmieniano roli, nie przekazywano sekretu i nie uruchamiano usługi. Zatwierdzony model Individual pozostaje oddzielny od zgody na te operacje.
+19 listopada 2026. **Adapter i CLI zostały użyte w zatwierdzonej rzeczywistej próbie Development CK-05a.4h: protokół metadanych i sprzątanie przeszły.** [Odbiór i granice](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md). Poniżej zachowano opis przygotowania/testów CK-05a.4f; A/B/query/ASSET/Free nie są zaliczone.
 
 `gateway/scripts/community-protocol-transport.mjs` łączy silnik CK-05a.4e z istniejącym `CloudKitDevelopmentSigner`. Przechowuje wyłącznie przekazany obiekt signera; nie czyta pliku klucza lub zmiennych aktywacji. Import modułu niczego nie uruchamia. `isEnabled` domyślnie odmawia; musi zwrócić dokładnie true.
 

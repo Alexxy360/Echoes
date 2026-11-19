@@ -34,3 +34,6 @@ Retencja wybiera rekordy z własnego SQLite i odczytuje dokładne ID; nie potrze
 Każdy etap zachowuje osobno: SHA eksportu wejściowego, dokładną różnicę, przyznaną zgodę/okno, wynik Apple, inwentarz własnych rekordów oraz wynik ich oczyszczania. Raport rozdziela „pole przyjęte przez schemat”, „usunięto wartości treści”, „zwykły klient nie ma dostępu” i „działa hostowany alarm”. Nie wolno łączyć tych stwierdzeń w jedno zaliczenie na podstawie konta operatora.
 
 Lokalny odbiór [CK-05a.3](ALARM_I_BUDZETY_RETENCJI.md) pozostaje ważny dla kodu i syntetycznej kompozycji. Flagi usług pozostają `0`, bez publikacji Production, nowego przekazania sekretów, opłat i operacji na dawnych danych Firebase.
+
+
+Aktualizacja CK-05a.4h: po osobnej zgodzie wycofano stary klucz, zarejestrowano nowy lokalny Development i przypisano właścicielowi rolę EchoesCommunityService według przyjętego modelu Individual. Rzeczywisty protokół metadanych wszystkich8typów i sprzątanie przeszły. [Wynik i granice](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md). Nie zastępuje to regionalnych query/ASSET/ACL dwóch zwykłych kont i Free; opis importu powyżej zachowuje historyczny zakres bez przypisywania ról.

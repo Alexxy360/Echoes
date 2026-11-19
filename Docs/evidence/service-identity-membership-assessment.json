@@ -27,6 +27,11 @@
   "servicesActivated": false,
   "productionChanged": false,
   "personalContactDetailsStored": false,
-  "userDecision": "Tak, przyjmuję rekomendowany wariant",
-  "requirementDecision": "Separate server Apple ID requirement explicitly superseded by owner administrator identity and separate credentials; ordinary A/B still required."
+  "userDecision": "Tak, przyjmuj\u0119 rekomendowany wariant",
+  "requirementDecision": "Separate server Apple ID requirement explicitly superseded by owner administrator identity and separate credentials; ordinary A/B still required.",
+  "laterVerification": {
+    "phase": "CK-05a.4h",
+    "path": "community-protocol-development-verification.json",
+    "note": "Historical analysis flags above describe CK-01l only. Subsequent separately approved key retirement/registration and owner role assignment are verified in CK-05a.4h."
+  }
 }

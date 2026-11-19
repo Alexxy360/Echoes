@@ -1,6 +1,6 @@
 # Konto Individual i tożsamość serwera — przyjęty model
 
-19 listopada 2026. **Model zatwierdzony przez właściciela: konto Individual z właścicielem jako administratorem backendu i oddzielnymi kluczami.** Nie nadano nowych ról, nie utworzono klucza ani nie aktywowano gateway. Właściciel potwierdził, że wydaje jako osoba fizyczna i nie dysponuje organizacją.
+19 listopada 2026. **Model zatwierdzony przez właściciela: konto Individual z właścicielem jako administratorem backendu i oddzielnymi kluczami.** W późniejszym CK-05a.4h, po osobnej zgodzie, wycofano stary klucz, utworzono nowy Development i nadano właścicielowi rolę EchoesCommunityService. [Wynik próby](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md). Gateway pozostaje nieaktywny. Właściciel potwierdził, że wydaje jako osoba fizyczna i nie dysponuje organizacją.
 
 ## Ustalone fakty
 

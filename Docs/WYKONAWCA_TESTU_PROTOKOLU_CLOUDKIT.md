@@ -1,6 +1,6 @@
 # Lokalny wykonawca testu protokołu — CK-05a.4e
 
-19 listopada 2026. **Silnik, trwały dziennik i adapter podpisanego HTTP są zaimplementowane lokalnie. CLI/permit i próba w Apple pozostają do przygotowania.** [Adapter i jego granice](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). Nie zmieniono ról lub kluczy, nie wysłano rekordów do CloudKit. Zatwierdzony model Individual nie jest zgodą na te operacje.
+19 listopada 2026. **Silnik/dziennik, HTTP i CLI/permit są gotowe. Po konkretnej zgodzie rzeczywista próba metadanych Development przeszła w CK-05a.4h:9batch,8rekordów potwierdzonych jako nieobecne.** [Wynik i granice](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md). Poniższy opis dokumentuje implementację CK-05a.4e, a nie pełny odbiór A/B/query/ASSET/Free.
 
 ## Dziennik przed IO
 

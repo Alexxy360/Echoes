@@ -1,6 +1,6 @@
 # Przygotowany zakres operacji — CloudKit Community Development
 
-19 listopada 2026. **Przygotowane do zatwierdzenia, jeszcze niewykonane.** Przyjęty model Individual nie jest zgodą na te operacje. [Narzędzie i granice](CLI_TESTU_PROTOKOLU_CLOUDKIT.md).
+19 listopada 2026. **Zakres osobno zatwierdzony i wykonany w CK-05a.4h: [wynik](ODBIOR_PROTOKOLU_COMMUNITY_DEVELOPMENT.md).** Jedna próba zakończona, permit usunięty; ten dokument nie zatwierdza kolejnego okna. Przyjęty model Individual nie jest zgodą na te operacje. [Narzędzie i granice](CLI_TESTU_PROTOKOLU_CLOUDKIT.md).
 
 ## Cel i kontekst
 
