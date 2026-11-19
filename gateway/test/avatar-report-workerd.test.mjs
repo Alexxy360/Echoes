@@ -25,6 +25,9 @@ test("real local workerd edge/Runtime/DO SQLite signs exact photo reports and re
     assert.equal(value.recovered.body.reportID, body.allowedReportIDs[1]); assert.equal(value.creates, 2); assert.equal(value.beforeRecovery, 2);
     assert.equal(value.foreign.status, 200); assert.equal(value.foreign.body.outcome, "unconfirmed"); assert.notEqual(value.foreign.body.reportID, value.recovered.body.reportID);
     assert.deepEqual(value.deniedSubmit, { status: 503, body: { protocolVersion: 1, error: "FEATURE_DISABLED" } }); assert.deepEqual(value.disabled, value.deniedSubmit);
+    assert.equal(value.cancelLost.status, 503); assert.equal(value.cancelRecovered.status, 200);
+    assert.equal(value.cancelRecovered.body.outcome, "cancelled"); assert.equal(value.cancelRecovered.body.reportID, body.allowedReportIDs[1]);
+    assert.equal(value.replacements, 1); assert.deepEqual(value.cancelledIntent, [{ ready: 0, active: 0, hidden: 1 }]);
     assert.equal(value.intents.length, 2); assert.ok(value.intents.every(r => r.ready === 1));
     assert.ok(value.budgetRows.some(r => r.kind === "avatar-report-submit" && r.count === 2)); assert.ok(value.lookups > 0);
     assert.equal(JSON.stringify(value).includes(first.reason), false); assert.equal(JSON.stringify(value).includes(f.signedIn.accountID), false);

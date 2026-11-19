@@ -316,3 +316,42 @@ func photoReportClient(
         ).outcome == .accepted)
     #expect(await recovery.requests.count == 1)
 }
+
+@Test func avatarReportNativeCancellationUsesUUIDOnlyAndDecodesRecoveryOfCancelledAttempt() async throws {
+    let f = try PhotoReportWireFixture()
+    let stub = PhotoReportStub(f.cases["cancel"]!)
+    let result = try await photoReportClient(stub, clock: ReviewClock(f.now)).cancel(
+        f.submission.identity, token: f.token)
+    #expect(result.identity == f.submission.identity && result.outcome == .cancelled)
+    let request = try #require(await stub.requests.first)
+    #expect(request.url?.path == "/v1/community/avatar/report/cancel")
+    #expect(
+        try JSONSerialization.jsonObject(with: request.httpBody!) as? [String: String]
+            == ["requestID": f.submission.identity.requestID])
+    let recovered = try await photoReportClient(
+        PhotoReportStub(f.cases["recover-cancelled"]!), clock: ReviewClock(f.now)
+    ).recover(f.submission.identity, token: f.token)
+    #expect(recovered == result)
+}
+@Test func avatarReportNativeCancellationDoesNotAcceptOriginalAcceptedOrUnconfirmedResult() async throws {
+    let f = try PhotoReportWireFixture()
+    for name in ["submit", "recover-accepted", "recover-unconfirmed"] {
+        await #expect(throws: GatewayAvatarReportFailure.invalidResponse) {
+            try await photoReportClient(PhotoReportStub(f.cases[name]!), clock: ReviewClock(f.now))
+                .cancel(name == "recover-unconfirmed" ? f.unknown : f.submission.identity, token: f.token)
+        }
+    }
+    await #expect(throws: GatewayAvatarReportFailure.invalidResponse) {
+        try await photoReportClient(PhotoReportStub(f.cases["cancel"]!), clock: ReviewClock(f.now))
+            .submit(f.submission, token: f.token)
+    }
+}
+@Test func avatarReportNativeCancellationRechecksActivationAfterIOAndDoesNotRetry() async throws {
+    let f = try PhotoReportWireFixture()
+    let clock = ReviewClock(try PhotoReportWireFixture().now)
+    let stub = PhotoReportStub(f.cases["cancel"]!, effect: { clock.disable() })
+    await #expect(throws: GatewayAvatarReportFailure.unavailable) {
+        try await photoReportClient(stub, clock: clock).cancel(f.submission.identity, token: f.token)
+    }
+    #expect(await stub.requests.count == 1)
+}

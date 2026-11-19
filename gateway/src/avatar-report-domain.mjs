@@ -10,9 +10,9 @@ export const avatarReportFail = code => { throw new AvatarReportError(code); };
 export const avatarReportExact = (value, keys) => plain(value) && Object.keys(value).sort().join() === [...keys].sort().join();
 const id = value => typeof value === "string" && publicUUID.test(value);
 export function avatarReportInput(action, value) {
-  const keys = action === "submit" ? ["requestID", "ownerID", "versionID", "reason", "coordinate"] : action === "recover" ? ["requestID"] : null;
+  const keys = action === "submit" ? ["requestID", "ownerID", "versionID", "reason", "coordinate"] : ["recover", "cancel"].includes(action) ? ["requestID"] : null;
   if (!keys || !avatarReportExact(value, keys) || !id(value.requestID) || action === "submit" && (!id(value.ownerID) || !id(value.versionID))) avatarReportFail("AVATAR_REPORT_INPUT");
-  if (action === "recover") return Object.freeze({ requestID: value.requestID });
+  if (action !== "submit") return Object.freeze({ requestID: value.requestID });
   try {
     const reason = communityText(value.reason, 500), coordinate = Object.freeze(communityCoordinate(value.coordinate));
     // JSON escapes can carry lone surrogates even through a fatal UTF-8 decoder.
@@ -21,9 +21,10 @@ export function avatarReportInput(action, value) {
   } catch { avatarReportFail("AVATAR_REPORT_INPUT"); }
 }
 export function avatarReportResult(action, value, input, accountID) {
-  if (!["submit", "recover"].includes(action) || !avatarReportExact(value, ["schemaVersion", "requestID", "reportID", "outcome"]) || value.schemaVersion !== 1 ||
+  if (!["submit", "recover", "cancel"].includes(action) || !avatarReportExact(value, ["schemaVersion", "requestID", "reportID", "outcome"]) || value.schemaVersion !== 1 ||
       !id(value.requestID) || value.requestID !== input.requestID || typeof value.reportID !== "string" || !/^community-v1-avatarreport-[a-f0-9]{64}$/.test(value.reportID) ||
-      !["accepted", "unconfirmed"].includes(value.outcome) || action === "submit" && value.outcome !== "accepted" ||
+      !["accepted", "unconfirmed", "cancelled"].includes(value.outcome) || action === "submit" && value.outcome !== "accepted" ||
+      action === "cancel" && value.outcome !== "cancelled" ||
       accountID !== undefined && value.reportID !== recordIdentity(accountID, "avatarreport", input.requestID).recordName) avatarReportFail("AVATAR_REPORT_RESPONSE");
   return Object.freeze({ ...value });
 }

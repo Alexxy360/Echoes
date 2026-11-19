@@ -1,0 +1,147 @@
+{
+  "stage": "CK-05d.1c.2b.2",
+  "createdAt": "2026-11-19T19:31:27.966970+00:00",
+  "baselineCommit": "799b8f822d0d9db42c2caa810bb8671fb4e7ca9e",
+  "backend": {
+    "newFunctions": 12,
+    "fullEach": 850,
+    "passedEach": 850,
+    "failedEach": 0,
+    "cancelledEach": 0,
+    "runtimeVersions": [
+      "22.23.5",
+      "24.22.1"
+    ],
+    "focusedBeforeLastTwoTests": 44,
+    "syntax": [
+      {
+        "runtime": "v22.23.5",
+        "files": 185,
+        "passed": true
+      },
+      {
+        "runtime": "v24.22.1",
+        "files": 185,
+        "passed": true
+      }
+    ],
+    "quota": "submit+cancel share legacy avatar-report-submit 3/min, all 6/min; durable consumption before body",
+    "workerd": "concrete local Edge/Runtime/DO SQLite/auth/signatures/provider dispatch; exact cancellation CAS loses ACK; recreate Runtime in same process/storage, disable cancel+READ; recovery proves cancelled without another report mutation; Apple/accounts/platform synthetic; outbound disabled"
+  },
+  "native": {
+    "newFunctions": 9,
+    "focused": 51,
+    "definedEach": 698,
+    "passedEach": 696,
+    "skippedEach": 2,
+    "failedEach": 0,
+    "platforms": [
+      "macOS arm64",
+      "iPhone 17 Pro iOS 26.1 Simulator"
+    ],
+    "skips": [
+      "physical upload-journal file protection",
+      "physical disk-cache file protection"
+    ],
+    "ui": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0,
+      "newFunctions": 1,
+      "scope": "real app Keychain with random synthetic scope and canned read-only responses; prepare cancelling, terminate/launch, recover cancelled, ack, exact cleanup; prior recovery/capacity/attributes retained"
+    },
+    "fixtureCases": 7,
+    "nativeURLSession": "real URLSession + delegate, loopback-free URLProtocol; UUID-only cancel, accepted/unconfirmed refused for cancellation, recover cancelled; exact pin/body/headers and retained system task unchanged",
+    "debugBuildAndTests": "passed",
+    "unsignedRelease": "passed",
+    "swiftFormatStrictFiles": 8
+  },
+  "negativeControls": [
+    {
+      "copy": "/private/tmp/echoes-avatar-report-cancel-negative/gateway",
+      "mutation": "omit exact cancellation registry tag guard in Coordinator",
+      "test": "cancellation finalizer rejects a replaced registry confirmation tag after the last checkpoint",
+      "testsFailed": 1,
+      "assertionsFailed": 1,
+      "evidence": "200 returned instead of required 409"
+    },
+    {
+      "copy": "/private/tmp/echoes-avatar-report-cancel-negative/EchoesCloudKit",
+      "mutation": "skip the cancelling phase preservation branch in resolve",
+      "test": "avatarReportJournalAcceptedOrUnknownDuringCancellationCannotReleaseOrResendAttempt",
+      "testsFailed": 1,
+      "issues": 6,
+      "sourcePreserved": true
+    }
+  ],
+  "setupNotes": [
+    "First non-escalated workerd run: 43 pass/1 startup sandbox bind denial; not acceptance. Retried locally with loopback permission, 44/44 and final850/850 each.",
+    "First Swift negative copy lacked sibling EchoesCore and did not compile; not evidence. Copied local dependency and reran to obtain one test/six issues.",
+    "xcresulttool first sandbox export denied its external TestReport cache; repeated with local tool access, summaries and screenshot exported. No automatic approval rejection."
+  ],
+  "screen": {
+    "path": "Docs/evidence/avatar-report-cancel-process-restart.png",
+    "sha256": "a20046a82a7d8cb8cc026869b56a53baf3ea40883eb0598d8380d2dc25776084",
+    "reviewed": true,
+    "observation": "existing fixed Debug Keychain screen shows Kontrola zaliczona / passed; screenshot is not proof of product form or remote service"
+  },
+  "logs": {
+    "/private/tmp/echoes-avatar-report-cancel-api-focus.log": "d54f51f1915a599e01b2135b361f162822127a06d95c0a4dd7c09af9356bace0",
+    "/private/tmp/echoes-avatar-report-cancel-api-focus2.log": "45411332d9fb351cc859ab21f1dab36c194faf23f9ec418e79956de95ab36ee5",
+    "/private/tmp/echoes-avatar-report-cancel-api-full22.log": "3f51e169d239f3d599b688d394190f68e1727cdc21331756ce23a113d00ae045",
+    "/private/tmp/echoes-avatar-report-cancel-api-full24.log": "374e02db8e4f68b6d1b1038ce6b0748301b19f26556ed258bb12204932e5dd50",
+    "/private/tmp/echoes-avatar-report-cancel-native-focus.log": "339cafda15f30dbc979242d09b853c288a698c55637d57f5aacfbd84a6a85e64",
+    "/private/tmp/echoes-avatar-report-cancel-native-full-mac.log": "d3cf98749b6e39751c5d779337dd80894e649b0bee33f65fa04a64cb89977d83",
+    "/private/tmp/echoes-avatar-report-cancel-keychain.log": "f7081b1ec5b27544545ca1c3d236d27832eadc5290670bfbdbe569371c68dfe2",
+    "/private/tmp/echoes-avatar-report-cancel-package-ios.log": "69bbae64cb29363a60c47fee3d7311ce8f82ebfb9ba81909904736fd031f2766",
+    "/private/tmp/echoes-avatar-report-cancel-release.log": "461fb93d78b4504d5fee4b99175061defa29888dd535a03553d0be1394f5d942",
+    "/private/tmp/echoes-avatar-report-cancel-api-negative.log": "f8f7d5eb6407d580c330c08325b1b37ad1a60f1a0073a1f87f58d892f5e0f074",
+    "/private/tmp/echoes-avatar-report-cancel-native-negative.log": "b8aa80e80c929a03441265c45a8698a4c42acd40ac9be4552e3ac38613f0aef8",
+    "/private/tmp/echoes-avatar-report-cancel-native-negative2.log": "76178b07962ee522249dbadd520b1f2a203a71a15720b5e1946502a6489872d6"
+  },
+  "summaries": {
+    "/private/tmp/echoes-avatar-report-cancel-keychain-summary.json": "7ae2cf11ad00f5c94d2311367792f565bd4146e25c7ce6b81aa811a0f10ce89b",
+    "/private/tmp/echoes-avatar-report-cancel-package-ios-summary.json": "cc0c9c05862914e62fb1733ebf4ac8345c7f98c0ab6fdfcf45ef6ab0c46a6851"
+  },
+  "sourceSHA256": {
+    "Echo/Services/AvatarReportJournalStorageCheck.swift": "d447254e3b45107cdf1b3dd1d795ccd11a556eb12f4c9eb1821eb5f6d49c9cf3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportHTTPClient.swift": "3a312061ac147f1d0dd5af27eba36a214b7a92d41b4ff69a0fca23b8513aecb9",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportJournal.swift": "f97675ec39fec9d619824276e079c8c533723d8754de3e9abdcd91e183e31222",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportModels.swift": "750a3df271631406909338d2724d62b3f43b2a2c924231827403c0ff44b7c45c",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report/responses.json": "cad3b66d6e0e3009401d7ae2f1d79b361cd139845e5fe5d217a500c1e1a45885",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportJournalTests.swift": "dc50ecbf12c3eb8c87e958d671a4d26d12dd0da0c4a4221385829bd0e13bc4a1",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportTests.swift": "ac950035e7af76f99c48992d6955ce8422f943dbf671bd91682eb5dc7cec2a4e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportTransportTests.swift": "760ce9ab661b4e5092889fa4e4e04478cdbc9d81d66d012781c65a751eca7e04",
+    "EchoesUITests/GatewayAvatarReportJournalStorageUITests.swift": "4578ca526e1375b67213b18d3ed950a58accd37662eb73262c621c8a76aeb5c8",
+    "gateway/scripts/generate-avatar-report-wire-fixtures.mjs": "a64a6e1f87313494419bcf312e6b4d59e50c54fb4debc8e54146a28c5505eb97",
+    "gateway/src/avatar-report-coordinator.mjs": "4cb5da20d67b1deab0e4ee550bf017088b59f48a5ea8f6f6ceebdca405650029",
+    "gateway/src/avatar-report-domain.mjs": "6a5329daee24600f6d013f62e64821b9ee5c5d76ea8748621b47e355be7d224d",
+    "gateway/src/avatar-report-http.mjs": "2d37a2dff0e0162325ded8b8061fc6b3779c999a176725a6cff60787e180fc37",
+    "gateway/src/community-state.mjs": "8f9638ea7f41574aa726c8c2d47399858c623a66e90f16cfc8f9aaf52ae85da1",
+    "gateway/src/gateway-avatar-report.mjs": "8b6349388f19192085266af5429ef6ecd79ef149d44ee11a6ff817cb9ea418f5",
+    "gateway/src/gateway-http.mjs": "9699c0deada9173316c3d7af61269423178339ebed9435131cb5364b22820a47",
+    "gateway/src/gateway-runtime.mjs": "f0001995d8e272ba791480eb7a09ba5cc4fbcf5da6cc74807fb6e461e06f9cd6",
+    "gateway/test/avatar-report-cancel-http.test.mjs": "f957d40830dc1e7c29e8351933f7ef5cd051984b6a222772a2b3847e6824ad83",
+    "gateway/test/avatar-report-workerd.test.mjs": "5018f89b263daf1003b5b4b7c6393cb7ac06c640872c25c4f8b8854ae484cf96",
+    "gateway/test/support/avatar-report-fixture.mjs": "4a5a76a9174cfc8600118ccd9d1d2a8e4afbd7ea013fdce9faf63885701210ce",
+    "gateway/test/support/avatar-report-http-fixture.mjs": "1af6766264f9e5380dcc5ea6d6c077758f7068fb8bb3af5217f0022b3253c9cb",
+    "gateway/test/support/avatar-report-workerd-proof.mjs": "9a6acb465bc9422e5fe0df549ee94313c1e7f8951cbca1618d5dadae4d89af17",
+    "gateway/wrangler.community.jsonc": "3ee926aa9d77d68e2181340d4e8ba0710e21d5a4b34c9566586878b9da977276"
+  },
+  "unchanged": {
+    "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagedProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "cloudKitSchema": "af48193c7d43a4473f219d643fbf24bb344acbd6b1b848eb8086c45cbed0534c",
+    "dependencies": "unchanged",
+    "CI": "unchanged",
+    "remoteChanges": false,
+    "newServicesOrFees": false
+  },
+  "remaining": [
+    "1c.3 native host/form/render consent/lifecycle/Runtime/account erasure coupling",
+    "photo-report operator",
+    "actual CloudKit schema validation/import and bounded remote acceptance",
+    "hosted SIWA, ordinary A/B, regional queries, ASSET/CDN, retention, Free capacity, physical device checks",
+    "controlled TestFlight preparation; no Production or Firebase mutation authorized"
+  ]
+}

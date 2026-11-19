@@ -6,6 +6,8 @@ public protocol GatewayAvatarReportAPI: Sendable {
         -> GatewayAvatarReportResult
     func recover(_ identity: GatewayAvatarReportIdentity, token: GatewaySecret) async throws
         -> GatewayAvatarReportResult
+    func cancel(_ identity: GatewayAvatarReportIdentity, token: GatewaySecret) async throws
+        -> GatewayAvatarReportResult
 }
 public protocol GatewayAvatarReportTransport: Sendable {
     func send(_ request: URLRequest, operation: GatewayAvatarReportOperation) async throws
@@ -49,6 +51,11 @@ public struct GatewayAvatarReportHTTPClient: GatewayAvatarReportAPI {
         -> GatewayAvatarReportResult
     {
         try await perform(.recover(identity), token: token)
+    }
+    public func cancel(_ identity: GatewayAvatarReportIdentity, token: GatewaySecret) async throws
+        -> GatewayAvatarReportResult
+    {
+        try await perform(.cancel(identity), token: token)
     }
     private func stamp() throws -> (wall: TimeInterval, uptime: TimeInterval) {
         let wall = date().timeIntervalSince1970
@@ -107,6 +114,9 @@ public struct GatewayAvatarReportHTTPClient: GatewayAvatarReportAPI {
             let outcome = GatewayAvatarReportOutcome(rawValue: wire.outcome)
         else { throw GatewayAvatarReportFailure.invalidResponse }
         if case .submit = operation, outcome != .accepted { throw GatewayAvatarReportFailure.invalidResponse }
+        if case .cancel = operation, outcome != .cancelled {
+            throw GatewayAvatarReportFailure.invalidResponse
+        }
         try checkActivation()
         return .init(identity: operation.identity, outcome: outcome)
     }

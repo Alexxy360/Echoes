@@ -3,7 +3,7 @@ import { AvatarReportError, avatarReportInput, avatarReportResult } from "./avat
 import { reportReviewAdmission, reportReviewDeadline, reportReviewReadInput, reportReviewBody, reportReviewErrorStatuses } from "./report-review-http.mjs";
 
 export { avatarReportInput, avatarReportResult };
-export const avatarReportPaths = new Map([["/v1/community/avatar/report", "submit"], ["/v1/community/avatar/report/recover", "recover"]]);
+export const avatarReportPaths = new Map([["/v1/community/avatar/report", "submit"], ["/v1/community/avatar/report/recover", "recover"], ["/v1/community/avatar/report/cancel", "cancel"]]);
 // Reuse only the bounded JSON/IO mechanics, never the moderator authorization or its public codes.
 export const avatarReportAdmission = reportReviewAdmission;
 export const avatarReportDeadline = reportReviewDeadline;

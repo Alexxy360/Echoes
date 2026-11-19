@@ -1,6 +1,6 @@
 # Zgłoszenia zdjęć w iOS — CK-05d.1c
 
-Stan CK-05d.1c.1–2: typowany kontrakt, konkretny transport URLSession i osobny trwały journal Keychain są zaimplementowane oraz odebrane lokalnie. Klient jest domyślnie wyłączony; host/formularz i powiązanie z mutacją w Runtime aplikacji pozostają do wykonania. Pozostałe części poniżej zachowują wymagania [planu zgłoszeń](ZGLOSZENIA_ZDJEC_PLAN.md) i [serwera](HTTP_ZGLOSZEN_ZDJEC.md).
+Stan CK-05d.1c.1–2b.2: typowany kontrakt, konkretny transport URLSession i osobny trwały journal Keychain są zaimplementowane oraz odebrane lokalnie. Klient jest domyślnie wyłączony; host/formularz i powiązanie z mutacją w Runtime aplikacji pozostają do wykonania. Pozostałe części poniżej zachowują wymagania [planu zgłoszeń](ZGLOSZENIA_ZDJEC_PLAN.md) i [serwera](HTTP_ZGLOSZEN_ZDJEC.md).
 
 ## Klient i tożsamość próby
 
@@ -8,13 +8,13 @@ GatewayAvatarReportIdentity przyjmuje kanoniczne accountID i requestID i wylicza
 
 GatewayAvatarReportSubmission zawiera tożsamość próby, AvatarReference, kanoniczny reason i poprawną Coordinate. Odrzuca zgłoszenie własnego zdjęcia, błędne ID/pozycje i niepoprawny powód; przycięcie obejmuje białe znaki ECMAScript, NFC i limit500 jednostek UTF-16. Wire ma najwyżej4096B. Typ nie stanowi dowodu wyświetlenia lub zgody użytkownika — to obowiązek przyszłego hosta/UI.
 
-Submit wysyła tylko requestID, ownerID, versionID, reason i coordinate. Nie wysyła zgłaszającego, reportID, hash obrazu, generacji publikacji lub roli. Recovery wysyła tylko pierwotny requestID, z aktualnym tokenem właściwego konta. Może działać po utracie dostępu do zdjęcia lub odnowieniu sesji; nie potrzebuje starego powodu/pozycji/obrazu. Odpowiedź musi mieć dokładnie protocolVersion/schemaVersion/requestID/reportID/outcome, wersje1 i zgodną tożsamość. Submit przyjmuje wyłącznie accepted; recovery także unconfirmed. Nie ma automatycznego ponowienia w kodzie klienta ani tworzenia nowego UUID.
+Submit wysyła tylko requestID, ownerID, versionID, reason i coordinate. Nie wysyła zgłaszającego, reportID, hash obrazu, generacji publikacji lub roli. Recovery wysyła tylko pierwotny requestID, z aktualnym tokenem właściwego konta. Może działać po utracie dostępu do zdjęcia lub odnowieniu sesji; nie potrzebuje starego powodu/pozycji/obrazu. Odpowiedź musi mieć dokładnie protocolVersion/schemaVersion/requestID/reportID/outcome, wersje1 i zgodną tożsamość. Submit przyjmuje wyłącznie accepted; recovery także unconfirmed/cancelled. Cancel wysyła wyłącznie requestID i przyjmuje tylko cancelled. Nie ma automatycznego ponowienia w kodzie klienta ani tworzenia nowego UUID.
 
 Accepted oznacza zapis raportu, nie jego rozpatrzenie. Unconfirmed nie dowodzi, że zapis nigdy nie dotrze. Dowolny błąd po rozpoczęciu wysyłki może oznaczać zapis bez potwierdzenia, również404/401 po późniejszej utracie uprawnień. Sam klient nie prowadzi trwałego dziennika i nie rozstrzyga tej niepewności; aplikacja nie może go aktywować przed kolejnymi etapami.
 
 ## Granice transportu
 
-Osobna ephemeral URLSession przypina origin, dokładną trasę submit/recover, POST, posortowane kanoniczne body i sześć nagłówków. Odrzuca obcy URL/metodę/body/nagłówki przed utworzeniem systemowego zadania. Nie ma cookies, credentials storage, cache, przekierowań lub oczekiwania na connectivity. Nie używa magazynu/roli/moderatora wiadomości; współdzieli jedynie czyste walidatory tekstu i formatu tokenu.
+Osobna ephemeral URLSession przypina origin, dokładną trasę submit/recover/cancel, POST, posortowane kanoniczne body i sześć nagłówków. Odrzuca obcy URL/metodę/body/nagłówki przed utworzeniem systemowego zadania. Nie ma cookies, credentials storage, cache, przekierowań lub oczekiwania na connectivity. Nie używa magazynu/roli/moderatora wiadomości; współdzieli jedynie czyste walidatory tekstu i formatu tokenu.
 
 Nagłówki odpowiedzi są sprawdzane przed body: najwyżej64/8192B, bez kolizji wielkości liter, odpowiednie MIME/no-store/nosniff, identity encoding, bez Range lub manifestu/recenzji/wyboru zdjęcia. Limit2048 rzeczywistych bajtów,128 niepustych fragmentów, dokładna długość jeżeli podana, poprawne UTF-8 i zamknięte JSON/status-kod. Kody panelu moderatora i surowe błędy dostawcy są odrzucane. 401 wymagający logowania mapuje się na istniejący GatewayFailure.signInRequired, bez automatycznego kasowania sesji; pozostałe błędy są lokalne i redagowane, Retry-After jest ograniczony do86400s.
 
@@ -51,3 +51,10 @@ Nadal brak hosta/formularza i wywołania nowego journalu przy rzeczywistym submi
 Dodano do repozytorium/rejestru/retencji lokalnie odebrany mechanizm bariery pod pierwotnym recordName. Nieznany nonce dostaje CREATE bariery, znany raport exact-CAS do czterech pól bez treści. Po pełnym dowodzie i checkpoint wynik jest cancelled; odzyskanie wyniku nie mutuje rekordu. Spóźniony oryginalny CREATE nie może odtworzyć powodu. Niedokończona próba zachowuje pierwotne 30 dni i może zostać domknięta przez retencję. Migracja prywatnego SQLite ma dwie kolumny, bez nowych pól/typów/praw CloudKit. Erasure owner czyści marker w partiach 25 i zachowuje obce konto. [Dokładny kontrakt](ANULOWANIE_ZGLOSZEN_ZDJEC.md), [dowody](evidence/avatar-report-cancellation-local-tests.json).
 
 To warstwa wewnętrzna, bez trasy cancel lub zmian DTO/journala iOS. Przed UI pozostaje 2b.2: chronione HTTP/Runtime, jawna aktywacja, quota/admission/deadline/drain, a w iOS trwałe cancelling przed IO. Accepted lub unconfirmed odebrane podczas cancelling nie potwierdzają anulowania; tylko cancelled pozwoli zakończyć tę operację. Nie wolno jeszcze podłączać wewnętrznego cancelled do starego klienta oczekującego dwóch wyników. Następnie 1c.3 host/formularz z rzeczywistą zgodą i lifecycle/erasure.
+
+
+## Trwałe cancelling — CK-05d.1c.2b.2
+
+Journal.cancelling zapisuje metadane przed żądaniem cancel. Zachowuje własny UUID i obraca revision. Prepared/dispatched można anulować; cancelling można jawnie wznowić dla tej samej tożsamości, natomiast resolved pozostaje do zwykłego potwierdzenia wyniku. Accepted/unconfirmed podczas cancelling nie dowodzi anulowania i nie pozwala na ack, nowy UUID lub dispatched. Tylko cancelled kończy anulowanie. Stare lease/revision, inne konto i callback oryginalnego submit nie mogą zastąpić tej intencji. Błędy przed/po zapisie wymagają odtworzenia trwałego stanu, a nie założenia, że operacja nie wyszła.
+
+Zamknięte kodowanie dopuszcza wyłącznie prepared:nil, dispatched:nil/unconfirmed, cancelling:nil/accepted/unconfirmed, resolved:accepted/cancelled. Namespace/limit4096 B/32 scope i device-only atrybuty pozostają bez zmian. App-hosted Keychain potwierdza proces terminate/launch z cancelling, syntetyczny odczyt cancelled, ack i dokładne końcowe sprzątanie. To kontrola diagnostyczna Debug; host i formularz użytkownika nadal do 1c.3. [Kontrakt serwera i anulowania](ANULOWANIE_ZGLOSZEN_ZDJEC.md), [dowody](evidence/avatar-report-cancel-api-native-local-tests.json).

@@ -9,20 +9,20 @@ const sync = value => {
 
 /** Protected intake for the exact published version. Reporting never changes publication/moderation. */
 export class AvatarReportCoordinator {
-  #authentication; #community; #policy; #repository; #registry; #client; #checkpoint; #enabled; #canSubmit; #clock; #mono; #timeout;
+  #authentication; #community; #policy; #repository; #registry; #client; #checkpoint; #enabled; #canSubmit; #canCancel; #clock; #mono; #timeout;
   #busy = false; #unsafe = false; #pending = new Set();
   constructor({ authentication, communityState, avatarPolicy, repository, registry, client, checkpoint,
-    isEnabled = () => false, canSubmit = () => false, clock = Date.now, monotonic = () => performance.now(), timeoutMilliseconds = 8000 } = {}) {
-    if (typeof authentication?.authorize !== "function" || ["assertActive", "visible", "begin", "finish", "assertCurrent", "avatarReportIntent"].some(key => typeof communityState?.[key] !== "function") ||
+    isEnabled = () => false, canSubmit = () => false, canCancel = () => false, clock = Date.now, monotonic = () => performance.now(), timeoutMilliseconds = 8000 } = {}) {
+    if (typeof authentication?.authorize !== "function" || ["assertActive", "visible", "begin", "finish", "assertCurrent", "avatarReportIntent", "cancelAvatarReportIntent"].some(key => typeof communityState?.[key] !== "function") ||
         ["readPublication", "assertReadPublication"].some(key => typeof avatarPolicy?.[key] !== "function") ||
-        ["beginRead", "write", "recoverAvatarReport"].some(key => typeof repository?.[key] !== "function") ||
-        ["owned", "readable", "readAvatarAssetCommitments"].some(key => typeof registry?.[key] !== "function") ||
+        ["beginRead", "write", "recoverAvatarReport", "cancelAvatarReport"].some(key => typeof repository?.[key] !== "function") ||
+        ["owned", "readable", "readAvatarAssetCommitments", "avatarReportCancellation", "assertAvatarReportCancellation"].some(key => typeof registry?.[key] !== "function") ||
         ["lookup", "waitForPendingOperations"].some(key => typeof client?.[key] !== "function") ||
         ["advance", "verify"].some(key => typeof checkpoint?.[key] !== "function") ||
-        [isEnabled, canSubmit, clock, monotonic].some(value => typeof value !== "function") ||
+        [isEnabled, canSubmit, canCancel, clock, monotonic].some(value => typeof value !== "function") ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) fail("AVATAR_REPORT_INPUT");
     this.#authentication = authentication; this.#community = communityState; this.#policy = avatarPolicy; this.#repository = repository;
-    this.#registry = registry; this.#client = client; this.#checkpoint = checkpoint; this.#enabled = isEnabled; this.#canSubmit = canSubmit;
+    this.#registry = registry; this.#client = client; this.#checkpoint = checkpoint; this.#enabled = isEnabled; this.#canSubmit = canSubmit; this.#canCancel = canCancel;
     this.#clock = clock; this.#mono = monotonic; this.#timeout = timeoutMilliseconds;
   }
   get isOccupied() { return this.#busy; }
@@ -49,7 +49,7 @@ export class AvatarReportCoordinator {
     if (["PUBLIC_SCOPE", "PUBLIC_RESPONSE", "PUBLIC_INPUT"].includes(error?.code)) return new AvatarReportError("AVATAR_REPORT_RESPONSE");
     return new AvatarReportError();
   }
-  async #prepare(o, submit, action) {
+  async #prepare(o, mode, action) {
     if (this.#busy) fail("AVATAR_REPORT_LIMIT"); this.#busy = true;
     let closed = false, settled = false, released = false, timer, rejectCancelled, result, identity, floorWall, floorMono;
     const controller = new AbortController();
@@ -62,7 +62,7 @@ export class AvatarReportCoordinator {
       if (!Number.isSafeInteger(started) || started < 0 || !Number.isFinite(mono) || mono < 0) fail();
       const transport = () => {
         const now = this.#clock(), tick = this.#mono();
-        if (closed || this.#unsafe || controller.signal.aborted || o.signal?.aborted || sync(this.#enabled()) !== true || submit && sync(this.#canSubmit()) !== true ||
+        if (closed || this.#unsafe || controller.signal.aborted || o.signal?.aborted || sync(this.#enabled()) !== true || mode === "submit" && sync(this.#canSubmit()) !== true || mode === "cancel" && sync(this.#canCancel()) !== true ||
             !Number.isSafeInteger(now) || now < floorWall || !Number.isFinite(tick) || tick < floorMono || now - started >= this.#timeout || tick - mono >= this.#timeout) fail();
         floorWall = now; floorMono = tick;
       };
@@ -84,7 +84,7 @@ export class AvatarReportCoordinator {
   }
   async prepareSubmit(value) {
     const o = this.#options("submit", value), input = o.body;
-    return this.#prepare(o, true, async ({ accountID, check, signal }) => {
+    return this.#prepare(o, "submit", async ({ accountID, check, signal }) => {
       if (input.ownerID === accountID) fail("AVATAR_REPORT_INPUT");
       const publication = this.#policy.readPublication(input.ownerID);
       if (publication.versionID !== input.versionID) fail("AVATAR_REPORT_NOT_FOUND");
@@ -131,11 +131,36 @@ export class AvatarReportCoordinator {
       return () => { guard(); return { schemaVersion: 1, requestID: input.requestID, reportID: saved.recordName, outcome: "accepted" }; };
     });
   }
+  #confirmedCancellation(accountID, requestID, reportID) {
+    const lease = this.#registry.avatarReportCancellation(accountID, requestID);
+    if (!lease || lease.recordName !== reportID || lease.state !== "settled" || !lease.cancellationTag || lease.cancellationTag !== lease.recordTag) fail("AVATAR_REPORT_RESPONSE");
+    this.#assertCancellation(lease); return lease;
+  }
+  #assertCancellation(lease) {
+    const current = this.#registry.assertAvatarReportCancellation(lease);
+    if (current.state !== "settled" || current.cancellationTag !== lease.cancellationTag || current.recordTag !== lease.recordTag) fail("AVATAR_REPORT_CONFLICT");
+  }
+  async prepareCancellation(value) {
+    const o = this.#options("cancel", value), input = o.body;
+    return this.#prepare(o, "cancel", async ({ accountID, check, signal }) => {
+      const saved = await this.#repository.cancelAvatarReport({ accessToken: o.accessToken, requestID: input.requestID, signal, authorizeMutation: check }); check();
+      if (saved.outcome !== "cancelled") fail("AVATAR_REPORT_RESPONSE");
+      const lease = this.#confirmedCancellation(accountID, input.requestID, saved.reportID);
+      const current = () => { check(); this.#assertCancellation(lease); };
+      await this.#community.cancelAvatarReportIntent(accountID, input.requestID); current();
+      await this.#checkpoint.advance({ signal }); current();
+      return () => { current(); return { ...saved, requestID: input.requestID }; };
+    });
+  }
   async prepareRecovery(value) {
     const o = this.#options("recover", value), input = o.body;
-    return this.#prepare(o, false, async ({ accountID, check, signal }) => {
+    return this.#prepare(o, "recover", async ({ accountID, check, signal }) => {
       const saved = await this.#repository.recoverAvatarReport({ accessToken: o.accessToken, requestID: input.requestID, signal, authorizeRead: check }); check();
-      let context;
+      let context, cancellation;
+      if (saved.outcome === "cancelled") {
+        cancellation = this.#confirmedCancellation(accountID, input.requestID, saved.reportID);
+        await this.#community.cancelAvatarReportIntent(accountID, input.requestID); check();
+      }
       if (saved.outcome === "accepted") {
         context = this.#registry.owned(accountID, "avatarreport", input.requestID);
         const intent = this.#community.avatarReportIntent(accountID, input.requestID);
@@ -144,6 +169,7 @@ export class AvatarReportCoordinator {
       }
       const current = () => {
         check();
+        if (cancellation) this.#assertCancellation(cancellation);
         if (context) {
           const latest = this.#registry.readable(context.recordName, "avatarreport");
           if (!latest || latest.payloadHash !== context.payloadHash || latest.recordTag !== context.recordTag || latest.requestID !== input.requestID) fail("AVATAR_REPORT_CONFLICT");

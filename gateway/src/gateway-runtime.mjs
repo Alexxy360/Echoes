@@ -61,6 +61,8 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
       env.AVATAR_OWNER_PREVIEW_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       !["0", "1"].includes(env.AVATAR_UPLOAD_ENABLED ?? "0") ||
       !["0", "1"].includes(env.AVATAR_REVIEW_ENABLED ?? "0") ||
+      !["0", "1"].includes(env.AVATAR_REPORT_CANCEL_ENABLED ?? "0") ||
+      env.AVATAR_REPORT_CANCEL_ENABLED === "1" && env.AVATAR_REPORT_ENABLED !== "1" ||
       !["0", "1"].includes(env.AVATAR_REPORT_ENABLED ?? "0") ||
       env.AVATAR_REPORT_ENABLED === "1" && env.COMMUNITY_ENABLED !== "1" ||
       !["0", "1"].includes(env.REPORT_REVIEW_ENABLED ?? "0") ||
@@ -84,7 +86,7 @@ export function activeGatewayConfiguration(env, now = Date.now()) {
     if (env.AVATAR_READ_ENABLED === "1" || env.AVATAR_REVIEW_ENABLED === "1" || env.AVATAR_OWNER_PREVIEW_ENABLED === "1") hosts = avatarDownloadHosts(env.AVATAR_DOWNLOAD_HOSTS_JSON);
     if (env.AVATAR_UPLOAD_ENABLED === "1") uploadHosts = avatarDownloadHosts(env.AVATAR_UPLOAD_HOSTS_JSON);
   } catch { return null; }
-  return Object.freeze({ deadline, avatarReportEnabled: env.AVATAR_REPORT_ENABLED === "1", reportReviewEnabled: env.REPORT_REVIEW_ENABLED === "1", reportReviewers: reportOperators, avatarOwnerPreviewEnabled: env.AVATAR_OWNER_PREVIEW_ENABLED === "1", avatarReviewEnabled: env.AVATAR_REVIEW_ENABLED === "1", avatarReviewers: reviewers, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
+  return Object.freeze({ deadline, avatarReportCancelEnabled: env.AVATAR_REPORT_CANCEL_ENABLED === "1", avatarReportEnabled: env.AVATAR_REPORT_ENABLED === "1", reportReviewEnabled: env.REPORT_REVIEW_ENABLED === "1", reportReviewers: reportOperators, avatarOwnerPreviewEnabled: env.AVATAR_OWNER_PREVIEW_ENABLED === "1", avatarReviewEnabled: env.AVATAR_REVIEW_ENABLED === "1", avatarReviewers: reviewers, avatarReadEnabled: env.AVATAR_READ_ENABLED === "1", avatarDownloadHosts: hosts,
     avatarUploadEnabled: env.AVATAR_UPLOAD_ENABLED === "1", avatarUploadHosts: uploadHosts, deletionEnabled: env.ACCOUNT_DELETION_ENABLED === "1",
     publicRecordsEnabled: env.PUBLIC_RECORDS_ENABLED === "1", retentionEnabled: env.PUBLIC_RETENTION_ENABLED === "1", communityEnabled: env.COMMUNITY_ENABLED === "1" });
 }
@@ -153,6 +155,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       if (!isAvatarReviewEnabled() || !config.avatarReviewers.includes(id)) return false;
       communityState.assertActive(id); return true;
     };
+    const isAvatarReportCancelEnabled = () => activeGatewayConfiguration(env, clock())?.avatarReportCancelEnabled === true;
     const isAvatarReportEnabled = () => activeGatewayConfiguration(env, clock())?.avatarReportEnabled === true;
     const isReportReviewEnabled = () => {
       const active = activeGatewayConfiguration(env, clock());
@@ -183,7 +186,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       if (config.communityEnabled) community = new CommunityCoordinator({ state: communityState, authentication, repository: publicRecords, avatarReferences,
         clock, cursorSecret: env.REQUEST_BUDGET_KEY, phrasesJSON: env.COMMUNITY_BLOCKED_PHRASES_JSON ?? "[]", supportURL: env.COMMUNITY_SUPPORT_URL ?? "" });
       if (config.avatarReportEnabled) avatarReports = new AvatarReportCoordinator({ authentication, communityState, avatarPolicy,
-        repository: publicRecords, registry, client, checkpoint, clock, isEnabled: isAvatarReportEnabled, canSubmit: isAvatarReadEnabled });
+        repository: publicRecords, registry, client, checkpoint, clock, isEnabled: isAvatarReportEnabled, canSubmit: isAvatarReadEnabled, canCancel: isAvatarReportCancelEnabled });
       if (config.reportReviewEnabled) reportReview = new CommunityReportReview({ authentication, communityState, registry,
         repository: publicRecords, client, reviews: new CommunityReportReviewState(storage, { clock }), checkpoint,
         clock, isEnabled: isReportReviewEnabled, isOperator: isReportReviewer });
@@ -258,7 +261,7 @@ export function createGatewayRuntime(storage, env, { clock = Date.now, fetchImpl
       deletionEnabled: config.deletionEnabled, limits, scheduleMaintenance: () => maintenance.schedule(), checkpoint,
       avatarReader, isAvatarReadEnabled, avatarOwnerPreview, isAvatarOwnerPreviewEnabled,
       avatarPublication, isAvatarUploadEnabled, avatarWithdrawal, isAvatarWithdrawalEnabled,
-      avatarReview, isAvatarReviewEnabled, isAvatarReviewer, avatarReports, isAvatarReportEnabled, reportReview, isReportReviewEnabled, isReportReviewer, clock,
+      avatarReview, isAvatarReviewEnabled, isAvatarReviewer, avatarReports, isAvatarReportEnabled, isAvatarReportCancelEnabled, reportReview, isReportReviewEnabled, isReportReviewer, clock,
       community, isCommunityEnabled: () => activeGatewayConfiguration(env, clock())?.communityEnabled === true,
       isEnabled: () => activeGatewayConfiguration(env, clock()) !== null && (checkpoint !== undefined || !hasRegistryCheckpoint(storage)) });
     return Object.freeze({ handle, maintenance, processor, publicRecords });
@@ -311,11 +314,11 @@ async function forwardReportReview(request, env, config, path, clock) {
 const claimPhotoReportEdge = avatarReportAdmission();
 async function forwardAvatarReport(request, env, config, path, clock) {
   const action = avatarReportPaths.get(path);
-  if (!config.avatarReportEnabled || action === "submit" && !config.avatarReadEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
+  if (!config.avatarReportEnabled || action === "submit" && !config.avatarReadEnabled || action === "cancel" && !config.avatarReportCancelEnabled) return gatewayJSON({ error: "FEATURE_DISABLED" }, 503);
   let admission, deadline, forwarded, response;
   const check = () => {
     deadline.check(); const active = activeGatewayConfiguration(env, clock());
-    if (active?.avatarReportEnabled !== true || action === "submit" && (active.avatarReadEnabled !== true || active.avatarDownloadHosts.join() !== config.avatarDownloadHosts.join())) throw new AvatarReportError();
+    if (active?.avatarReportEnabled !== true || action === "cancel" && active.avatarReportCancelEnabled !== true || action === "submit" && (active.avatarReadEnabled !== true || active.avatarDownloadHosts.join() !== config.avatarDownloadHosts.join())) throw new AvatarReportError();
   };
   try {
     admission = claimPhotoReportEdge(); deadline = avatarReportDeadline(request.signal, 15000);

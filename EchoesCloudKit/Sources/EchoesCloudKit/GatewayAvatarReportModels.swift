@@ -74,7 +74,7 @@ public struct GatewayAvatarReportSubmission: Equatable, Sendable, CustomStringCo
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
 
-public enum GatewayAvatarReportOutcome: String, Equatable, Sendable { case accepted, unconfirmed }
+public enum GatewayAvatarReportOutcome: String, Equatable, Sendable { case accepted, unconfirmed, cancelled }
 public struct GatewayAvatarReportResult: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
     public let identity: GatewayAvatarReportIdentity
     public let outcome: GatewayAvatarReportOutcome
@@ -84,16 +84,18 @@ public struct GatewayAvatarReportResult: Equatable, Sendable, CustomStringConver
 public enum GatewayAvatarReportOperation: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
     case submit(GatewayAvatarReportSubmission)
     case recover(GatewayAvatarReportIdentity)
+    case cancel(GatewayAvatarReportIdentity)
     var identity: GatewayAvatarReportIdentity {
         switch self {
         case .submit(let value): value.identity
-        case .recover(let value): value
+        case .recover(let value), .cancel(let value): value
         }
     }
     var path: String {
         switch self {
         case .submit: "/v1/community/avatar/report"
         case .recover: "/v1/community/avatar/report/recover"
+        case .cancel: "/v1/community/avatar/report/cancel"
         }
     }
     var maximumResponseBytes: Int { 2048 }
@@ -108,7 +110,7 @@ public enum GatewayAvatarReportOperation: Equatable, Sendable, CustomStringConve
                     "latitude": value.coordinate.latitude, "longitude": value.coordinate.longitude,
                 ],
             ]
-        case .recover(let value): fields = ["requestID": value.requestID]
+        case .recover(let value), .cancel(let value): fields = ["requestID": value.requestID]
         }
         let body = try JSONSerialization.data(withJSONObject: fields, options: [.sortedKeys])
         guard body.count <= 4096 else { throw GatewayAvatarReportFailure.invalidInput }

@@ -593,3 +593,136 @@ private func photoJournalEventually(_ predicate: @Sendable () -> Bool) async thr
     }
     throw GatewayAvatarReportJournalFailure.unavailable
 }
+
+@Test @MainActor func avatarReportJournalCancellationSurvivesReopenWithoutSensitiveMaterial() async throws {
+    let storage = PhotoReportJournalMemoryStorage()
+    let scope = try photoStoreScope()
+    let journal = GatewayAvatarReportJournal(storage: storage)
+    let identity = try photoStoreIntent(scope)
+    let lease = try await journal.open(scope: scope)
+    let entry = try await journal.cancelling(journal.prepare(identity, lease: lease), lease: lease)
+    #expect(entry.phase == .cancelling && entry.outcome == nil)
+    let restored = GatewayAvatarReportJournal(storage: storage)
+    let next = try await restored.open(scope: scope)
+    #expect(try await restored.pending(lease: next) == entry)
+    await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+        try await restored.dispatched(entry, lease: next)
+    }
+    await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+        try await restored.acknowledge(entry, lease: next)
+    }
+    let data = try #require(storage.records[scope.digest])
+    let text = try #require(String(data: data, encoding: .utf8))
+    for value in [identity.accountID, identity.reportID, "reason", "coordinate", "versionID", "Bearer"] {
+        #expect(!text.contains(value))
+    }
+}
+@Test @MainActor func avatarReportJournalAcceptedOrUnknownDuringCancellationCannotReleaseOrResendAttempt()
+    async throws
+{
+    for outcome in [GatewayAvatarReportOutcome.accepted, .unconfirmed] {
+        let storage = PhotoReportJournalMemoryStorage()
+        let scope = try photoStoreScope()
+        let journal = GatewayAvatarReportJournal(storage: storage)
+        let identity = try photoStoreIntent(scope)
+        let lease = try await journal.open(scope: scope)
+        let entry = try await journal.cancelling(
+            journal.dispatched(journal.prepare(identity, lease: lease), lease: lease), lease: lease)
+        let recovered = try await journal.resolve(
+            entry, result: .init(identity: identity, outcome: outcome), lease: lease)
+        #expect(recovered.phase == .cancelling && recovered.outcome == outcome)
+        await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+            try await journal.acknowledge(recovered, lease: lease)
+        }
+        await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+            try await journal.dispatched(recovered, lease: lease)
+        }
+        await #expect(throws: GatewayAvatarReportJournalFailure.pendingExists) {
+            try await journal.prepare(photoStoreIntent(scope), lease: lease)
+        }
+        let restored = GatewayAvatarReportJournal(storage: storage)
+        let next = try await restored.open(scope: scope)
+        #expect(try await restored.pending(lease: next) == recovered)
+    }
+}
+@Test @MainActor func avatarReportJournalOnlyExactCancelledResultClosesCancellationThenAcknowledges()
+    async throws
+{
+    let storage = PhotoReportJournalMemoryStorage()
+    let scope = try photoStoreScope()
+    let journal = GatewayAvatarReportJournal(storage: storage)
+    let identity = try photoStoreIntent(scope)
+    let lease = try await journal.open(scope: scope)
+    let entry = try await journal.cancelling(journal.prepare(identity, lease: lease), lease: lease)
+    await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+        try await journal.resolve(
+            entry, result: .init(identity: photoStoreIntent(scope), outcome: .cancelled), lease: lease)
+    }
+    let terminal = try await journal.resolve(
+        entry, result: .init(identity: identity, outcome: .cancelled), lease: lease)
+    #expect(terminal.phase == .resolved && terminal.outcome == .cancelled)
+    await #expect(throws: GatewayAvatarReportJournalFailure.invalidTransition) {
+        try await journal.cancelling(terminal, lease: lease)
+    }
+    try await journal.acknowledge(terminal, lease: lease)
+    #expect(try await journal.pending(lease: lease) == nil)
+}
+@Test @MainActor
+func avatarReportJournalCancellationRetryRotatesRevisionSameIdentityAndRejectsStaleCallbacks() async throws {
+    let storage = PhotoReportJournalMemoryStorage()
+    let scope = try photoStoreScope()
+    let journal = GatewayAvatarReportJournal(storage: storage)
+    let identity = try photoStoreIntent(scope)
+    let lease = try await journal.open(scope: scope)
+    let original = try await journal.dispatched(journal.prepare(identity, lease: lease), lease: lease)
+    let first = try await journal.cancelling(original, lease: lease)
+    let retry = try await journal.cancelling(first, lease: lease)
+    #expect(first.intent == retry.intent && first.revision != retry.revision && retry.phase == .cancelling)
+    for stale in [original, first] {
+        await #expect(throws: GatewayAvatarReportJournalFailure.inactive) {
+            try await journal.resolve(
+                stale, result: .init(identity: identity, outcome: .accepted), lease: lease)
+        }
+        await #expect(throws: GatewayAvatarReportJournalFailure.inactive) {
+            try await journal.resolve(
+                stale, result: .init(identity: identity, outcome: .cancelled), lease: lease)
+        }
+    }
+    #expect(try await journal.pending(lease: lease) == retry)
+}
+@Test @MainActor func avatarReportJournalCancellationWriteFailureCannotAuthorizeIOAndKeepsDurableMetadata()
+    async throws
+{
+    for afterWrite in [false, true] {
+        let storage = PhotoReportJournalMemoryStorage()
+        let scope = try photoStoreScope()
+        let journal = GatewayAvatarReportJournal(storage: storage)
+        let identity = try photoStoreIntent(scope)
+        let lease = try await journal.open(scope: scope)
+        let original = try await journal.dispatched(journal.prepare(identity, lease: lease), lease: lease)
+        storage.failAt = storage.writes + 1
+        storage.afterWrite = afterWrite
+        await #expect(throws: GatewayAvatarReportJournalFailure.unavailable) {
+            try await journal.cancelling(original, lease: lease)
+        }
+        storage.failAt = nil
+        let restored = GatewayAvatarReportJournal(storage: storage)
+        let next = try await restored.open(scope: scope)
+        let pending = try #require(try await restored.pending(lease: next))
+        #expect(pending.intent == identity && pending.phase == (afterWrite ? .cancelling : .dispatched))
+    }
+}
+@Test @MainActor func avatarReportJournalCancelledRecoveryCanCloseDispatchedAttemptWithoutNewCancelMutation()
+    async throws
+{
+    let storage = PhotoReportJournalMemoryStorage()
+    let scope = try photoStoreScope()
+    let journal = GatewayAvatarReportJournal(storage: storage)
+    let identity = try photoStoreIntent(scope)
+    let lease = try await journal.open(scope: scope)
+    let entry = try await journal.dispatched(journal.prepare(identity, lease: lease), lease: lease)
+    let resolved = try await journal.resolve(
+        entry, result: .init(identity: identity, outcome: .cancelled), lease: lease)
+    #expect(resolved.phase == .resolved && resolved.outcome == .cancelled)
+    try await journal.acknowledge(resolved, lease: lease)
+}

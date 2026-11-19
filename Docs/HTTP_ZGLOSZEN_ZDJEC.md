@@ -40,3 +40,8 @@ Kody domeny: AVATAR_REPORT_INPUT (400), SCOPE (401), NOT_FOUND (404), CONFLICT (
 [Zapis weryfikacji](evidence/avatar-report-intake-local-tests.json) obejmuje cały zestaw gateway, testy negatywne i rzeczywisty lokalny workerd/DO/SQLite. Provider Apple, konta i platformowe metadata są jawnie modelowane; test workerd ma zablokowany zewnętrzny outbound. Odtworzenie Runtime korzysta z tej samej lokalnej instancji procesu/bazy; nie jest dowodem przetrwania utraty zasilania lub restartu procesu. Nowe opóźnione cancel sprawdzono w Node Web Streams, nie na hostingu.
 
 Native DTO/journal/formularz i osobny operator zgłoszeń zdjęć pozostają do wykonania. Nie importowano schematu, nie zmieniono praw/kluczy/sekretów/usług, nie uruchomiono opłat ani Production, Firebase i TestFlight. Zwykłe A/B, SIWA, rzeczywiste query/ASSET/CDN/retencja, Free i urządzenia nadal wymagają odbioru. Kontakt do wsparcia właściciel poda później.
+
+
+## Anulowanie własnej próby — CK-05d.1c.2b.2
+
+POST /v1/community/avatar/report/cancel przyjmuje zamknięte {requestID} i zwraca wyłącznie cancelled z własnym reportID po pełnym dowodzie trwałej bariery. Osobna flaga AVATAR_REPORT_CANCEL_ENABLED=0 wymaga AVATAR_REPORT_ENABLED, ale nie READ. Recover przyjmuje accepted/unconfirmed/cancelled także przy wyłączonym cancel. Submit i cancel dzielą trzy mutacje/minutę, wszystkie trzy operacje sześć żądań/minutę; liczniki są trwałe i pobierane przed body. Te same granice/admission/drain/deadline i zamknięty protokół obowiązują nową trasę. [Pełny kontrakt](ANULOWANIE_ZGLOSZEN_ZDJEC.md), [lokalne dowody](evidence/avatar-report-cancel-api-native-local-tests.json). Bez aktywacji lub importu schematu.

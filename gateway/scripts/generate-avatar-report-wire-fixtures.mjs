@@ -10,6 +10,9 @@ try {
   await capture("recover-unconfirmed", await f.edge("recover", unknown));
   await capture("scope", await f.edge("recover", unknown, { token: randomUUID() + "." + "a".repeat(43) }));
   await capture("input", await f.edge("submit", { ...submit, generation: 1 }));
+  f.setCancellable(true);
+  await capture("cancel", await f.edge("cancel", { requestID: submit.requestID }));
+  await capture("recover-cancelled", await f.edge("recover", { requestID: submit.requestID }));
   // All values and secrets here are synthetic test fixtures; no service or user data is read.
   const fixture = { synthetic: "owned-local-avatar-report-runtime-v1", now: f.clock(), accountID: f.viewer.accountID, token: f.viewer.sessionToken, submit, unknown, responses };
   const path = new URL("../../EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report/responses.json", import.meta.url);

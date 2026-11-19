@@ -170,7 +170,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
   avatarWithdrawal = avatarPublication, isAvatarWithdrawalEnabled = isAvatarUploadEnabled,
   avatarReview, isAvatarReviewEnabled = () => false, isAvatarReviewer = () => false, reviewTimeoutMilliseconds = 12000, clock = Date.now,
   avatarOwnerPreview, isAvatarOwnerPreviewEnabled = () => false, previewTimeoutMilliseconds = 12000,
-  avatarReports, isAvatarReportEnabled = () => false, avatarReportTimeoutMilliseconds = 12000,
+  avatarReports, isAvatarReportEnabled = () => false, isAvatarReportCancelEnabled = () => false, avatarReportTimeoutMilliseconds = 12000,
   reportReview, isReportReviewEnabled = () => false, isReportReviewer = () => false, reportTimeoutMilliseconds = 12000,
   limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
   let activeAvatar = 0;
@@ -188,7 +188,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
   const previewHandler = createAvatarOwnerPreviewHandler({ authentication, limits, checkpoint, avatarOwnerPreview, isEnabled,
     isAvatarOwnerPreviewEnabled, previewTimeoutMilliseconds, inputTimeoutMilliseconds });
   const photoReportHandler = createAvatarReportHandler({ authentication, limits, checkpoint, avatarReports, isEnabled,
-    isAvatarReportEnabled, isAvatarReadEnabled, scheduleMaintenance, avatarReportTimeoutMilliseconds, inputTimeoutMilliseconds });
+    isAvatarReportEnabled, isAvatarReportCancelEnabled, isAvatarReadEnabled, scheduleMaintenance, avatarReportTimeoutMilliseconds, inputTimeoutMilliseconds });
   const reportHandler = createReportReviewHandler({ authentication, limits, checkpoint, reportReview, isEnabled,
     isReportReviewEnabled, isReportReviewer, scheduleMaintenance, clock, reportTimeoutMilliseconds, inputTimeoutMilliseconds });
   return async (request, serverBudgetHash) => {

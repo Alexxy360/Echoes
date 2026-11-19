@@ -161,7 +161,7 @@
             guard let testID = env["ECHOES_PHOTO_REPORT_RESTART_ID"] else { return nil }
             guard UUID(uuidString: testID)?.uuidString.lowercased() == testID,
                 let phase = env["ECHOES_PHOTO_REPORT_RESTART_PHASE"],
-                ["prepare", "recover", "cleanup"].contains(phase)
+                ["prepare", "recover", "cancel-prepare", "cancel-recover", "cleanup"].contains(phase)
             else { return "restart-configuration-failed" }
             let storage = KeychainGatewayAvatarReportJournalStorage()
             do {
@@ -185,23 +185,30 @@
                 } else {
                     let identity = try GatewayAvatarReportIdentity(accountID: testID, requestID: testID)
                     let journal = GatewayAvatarReportJournal(storage: storage)
-                    if phase == "prepare" {
+                    if phase == "prepare" || phase == "cancel-prepare" {
                         guard try await journal.peek(scope: scope) == nil else {
                             throw GatewayAvatarReportFailure.invalidResponse
                         }
                         let lease = try await journal.open(scope: scope)
                         let entry = try await journal.dispatched(
                             journal.prepare(identity, lease: lease), lease: lease)
-                        guard entry.intent == identity, entry.phase == .dispatched else {
+                        let saved =
+                            phase == "cancel-prepare"
+                            ? try await journal.cancelling(entry, lease: lease) : entry
+                        guard saved.intent == identity,
+                            saved.phase == (phase == "cancel-prepare" ? .cancelling : .dispatched)
+                        else {
                             throw GatewayAvatarReportFailure.invalidResponse
                         }
                     } else {
                         let lease = try await journal.open(scope: scope)
                         guard let entry = try await journal.pending(lease: lease), entry.intent == identity,
-                            entry.phase == .dispatched
+                            entry.phase == (phase == "cancel-recover" ? .cancelling : .dispatched)
                         else { throw GatewayAvatarReportFailure.invalidResponse }
                         let client = GatewayAvatarReportHTTPClient(
-                            configuration: config, transport: PhotoReportJournalCheckAPI(),
+                            configuration: config,
+                            transport: PhotoReportJournalCheckAPI(
+                                outcome: phase == "cancel-recover" ? "cancelled" : "accepted"),
                             isEnabled: { true })
                         let token = try GatewaySecret(testID + "." + String(repeating: "a", count: 43))
                         let outcome = try await client.recover(identity, token: token)
@@ -233,13 +240,15 @@
         ]
     }
     private actor PhotoReportJournalCheckAPI: GatewayAvatarReportTransport {
+        let outcome: String
+        init(outcome: String = "accepted") { self.outcome = outcome }
         func send(_ request: URLRequest, operation: GatewayAvatarReportOperation) async throws
             -> GatewayAvatarReportHTTPResponse
         {
             guard case .recover(let intent) = operation else { throw GatewayAvatarReportFailure.invalidInput }
             let body: [String: Any] = [
                 "protocolVersion": 1, "schemaVersion": 1,
-                "requestID": intent.requestID, "reportID": intent.reportID, "outcome": "accepted",
+                "requestID": intent.requestID, "reportID": intent.reportID, "outcome": outcome,
             ]
             return .init(
                 status: 200,

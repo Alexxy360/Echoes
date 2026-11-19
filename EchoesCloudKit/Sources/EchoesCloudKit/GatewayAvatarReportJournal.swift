@@ -37,7 +37,9 @@ public struct GatewayAvatarReportJournalLease: Sendable, CustomStringConvertible
     public var description: String { "GatewayAvatarReportJournalLease(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
-public enum GatewayAvatarReportJournalPhase: String, Codable, Sendable { case prepared, dispatched, resolved }
+public enum GatewayAvatarReportJournalPhase: String, Codable, Sendable {
+    case prepared, dispatched, cancelling, resolved
+}
 public struct GatewayAvatarReportJournalEntry: Equatable, Sendable, CustomStringConvertible, CustomReflectable
 {
     public let intent: GatewayAvatarReportIdentity
@@ -80,6 +82,7 @@ private final class AvatarReportJournalBackend: @unchecked Sendable {
             return .entry(try load(scope)?.entry?.value(accountID: scope.owner.accountID))
         case .prepare(let intent, let lease): return .entry(try prepare(intent, lease: lease))
         case .dispatch(let entry, let lease): return .entry(try dispatched(entry, lease: lease))
+        case .cancel(let entry, let lease): return .entry(try cancelling(entry, lease: lease))
         case .resolve(let entry, let result, let lease):
             return .entry(try resolve(entry, result: result, lease: lease))
         case .acknowledge(let entry, let lease):
@@ -123,7 +126,9 @@ private final class AvatarReportJournalBackend: @unchecked Sendable {
             let result = outcome.flatMap(GatewayAvatarReportOutcome.init(rawValue:))
             switch (phase, outcome, result) {
             case (.prepared, nil, nil), (.dispatched, nil, nil), (.dispatched, "unconfirmed", .unconfirmed),
-                (.resolved, "accepted", .accepted):
+                (.cancelling, nil, nil), (.cancelling, "accepted", .accepted),
+                (.cancelling, "unconfirmed", .unconfirmed),
+                (.resolved, "accepted", .accepted), (.resolved, "cancelled", .cancelled):
                 break
             default: throw GatewayAvatarReportJournalFailure.unavailable
             }
@@ -239,6 +244,16 @@ private final class AvatarReportJournalBackend: @unchecked Sendable {
         try save(value, scope: lease.scope)
         return try value.entry!.value(accountID: lease.scope.owner.accountID)
     }
+    private func cancelling(_ entry: GatewayAvatarReportJournalEntry, lease: GatewayAvatarReportJournalLease)
+        throws -> GatewayAvatarReportJournalEntry
+    {
+        var value = try exact(entry, lease)
+        guard entry.phase != .resolved else { throw GatewayAvatarReportJournalFailure.invalidTransition }
+        value.entry!.phase = .cancelling
+        value.entry!.revision = UUID().uuidString.lowercased()
+        try save(value, scope: lease.scope)
+        return try value.entry!.value(accountID: lease.scope.owner.accountID)
+    }
     private func resolve(
         _ entry: GatewayAvatarReportJournalEntry, result: GatewayAvatarReportResult,
         lease: GatewayAvatarReportJournalLease
@@ -247,7 +262,14 @@ private final class AvatarReportJournalBackend: @unchecked Sendable {
         guard result.identity == entry.intent, entry.phase != .resolved else {
             throw GatewayAvatarReportJournalFailure.invalidTransition
         }
-        value.entry!.phase = result.outcome == .accepted ? .resolved : .dispatched
+        if result.outcome == .cancelled {
+            value.entry!.phase = .resolved
+        } else if entry.phase == .cancelling {
+            // An accepted original report is not proof that its cancellation completed.
+            value.entry!.phase = .cancelling
+        } else {
+            value.entry!.phase = result.outcome == .accepted ? .resolved : .dispatched
+        }
         value.entry!.revision = UUID().uuidString.lowercased()
         // Unconfirmed is not a terminal absence proof. Keep this exact attempt pending;
         // it cannot be acknowledged, replaced or sent again after a read-only recovery.
@@ -269,7 +291,7 @@ private final class AvatarReportJournalBackend: @unchecked Sendable {
         throws
     {
         var value = try exact(entry, lease)
-        guard entry.phase == .resolved, entry.outcome == .accepted else {
+        guard entry.phase == .resolved, entry.outcome == .accepted || entry.outcome == .cancelled else {
             throw GatewayAvatarReportJournalFailure.invalidTransition
         }
         value.entry = nil
@@ -293,6 +315,7 @@ private enum AvatarReportJournalCommand: Sendable {
     case pending(GatewayAvatarReportJournalLease)
     case prepare(GatewayAvatarReportIdentity, GatewayAvatarReportJournalLease)
     case dispatch(GatewayAvatarReportJournalEntry, GatewayAvatarReportJournalLease)
+    case cancel(GatewayAvatarReportJournalEntry, GatewayAvatarReportJournalLease)
     case resolve(
         GatewayAvatarReportJournalEntry, GatewayAvatarReportResult, GatewayAvatarReportJournalLease)
     case acknowledge(GatewayAvatarReportJournalEntry, GatewayAvatarReportJournalLease)
@@ -419,6 +442,16 @@ private enum AvatarReportJournalReply: Sendable {
         async throws -> GatewayAvatarReportJournalEntry
     {
         guard let result = try await entry(.dispatch(value, lease), lease: lease) else {
+            throw GatewayAvatarReportJournalFailure.unavailable
+        }
+        return result
+    }
+    /// Persist this transition before cancellation IO. Retry only this same identity;
+    /// accepted/unconfirmed recovery cannot release it while cancellation remains uncertain.
+    public func cancelling(_ value: GatewayAvatarReportJournalEntry, lease: GatewayAvatarReportJournalLease)
+        async throws -> GatewayAvatarReportJournalEntry
+    {
+        guard let result = try await entry(.cancel(value, lease), lease: lease) else {
             throw GatewayAvatarReportJournalFailure.unavailable
         }
         return result

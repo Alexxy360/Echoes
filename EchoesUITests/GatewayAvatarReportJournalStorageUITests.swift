@@ -16,6 +16,12 @@ import XCTest
         add(screenshot)
     }
     func testAppKeychainPhotoReportSurvivesProcessTerminationThenRecoversOriginalAttempt() {
+        checkProcessRestart(cancellation: false)
+    }
+    func testAppKeychainPhotoReportCancellationSurvivesProcessTerminationThenRecoversFence() {
+        checkProcessRestart(cancellation: true)
+    }
+    private func checkProcessRestart(cancellation: Bool) {
         let app = XCUIApplication()
         app.launchEnvironment["ECHOES_GATEWAY_STORAGE_CHECK"] = "1"
         app.launchEnvironment["ECHOES_PHOTO_REPORT_RESTART_ID"] = UUID().uuidString.lowercased()
@@ -28,19 +34,23 @@ import XCTest
             XCTAssertEqual(cleanup.label, "passed")
             app.terminate()
         }
-        app.launchEnvironment["ECHOES_PHOTO_REPORT_RESTART_PHASE"] = "prepare"
+        app.launchEnvironment["ECHOES_PHOTO_REPORT_RESTART_PHASE"] =
+            cancellation ? "cancel-prepare" : "prepare"
         app.launch()
         let prepared = app.staticTexts["gateway.storage.result"]
         XCTAssertTrue(prepared.waitForExistence(timeout: 20))
         XCTAssertEqual(prepared.label, "passed")
         app.terminate()
-        app.launchEnvironment["ECHOES_PHOTO_REPORT_RESTART_PHASE"] = "recover"
+        app.launchEnvironment["ECHOES_PHOTO_REPORT_RESTART_PHASE"] =
+            cancellation ? "cancel-recover" : "recover"
         app.launch()
         let recovered = app.staticTexts["gateway.storage.result"]
         XCTAssertTrue(recovered.waitForExistence(timeout: 20))
         XCTAssertEqual(recovered.label, "passed")
         let screenshot = XCTAttachment(screenshot: app.screenshot())
-        screenshot.name = "avatar-report-journal-process-restart-passed"
+        screenshot.name =
+            cancellation
+            ? "avatar-report-cancel-process-restart-passed" : "avatar-report-journal-process-restart-passed"
         screenshot.lifetime = .keepAlways
         add(screenshot)
     }

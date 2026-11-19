@@ -8,9 +8,9 @@ import { createGatewayRuntime, forwardGatewayRequest, handleAuthorityRequest, au
 export async function photoReportHTTPFixture(t, { runtime = false, settings = {} } = {}) {
   const f = await avatarReportFixture(); t.after(() => f.close());
   const limits = new GatewayLimits(f.storage, { clock: f.clock });
-  let feature = true, readable = true, prepared = false, afterAdvance;
+  let feature = true, readable = true, cancellable = false, prepared = false, afterAdvance;
   const counts = { network: 0, account: 0, scheduled: 0, verifies: 0 };
-  const actor = Object.fromEntries(["prepareSubmit", "prepareRecovery"].map(method => [method, async input => {
+  const actor = Object.fromEntries(["prepareSubmit", "prepareRecovery", "prepareCancellation"].map(method => [method, async input => {
     const final = await f.reports[method](input); prepared = true; return final;
   }]));
   const deps = { authentication: f.state, login: { login() {} }, renewal: { renew() {} }, sessionReset: { reset() {} },
@@ -19,7 +19,7 @@ export async function photoReportHTTPFixture(t, { runtime = false, settings = {}
     checkpoint: { async verify(...args) { counts.verifies++; return f.checkpoint.verify(...args); },
       async advance(...args) { await f.checkpoint.advance(...args); if (prepared) await afterAdvance?.(); } },
     avatarReports: { ...actor, waitForPendingOperations: () => f.reports.waitForPendingOperations() },
-    isEnabled: () => true, isAvatarReportEnabled: () => feature, isAvatarReadEnabled: () => readable,
+    isEnabled: () => true, isAvatarReportEnabled: () => feature, isAvatarReportCancelEnabled: () => cancellable, isAvatarReadEnabled: () => readable,
     scheduleMaintenance: async () => { counts.scheduled++; }, clock: f.clock, ...settings };
   Object.assign(f.storage, { async getAlarm() { return null; }, async setAlarm() {}, async deleteAlarm() {} });
   const secret = () => randomBytes(32).toString("base64url");
@@ -38,7 +38,7 @@ export async function photoReportHTTPFixture(t, { runtime = false, settings = {}
     reason: "PRIVATE_SYNTHETIC_PHOTO_REASON", coordinate: f.coordinate } : { requestID: randomUUID() }), ...changes });
   const request = (action, changes = {}, options = {}) => {
     const raw = options.rawBody ?? JSON.stringify(body(action, changes));
-    return new Request("https://echoes-authority.internal/v1/community/avatar/report" + (action === "recover" ? "/recover" : ""), { method: "POST",
+    return new Request("https://echoes-authority.internal/v1/community/avatar/report" + (action === "submit" ? "" : "/" + action), { method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + (options.token ?? f.viewer.sessionToken), ...options.headers }, body: raw,
       ...(raw instanceof ReadableStream ? { duplex: "half" } : {}), ...(options.signal ? { signal: options.signal } : {}) });
   };
@@ -48,5 +48,6 @@ export async function photoReportHTTPFixture(t, { runtime = false, settings = {}
       const req = request(action, changes, { ...options, headers: { "CF-Connecting-IP": "192.0.2.17", ...options.headers } });
       Object.defineProperty(req, "cf", { value: { colo: "WAW" } }); return forwardGatewayRequest(req, env, { clock: f.clock });
     },
+    setCancellable(value) { cancellable = value; f.setReportsCancellable(value); env.AVATAR_REPORT_CANCEL_ENABLED = value ? "1" : "0"; },
     setFeature(value) { feature = value; }, setReadable(value) { readable = value; }, afterLastAdvance(fn) { afterAdvance = fn; }, counts: () => ({ ...counts }) };
 }

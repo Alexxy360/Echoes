@@ -31,7 +31,7 @@ export async function avatarReportWorkerdProof(request, storage) {
     }
   }); await storage.sync();
   const records = new Map(p.records.map(r => [r.recordName, r])), publicKey = createPublicKey(p.privateKeyPEM);
-  let sequence = 0, creates = 0, lostACK = false, loseNextACK = false, lookups = 0;
+  let sequence = 0, creates = 0, replacements = 0, lostACK = false, loseNextACK = false, lookups = 0;
   const provider = async req => {
     const url = new URL(req.url), raw = await req.text(), body = JSON.parse(raw), hash = createHash("sha256").update(raw).digest("base64");
     if (url.origin !== "https://api.apple-cloudkit.com" || req.method !== "POST" || req.redirect !== "manual" ||
@@ -43,8 +43,10 @@ export async function avatarReportWorkerdProof(request, storage) {
     if (op.record.recordName === checkpointRecordName) {
       if (op.operationType !== "replace" || old.recordChangeTag !== op.record.recordChangeTag) return Response.json({ records: [{ recordName: checkpointRecordName, serverErrorCode: "CONFLICT" }] });
     } else {
-      if (op.operationType !== "create" || op.record.recordType !== "EchoesAvatarReportV1" || old || !p.allowedReportIDs.includes(op.record.recordName)) throw Error("Unexpected synthetic report mutation");
-      creates++;
+      if (op.record.recordType !== "EchoesAvatarReportV1" || !p.allowedReportIDs.includes(op.record.recordName)) throw Error("Unexpected synthetic report mutation");
+      if (op.operationType === "create" && !old) creates++;
+      else if (op.operationType === "replace" && old?.recordChangeTag === op.record.recordChangeTag && op.record.fields.erased?.value === 1) replacements++;
+      else throw Error("Unexpected synthetic report operation");
     }
     const saved = { ...op.record, recordChangeTag: "photo-report-proof-" + ++sequence }; records.set(saved.recordName, saved);
     if (loseNextACK && saved.recordType === "EchoesAvatarReportV1") { loseNextACK = false; lostACK = true; throw Error("Synthetic lost acknowledgement"); }
@@ -62,7 +64,7 @@ export async function avatarReportWorkerdProof(request, storage) {
     if (object !== id) throw Error("Unexpected synthetic object"); return { fetch: req => handleAuthorityRequest(req, { runtime, env, objectID: id, clock }) };
   } };
   const call = async (action, body, token = p.accessToken) => {
-    const req = new Request("https://synthetic-photo-report.invalid/v1/community/avatar/report" + (action === "recover" ? "/recover" : ""), { method: "POST",
+    const req = new Request("https://synthetic-photo-report.invalid/v1/community/avatar/report" + (action === "submit" ? "" : "/" + action), { method: "POST",
       headers: { "Content-Type": "application/json", Authorization: "Bearer " + token, "CF-Connecting-IP": "192.0.2.17" }, body: JSON.stringify(body), signal: request.signal });
     Object.defineProperty(req, "cf", { value: { colo: "WAW" } });
     const response = await forwardGatewayRequest(req, env, { clock });
@@ -76,8 +78,13 @@ export async function avatarReportWorkerdProof(request, storage) {
   const recovered = await call("recover", { requestID: p.second.requestID });
   const foreign = await call("recover", { requestID: p.second.requestID }, p.foreignToken);
   const deniedSubmit = await call("submit", p.first);
-  env.AVATAR_REPORT_ENABLED = "0"; const disabled = await call("recover", { requestID: p.second.requestID });
   const intents = storage.sql.exec("SELECT request_id,ready FROM community_intents_v1 WHERE kind='avatarreport' ORDER BY request_id").toArray();
   const budgetRows = storage.sql.exec("SELECT kind,count FROM gateway_windows_v1 WHERE kind LIKE 'avatar-report%' ORDER BY kind,count").toArray();
-  return Response.json({ accepted, unknown, recovered, foreign, deniedSubmit, disabled, creates, beforeRecovery, lostACK, lookups, intents, budgetRows });
+  env.AVATAR_REPORT_CANCEL_ENABLED = "1"; loseNextACK = true;
+  const cancelLost = await call("cancel", { requestID: p.second.requestID });
+  env.AVATAR_REPORT_CANCEL_ENABLED = "0"; runtime = createGatewayRuntime(storage, env, options);
+  const cancelRecovered = await call("recover", { requestID: p.second.requestID });
+  const cancelledIntent = storage.sql.exec("SELECT ready,active,hidden FROM community_intents_v1 WHERE kind='avatarreport' AND request_id=?", p.second.requestID).toArray();
+  env.AVATAR_REPORT_ENABLED = "0"; const disabled = await call("recover", { requestID: p.second.requestID });
+  return Response.json({ cancelLost, cancelRecovered, cancelledIntent, replacements, accepted, unknown, recovered, foreign, deniedSubmit, disabled, creates, beforeRecovery, lostACK, lookups, intents, budgetRows });
 }

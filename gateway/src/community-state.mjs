@@ -87,6 +87,17 @@ export class CommunityState {
       return Object.freeze({ ...row });
     });
   }
+  /** Trusted hook, only after a full verified remote cancellation fence. Never creates an intent. */
+  async cancelAvatarReportIntent(accountID, requestID) {
+    communityUUID(requestID);
+    this.#tx(() => {
+      this.#account(accountID); const row = this.#row(accountID, "avatarreport", requestID);
+      if (!row) return;
+      if (row.request_id !== requestID) throw new CommunityError("COMMUNITY_STALE");
+      this.#storage.sql.exec("UPDATE community_intents_v1 SET ready=0,active=0,hidden=1 WHERE account_id=? AND kind='avatarreport' AND logical_id=? AND request_id=?", accountID, requestID, requestID);
+    });
+    await this.#durable(); this.assertActive(accountID);
+  }
   async stop(accountID, requestID, generation, payloadHash) {
     communityUUID(requestID);
     const intent = this.#tx(() => {
@@ -107,14 +118,14 @@ export class CommunityState {
     return this.#tx(() => {
       const account = this.#account(intent.account_id), row = this.#row(intent.account_id, intent.kind, intent.logical_id);
       if (!row || row.request_id !== intent.request_id || row.payload_hash !== intent.payload_hash ||
-          row.generation !== intent.generation || intent.kind === "presence" && row.generation !== account.generation) throw new CommunityError("COMMUNITY_STALE");
+          row.generation !== intent.generation || intent.kind === "avatarreport" && (row.active !== 1 || row.hidden !== 0) || intent.kind === "presence" && row.generation !== account.generation) throw new CommunityError("COMMUNITY_STALE");
       return row;
     });
   }
   async finish(intent) {
     this.#tx(() => { this.#account(intent.account_id); const row = this.#row(intent.account_id, intent.kind, intent.logical_id);
       if (!row || row.request_id !== intent.request_id || row.payload_hash !== intent.payload_hash ||
-          row.generation !== intent.generation ||
+          row.generation !== intent.generation || intent.kind === "avatarreport" && (row.active !== 1 || row.hidden !== 0) ||
           intent.kind === "presence" && this.#account(intent.account_id).generation !== intent.generation) throw new CommunityError("COMMUNITY_STALE");
       this.#storage.sql.exec("UPDATE community_intents_v1 SET ready=1 WHERE account_id=? AND kind=? AND logical_id=? AND request_id=?", intent.account_id, intent.kind, intent.logical_id, intent.request_id);
     });

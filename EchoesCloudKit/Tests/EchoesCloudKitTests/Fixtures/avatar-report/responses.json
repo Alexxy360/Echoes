@@ -1,12 +1,12 @@
 {
   "synthetic": "owned-local-avatar-report-runtime-v1",
   "now": 1794603600000,
-  "accountID": "70c42ee3-e359-4e37-bff7-b13d60e44276",
-  "token": "e7d6b718-5ae4-497e-aee1-bfd34c7ebb25.FyogL59kb7MIcQ07UzmdoOg6jkUd-aWgJo_5RE5dsVo",
+  "accountID": "b8b3a120-ad3b-453a-9bb8-b5733a3cbbe8",
+  "token": "e5df4c93-7ace-4660-a0b5-9da55f428984.g8cVhC3T92AwqJiVS_lw4WzgAPnp3V8zLKOq7LKVv2w",
   "submit": {
-    "requestID": "24744d4a-ff74-417d-bc2c-f3d3946de655",
-    "ownerID": "20eafbcc-7319-498e-9315-b55eae396453",
-    "versionID": "a4f1e19a-2b71-480f-b363-5251d9f13504",
+    "requestID": "01de0338-864d-4fdd-a0f0-e89193558569",
+    "ownerID": "ee40f1bd-f4ff-41f3-bff3-4b4923ce7126",
+    "versionID": "9e7541d7-fa16-4243-bde5-7d9be206954e",
     "reason": "PRIVATE_SYNTHETIC_PHOTO_REASON",
     "coordinate": {
       "latitude": 51.1123456,
@@ -14,7 +14,7 @@
     }
   },
   "unknown": {
-    "requestID": "5be91b88-26d9-4e21-9614-95ebd3f0bfc0"
+    "requestID": "562a36dd-40e6-4511-b1f6-1994ede2b4c5"
   },
   "responses": {
     "submit": {
@@ -25,7 +25,7 @@
         "pragma": "no-cache",
         "x-content-type-options": "nosniff"
       },
-      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"requestID\":\"24744d4a-ff74-417d-bc2c-f3d3946de655\",\"reportID\":\"community-v1-avatarreport-7eab923ef8b53911bbfa79073137dff72a16282f0ddeecd45267c8a44f73b922\",\"outcome\":\"accepted\"}"
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"requestID\":\"01de0338-864d-4fdd-a0f0-e89193558569\",\"reportID\":\"community-v1-avatarreport-3b673d25a9e12e48e6a9beab13ea4ec3969d58f80d40cf14db37d27e11b35178\",\"outcome\":\"accepted\"}"
     },
     "recover-accepted": {
       "status": 200,
@@ -35,7 +35,7 @@
         "pragma": "no-cache",
         "x-content-type-options": "nosniff"
       },
-      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-7eab923ef8b53911bbfa79073137dff72a16282f0ddeecd45267c8a44f73b922\",\"outcome\":\"accepted\",\"requestID\":\"24744d4a-ff74-417d-bc2c-f3d3946de655\"}"
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-3b673d25a9e12e48e6a9beab13ea4ec3969d58f80d40cf14db37d27e11b35178\",\"outcome\":\"accepted\",\"requestID\":\"01de0338-864d-4fdd-a0f0-e89193558569\"}"
     },
     "recover-unconfirmed": {
       "status": 200,
@@ -45,7 +45,7 @@
         "pragma": "no-cache",
         "x-content-type-options": "nosniff"
       },
-      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-fb58bb10c8daf6b8434238dc835ee8fc1db88fcd3ae8e718de8716691dfc6872\",\"outcome\":\"unconfirmed\",\"requestID\":\"5be91b88-26d9-4e21-9614-95ebd3f0bfc0\"}"
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-ffbac89d35315642f7cd8d04dce395b7cae9a984e4ee07f037921f21f1f34dfb\",\"outcome\":\"unconfirmed\",\"requestID\":\"562a36dd-40e6-4511-b1f6-1994ede2b4c5\"}"
     },
     "scope": {
       "status": 401,
@@ -66,6 +66,26 @@
         "x-content-type-options": "nosniff"
       },
       "body": "{\"protocolVersion\":1,\"error\":\"AVATAR_REPORT_INPUT\"}"
+    },
+    "cancel": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-3b673d25a9e12e48e6a9beab13ea4ec3969d58f80d40cf14db37d27e11b35178\",\"outcome\":\"cancelled\",\"requestID\":\"01de0338-864d-4fdd-a0f0-e89193558569\"}"
+    },
+    "recover-cancelled": {
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": "{\"protocolVersion\":1,\"schemaVersion\":1,\"reportID\":\"community-v1-avatarreport-3b673d25a9e12e48e6a9beab13ea4ec3969d58f80d40cf14db37d27e11b35178\",\"outcome\":\"cancelled\",\"requestID\":\"01de0338-864d-4fdd-a0f0-e89193558569\"}"
     }
   }
 }

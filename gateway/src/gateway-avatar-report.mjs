@@ -7,16 +7,16 @@ const response = (value, status = 200) => Response.json({ protocolVersion: 1, ..
   headers: { "Cache-Control": "no-store", Pragma: "no-cache", "X-Content-Type-Options": "nosniff" } });
 
 export function createAvatarReportHandler({ authentication, limits, checkpoint, avatarReports, isEnabled, isAvatarReadEnabled,
-  isAvatarReportEnabled, scheduleMaintenance, avatarReportTimeoutMilliseconds = 12000, inputTimeoutMilliseconds = 3000 } = {}) {
-  if ([isAvatarReportEnabled, isAvatarReadEnabled].some(value => typeof value !== "function") ||
+  isAvatarReportEnabled, isAvatarReportCancelEnabled = () => false, scheduleMaintenance, avatarReportTimeoutMilliseconds = 12000, inputTimeoutMilliseconds = 3000 } = {}) {
+  if ([isAvatarReportEnabled, isAvatarReadEnabled, isAvatarReportCancelEnabled].some(value => typeof value !== "function") ||
       !Number.isInteger(avatarReportTimeoutMilliseconds) || avatarReportTimeoutMilliseconds < 1 || avatarReportTimeoutMilliseconds > 12000) throw new Error("Photo report configuration unavailable.");
   const claim = avatarReportAdmission();
   return async (request, budget, action) => {
     let admission, deadline;
     try {
-      const method = { submit: "prepareSubmit", recover: "prepareRecovery" }[action];
+      const method = { submit: "prepareSubmit", recover: "prepareRecovery", cancel: "prepareCancellation" }[action];
       const flag = fn => { try { return sync(fn()) === true; } catch { return false; } };
-      const enabled = () => flag(isEnabled) && flag(isAvatarReportEnabled) && (action !== "submit" || flag(isAvatarReadEnabled));
+      const enabled = () => flag(isEnabled) && flag(isAvatarReportEnabled) && (action !== "submit" || flag(isAvatarReadEnabled)) && (action !== "cancel" || flag(isAvatarReportCancelEnabled));
       if (!enabled() || !method || typeof avatarReports?.[method] !== "function" || typeof avatarReports.waitForPendingOperations !== "function" || typeof limits.consumeAvatarReport !== "function") return response({ error: "FEATURE_DISABLED" }, 503);
       admission = claim(); deadline = avatarReportDeadline(request.signal, avatarReportTimeoutMilliseconds);
       const awaited = task => admission.run(deadline, task);
@@ -29,7 +29,7 @@ export function createAvatarReportHandler({ authentication, limits, checkpoint, 
         return identity.accountID;
       };
       const accountID = authorize();
-      await awaited(() => limits.consumeAvatarReport(accountID, { submit: action === "submit" })); authorize(accountID);
+      await awaited(() => limits.consumeAvatarReport(accountID, { submit: action === "submit" || action === "cancel" })); authorize(accountID);
       const input = avatarReportInput(action, await avatarReportReadInput(request, headers, deadline, admission, inputTimeoutMilliseconds)); authorize(accountID);
       await awaited(() => scheduleMaintenance()); authorize(accountID);
       await awaited(() => checkpoint?.verify({ signal: deadline.signal })); authorize(accountID);
