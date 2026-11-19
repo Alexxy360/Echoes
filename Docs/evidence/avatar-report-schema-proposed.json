@@ -1,0 +1,110 @@
+{
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "inputSHA256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025",
+  "proposedSHA256": "af48193c7d43a4473f219d643fbf24bb344acbd6b1b848eb8086c45cbed0534c",
+  "preservedTypes": [
+    "EchoesAccessProbeV1",
+    "EchoesAvatarProfileV1",
+    "EchoesAvatarV1",
+    "EchoesBlockV1",
+    "EchoesGatewayProbeV1",
+    "EchoesLocalMessageV1",
+    "EchoesPresenceV1",
+    "EchoesPrivateProfileV1",
+    "EchoesPrivateScopeV1",
+    "EchoesPublicProfileV1",
+    "EchoesRegistryCheckpointV1",
+    "EchoesReportV1",
+    "Users"
+  ],
+  "preservedRoles": [
+    "EchoesGatewayProbeService",
+    "EchoesCommunityService"
+  ],
+  "addedRole": null,
+  "addedTypes": [
+    {
+      "name": "EchoesAvatarReportV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "avatarID": {
+          "type": "STRING",
+          "options": []
+        },
+        "versionID": {
+          "type": "STRING",
+          "options": []
+        },
+        "publicationGeneration": {
+          "type": "INT64",
+          "options": []
+        },
+        "imageSHA256": {
+          "type": "STRING",
+          "options": []
+        },
+        "reason": {
+          "type": "STRING",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    }
+  ],
+  "roleAssignments": [],
+  "remoteValidation": "not performed",
+  "remoteImport": false,
+  "dataOperations": []
+}

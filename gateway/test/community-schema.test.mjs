@@ -12,6 +12,8 @@ import { CloudKitPublicClient } from "../src/cloudkit-public-client.mjs";
 const original = await readFile(new URL("../schema/development-export-20261119.ckdb", import.meta.url), "utf8");
 const prepared = prepareCommunitySchema(original), before = inspectSchema(original), after = inspectSchema(prepared.schema);
 const types = new Map(after.types.map(type => [type.name, type]));
+// This fixture is the already imported eight-type proposal; later additive types have their own proposal.
+const historicalKinds = ["profile", "presence", "message", "block", "report", "avatar", "avatarprofile"];
 const now = 1795040000000, accountID = randomUUID();
 function context(kind) {
   return { ...recordIdentity(accountID, kind, ["profile", "presence", "avatarprofile"].includes(kind) ? "singleton" : randomUUID()),
@@ -29,7 +31,7 @@ test("additive proposal preserves the exported definitions and grants no ordinar
   assert.deepEqual(after.types.slice(0, before.types.length), before.types);
   assert.deepEqual(after.roles, [...before.roles, communitySchemaRole]);
   assert.equal(before.types.length, 5); assert.equal(prepared.addedTypes.length, 8);
-  assert.deepEqual(new Set(prepared.addedTypes.map(type => type.name)), new Set([...Object.values(publicRecordTypes), checkpointRecordType]));
+  assert.deepEqual(new Set(prepared.addedTypes.map(type => type.name)), new Set([...historicalKinds.map(kind => publicRecordTypes[kind]), checkpointRecordType]));
   for (const type of prepared.addedTypes) {
     assert.deepEqual(type.grants, [{ role: communitySchemaRole, rights: ["READ", "CREATE", "WRITE"] }]);
   }
@@ -59,7 +61,7 @@ test("actual live, inactive, deletion, retention, avatar and checkpoint serializ
   const descriptor = avatarDescriptor({ requestID: avatar.requestID, image: manifest("image"), thumbnail: manifest("thumbnail") }, accountID);
   avatar.payloadHash = avatarDescriptorHash(descriptor);
   accepts(avatar.recordType, { ...avatarMetadata(avatar, descriptor), image: { type: "ASSET" }, thumbnail: { type: "ASSET" } });
-  for (const kind of Object.keys(publicRecordTypes)) accepts(publicRecordTypes[kind], erasedFields(context(kind), randomUUID()));
+  for (const kind of historicalKinds) accepts(publicRecordTypes[kind], erasedFields(context(kind), randomUUID()));
   for (const kind of ["presence", "message", "report", "avatar"]) accepts(publicRecordTypes[kind], expiredPublicFields(context(kind)));
   accepts(checkpointRecordType, checkpointFields({ schemaVersion: 1, registryID: randomUUID(), anchorID: randomUUID(), parentAnchorID: "", registeredCount: 0 }));
 });

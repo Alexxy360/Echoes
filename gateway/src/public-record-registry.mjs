@@ -194,7 +194,8 @@ export class PublicRecordRegistry {
   async reserve({ accountID, kind, logicalID, requestID, payloadHash, expectedTag = null } = {}) {
     const identity = recordIdentity(accountID, kind, logicalID), now = this.#now();
     if (!publicUUID.test(requestID ?? "") || typeof payloadHash !== "string" || !/^[a-f0-9]{64}$/.test(payloadHash) ||
-        expectedTag !== null && !validTag(expectedTag) || kind === "avatar" && expectedTag !== null) throw new PublicRecordError("PUBLIC_INPUT");
+        expectedTag !== null && !validTag(expectedTag) || kind === "avatar" && expectedTag !== null ||
+        kind === "avatarreport" && (expectedTag !== null || logicalID !== requestID)) throw new PublicRecordError("PUBLIC_INPUT");
     const result = this.#tx(() => {
       const generation = this.#active(accountID), previous = this.#row(identity.recordName);
       if (previous) {
@@ -443,7 +444,7 @@ export class PublicRecordRegistry {
     const count = this.#tx(() => {
       backfillAvatarRetirements(this.#storage, this.#now(), maximumRecords);
       const rows = this.#rows(`SELECT p.* FROM public_records_v1 p LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name
-        WHERE p.kind IN ('presence','message','report') AND p.phase IN ('pending','settled') AND r.record_name IS NULL
+        WHERE p.kind IN ('presence','message','report','avatarreport') AND p.phase IN ('pending','settled') AND r.record_name IS NULL
         ORDER BY p.record_name LIMIT ?`, maximumRecords);
       if (rows.length < maximumRecords) rows.push(...this.#rows(`SELECT p.* FROM public_records_v1 p
         JOIN avatar_retirements_v1 a ON a.record_name=p.record_name LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name
@@ -467,7 +468,7 @@ export class PublicRecordRegistry {
       if (dueAt !== null && (!Number.isSafeInteger(dueAt) || dueAt < 0)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       const legacy = this.#rows(`SELECT 1 FROM public_records_v1 p JOIN auth_accounts_v1 a ON a.account_id=p.account_id
         LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name WHERE a.disabled=0
-        AND p.phase IN ('pending','settled') AND p.kind IN ('presence','message','report') AND r.record_name IS NULL LIMIT 1`).length > 0;
+        AND p.phase IN ('pending','settled') AND p.kind IN ('presence','message','report','avatarreport') AND r.record_name IS NULL LIMIT 1`).length > 0;
       return Object.freeze({ dueAt, wakeAt, needsBackfill: legacy || needsAvatarRetirementBackfill(this.#storage) || wakeAt !== null && wakeAt <= this.#now() });
     });
   }

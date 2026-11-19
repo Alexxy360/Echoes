@@ -1,0 +1,141 @@
+{
+  "stage": "CK-05d.1a",
+  "createdAt": "2026-11-19T17:32:24.015425+00:00",
+  "baselineCommit": "c49262719ec5e5c75b0c2e5c7c6037aef91d4f79",
+  "backend": {
+    "Node22": "22.23.5",
+    "Node24": "24.22.1",
+    "fullEach": 780,
+    "passedEach": 780,
+    "failedEach": 0,
+    "skippedEach": 0,
+    "newFunctions": [
+      "photo-report schema adds one server-only type while preserving all thirteen installed types and roles",
+      "photo-report serializers and both content-free fences fit the additive schema without extra data fields",
+      "photo-report schema refuses replacement missing base and changes to the reviewed proposal",
+      "photo-report input rejects arbitrary fields invalid versions misleading subjects and oversized reasons",
+      "immutable photo report derives its reporter from authentication and keeps reason and image references out of SQL",
+      "photo-report creation and recovery require synchronous true authorization before provider IO",
+      "same photo-report request is idempotent but content replacement CAS and alternate logical IDs are forbidden",
+      "lost photo-report acknowledgement is recovered from the exact own immutable record without another create",
+      "missing pending photo report remains unconfirmed and recovery never fabricates or retransmits it",
+      "another account cannot discover or settle a reporter's pending photo report using the same request UUID",
+      "photo-report recovery rejects changed reason owner key or immutable settled record tag",
+      "same reporter recovers after session generation changes and after repository recreation",
+      "thirty-day photo-report retention survives backfill and retries and removes all content with the real processor",
+      "deleting the reporter erases its photo report without touching another account's report",
+      "reporter deletion during recovery lookup cannot settle or disclose the old pending result",
+      "read authorization withdrawn in the final checkpoint cannot return an accepted photo-report result",
+      "cancelled recovery rejects a late provider result and leaves unknown report state available for a new explicit read",
+      "thirty-day fencing prevents a delayed photo-report CREATE from resurrecting expired content"
+    ],
+    "syntaxMJSCountEach": 169,
+    "actualLocalSQLiteCryptoAndPublicClient": true,
+    "existingFullSuiteIncludesActualLocalWorkerd": true,
+    "providerAndIdentity": "synthetic; no external network"
+  },
+  "contract": {
+    "type": "EchoesAvatarReportV1",
+    "namespace": "avatarreport",
+    "immutableRequestIdentity": true,
+    "replacementTagAndAlternateLogicalIDForbidden": true,
+    "contentFields": [
+      "avatarID",
+      "versionID",
+      "publicationGeneration",
+      "imageSHA256",
+      "reason"
+    ],
+    "reporterDerivedFromAuthenticatedSession": true,
+    "creationAndRecoveryRequireSynchronousTrueCallback": true,
+    "SQLHasNoReasonGPSOrImageSnapshot": true,
+    "recoveryNeverCreatesOrReplacesReportContent": true,
+    "recoveryOutcomes": [
+      "accepted",
+      "unconfirmed"
+    ],
+    "notFoundIsNotProofOfPermanentNonCommit": true,
+    "exactFieldsHashOwnerTagCheckedBeforeAcceptance": true,
+    "recoveryAfterSessionGenerationChange": true,
+    "repositoryReinstantiation": "same process and existing SQLite connection; not power-loss/process restart proof",
+    "authenticationAndReadGuardRecheckedAfterIO": true,
+    "retentionMilliseconds": 2592000000,
+    "retriesAndRecoveryDoNotExtendTTL": true,
+    "backfillAndRealRetentionProcessorTested": true,
+    "lateCreateFencedAfterExpiry": true,
+    "reporterErasurePreservesOtherAccount": true,
+    "oldTextReportQueueRemainsSeparate": true
+  },
+  "schemaProposal": {
+    "inputSHA256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025",
+    "proposedSHA256": "af48193c7d43a4473f219d643fbf24bb344acbd6b1b848eb8086c45cbed0534c",
+    "preservedTypes": 13,
+    "preservedRoles": 2,
+    "addedTypes": [
+      "EchoesAvatarReportV1"
+    ],
+    "ordinaryClientGrants": false,
+    "newRoleAssignments": [],
+    "remoteValidation": "not performed",
+    "remoteImport": false,
+    "dataOperations": []
+  },
+  "negativeControl": {
+    "changed": "isolated repository recovery omits decoding and verification against the original immutable payload hash",
+    "executedFunctions": 1,
+    "failedAsIntended": 1,
+    "originalSourcesPreserved": true
+  },
+  "correctedPreparationErrors": [
+    "One script invocation used the gateway directory with root-relative paths and stopped before editing; corrected working directory, then generated the proposal successfully."
+  ],
+  "sourceSHA256": {
+    "gateway/src/public-record-schema.mjs": "431992451da9e326b41dc2ca97092deba73c48838ddd4b41c3acd3d9748c7528",
+    "gateway/src/public-retention-policy.mjs": "cb69cec2dc99adff350879e19f94df8d94f1fa6c6e7ad41ef40b987d400d7312",
+    "gateway/src/public-record-registry.mjs": "3d31ce15f5dea8ecfbd024d59c9961a5764c509cdc0a570e4ffa141ee1378ed3",
+    "gateway/src/public-record-repository.mjs": "b4c923a42cf9d99a9d4ccd975a48510296a0b16d9d81ccea56c4b8bf6a5fda86",
+    "gateway/scripts/prepare-avatar-report-schema.mjs": "84ca6f1e76be39185d166f288cfa7b6c1a95007425ffabbe74b9d4e0edc9b489",
+    "gateway/test/avatar-report-records.test.mjs": "f80081112b3314fc0eb6ba29dce76a5e01f2019aae0b886efe1c8eadc05de40c",
+    "gateway/test/community-schema.test.mjs": "9935f38aaf73cc13de2be40cf850541fa32cb98d8e1cb72f3838c7b31ae83fd4"
+  },
+  "logs": {
+    "fullNode22": {
+      "path": "/private/tmp/echoes-avatar-report-records-full22.log",
+      "SHA256": "635a2be18258f6cc33dd52b76a725047dc7df2b38e3966336b39912583c00ed5"
+    },
+    "fullNode24": {
+      "path": "/private/tmp/echoes-avatar-report-records-full24.log",
+      "SHA256": "fc32fb4a2aebfd934745d4cbae3fd26fa8a9b1c7b1127f6c76f1683983243299"
+    },
+    "focused": {
+      "path": "/private/tmp/echoes-avatar-report-records-target-final.log",
+      "SHA256": "20c682fb2f95a167ac59639cf2e3a34b9028dc6998e0854a18ba7863cb328d4b"
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-avatar-report-records-negative.log",
+      "SHA256": "d306cde88adece594d5e6a93ff427bfeb8707c743879471a4d7e4b39a4e82978"
+    },
+    "syntax": {
+      "path": "/private/tmp/echoes-avatar-report-records-syntax.json",
+      "SHA256": "819132973ac04093be91d1c5237ac7ba39cb4b21d20378dbc4f140eb9bc4ab9a"
+    }
+  },
+  "nativeSwiftCoreUIChanged": false,
+  "nativeBuildsAndUITestsRerun": false,
+  "HTTPOrRuntimeRouteInstalled": false,
+  "dependenciesCIChanged": false,
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "notAccepted": [
+    "readable-current-avatar/range/blocks/quotas intake coordinator",
+    "limited HTTP/Runtime activation",
+    "native journal/form and exact current image consent",
+    "photo-report moderator queue/inspection/decision/recovery",
+    "Apple schema validation/import or actual privileges",
+    "hosted Runtime/SIWA/Free",
+    "ordinary A/B",
+    "real CloudKit queries/assets/CDN",
+    "physical device behavior",
+    "Firebase removal/TestFlight readiness"
+  ],
+  "externalChanges": []
+}

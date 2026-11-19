@@ -1,7 +1,7 @@
 import { PublicRecordError, digest, fieldValues, publicRecordTypes } from "./public-record-schema.mjs";
 import { avatarRetirementSchema } from "./avatar-retirement-state.mjs";
 
-export const publicRetentionLifetimes = Object.freeze({ presence: 600000, message: 7200000, report: 2592000000 });
+export const publicRetentionLifetimes = Object.freeze({ presence: 600000, message: 7200000, report: 2592000000, avatarreport: 2592000000 });
 export const publicRetentionLeaseMilliseconds = 60000;
 
 /** Only server-owned registry times determine retention. Profiles, blocks and avatars have no TTL. */
@@ -34,6 +34,8 @@ export const publicRetentionSchema = Object.freeze([
   `CREATE INDEX IF NOT EXISTS public_retention_due_v1 ON public_retention_v1(state,due_at,record_name)`,
   `CREATE TABLE IF NOT EXISTS public_retention_cursor_v1(singleton INTEGER PRIMARY KEY CHECK(singleton=1),record_name TEXT NOT NULL)`,
   `INSERT OR IGNORE INTO public_retention_cursor_v1(singleton,record_name) VALUES(1,'')`,
+  `CREATE INDEX IF NOT EXISTS public_retention_live_records_v2 ON public_records_v1(kind,record_name)
+    WHERE phase IN ('pending','settled') AND kind IN ('presence','message','report','avatarreport')`,
   `CREATE INDEX IF NOT EXISTS public_retention_live_records_v1 ON public_records_v1(kind,record_name)
     WHERE phase IN ('pending','settled') AND kind IN ('presence','message','report')`,
 ]);

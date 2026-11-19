@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { approximateLocation } from "./community-geo.mjs";
 
 export const publicRecordTypes = Object.freeze({ profile: "EchoesPublicProfileV1", presence: "EchoesPresenceV1",
-  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1", avatar: "EchoesAvatarV1", avatarprofile: "EchoesAvatarProfileV1" });
+  message: "EchoesLocalMessageV1", block: "EchoesBlockV1", report: "EchoesReportV1", avatarreport: "EchoesAvatarReportV1", avatar: "EchoesAvatarV1", avatarprofile: "EchoesAvatarProfileV1" });
 export const publicUUID = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
-export const publicRecordName = /^community-v1-(profile|presence|message|block|report|avatar|avatarprofile)-[a-f0-9]{64}$/;
+export const publicRecordName = /^community-v1-(profile|presence|message|block|report|avatarreport|avatar|avatarprofile)-[a-f0-9]{64}$/;
 const codes = new Set(["PUBLIC_UNAVAILABLE", "PUBLIC_INPUT", "PUBLIC_CONFLICT", "PUBLIC_LIMIT", "PUBLIC_ERASED",
   "PUBLIC_PENDING", "PUBLIC_RESPONSE", "PUBLIC_THROTTLED", "PUBLIC_SCOPE", "PUBLIC_REGISTRY_UNVERIFIED"]);
 export class PublicRecordError extends Error {
@@ -68,6 +68,14 @@ export function normalizePublicInput(kind, value, now) {
   case "block": keys(value, ["targetID", "blocked"]);
     if (!publicUUID.test(value.targetID ?? "") || typeof value.blocked !== "boolean") throw new PublicRecordError("PUBLIC_INPUT");
     return { targetID: value.targetID, blocked: value.blocked ? 1 : 0 };
+  case "avatarreport":
+    keys(value, ["avatarID", "versionID", "publicationGeneration", "imageSHA256", "reason"]);
+    if (typeof value.avatarID !== "string" || !/^community-v1-avatar-[a-f0-9]{64}$/.test(value.avatarID) ||
+        typeof value.versionID !== "string" || !publicUUID.test(value.versionID) ||
+        !Number.isSafeInteger(value.publicationGeneration) || value.publicationGeneration < 1 ||
+        typeof value.imageSHA256 !== "string" || !/^[a-f0-9]{64}$/.test(value.imageSHA256)) throw new PublicRecordError("PUBLIC_INPUT");
+    return { avatarID: value.avatarID, versionID: value.versionID, publicationGeneration: value.publicationGeneration,
+      imageSHA256: value.imageSHA256, reason: text(value.reason, 500) };
   case "report": keys(value, ["messageID", "reason"]);
     if (typeof value.messageID !== "string" || !/^community-v1-message-[a-f0-9]{64}$/.test(value.messageID)) throw new PublicRecordError("PUBLIC_INPUT");
     return { messageID: value.messageID, reason: text(value.reason, 500) };

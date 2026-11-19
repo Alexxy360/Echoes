@@ -36,10 +36,16 @@ export class CloudKitPublicRepository {
   async #write({ accessToken, kind, logicalID, requestID, input, expectedTag = null, signal, authorizeMutation = () => {} } = {}, latest) {
     this.#check(signal);
     if (typeof authorizeMutation !== "function") throw new PublicRecordError("PUBLIC_INPUT");
-    const permit = () => { this.#check(signal); authorizeMutation(); };
+    const permit = () => {
+      this.#check(signal); const allowed = authorizeMutation();
+      if (kind === "avatarreport") {
+        if (allowed && typeof allowed.then === "function") void Promise.resolve(allowed).catch(() => {});
+        if (allowed !== true) throw new PublicRecordError("PUBLIC_SCOPE");
+      }
+    };
     permit();
     const identity = this.#authorize(accessToken), fields = normalizePublicInput(kind, input, this.#clock());
-    if (["message", "report"].includes(kind) && (logicalID !== requestID || expectedTag !== null) ||
+    if (["message", "report", "avatarreport"].includes(kind) && (logicalID !== requestID || expectedTag !== null) ||
         kind === "block" && logicalID !== fields.targetID) throw new PublicRecordError("PUBLIC_INPUT");
     await this.#checkpoint.verify({ signal });
     permit(); this.#authorize(accessToken, identity.accountID);
@@ -84,6 +90,39 @@ export class CloudKitPublicRepository {
     permit(); this.#authorize(accessToken, saved.accountID);
     return this.#receipt(this.#registry.assertMutationCurrent(saved), expectedFields);
   }
+  /** Own immutable photo-report receipt only. Never creates/rewrites report content or returns its fields. */
+  async recoverAvatarReport({ accessToken, requestID, signal, authorizeRead } = {}) {
+    if (typeof authorizeRead !== "function") throw new PublicRecordError("PUBLIC_INPUT");
+    const identity = this.#authorize(accessToken);
+    const name = recordIdentity(identity.accountID, "avatarreport", requestID).recordName;
+    const check = () => {
+      this.#check(signal); const allowed = authorizeRead();
+      if (allowed && typeof allowed.then === "function") void Promise.resolve(allowed).catch(() => {});
+      if (allowed !== true) throw new PublicRecordError("PUBLIC_SCOPE");
+      this.#authorize(accessToken, identity.accountID);
+    };
+    check(); await this.#checkpoint.verify({ signal }); check();
+    const old = this.#registry.owned(identity.accountID, "avatarreport", requestID);
+    const receipt = outcome => Object.freeze({ schemaVersion: 1, reportID: name, outcome });
+    if (!old) { check(); return receipt("unconfirmed"); }
+    if (old.expectedTag !== null || !["pending", "settled"].includes(old.phase)) throw new PublicRecordError("PUBLIC_SCOPE");
+    // Rebind the same existing immutable reservation to the current account generation after sign-in.
+    const context = await this.#registry.reserve({ accountID: identity.accountID, kind: "avatarreport", logicalID: requestID,
+      requestID, payloadHash: old.payloadHash, expectedTag: null }); check();
+    const record = (await this.#client.lookup([name], { signal })).get(name); check();
+    this.#registry.assertMutationCurrent(context);
+    if (record?.serverErrorCode === "NOT_FOUND") {
+      await this.#checkpoint.advance({ signal }); check(); this.#registry.assertMutationCurrent(context);
+      // Absence is not evidence that an earlier timed-out provider write will never appear.
+      return receipt("unconfirmed");
+    }
+    if (record?.serverErrorCode) throw providerFailure(record);
+    checkScope(record, context); this.#decode(record, context);
+    if (context.phase === "settled" && record.recordChangeTag !== context.recordTag) throw new PublicRecordError("PUBLIC_CONFLICT");
+    const saved = await this.#registry.settle(context, record.recordChangeTag); check();
+    await this.#checkpoint.advance({ signal }); check(); this.#registry.assertMutationCurrent(saved);
+    return receipt("accepted");
+  }
   #receipt(context, fields) {
     return Object.freeze({ recordName: context.recordName, recordType: context.recordType,
       recordChangeTag: context.recordTag, fields });
@@ -126,7 +165,8 @@ export class CloudKitPublicRepository {
     const values = Object.fromEntries(Object.entries(record.fields).map(([key, field]) => [key, field?.value]));
     const inventories = { profile: ["name"], presence: values.active === 0 ? ["active", "generation"] :
       ["name", "latitude", "longitude", "song", "songID", "generation"], message: ["name", "text", "latitude", "longitude"],
-    block: ["targetID", "blocked"], report: ["messageID", "reason"], avatarprofile: ["versionID", "generation"] };
+    block: ["targetID", "blocked"], report: ["messageID", "reason"],
+    avatarreport: ["avatarID", "versionID", "publicationGeneration", "imageSHA256", "reason"], avatarprofile: ["versionID", "generation"] };
     // Avatar bytes require their separate authorization/validation path; never generic declassification.
     if (!Object.hasOwn(inventories, context.kind)) throw new PublicRecordError("PUBLIC_INPUT");
     const raw = Object.fromEntries(inventories[context.kind].map(key => [key, values[key]]));
