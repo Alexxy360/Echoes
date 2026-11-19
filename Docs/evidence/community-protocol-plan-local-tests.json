@@ -1,0 +1,48 @@
+{
+  "phase": "CK-05a.4d",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "f58f0acbd5d168e39ca6136cb753be91c66b0482",
+  "status": "inventory generator/verifier prepared; network executor not implemented or run",
+  "tests": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-protocol-plan-node22.log",
+      "sha256": "a2a9cddf58ed042abd5e12d6a7ee932569c2c00af9f9c05716e4a27f41f1619e",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-protocol-plan-node24.log",
+      "sha256": "5654da96d8828363bf205dc7d5b772b6a1b1f0423944a8105b5d9eeb2f464d84",
+      "passed": 4,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "filesSHA256": {
+    "gateway/scripts/community-protocol-plan.mjs": "c8933c3e20991862376c0cfff4d49eaf4f2496a7600a3f8b28476cb7d5d45926",
+    "gateway/test/community-protocol-plan.test.mjs": "a3c5fcdcd3f529bcd4cc02a2ca7555787c3d4712b1079e00e803dd374141c489",
+    "gateway/schema/development-installed-20261119.ckdb": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025"
+  },
+  "coverage": [
+    "actual serializer fields match installed Apple schema; no ASSET or real checkpoint",
+    "content-free fences and unique retention intents; checkpoint anchor chain",
+    "reviewed plan restore and rejection of changed hash/scope/records/fields/options",
+    "fresh synthetic account/run IDs and malformed/overflowing seed rejection"
+  ],
+  "remoteOperations": false,
+  "serviceActivation": false,
+  "keyOrRoleChanges": false,
+  "newTestFunctions": 4,
+  "notRerun": [
+    "unchanged product gateway full suite",
+    "Swift/iOS/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "notAccepted": [
+    "network executor durability/deadline/limits/recovery",
+    "real CloudKit protocol/queries/ASSET",
+    "account model decision and actual ACL A/B",
+    "key retirement/new credentials and hosted Free"
+  ]
+}

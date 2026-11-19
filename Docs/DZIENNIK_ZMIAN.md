@@ -917,3 +917,14 @@ Przygotowano MODEL_UPRAWNIEN_INDIVIDUAL.md z konkretnym wariantem konta właści
 Pliki: Docs/MODEL_UPRAWNIEN_INDIVIDUAL.md, Docs/evidence/service-identity-membership-assessment.json oraz ten dziennik i plan. Weryfikacja: rzeczywiste metadane konta/zespołu, odpowiedź właściciela, trzy źródła Apple, JSON i lokalne odnośniki poprawne. Nie zapisano adresu e-mail ani innych danych kontaktowych konta. Kod produktu/testów/deps/CI niezmieniony; testów/kompilacji nie ponawiano.
 
 Bez zmian uprawnień/członkostwa, nowych lub odwołanych kluczy/sekretów, rekordów, SDK telefonu, aktywacji/usług/opłat, Production, Firebase i TestFlight. Odrębna tożsamość serwisowa i A/B niezaliczone; zastaną zmianę projektu zachowujemy.
+
+
+## CK-05a.4d — 2026-11-19 — lokalny inwentarz przyszłej próby protokołu
+
+Dodano czysty generator i weryfikator planu ośmiu syntetycznych rekordów. Wykorzystuje rzeczywiste serializery produktu, nowy accountID/runID, stałe location0,0 i avatar wyłącznie metadata. Nie dotyka prawdziwego checkpointu; losowy checkpoint ma własny łańcuch anchorów. Przygotowuje minimalne bariery retention/deletion oraz pełne początkowe pola, zamrożony inwentarz i SHA. Odtworzenie z seed i porównanie odrzucają zmianę hash/scope/pól/ID/ograniczeń. Brak transportu, sekretów, odczytu plików lub automatycznego wykonania.
+
+Opisano wymagania przyszłego wykonawcy: trwały dziennik przed IO, preflight nieobecności, pojedynczy create, CAS/konflikt starego tagu z pustym payloadem, exact field removal i cleanup wyłącznie własnych ID po tagu, jawne cleanup-pending przy niepewności, brak forceDelete/query/resetu oraz deadline i do9 batch. Wykonawca i jego recovery nadal nie są zaimplementowane; deklaracje constraints tego nie dowodzą.
+
+Pliki: gateway/scripts/community-protocol-plan.mjs, gateway/test/community-protocol-plan.test.mjs, Docs/PLAN_TESTU_PROTOKOLU_CLOUDKIT.md, Docs/evidence/community-protocol-plan-local-tests.json oraz ten dziennik i plan. Weryfikacja:4/4 Node22.23.5 i4/4 Node24.22.1; pola porównane z faktycznym eksportem Apple, minimalne bariery/anchor chain, hash/zmiana zakresu, odrębne tożsamości/błędny seed. JSON poprawny. Bez zmian produktu/iOS/deps/CI i powtarzania wcześniejszych643 testów lub kompilacji.
+
+Bez wywołań Apple/Cloudflare, kluczy/ról, rekordów, plików aktywacji, opłat, SDK telefonu, Production/Firebase/TestFlight. Decyzja modelu konta Individual i zgoda na przyszłe rzeczywiste operacje pozostają otwarte; zastany projekt zachowujemy. [Dokładny status](PLAN_TESTU_PROTOKOLU_CLOUDKIT.md).
