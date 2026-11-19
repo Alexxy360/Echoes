@@ -1,0 +1,206 @@
+{
+  "stage": "CK-05d.1c.2",
+  "createdAt": "2026-11-19T18:45:06.899602+00:00",
+  "baselineCommit": "4bba32ef36f40f49cb85e5a5691f390841456ba5",
+  "native": {
+    "definedEach": 689,
+    "passedEach": 687,
+    "skippedEach": 2,
+    "failedEach": 0,
+    "newFunctions": [
+      "avatarReportJournalReopensExactDispatchedIdentityAndFencesOldInstance",
+      "avatarReportJournalNeverReplacesPendingOrAcknowledgesUnconfirmedOutcome",
+      "avatarReportJournalOnlyExactAcceptedResultCanBeAcknowledgedAndCannotBeDowngraded",
+      "avatarReportJournalRejectsAnotherReporterOrRequestBeforeChangingSavedEntry",
+      "avatarReportJournalScopeSeparatesNativeIdentityOriginAndGatewayAccount",
+      "avatarReportJournalCorruptionOversizeAndCrossScopeNeverRepairOrDeleteTheSavedAttempt",
+      "avatarReportJournalAmbiguousPreparationDispatchAndResolutionKeepOriginalIDOnReopen",
+      "avatarReportJournalReadbackMismatchFailsClosedAndNeverSubstitutesEmptyPending",
+      "avatarReportJournalPeekIsReadOnlyAndLateFenceCannotInvalidateNewLease",
+      "avatarReportJournalSlowWriteDoesNotBlockMainActorAndCannotReturnAfterScopeFence",
+      "avatarReportJournalCancelledWriteKeepsOriginalIdentityForExplicitRecovery",
+      "avatarReportJournalPreCancelledCallsNeverReadWriteOrRotateLiveLease",
+      "avatarReportJournalErasesAllOriginsForExactOwnerAndPreservesOtherAccount",
+      "avatarReportJournalDeletionFenceSurvivesFailedCleanupWithoutRevokingOtherAccount",
+      "avatarReportJournalFenceCapacityFailsClosedWhileExactCleanupStillWorks",
+      "avatarReportJournalErasureCapacityNeverForgetsAnEarlierOwnerAndAllowsCleanupRetry",
+      "avatarReportJournalNewRecoveryRevisionRejectsLateResultAndOldAcknowledgement",
+      "avatarReportJournalConcreteServerNativeRecoveryPersistsSameOwnAttempt",
+      "avatarReportJournalNamespaceCannotReadModeratorJournalAndKeychainIsDeviceOnly",
+      "avatarReportJournalClosedStoredIntentCannotContainOtherAccountOrTargetMetadata",
+      "avatarReportJournalAccountDeletionDuringWriteWithholdsLateEntryAndPreservesOtherAccount"
+    ],
+    "focusedPassed": 21,
+    "platforms": [
+      "macOS",
+      "iPhone17Pro/iOS26.1Simulator"
+    ],
+    "skips": "two existing physical file protection checks"
+  },
+  "journal": {
+    "storage": "metadata only, serialized backend IO off MainActor",
+    "fields": [
+      "schemaVersion",
+      "scope digest",
+      "owner digest",
+      "lease UUID",
+      "requestID",
+      "phase",
+      "revision UUID",
+      "outcome?"
+    ],
+    "rawAccountNativeIDsReportIDTargetReasonPositionImageBearerPersisted": false,
+    "reportIdentityReconstructedFromTrustedScopeAndRequestUUID": true,
+    "reporterMustMatchScopeBeforePreparation": true,
+    "onePendingPerScope": true,
+    "phases": [
+      "prepared",
+      "dispatched",
+      "resolved"
+    ],
+    "onlyAcceptedCanResolveAndAcknowledge": true,
+    "unconfirmedRemainsDispatchedAndBlocksReplacementOrRedispatch": true,
+    "unknownDoesNotExpireLocallyOrBecomeAbsenceProof": true,
+    "outcomeCannotDowngradeAccepted": true,
+    "closedCanonicalFrameMaximumBytes": 4096,
+    "exactLeaseAndRevisionCASAndReadback": true,
+    "scopeIncludes": [
+      "gateway origin",
+      "CloudKit container/environment",
+      "gateway account",
+      "native Apple/iCloud binding"
+    ],
+    "oldCallbacksAndCancelledOrFencedWritesCannotReturnNewScopeData": true,
+    "fenceAndErasedOwnerCaps": 32,
+    "saturationFailsClosedButStillAllowsExactCleanup": true,
+    "ownerErasureCoversAllOriginsPreservingOtherAccount": true,
+    "persistedDeletionFenceAcrossProcessRestart": false,
+    "scopeLifecycle": "host must bind current authorization and invoke fences/erasure; application host not connected yet"
+  },
+  "keychain": {
+    "service": "mpvEcho.Echo.gateway.avatar-report.v1",
+    "accessible": "WhenUnlockedThisDeviceOnly",
+    "synchronizable": false,
+    "maximumRecordBytes": 4096,
+    "maximumScopes": 32,
+    "existingUpdatesAllowedWhenFull": true,
+    "namespaceCapacityAndOwnerErasureActuallyTested": true,
+    "appHostedAttributesVerified": true,
+    "physicalEncryptionOrLockedDeviceAvailabilityProved": false
+  },
+  "UI": {
+    "total": 2,
+    "passed": 2,
+    "failed": 0,
+    "actual": [
+      "app-process Security Keychain",
+      "separate Store reinstantiation",
+      "accepted native canned recovery",
+      "oversize rejection",
+      "32-scope capacity and existing update",
+      "exact owner cleanup preserving other account",
+      "application terminate/launch with same dispatched identity",
+      "read-only recovery after process restart",
+      "cleanup after restart test"
+    ],
+    "synthetic": [
+      "UUID-derived owners/native bindings",
+      "canned recovery transport"
+    ],
+    "externalNetwork": false,
+    "restart": "XCUIApplication.terminate then launch a fresh application process; third cleanup launch",
+    "powerLossTested": false,
+    "physicalDeviceTested": false,
+    "screenshotsReviewed": true,
+    "screenshots": {
+      "Docs/evidence/avatar-report-journal-keychain.png": "b3fb8bed18bf73c35731f826bec762f1dd96eba1addad73a6fdaa336902c8e34",
+      "Docs/evidence/avatar-report-journal-process-restart.png": "b3fb8bed18bf73c35731f826bec762f1dd96eba1addad73a6fdaa336902c8e34"
+    }
+  },
+  "builds": [
+    "Debug application and UI tests passed on final sources",
+    "unsigned Release generic iOS passed"
+  ],
+  "formatSwiftFiles": 8,
+  "negativeControl": {
+    "mutation": "isolated copy permits acknowledging dispatched/unconfirmed entries",
+    "executedFunctions": 1,
+    "failedFunctions": 1,
+    "issues": 6,
+    "originalSourcesPreserved": true
+  },
+  "correctedPreparationErrors": [
+    "Initial additional tests referenced a private polling helper in another file; added a local helper and tests passed.",
+    "First full macOS regression had one older report-host test expire its one-second inspection before display under parallel setup load. Its test clock now stays frozen during setup and starts real passage after material and observation are installed; deadline stays one second, no product timing changed. Both final full suites pass.",
+    "Marked both new and existing pure Keychain attribute-query builders nonisolated; eliminated app MainActor-to-detached warnings. Split confusable trailing closures in new Debug restart checker into explicit boolean values."
+  ],
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportJournal.swift": "4a02289fe7052bb7bb5eb50c7c3f34922d497aa2db3c1463b98c5c36dabe5d36",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportKeychain.swift": "ad555f91f7a321547922c94c8fa764a1360f6f983b20c7c612d52f58f83bf531",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportJournalTests.swift": "5acf2ac9197011f8905dd478e5d43373a1468ecae09afebad1d241687f0bcad4",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewHostBoundaryTests.swift": "585597c98b01659756730115101b2df22a06457c23bccf8b97f240f11c8cc42a",
+    "Echo/Services/AvatarReportJournalStorageCheck.swift": "35690a68fe4810a69c138461f1ab3a9b928de404ac1708e8a608569ffd821fcb",
+    "Echo/Services/ReportReviewJournalStorageCheck.swift": "ee5c44069f869fbc6e38ee089b289cc28e3f4995d45021e7d999466ff8b4a0b9",
+    "Echo/Services/GatewayStorageCheck.swift": "d982280c9837589548cf9e44f5c49521b82e9f4e85c24a3e784971d5f8145793",
+    "EchoesUITests/GatewayAvatarReportJournalStorageUITests.swift": "466b9e25b7b7cb7d4a6fe1fbb285ee94275137c802a38551ffb904f264cc62bc"
+  },
+  "logs": {
+    "macOS": {
+      "path": "/private/tmp/echoes-avatar-report-journal-full-mac-final.log",
+      "SHA256": "5c030fd1dc7c7c730ab7051df297a2cba9d9999e5263b8ee51129c57f3912936"
+    },
+    "iOS": {
+      "path": "/private/tmp/echoes-avatar-report-journal-package-ios-final.log",
+      "SHA256": "f2c43d7b29acd448b7faf31d827ad5157454e7b1bed959e73b0500c3baec3c5e"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-avatar-report-journal-package-ios-final-summary.json",
+      "SHA256": "d793e7308e68f0af365a445820ab7824ee1e84bd8053c83696c02797ad7568f9"
+    },
+    "UI": {
+      "path": "/private/tmp/echoes-avatar-report-journal-ui-final.log",
+      "SHA256": "3084d10fc7baf7a3f71933114716552db1e07fa30bb49b341eadca41104fe5f9"
+    },
+    "UISummary": {
+      "path": "/private/tmp/echoes-avatar-report-journal-ui-final-summary.json",
+      "SHA256": "995f5f4560fbe007f14ab8f716623412ebbbff4aac95a58da74a4b1345c0285d"
+    },
+    "Release": {
+      "path": "/private/tmp/echoes-avatar-report-journal-release-final-build.log",
+      "SHA256": "5d2359b6947704eecccc7b38537b4af9d6e04707c0c0d209ea661d01cb44fa59"
+    },
+    "focused": {
+      "path": "/private/tmp/echoes-avatar-report-journal-target3.log",
+      "SHA256": "3e7ae088ac3e2506536296b3fcbbfa29dcaff5e4b209fa6094de555652197da3"
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-avatar-report-journal-negative.log",
+      "SHA256": "852f52e147006890ccf8f086b786448a86cf21bd9f26fc067c92fc25a0f78109"
+    },
+    "format": {
+      "path": "/private/tmp/echoes-avatar-report-journal-format-final.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "initialFullMacFailure": {
+      "path": "/private/tmp/echoes-avatar-report-journal-full-mac.log",
+      "SHA256": "879702519cfcf9fbb0acea4d1335d446cb2e6b996271878189dee51dd497589f"
+    },
+    "initialTestCompile": {
+      "path": "/private/tmp/echoes-avatar-report-journal-target2.log",
+      "SHA256": "ea861a6dc4b0f3fe929a497fe038218ce03b1805967c932c93f5125e560e11bc"
+    }
+  },
+  "backendChangedOrRepeated": false,
+  "dependenciesCIChanged": false,
+  "newCloudKitSchemaRightsKeysSecretsServicesFees": false,
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "externalChanges": [],
+  "notAccepted": [
+    "native photo report foreground host/form and live mutation coupling",
+    "terminal server fence before allowing abandonment of an unconfirmed attempt",
+    "photo report moderator",
+    "actual hosted SIWA/schema/privileges/query/ASSET/CDN/retention/Free/ordinaryA-B",
+    "physical device",
+    "Firebase removal/TestFlight readiness"
+  ]
+}

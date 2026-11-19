@@ -8,6 +8,7 @@
     /// Isolated local diagnostic: no Apple identity, CloudKit, Firebase or HTTP requests.
     @MainActor enum GatewayStorageCheck {
         static func run() async -> String {
+            if let restart = await checkAvatarReportRestartIfRequested() { return restart }
             guard
                 let origin = URL(
                     string: "https://keychain-" + UUID().uuidString.lowercased() + ".example.invalid"),
@@ -62,6 +63,7 @@
             } catch { deletionReport = "storage-failed" }
             let communityReport = await checkCommunity(configuration: config, cloudKit: cloudKit)
             let reportReview = await checkReportReview(configuration: config, cloudKit: cloudKit)
+            let avatarReport = await checkAvatarReport(configuration: config, cloudKit: cloudKit)
             print("ECHOES_GATEWAY_STORAGE_BEFORE_CLEANUP session=" + report + " deletion=" + deletionReport)
             for (index, item) in [sessionQuery, deletionQuery].enumerated() {
                 let cleanup = SecItemDelete(item as CFDictionary)
@@ -91,6 +93,7 @@
             if deletionReport != "passed" { report = deletionReport }
             if communityReport != "passed" { report = communityReport }
             if reportReview != "passed" { report = reportReview }
+            if avatarReport != "passed" { report = avatarReport }
             // Fixed outcomes only; no synthetic token, encoded payload, attributes or native IDs.
             print("ECHOES_GATEWAY_DELETION_STORAGE_CHECK result=" + deletionReport)
             print("ECHOES_GATEWAY_COMMUNITY_STORAGE_CHECK result=" + communityReport)

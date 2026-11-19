@@ -273,12 +273,18 @@ func reportReviewHostRejectsAccountChangeDuringTheLastJournalReadBeforeInspectOr
 }
 
 private final class ReportHostAdvancingClock: @unchecked Sendable {
-    let base: Int, start = ProcessInfo.processInfo.systemUptime
+    let base: Int
+    private let lock = NSLock()
+    private var start: TimeInterval?
     init(_ base: Int) { self.base = base }
-    func date() -> Date {
-        .init(timeIntervalSince1970: Double(base) / 1000 + ProcessInfo.processInfo.systemUptime - start)
+    // Setup can be slow under a full parallel suite. Start real passage only once the
+    // material and observation are installed; the tested one-second deadline is unchanged.
+    func resume() { lock.withLock { start = ProcessInfo.processInfo.systemUptime } }
+    private func elapsed() -> TimeInterval {
+        lock.withLock { start.map { ProcessInfo.processInfo.systemUptime - $0 } ?? 0 }
     }
-    func uptime() -> TimeInterval { 100 + ProcessInfo.processInfo.systemUptime - start }
+    func date() -> Date { .init(timeIntervalSince1970: Double(base) / 1000 + elapsed()) }
+    func uptime() -> TimeInterval { 100 + elapsed() }
 }
 private final class ReportHostNotification: @unchecked Sendable {
     let lock = NSLock()
@@ -312,6 +318,7 @@ private final class ReportHostNotification: @unchecked Sendable {
     } onChange: {
         notification.mark()
     }
+    clock.resume()
     try await reportHostWait { notification.read() }
     #expect(host.presentation == nil && host.material(for: shown) == nil)
     #expect(await f.api.calls == ["queue", "inspect"])

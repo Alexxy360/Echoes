@@ -121,7 +121,7 @@
         }
     }
 
-    private func reportJournalQuery(_ scope: GatewayReportReviewScope) -> [String: Any] {
+    private nonisolated func reportJournalQuery(_ scope: GatewayReportReviewScope) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: "mpvEcho.Echo.gateway.report-review.v1",
