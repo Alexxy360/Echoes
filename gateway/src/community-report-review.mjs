@@ -9,6 +9,7 @@ const sync = value => { if (value && typeof value.then === "function") { void Pr
 
 /** Trusted moderation boundary. Separate operator predicate; no installed HTTP/runtime activation. */
 export class CommunityReportReview {
+  #pending = new Set();
   #authentication; #community; #registry; #repository; #client; #reviews; #checkpoint; #enabled; #operator; #clock; #monotonic; #timeout; #busy = false;
   constructor({ authentication, communityState, registry, repository, client, reviews, checkpoint, isEnabled = () => false, isOperator = () => false,
     clock = Date.now, monotonic = () => performance.now(), timeoutMilliseconds = 8000 } = {}) {
@@ -22,6 +23,8 @@ export class CommunityReportReview {
     this.#checkpoint = checkpoint; this.#enabled = isEnabled; this.#operator = isOperator; this.#clock = clock; this.#monotonic = monotonic; this.#timeout = timeoutMilliseconds;
     this.#reviews = reviews;
   }
+  get isOccupied() { return this.#busy; }
+  async waitForPendingOperations() { await Promise.allSettled([...this.#pending]); }
   #options(value, keys) {
     if (!plain(value) || Object.keys(value).some(key => !["accessToken", "signal", ...keys].includes(key)) ||
         typeof value.accessToken !== "string" || value.accessToken.length < 1 || value.accessToken.length > 1024 ||
@@ -68,6 +71,7 @@ export class CommunityReportReview {
           const result = await action({ identity, check, signal: controller.signal }); check(); prepared = result;
         } finally { await this.#client.waitForPendingOperations(); settled = true; release(); }
       })();
+      this.#pending.add(work); void work.then(() => this.#pending.delete(work), () => this.#pending.delete(work));
       await Promise.race([work, cancelled]);
       return () => { try { transport(); this.#identity(o, identity); return prepared(); } catch (error) { throw this.#error(error); } finally { close(); } };
     } catch (error) { close(); if (!timer) { settled = true; release(); } throw this.#error(error); }

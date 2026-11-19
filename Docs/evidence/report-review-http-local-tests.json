@@ -1,0 +1,97 @@
+{
+  "phase": "CK-05c.3",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "ff1e269f7d40647aff494433e9b6f8c323aa1448",
+  "status": "closed report moderation HTTP/edge/concrete Runtime implemented and locally verified; deployment/operator UI and actual sessions remain",
+  "filesSHA256": {
+    "gateway/src/report-review-http.mjs": "8720112d9febade485200c9bc74220b9670067ce6fe37036a5b683273f612e0c",
+    "gateway/src/gateway-report-review.mjs": "b9ef65621ccdf89a94cb2788b52c316bcef6e86424db3708e4311642a29b6e16",
+    "gateway/src/community-report-review-state.mjs": "85a2f5ff2104104688a1f38097aefe5b4530e28c74603be693f1f44f02cd4c2f",
+    "gateway/src/community-report-review.mjs": "da183d5041737695fed8ee98f6dfa91412df4c62bbb70c50f1df65ad41ebe149",
+    "gateway/src/gateway-http.mjs": "23effa7a8b0d7deb2c3f9199690f5ccefec58f4cbcecb0cbf0b2a749e79f2e5c",
+    "gateway/src/gateway-runtime.mjs": "6e8dc8bc7d6529342f77213781565e32ad3b65036a2d637ee523c387fef83fd0",
+    "gateway/src/gateway-limits.mjs": "991cac8c5f4ba3a1ddcb0a8103f63ffddba393dbb34a5307fb18924d05e18fdf",
+    "gateway/wrangler.community.jsonc": "74b5546e89ca06f8e911f1d441a12a04869f1ad6f7796705b5dcaf32cad169e9",
+    "gateway/test/support/community-report-review-fixture.mjs": "4fee4fa053bbafad32adbdb5330c1002e63125f3554e0eb4557b79846dfa61bc",
+    "gateway/test/support/report-review-http-fixture.mjs": "4825a4002ba8550d667bf85f8499825f24174b6190860fc937cc309547a91aa8",
+    "gateway/test/report-review-http.test.mjs": "78435074b7511d772824ab2e4e633d10dccd15324f127172348e2e1e377cd46d",
+    "gateway/test/report-review-workerd.test.mjs": "43f3a6c504423ef5a67c56dab9059e4b8be5cc432626b1f540beede267886a40",
+    "gateway/test/support/report-review-worker.mjs": "82ae26d4a61f10d77713e90ccd5f72ba7c12a0bc53f1f55594538bf72d7eefd8",
+    "gateway/test/support/workerd-image-harness.mjs": "404310ba45632458cd4b187ad43ee30c9c0775502ec344cc001cc09be1cc11d8"
+  },
+  "newTestFunctions": 16,
+  "newTests": {
+    "HTTPAndRuntime": 15,
+    "actualLocalWorkerd": 1
+  },
+  "fullSuite": {
+    "node22": {
+      "runtime": "22.23.5",
+      "tests": 742,
+      "passed": 742,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-report-review-http-full-node22.log",
+      "sha256": "3e1aba949a138ce3ca5d02ef04e95aaef3c5ab0c6fb6e89433ab3ba37ba2c4c8"
+    },
+    "node24": {
+      "runtime": "24.22.1",
+      "tests": 742,
+      "passed": 742,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-report-review-http-full-node24.log",
+      "sha256": "8165d823ddd3b3a8a39dc6f04276e2e407c5b3ae20813d7914c366b0d116eb30"
+    }
+  },
+  "coverage": [
+    "four strict native POST routes with separate default-denied operator allowlist; no avatar reviewer inheritance",
+    "exact request/response identities and fields, metadata/text/time/cursor/byte/fragment/UTF8/header validation at authority and edge",
+    "attempted request and inspection budgets in distinct namespace plus existing shared heavy/daily quotas",
+    "canonical edge body with trusted budget and no client role/budget header forwarding",
+    "last-checkpoint role revocation and operator-list changes during upstream response/body suppress confidential output",
+    "single retained request through actual coordinator/provider drain after abort, body cancellation retained to completion and failure poisons gate",
+    "actual local workerd/Durable Object SQLite: inspection, atomic hide/closed queue, same revision after fresh Runtime, ordinary denied, flag disabled, no content/token copies in SQL"
+  ],
+  "limits": {
+    "inputBytes": 512,
+    "inputMilliseconds": 3000,
+    "authorityMilliseconds": 12000,
+    "edgeMilliseconds": 15000,
+    "queueResponseBytes": 8192,
+    "inspectionResponseBytes": 12288,
+    "otherResponseBytes": 2048,
+    "bodyFragments": 128,
+    "accountRequestsPerMinute": 30,
+    "accountInspectionsPerMinute": 10
+  },
+  "workerd": {
+    "version": "1.20260730.1",
+    "compatibilityDate": "2026-07-30",
+    "externalNetwork": "denied by harness",
+    "actualDOAndSQL": true,
+    "actualSignatures": true,
+    "providerAndAccounts": "synthetic",
+    "platformCFAndIP": "synthetic",
+    "freshRuntimeInSameDO": true,
+    "evictionOrPITRProven": false
+  },
+  "deploymentConfig": {
+    "gatewayEnabled": false,
+    "reportReviewEnabled": false,
+    "reportReviewers": [],
+    "serviceCreatedOrDeployed": false,
+    "rolesOrKeysChanged": false,
+    "secretsTransferred": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "iOS/Swift/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "native typed moderation transport, protected panel and durable decision intent/recovery",
+    "actual SIWA/operator mapping and separately approved runtime activation",
+    "actual A/B/query/ASSET/hosted Free and all migration acceptance"
+  ]
+}

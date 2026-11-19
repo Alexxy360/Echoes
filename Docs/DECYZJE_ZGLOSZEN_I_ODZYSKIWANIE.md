@@ -1,6 +1,6 @@
 # Trwałe decyzje zgłoszeń i odzyskiwanie — CK-05c.2
 
-19 listopada 2026. Wewnętrzny serwis obsługuje inspekcję, decyzję i sprawdzenie nieznanego wyniku. **Nie jest jeszcze podłączony do HTTP/Runtime ani panelu moderatora.** W tym etapie nie aktywowano uprawnień moderatora ani usługi i nie wykonano nowej próby Apple. Administracyjna rola właściciela z CK-05a.4h pozostaje przypisana. [Dowody lokalne](evidence/community-report-decisions-local-tests.json).
+19 listopada 2026. Wewnętrzny serwis obsługuje inspekcję, decyzję i sprawdzenie nieznanego wyniku. **Późniejszy CK-05c.3 podłączył ograniczone HTTP/Runtime i wykonał lokalny odbiór; panel i rzeczywista aktywacja pozostają do wykonania.** W CK-05c.2 nie aktywowano uprawnień moderatora ani usługi i nie wykonano nowej próby Apple. Administracyjna rola właściciela z CK-05a.4h pozostaje przypisana. [HTTP i granice](HTTP_POUFNYCH_ZGLOSZEN.md), [historyczne dowody lokalne](evidence/community-report-decisions-local-tests.json).
 
 ## Inspekcja i decyzja
 

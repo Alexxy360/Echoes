@@ -7,8 +7,8 @@ import { once } from "node:events";
 import { build } from "esbuild";
 const require = createRequire(import.meta.url), runtime = require("workerd");
 
-export async function avatarWorker({ communityEntry = false, retentionEntry = false } = {}) {
-  if (communityEntry && retentionEntry) throw new Error("Choose one synthetic worker entry");
+export async function avatarWorker({ communityEntry = false, retentionEntry = false, reportEntry = false } = {}) {
+  if ([communityEntry, retentionEntry, reportEntry].filter(Boolean).length > 1) throw new Error("Choose one synthetic worker entry");
   const directory = await mkdtemp(join(tmpdir(), "echoes-codec-workerd-"));
   let child, stderr = "";
   const stop = async () => {
@@ -22,9 +22,9 @@ export async function avatarWorker({ communityEntry = false, retentionEntry = fa
   try {
     const bundle = join(directory, "entry.mjs");
     await mkdir(join(directory, "state"));
-    const entry = retentionEntry ? "./public-retention-worker.mjs" : communityEntry ? "./community-disabled-worker.mjs" : "./avatar-normalizer-worker.mjs";
-    const objectClass = retentionEntry ? "RetentionProofAuthority" : communityEntry ? "CommunityAuthority" : "AvatarCodecTestAuthority";
-    const objectBinding = retentionEntry ? "RETENTION" : communityEntry ? "COMMUNITY_AUTHORITY" : "CODEC";
+    const entry = reportEntry ? "./report-review-worker.mjs" : retentionEntry ? "./public-retention-worker.mjs" : communityEntry ? "./community-disabled-worker.mjs" : "./avatar-normalizer-worker.mjs";
+    const objectClass = reportEntry ? "ReportProofAuthority" : retentionEntry ? "RetentionProofAuthority" : communityEntry ? "CommunityAuthority" : "AvatarCodecTestAuthority";
+    const objectBinding = reportEntry ? "REPORTS" : retentionEntry ? "RETENTION" : communityEntry ? "COMMUNITY_AUTHORITY" : "CODEC";
     await build({ entryPoints: [new URL(entry, import.meta.url).pathname], outfile: bundle,
       bundle: true, format: "esm", platform: "node", target: "es2022", external: ["node:*", "cloudflare:*"],
       plugins: [{ name: "static-avatar-wasm", setup(builder) {

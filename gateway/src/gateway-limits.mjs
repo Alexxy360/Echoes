@@ -116,6 +116,20 @@ export class GatewayLimits {
     });
     await this.#sync(); if (outcome) throw outcome;
   }
+  /** Reviewer account is established by session+server role before body/checkpoint/provider IO. */
+  async consumeReportReview(accountID, { inspection = false } = {}) {
+    if (typeof accountID !== "string" || !/^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(accountID) || typeof inspection !== "boolean") throw new GatewayLimitError();
+    const now = this.#now(), minute = Math.floor(now / 60000) * 60000;
+    const key = createHash("sha256").update("echoes/report-review-budget/v1\0" + accountID).digest("hex");
+    const outcome = this.#tx(() => {
+      for (const [kind, ceiling] of inspection ? [["report-review", 30], ["report-inspection", 10]] : [["report-review", 30]]) {
+        const rows = this.#rows(`INSERT INTO gateway_windows_v1(kind,key_hash,window_start,count) VALUES (?,?,?,1)
+          ON CONFLICT(kind,key_hash,window_start) DO UPDATE SET count=count+1 WHERE count<? RETURNING count`, kind, key, minute, ceiling);
+        if (!rows.length) return new GatewayLimitError("RATE_LIMITED", Math.max(1, Math.ceil((minute + 60000 - now) / 1000)));
+      }
+    });
+    await this.#sync(); if (outcome) throw outcome;
+  }
   async purgeExpired() {
     const now = this.#now(), day = Math.floor(now / 86400000), minute = Math.floor(now / 60000) * 60000;
     this.#tx(() => {

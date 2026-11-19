@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { plain, publicUUID, validTag, digest } from "./public-record-schema.mjs";
 
-const codes = new Set(["REPORT_REVIEW_INPUT", "REPORT_REVIEW_SCOPE", "REPORT_REVIEW_STALE", "REPORT_REVIEW_CAPACITY", "REPORT_REVIEW_UNAVAILABLE"]);
+const codes = new Set(["REPORT_REVIEW_INPUT", "REPORT_REVIEW_SCOPE", "REPORT_REVIEW_STALE", "REPORT_REVIEW_CAPACITY", "REPORT_REVIEW_RESPONSE", "REPORT_REVIEW_UNAVAILABLE"]);
 export class CommunityReportReviewError extends Error {
   constructor(code = "REPORT_REVIEW_UNAVAILABLE") { super("Confidential report review could not be completed."); this.code = codes.has(code) ? code : "REPORT_REVIEW_UNAVAILABLE"; }
 }

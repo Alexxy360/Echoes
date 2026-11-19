@@ -1,6 +1,6 @@
 # Poufna kolejka i odczyt zgłoszeń — CK-05c.1
 
-19 listopada 2026. **Wewnętrzny odczyt zgłoszeń oraz późniejsze decyzje/recovery CK-05c.2 są zaimplementowane i sprawdzone lokalnie.** Nie ma jeszcze podłączonej trasy HTTP/Runtime ani panelu. Żadnej osobie nie nadano tym kodem dostępu. Poniżej opis historycznego CK-05c.1; [trwałe decyzje i granice](DECYZJE_ZGLOSZEN_I_ODZYSKIWANIE.md), [historyczne dowody odczytu](evidence/community-report-review-local-tests.json).
+19 listopada 2026. **Odczyt i trwałe decyzje/recovery CK-05c.1–2 są podłączone do ograniczonego HTTP/Runtime w CK-05c.3 i sprawdzone lokalnie.** Konfiguracja pozostaje wyłączona/pusta; panel i rzeczywiste uprawnienia są jeszcze do wykonania. Żadnej osobie nie nadano tym kodem dostępu. Poniżej opis historycznego CK-05c.1; [HTTP i granice](HTTP_POUFNYCH_ZGLOSZEN.md), [trwałe decyzje](DECYZJE_ZGLOSZEN_I_ODZYSKIWANIE.md), [historyczne dowody odczytu](evidence/community-report-review-local-tests.json).
 
 ## Zakres
 

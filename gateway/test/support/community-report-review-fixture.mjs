@@ -5,7 +5,9 @@ import { CommunityReportReview } from "../../src/community-report-review.mjs";
 import { CommunityReportReviewState } from "../../src/community-report-review-state.mjs";
 
 export async function reportReviewFixture(t, options = {}) {
-  const f = await publicFixture(options); let closed = false; const close = f.close;
+  const { startAt, ...storageOptions } = options;
+  const f = await publicFixture(storageOptions); if (startAt !== undefined) f.advance(startAt - f.clock());
+  let closed = false; const close = f.close;
   f.close = () => { if (!closed) { closed = true; close(); } }; t.after(() => f.close());
   const operator = await f.session("operator"), reporter = await f.session("reporter"), author = await f.session("author");
   const community = new CommunityState(f.storage, { clock: f.clock }); let enabled = true, role = true, mono = 0;
