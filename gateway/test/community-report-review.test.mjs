@@ -2,32 +2,12 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { randomUUID } from "node:crypto";
 import { setImmediate as tick } from "node:timers/promises";
-import { publicFixture, messageInput } from "./support/public-record-fixture.mjs";
-import { CommunityState } from "../src/community-state.mjs";
 import { CommunityReportReview } from "../src/community-report-review.mjs";
+import { reportReviewFixture as setup } from "./support/community-report-review-fixture.mjs";
 
 const code = expected => error => error?.code === expected && !error.message.includes("PRIVATE") && error.cause === undefined;
 const barrier = () => { let release; const promise = new Promise(resolve => { release = resolve; }); return { promise, release }; };
-async function setup(t) {
-  const f = await publicFixture(); t.after(() => f.close());
-  const operator = await f.session("operator"), reporter = await f.session("reporter"), author = await f.session("author");
-  const community = new CommunityState(f.storage, { clock: f.clock }); let enabled = true, role = true, mono = 0;
-  const config = { authentication: f.state, communityState: community, registry: f.registry, repository: f.repository, client: f.client, checkpoint: f.checkpoint,
-    clock: f.clock, monotonic: () => mono, isEnabled: () => enabled, isOperator: id => role && id === operator.accountID };
-  const review = new CommunityReportReview(config), input = messageInput(author, "PRIVATE-SYNTHETIC-MESSAGE"), message = await f.repository.write(input);
-  const makeReport = async () => {
-    const requestID = randomUUID();
-    return f.repository.write({ accessToken: reporter.sessionToken, kind: "report", logicalID: requestID, requestID,
-      input: { messageID: message.recordName, reason: "PRIVATE-SYNTHETIC-REPORT" } });
-  };
-  const report = await makeReport();
-  return { ...f, operator, reporter, author, community, input, message, report, review, config, makeReport,
-    enable(value) { enabled = value; }, role(value) { role = value; }, moveMono(value) { mono += value; },
-    options(changes) { return { accessToken: operator.sessionToken, ...changes }; },
-    async queue(options = {}) { const final = await review.prepareQueue(this.options(options)); return final(); },
-    async inspect(options = {}) { const final = await review.prepareInspection(this.options({ reportID: report.recordName, ...options })); return final(); },
-  };
-}
+
 
 test("report review is disabled and separately denies ordinary or promise-returning operator roles before IO", async t => {
   const f = await setup(t), before = f.model.checkpointRequests.length;

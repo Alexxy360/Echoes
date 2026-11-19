@@ -1,26 +1,26 @@
 import { plain, publicUUID, digest } from "./public-record-schema.mjs";
+import { CommunityReportReviewError, reportReviewContent, reportReviewContentHash } from "./community-report-review-state.mjs";
+export { CommunityReportReviewError } from "./community-report-review-state.mjs";
 
 const reportName = /^community-v1-report-[a-f0-9]{64}$/;
 const messageName = /^community-v1-message-[a-f0-9]{64}$/;
-const codes = new Set(["REPORT_REVIEW_INPUT", "REPORT_REVIEW_SCOPE", "REPORT_REVIEW_STALE", "REPORT_REVIEW_CAPACITY", "REPORT_REVIEW_UNAVAILABLE"]);
-export class CommunityReportReviewError extends Error {
-  constructor(code = "REPORT_REVIEW_UNAVAILABLE") { super("Confidential report review could not be completed."); this.code = codes.has(code) ? code : "REPORT_REVIEW_UNAVAILABLE"; }
-}
 const fail = code => { throw new CommunityReportReviewError(code); };
 const sync = value => { if (value && typeof value.then === "function") { void Promise.resolve(value).catch(() => {}); fail("REPORT_REVIEW_SCOPE"); } return value; };
 
-/** Trusted, read-only moderation boundary. Separate operator predicate; no installed HTTP/runtime activation. */
+/** Trusted moderation boundary. Separate operator predicate; no installed HTTP/runtime activation. */
 export class CommunityReportReview {
-  #authentication; #community; #registry; #repository; #client; #checkpoint; #enabled; #operator; #clock; #monotonic; #timeout; #busy = false;
-  constructor({ authentication, communityState, registry, repository, client, checkpoint, isEnabled = () => false, isOperator = () => false,
+  #authentication; #community; #registry; #repository; #client; #reviews; #checkpoint; #enabled; #operator; #clock; #monotonic; #timeout; #busy = false;
+  constructor({ authentication, communityState, registry, repository, client, reviews, checkpoint, isEnabled = () => false, isOperator = () => false,
     clock = Date.now, monotonic = () => performance.now(), timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
         typeof registry?.reviewReportPage !== "function" || typeof registry?.readable !== "function" || typeof repository?.beginRead !== "function" || typeof client?.waitForPendingOperations !== "function" ||
+        ["isOpen", "reserve", "confirm", "get", "decide", "recover", "outcome"].some(name => typeof reviews?.[name] !== "function") ||
         ["verify", "advance"].some(name => typeof checkpoint?.[name] !== "function") ||
         [isEnabled, isOperator, clock, monotonic].some(value => typeof value !== "function") ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) fail("REPORT_REVIEW_INPUT");
     this.#authentication = authentication; this.#community = communityState; this.#registry = registry; this.#repository = repository; this.#client = client;
     this.#checkpoint = checkpoint; this.#enabled = isEnabled; this.#operator = isOperator; this.#clock = clock; this.#monotonic = monotonic; this.#timeout = timeoutMilliseconds;
+    this.#reviews = reviews;
   }
   #options(value, keys) {
     if (!plain(value) || Object.keys(value).some(key => !["accessToken", "signal", ...keys].includes(key)) ||
@@ -65,7 +65,7 @@ export class CommunityReportReview {
         try {
           transport(); identity = this.#identity(o);
           const check = () => { transport(); this.#identity(o, identity); transport(); };
-          const result = await action({ check, signal: controller.signal }); check(); prepared = result;
+          const result = await action({ identity, check, signal: controller.signal }); check(); prepared = result;
         } finally { await this.#client.waitForPendingOperations(); settled = true; release(); }
       })();
       await Promise.race([work, cancelled]);
@@ -81,26 +81,72 @@ export class CommunityReportReview {
       await this.#checkpoint.advance({ signal }); check();
       return () => ({ schemaVersion: 1, items: page.items.filter(item => {
         const row = this.#registry.readable(item.recordName, "report");
-        return row?.recordTag === item.recordTag && row.payloadHash === item.payloadHash && row.requestID === item.requestID;
+        return row?.recordTag === item.recordTag && row.payloadHash === item.payloadHash && row.requestID === item.requestID && this.#reviews.isOpen(row);
       }).map(item => ({ reportID: item.recordName, createdAt: item.createdAt, expiresAt: item.startedAt + 2592000000 })), after: page.after });
     });
   }
   async prepareInspection(value) {
     const o = this.#options(value, ["reportID"]);
     if (typeof o.reportID !== "string" || !reportName.test(o.reportID)) fail("REPORT_REVIEW_INPUT");
-    return this.#prepare(o, async ({ check, signal }) => {
+    return this.#prepare(o, async ({ identity, check, signal }) => {
       const lease = await this.#repository.beginRead({ accessToken: o.accessToken, signal }); check();
       const [report] = await lease.lookup([o.reportID], "report"); check();
       if (!report || !lease.current(report) || !messageName.test(report.input.messageID)) fail("REPORT_REVIEW_STALE");
       const [message] = await lease.lookup([report.input.messageID], "message"); check();
+      if (!this.#reviews.isOpen(report.context)) fail("REPORT_REVIEW_STALE");
+      const content = reportReviewContent(report, message && lease.current(message) ? message : null);
+      const receipt = await this.#reviews.reserve(identity.accountID, identity.sessionKey, content); check();
+      await this.#reviews.confirm(identity.accountID, identity.sessionKey, receipt.inspectionID); check();
       await this.#checkpoint.advance({ signal }); check();
       return () => {
-        if (!lease.current(report)) fail("REPORT_REVIEW_STALE");
+        this.#reviews.get(identity.accountID, identity.sessionKey, receipt.inspectionID);
+        if (!lease.current(report) || !this.#reviews.isOpen(report.context)) fail("REPORT_REVIEW_STALE");
         const current = message && lease.current(message) && message.record.fields.expiresAt.value > this.#clock();
-        return { schemaVersion: 1, reportID: report.context.recordName, createdAt: report.context.createdAt,
+        return { schemaVersion: 1, inspectionID: receipt.inspectionID, inspectionExpiresAt: receipt.expiresAt, contentHash: receipt.contentHash,
+          reportID: report.context.recordName, createdAt: report.context.createdAt,
           expiresAt: report.context.startedAt + 2592000000, reason: report.input.reason, messageID: report.input.messageID,
           message: current ? { authorID: message.context.accountID, name: message.input.name, text: message.input.text,
             createdAt: message.context.createdAt, expiresAt: message.record.fields.expiresAt.value } : null };
+      };
+    });
+  }
+  async prepareDecision(value) {
+    const o = this.#options(value, ["inspectionID", "decisionID", "verdict"]);
+    if (![o.inspectionID, o.decisionID].every(v => typeof v === "string" && publicUUID.test(v)) || !["dismiss", "hide_message"].includes(o.verdict)) fail("REPORT_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      const receipt = this.#reviews.get(identity.accountID, identity.sessionKey, o.inspectionID);
+      const lease = await this.#repository.beginRead({ accessToken: o.accessToken, signal }); check();
+      const [report] = await lease.lookup([receipt.content.reportID], "report"); check();
+      if (!report || !lease.current(report)) fail("REPORT_REVIEW_STALE");
+      const [message] = await lease.lookup([report.input.messageID], "message"); check();
+      const content = reportReviewContent(report, message && lease.current(message) ? message : null);
+      if (reportReviewContentHash(content) !== receipt.content_hash) fail("REPORT_REVIEW_STALE");
+      const authorize = () => { check(); if (!lease.current(report) || message && !lease.current(message)) fail("REPORT_REVIEW_STALE"); return true; };
+      let result;
+      try { result = await this.#reviews.decide({ reviewerID: identity.accountID, sessionKey: identity.sessionKey,
+        inspectionID: o.inspectionID, decisionID: o.decisionID, verdict: o.verdict, content, authorize }); }
+      catch (error) { check(); await this.#checkpoint.advance({ signal }); throw error; }
+      check(); await this.#checkpoint.advance({ signal }); check();
+      const query = { reviewerID: identity.accountID, reportID: content.reportID, decisionID: o.decisionID, verdict: o.verdict, contentHash: receipt.content_hash };
+      return () => {
+        const outcome = this.#reviews.outcome(query);
+        if (outcome.outcome !== "confirmed" || outcome.revision !== result.revision) fail("REPORT_REVIEW_STALE");
+        return { schemaVersion: 1, inspectionID: o.inspectionID, ...result };
+      };
+    });
+  }
+  async prepareRecovery(value) {
+    const keys = ["reportID", "decisionID", "verdict", "contentHash"], o = this.#options(value, keys);
+    if (!reportName.test(o.reportID ?? "") || !publicUUID.test(o.decisionID ?? "") || !["dismiss", "hide_message"].includes(o.verdict) ||
+        typeof o.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(o.contentHash)) fail("REPORT_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      await this.#checkpoint.verify({ signal }); check();
+      const query = { ...Object.fromEntries(keys.map(k => [k, o[k]])), reviewerID: identity.accountID };
+      const result = await this.#reviews.recover(query); check();
+      await this.#checkpoint.advance({ signal }); check();
+      return () => { const latest = this.#reviews.outcome(query);
+        if (latest.outcome !== result.outcome || latest.revision !== result.revision) fail("REPORT_REVIEW_STALE");
+        return { schemaVersion: 1, ...latest };
       };
     });
   }

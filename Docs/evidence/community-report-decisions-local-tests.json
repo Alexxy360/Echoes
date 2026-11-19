@@ -1,0 +1,77 @@
+{
+  "phase": "CK-05c.2",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "43b56066cdc7fd42245dd9779f6bb93f51f6dec9",
+  "status": "internal durable report decisions/recovery and local retention tested; HTTP/runtime/operator UI remain",
+  "filesSHA256": {
+    "gateway/src/community-report-review-state.mjs": "626c2650a37291c8f8f8a6077a9d03745834e3f1ba4a9e99af9062ff53e089ed",
+    "gateway/src/community-report-review.mjs": "277da15a03eaa19e746b1b9bca04d3c1ba759680101e0ad301b46f4932220b4f",
+    "gateway/src/gateway-maintenance.mjs": "95568ed5e331f64778c4f97ffbf0e97b8fdd239b465138dbe5cab7fa80483e62",
+    "gateway/test/community-report-review.test.mjs": "089d42b6300a6c2f4e4cc1a9c667993abd59c1f2a77eca27b13e5663e5cfb516",
+    "gateway/test/community-report-decisions.test.mjs": "ee1540400707c3de5fc80c2691789578ea0da4c491386d3645e0ea3de9c8b82b",
+    "gateway/test/support/community-report-review-fixture.mjs": "cf7b4ae729f7a1a39dd54881e5142014226e8b1155c417374685cb3ae42b76bc"
+  },
+  "newTestFunctions": 21,
+  "fullSuite": {
+    "node22": {
+      "runtime": "22.23.5",
+      "tests": 726,
+      "passed": 726,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-report-decisions-final-node22.log",
+      "sha256": "d60b6969647c809ca3ec55bd3b791ba07bdbd00a9e9882f4e0d9c6a4fe2c3687"
+    },
+    "node24": {
+      "runtime": "24.22.1",
+      "tests": 726,
+      "passed": 726,
+      "failed": 0,
+      "skipped": 0,
+      "path": "/private/tmp/echoes-report-decisions-final-node24.log",
+      "sha256": "345b4946c8034b5e5a007d3580150a4bc7b997b51c6968b35a9c1e8201e1cdda"
+    }
+  },
+  "coverage": [
+    "server-verified short-lived content commitment bound to original operator/session; no report reason, message text, GPS or session tokens in SQL",
+    "single-transaction hide policy plus immutable decision; SQL failure after policy update rolls back both",
+    "dismissal, exact idempotency, conflict across verdict/operator/decisionID/material and globally reused ID",
+    "recovery confirmed/not-applied/superseded, including new same-account session after receipt expiry",
+    "lost durability ACK after commit and role revocation after commit never pretend the effect was undone",
+    "two competing inspected operators have one atomic winner",
+    "independent 10/min/256-row budget survives inspection deletion; unverified/false/undefined/Promise authority denied",
+    "actual file reopen retains decision/revision without receipt or network",
+    "bounded local maintenance deletes erased/expired report metadata without provider access or unhiding content"
+  ],
+  "storage": "actual local SQLite transactions and a real file reopen; no power-loss or hosted PITR acceptance",
+  "providers": "actual signatures/parser with explicit synthetic Apple/accounts; no remote Apple or Cloudflare traffic",
+  "metadataRetention": {
+    "inspectionMaximumMilliseconds": 90000,
+    "inspectionMaximumRows": 256,
+    "budgetMaximumRows": 256,
+    "budgetExpiresByEndOfNextMinute": true,
+    "decisionExpiresWithReport": true,
+    "purgePerPass": {
+      "inspections": 256,
+      "decisions": 100
+    },
+    "doesNotUnhideMessage": true
+  },
+  "boundaries": {
+    "HTTPOrDecisionRuntimeInstalled": false,
+    "localAlarmPurgeIntegrated": true,
+    "humanViewingProven": false,
+    "rolesOrCredentialsChanged": false,
+    "newServiceOrDeployment": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "iOS/Swift/UI/Debug/Release",
+    "dependencies/CI"
+  ],
+  "remaining": [
+    "restricted HTTP/edge/runtime admission, quotas and separate operator configuration",
+    "native moderation UI and durable decision intent/recovery",
+    "actual SIWA/operator sessions/A-B/hosted Free and whole migration acceptance"
+  ]
+}
