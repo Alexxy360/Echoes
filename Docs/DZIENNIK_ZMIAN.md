@@ -886,3 +886,21 @@ Pliki: gateway/src/public-record-schema.mjs, gateway/src/cloudkit-public-client.
 Weryfikacja: pełne643/643 Node22.23.5 i643/643 Node24.22.1, rzeczywisty lokalny SQLite/crypto/workerd z syntetycznymi providerami/tożsamościami, bez odbioru Apple query. Kontrole składni wszystkich tracked MJS gateway i czterech JSON oraz deterministyczne porównanie aktualnego pliku z wejściem i raportem opisuje [raport](evidence/community-schema-repair-local-tests.json).
 
 Granice: poprawiony import, zapytania/assety Apple, odrębna tożsamość/ACL A-B i Free nadal niezaliczone. Bez nowych kluczy/sekretów, rekordów, SDK telefonu, wdrożenia/aktywacji/usług/opłat, Production, Firebase i TestFlight. iOS/deps/CI niezmienione; ich testów/kompilacji nie ponawiano. Zastaną zmianę projektu zachowujemy. [Wynik i dokładny zakres ponowienia](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md).
+
+
+## CK-05a.4c — 2026-11-19 — udany import Development i kontrola eksportu
+
+Cel: wykonać osobno zatwierdzone ponowienie poprawionego schematu i udowodnić zgodność faktycznie zapisanych definicji.
+
+Wykonano:
+
+1. Po zgodzie właściciela na SHA26b06f38…/commit a2ee716 przywrócono kartę dotychczasowej konsoli, bez ponownego logowania. Potwierdzono zespół22YC9RAP4P, iCloud.mpvEcho.Echo i Development. Świeży eksport2396 B był zgodny bajtowo ze źródłem0138e853…; plik importu miał zatwierdzone SHA.
+2. Wgrano poprawiony plik, odczytano Validation Passed i potwierdzono checkbox przez jednoznaczny locator. Jedna ponowna próba końcowego Import zakończyła się komunikatem The schema was successfully imported. Modal sukcesu wymagał Close, dlatego oczekiwanie na samo ukrycie modala nie było właściwym sygnałem; odczytano faktyczny wynik zamiast powtarzać import.
+3. Pobrano eksport kontrolny8657 B/SHA6ee9f8e0…. verifyInstalledCommunitySchema na Node22.23.5 potwierdził13 typów i2 role: wcześniejsze pięć typów z wszystkimi polami/indeksami/prawami zachowane, obie role zachowane, osiem nowych typów i granty zgodne z zatwierdzoną propozycją. Apple dodał nieindeksowane pola systemowe nowych typów i przestawił format/kolejność; nie ignorowano pól biznesowych, indeksów ani praw.
+4. Zachowano eksport, raport odbioru i obejrzany zrzut sukcesu z widocznym kontenerem/Development. Zaktualizowano bieżący status i procedurę; historia częściowego błędu pozostaje w poprzednim wpisie i dowodach.
+
+Pliki: gateway/schema/development-installed-20261119.ckdb, Docs/evidence/community-schema-installed-acceptance.json, Docs/evidence/community-schema-import-success.jpg, Docs/SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md, Docs/ODBIOR_SCHEMATU_RETENCJI_DEVELOPMENT.md oraz ten dziennik i plan.
+
+Weryfikacja: rzeczywista walidacja/import Apple i ścisłe porównanie eksportu po zapisie, raport JSON poprawny. Kod produktu/testów/deps/CI bez zmian; pełnych643/643 obu Node z a2ee716 ani iOS/Debug/Release nie ponawiano i nie przedstawiano jako nowych wyników.
+
+Granice: nie przypisywano roli tożsamościom, nie tworzono kluczy/sekretów ani rekordów. Nie wykonywano resetu, zmian Production, wdrożenia/aktywacji/usług/opłat, SDK telefonu, migracji Firebase lub TestFlight. Sama deklaracja grantów nie jest dowodem realnego ACL dwóch zwykłych kont. Zapytania/indeksy w ruchu, CRUD/CAS/usuwanie pól, ASSET, odrębna tożsamość i Free nadal wymagają odbioru. Zastaną zmianę projektu zachowujemy. [Pełny aktualny zakres i dowody](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md).

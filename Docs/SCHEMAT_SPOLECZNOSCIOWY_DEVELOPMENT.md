@@ -1,6 +1,6 @@
-# Propozycja schematu społecznościowego Development — CK-05a.4a–b
+# Schemat społecznościowy Development — CK-05a.4a–c
 
-19 listopada 2026, Europe/Warsaw. **Pierwszy import odrzucony z częściowym zapisem; poprawka przygotowana lokalnie, jeszcze niewysłana do Apple.** To etap przygotowania bazy dla migracji, a nie uruchomienie nowego backendu.
+19 listopada 2026, Europe/Warsaw. **Poprawiony schemat zaimportowany do Development i porównany z eksportem kontrolnym.** Pierwsza próba była częściowo odrzucona; jej wynik i poprawkę zachowano poniżej. To odbiór definicji bazy, a nie działających zapytań, ACL kont lub uruchomienie nowego backendu.
 
 ## Rzeczywisty punkt wyjścia
 
@@ -12,7 +12,9 @@ Pierwotny plik z commitu `62798c9`, 6296 bajtów i SHA-256 `a5d491ea66ce111485cf
 
 Eksport po błędzie [development-after-failed-import-20261119.ckdb](../gateway/schema/development-after-failed-import-20261119.ckdb) ma 2396 bajtów, SHA-256 `0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd`. Porównanie potwierdza te same pięć typów ze wszystkimi wcześniejszymi polami/indeksami/prawami, tę samą rolę diagnostyczną i jedną nową rolę `EchoesCommunityService`. Ośmiu nowych typów nie ma. Nie przypisywano roli kontom/kluczom; sam eksport nie dowodzi jej składu. Nie wykonywano resetu ani usuwania roli. [Wynik próby i zrzut](evidence/community-schema-import-attempt-20261119.json).
 
-Aktualny poprawiony [plik proponowanego importu](../gateway/schema/community-development-proposed.ckdb) ma 6355 bajtów, SHA-256 `26b06f38f2de80269d7e1c73d5e439294df3016298a990aa41704ecade1b45f3`. Zaczyna się całym niezmienionym eksportem po błędzie, zachowuje obie role i dopisuje poniższe typy. [Raport maszynowy](evidence/community-development-schema-proposal.json) zawiera kompletny aktualny inwentarz. Ponowienie dotyczy tego poprawionego pliku; zgoda na wcześniejsze SHA nie oznacza jego zatwierdzenia.
+Poprawiony [plik importu](../gateway/schema/community-development-proposed.ckdb) ma 6355 bajtów, SHA-256 `26b06f38f2de80269d7e1c73d5e439294df3016298a990aa41704ecade1b45f3`. Zaczyna się całym niezmienionym eksportem po błędzie, zachowuje obie role i dopisuje poniższe typy. [Raport przygotowania](evidence/community-development-schema-proposal.json) zawiera kompletny inwentarz z chwili przygotowania. Właściciel osobno zatwierdził tę wersję z commitu `a2ee716`. Po ponownym sprawdzeniu źródła Apple pokazał `Validation Passed`, a jedna próba końcowego importu zakończyła się komunikatem sukcesu.
+
+[Eksport po udanym imporcie](../gateway/schema/development-installed-20261119.ckdb) ma 8657 bajtów, SHA-256 `6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025`. Kontrola semantyczna potwierdza wszystkie 13 typów i obie role: pięć wcześniejszych typów/pól/indeksów/praw zachowanych oraz osiem nowych typów zgodnych z zatwierdzonym kontraktem. Apple dodał zwykłe nieindeksowane pola systemowe nowych typów i zmienił kolejność/formatowanie. Nie pominięto różnic w polach biznesowych, indeksach ani grantach. [Dowód odbioru](evidence/community-schema-installed-acceptance.json), [potwierdzenie Apple](evidence/community-schema-import-success.jpg).
 
 ## Co dokładnie dopisujemy
 
@@ -40,7 +42,7 @@ Zachowujemy wszystkie istniejące typy, ich pola, indeksy i prawa, w tym prywatn
 | `EchoesPresenceV1` | `___recordID`, `location`, `erased`, `expiresAt`, `active` | `recordSortKey`, `location`, `expiresAt`, `updatedAt` |
 | `EchoesLocalMessageV1` | `___recordID`, `location`, `erased`, `expiresAt`, `createdAt` | `recordSortKey`, `location`, `expiresAt`, `createdAt` |
 
-Indeksy odpowiadają aktualnemu builderowi `CloudKitPublicClient.regionalCandidates`: NEAR po przybliżonym położeniu, filtrowanie aktualności/aktywności i sortowanie po czasie oraz `recordSortKey`. Serwer zapisuje w tym polu dokładne ID własnego rekordu; klient nie może go narzucić. Kolejność remisów pozostaje zgodna z kursorem, a bariery usuwania/retencji usuwają tę wartość. `___recordID` ma wyłącznie QUERYABLE; nie próbujemy ponownie ustawiać odrzuconego SORTABLE na REFERENCE. Pozostałe typy używają odczytu dokładnego ID. Testy nie emulują silnika indeksów Apple. Akceptacja poprawionego importu i kombinacji zapytań/stronicowania przez CloudKit pozostaje do potwierdzenia; [opis protokołu Apple](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/QueryingRecords.html).
+Indeksy odpowiadają aktualnemu builderowi `CloudKitPublicClient.regionalCandidates`: NEAR po przybliżonym położeniu, filtrowanie aktualności/aktywności i sortowanie po czasie oraz `recordSortKey`. Serwer zapisuje w tym polu dokładne ID własnego rekordu; klient nie może go narzucić. Kolejność remisów pozostaje zgodna z kursorem, a bariery usuwania/retencji usuwają tę wartość. `___recordID` ma wyłącznie QUERYABLE; nie próbujemy ponownie ustawiać odrzuconego SORTABLE na REFERENCE. Pozostałe typy używają odczytu dokładnego ID. Testy nie emulują silnika indeksów Apple. Import przyjęto, lecz rzeczywiste kombinacje zapytań/stronicowanie i aktualność indeksu nadal wymagają odbioru; [opis protokołu Apple](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/QueryingRecords.html).
 
 ## Weryfikacja lokalna
 
@@ -50,12 +52,12 @@ Pierwsze osiem testów z CK-05a.4a zachowano jako [historyczny wynik dla commitu
 
 Kod gateway zmienia pole techniczne i descriptor zapytania; odpowiedzi aplikacji iOS pozostają te same. iOS, zależności i CI są niezmienione, ich wcześniejszych testów/kompilacji nie ponawiano. Nie powstał klucz, sekret ani rekord; nie instalowano aplikacji. W Apple powstała opisana wyżej rola. Trzy początkowe wersje nowego testu miały błędne założenia o limicie odczytów, przygotowaniu polityki wiadomości i prezentacji strony w porządku czatu; poprawiono fixture/oczekiwania, zachowując zabezpieczenia produktu.
 
-## Kolejność po zatwierdzeniu tego konkretnego zakresu
+## Wykonana kolejność importu i dalszy odbiór
 
-1. Ponownie sprawdzić zespół/kontener/Development i pobrać świeży eksport. Wymagane SHA źródła `0138e853…`; przy różnicy zatrzymać import i przygotować nowy diff.
-2. Zweryfikować, że wskazany plik importu ma zatwierdzone SHA. Sprawdzić ekran importu Apple; jeśli narzędzie nie udostępnia osobnej walidacji, nie deklarować jej przeprowadzenia. Brak management tokenu nie uprawnia do utworzenia nowego.
-3. Zaimportować wyłącznie poprawkę SHA `26b06f38…` w Development po konkretnej zgodzie właściciela. Nie używać Reset Schema ani Deploy/Production. Błąd Apple oznacza analizę i poprawioną propozycję; nie poszerzać praw ani zakresu w celu obejścia błędu.
-4. Także po błędzie wykonać eksport kontrolny, ponieważ import może być częściowy. Po sukcesie porównać pięć wcześniejszych typów, obie role oraz osiem nowych typów, pola, indeksy i granty. CloudKit może dodać do nowych typów systemowe pola; trzeba je jawnie uwzględnić przy porównaniu, bez pomijania różnic w prawach.
-5. Zachować wynik i osobno przygotować ograniczony test syntetycznych rekordów/assetów oraz uprawnienia tożsamości serwerowej. Zgoda na sam schemat **nie obejmuje** rekordów, przypisania ról, nowych kluczy lub przekazania sekretów.
+1. Wykonano: ponowne sprawdzenie zespołu/kontenera/Development i świeży eksport; SHA źródła `0138e853…` zgodne z przejrzanym wejściem.
+2. Wykonano: dokładne SHA zatwierdzonego pliku `26b06f38…`, wgranie i wstępna walidacja Apple. Nie tworzono management tokenu.
+3. Wykonano: jedna ponowna próba końcowego importu, potwierdzona sukcesem. Bez Reset Schema ani Deploy/Production.
+4. Wykonano: eksport kontrolny `6ee9f8e0…`, ścisłe porównanie pięciu wcześniejszych typów, obu ról, ośmiu nowych typów/pól/indeksów/grantów. Także po przyszłym błędzie trzeba wykonać eksport, ponieważ poprzednia próba była częściowa.
+5. Dalej: osobno przygotować ograniczony test syntetycznych rekordów/assetów oraz uprawnienia tożsamości serwerowej. Zgoda na sam schemat **nie obejmuje** rekordów, przypisania ról, nowych kluczy lub przekazania sekretów.
 
-Import pozostawi definicje typów w Development. Nie planujemy ich automatycznego usuwania przy wyłączeniu funkcji. Odbiór ACL dwóch zwykłych kont, odrębna tożsamość serwera, rzeczywiste zapytania/assety i pomiary Free pozostają otwarte. Dysponujemy jednym kontem operatora, które nie zastępuje tych testów. Flagi usług pozostają `0`; brak Production, migracji danych Firebase, wdrożenia gateway, nowych usług lub opłat.
+Zaimportowane definicje typów pozostają w Development. Nie planujemy ich automatycznego usuwania przy wyłączeniu funkcji. Odbiór ACL dwóch zwykłych kont, odrębna tożsamość serwera, rzeczywiste zapytania/assety i pomiary Free pozostają otwarte. Dysponujemy jednym kontem operatora, które nie zastępuje tych testów. Flagi usług pozostają `0`; brak Production, migracji danych Firebase, wdrożenia gateway, nowych usług lub opłat.

@@ -1,0 +1,65 @@
+{
+  "phase": "CK-05a.4c",
+  "dateEuropeWarsaw": "2026-11-19",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "approvedProposalCommit": "a2ee716a7b7d957772bb7130a16f3b6b3259843c",
+  "approvedProposalSHA256": "26b06f38f2de80269d7e1c73d5e439294df3016298a990aa41704ecade1b45f3",
+  "freshBeforeExportSHA256": "0138e853eb0dd20de0aab908c9a1d90e24c0ba7e97005f6c30423f4c90e45ddd",
+  "freshBeforeMatchedReviewedSource": true,
+  "appleUploadValidation": "Validation Passed",
+  "finalImportSubmissions": 1,
+  "appleImportResult": "The schema was successfully imported.",
+  "importSucceeded": true,
+  "afterExport": {
+    "path": "gateway/schema/development-installed-20261119.ckdb",
+    "sha256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025",
+    "bytes": 8657,
+    "typeCount": 13,
+    "roleCount": 2
+  },
+  "verification": {
+    "method": "verifyInstalledCommunitySchema with reviewed pre-import source and preserveExistingServiceRole:true; Node22.23.5",
+    "passed": true,
+    "allFiveEarlierTypeFieldsIndexesGrantsPreserved": true,
+    "bothExistingRolesPreserved": true,
+    "eightNewTypesMatchApprovedFieldsIndexesAndGrants": true,
+    "onlyIgnoredDifferences": "definition/field/option/right order and whitespace; six known unindexed implicit CloudKit system fields on new types",
+    "ordinaryPublicRolesGrantedOnNewTypes": false
+  },
+  "newTypes": [
+    "EchoesPublicProfileV1",
+    "EchoesPresenceV1",
+    "EchoesLocalMessageV1",
+    "EchoesBlockV1",
+    "EchoesReportV1",
+    "EchoesAvatarV1",
+    "EchoesAvatarProfileV1",
+    "EchoesRegistryCheckpointV1"
+  ],
+  "roleAssignmentsPerformed": false,
+  "roleMembershipsVerified": false,
+  "recordOperationsPerformed": false,
+  "newKeysOrSecrets": false,
+  "gatewayActivationOrDeployment": false,
+  "productionChanged": false,
+  "screenshots": {
+    "Docs/evidence/community-schema-import-success.jpg": {
+      "sha256": "b3747a2418cb7f400ce0aaf716dc41c7f228a46af1690444a82518abf275c1e6",
+      "visuallyReviewed": true
+    }
+  },
+  "productCodeChangedSinceApprovedProposal": false,
+  "fullSuitesNotRepeated": "643/643 on each Node applies to unchanged code at a2ee716; only real schema import and read-back acceptance performed in this phase",
+  "notAccepted": [
+    "actual regional query/continuation behavior and async index readiness",
+    "CloudKit record CRUD/CAS/field removal and ASSET handling",
+    "separate service identity and key lifecycle",
+    "ordinary accounts A/B ACL enforcement",
+    "hosted alarm and Free capacity measurements",
+    "Production/TestFlight readiness"
+  ]
+}
