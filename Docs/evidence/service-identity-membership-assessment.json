@@ -1,0 +1,30 @@
+{
+  "phase": "CK-01l",
+  "dateEuropeWarsaw": "2026-11-19",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo"
+  },
+  "observed": {
+    "membershipProgram": "Apple Developer Program",
+    "enrolledAs": "Individual",
+    "containerTeamMemberCount": 1,
+    "membershipAndContainerPermissionsReadOnly": true
+  },
+  "userConfirmed": "publishes as an individual; no organization available",
+  "sources": [
+    "https://developer.apple.com/help/account/access/roles/",
+    "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/SettingUpWebServices.html",
+    "https://developer.apple.com/help/account/membership/program-enrollment/"
+  ],
+  "inference": "An ordinary second Apple Account invited to App Store Connect is not a verified route to a separate S2S creator identity in this Individual team.",
+  "proposedAlternative": "owner account is explicitly privileged administrator; separate credentials remain tied to the same iCloud identity; ordinary A/B accounts remain required",
+  "alternativeAccepted": false,
+  "separateServiceIdentityRequirementSatisfied": false,
+  "roleAssignmentsPerformed": false,
+  "credentialChangesPerformed": false,
+  "remoteAccountChangesPerformed": false,
+  "servicesActivated": false,
+  "productionChanged": false,
+  "personalContactDetailsStored": false
+}

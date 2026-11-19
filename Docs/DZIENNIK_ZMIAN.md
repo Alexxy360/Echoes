@@ -904,3 +904,16 @@ Pliki: gateway/schema/development-installed-20261119.ckdb, Docs/evidence/communi
 Weryfikacja: rzeczywista walidacja/import Apple i ścisłe porównanie eksportu po zapisie, raport JSON poprawny. Kod produktu/testów/deps/CI bez zmian; pełnych643/643 obu Node z a2ee716 ani iOS/Debug/Release nie ponawiano i nie przedstawiano jako nowych wyników.
 
 Granice: nie przypisywano roli tożsamościom, nie tworzono kluczy/sekretów ani rekordów. Nie wykonywano resetu, zmian Production, wdrożenia/aktywacji/usług/opłat, SDK telefonu, migracji Firebase lub TestFlight. Sama deklaracja grantów nie jest dowodem realnego ACL dwóch zwykłych kont. Zapytania/indeksy w ruchu, CRUD/CAS/usuwanie pól, ASSET, odrębna tożsamość i Free nadal wymagają odbioru. Zastaną zmianę projektu zachowujemy. [Pełny aktualny zakres i dowody](SCHEMAT_SPOLECZNOSCIOWY_DEVELOPMENT.md).
+
+
+## CK-01l — 2026-11-19 — ograniczenia członkostwa Individual i model do decyzji
+
+Cel: ustalić wykonalną ścieżkę tożsamości serwera przed nadaniem roli do nowego schematu.
+
+Odczytano Container Permissions (jeden członek zespołu) i Membership details (Apple Developer Program, Individual,22YC9RAP4P), bez zmiany checkboxów, konta i członkostwa. Właściciel potwierdził, że publikuje jako osoba fizyczna i nie ma organizacji. Zweryfikowano oficjalne zasady Apple: dodatkowy użytkownik App Store Connect nie staje się członkiem indywidualnego zespołu Developer; CloudKit S2S dziedziczy tożsamość twórcy klucza. Nie obiecano utworzenia osobnego konta serwera samym zaproszeniem drugiego AppleID.
+
+Przygotowano MODEL_UPRAWNIEN_INDIVIDUAL.md z konkretnym wariantem konta właściciela jako administratora i oddzielnymi kluczami. Jawnie opisano prawa również z SDK urządzenia właściciela, brak pełnego oddzielenia tożsamości, nadal wymagane nieuprzywilejowane A/B oraz skutki nadania roli dla starego klucza diagnostycznego. Wariant nie jest przyjęty i nie zmienia samodzielnie wcześniejszego wymagania. Ewentualne operacje ról/wycofania lub utworzenia kluczy i prób wymagają osobnego przygotowania i konkretnych zgód.
+
+Pliki: Docs/MODEL_UPRAWNIEN_INDIVIDUAL.md, Docs/evidence/service-identity-membership-assessment.json oraz ten dziennik i plan. Weryfikacja: rzeczywiste metadane konta/zespołu, odpowiedź właściciela, trzy źródła Apple, JSON i lokalne odnośniki poprawne. Nie zapisano adresu e-mail ani innych danych kontaktowych konta. Kod produktu/testów/deps/CI niezmieniony; testów/kompilacji nie ponawiano.
+
+Bez zmian uprawnień/członkostwa, nowych lub odwołanych kluczy/sekretów, rekordów, SDK telefonu, aktywacji/usług/opłat, Production, Firebase i TestFlight. Odrębna tożsamość serwisowa i A/B niezaliczone; zastaną zmianę projektu zachowujemy.
