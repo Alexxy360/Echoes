@@ -1,0 +1,13 @@
+# Niepotwierdzone anulowanie klienta CloudKit — CK-05c.3a
+
+19 listopada 2026. Przegląd przy podłączaniu poufnego HTTP wykrył dwie luki we wspólnym `CloudKitPublicClient`: niepoprawny Content-Type uruchamiał cancel bez await, a odrzucone cancel czytnika i odpowiedzi były ignorowane. `waitForPendingOperations()` mógł wtedy potwierdzić zakończenie mimo braku potwierdzenia anulowania. [Dowody poprawki](evidence/cloudkit-public-drain-local-tests.json).
+
+Odpowiedź jest teraz objęta jednym finally także przed parserem: HTTPerror, zły MIME, nadmierny Content-Length, późna odpowiedź po abort i poprawny odczyt czekają na faktyczny cancel. Pending pozostaje zajęty do jego końca. Odmowa cancel lub obca blokada czytnika ustawia nieodwracalny dla tej instancji stan unsafeDrain. Odtąd kontrola klienta odrzuca kolejne wywołania przed podpisaniem/siecią, a waitForPendingOperations zwraca redagowany PUBLIC_UNAVAILABLE zamiast pozytywnego potwierdzenia.
+
+Nie dodano resetu ani automatycznej wymiany klienta. Wznowienie wymaga zakończenia starej instancji środowiska; trwałe intencje zachowują dotychczasowe zasady nieznanego wyniku i recovery. Wyjątek nie cofa już wysłanego zapisu. Sam błąd JSON z prawidłowo ukończonym anulowaniem nie oznacza niepotwierdzonego IO i pozwala na późniejsze poprawne wywołanie.
+
+Aktywacja musi zwracać synchronicznie dokładnie true. Prawdziwe Promise, odrzucone Promise, truthy liczba lub wyjątek nie mogą rozpocząć żądania. Ponowna kontrola znajduje się też przed fetch. Nie zmieniono adresów Development/public, kontraktów rekordów, wielkości partii lub retry.
+
+Osiem nowych funkcji, target8/8obu wersji, pełne **750/750 Node22.23.5 i750/750 Node24.22.1**. Rzeczywiste ReadableStream/Response/AbortController i deferred/rejected cancel: trzy ścieżki przed parserem, failedcancel odpowiedzi i czytnika, obcy locked body, późny fetch po abort, asynchroniczna aktywacja oraz zdrowe ponowne żądanie po zwykłym błędzie JSON. Integracja poufnego HTTP potwierdza zachowanie busy oraz brak kolejnych wywołań providera/checkpoint po niepotwierdzonym drain.
+
+Wszystkie dane, konta, klucze i dostawcy tych prób są syntetyczne; nie kontaktowano Apple/Cloudflare i nie uruchamiano ponownie zatwierdzonej wcześniej próby Development. Istniejące testy lokalnego workerd pozostały zielone. To regresja kodu, nie odbiór hostowanego anulowania, PITR, A/B lub Free. iOS, deps/CI i konfiguracja wyłączonych usług nie zmieniły się; ich testów/kompilacji nie ponawiano. Zastana zmiana projektu pozostała zachowana. Następnie natywny kontrakt/panel moderatora z trwałym intent/recovery oraz wszystkie pozostałe realne odbiory planu.

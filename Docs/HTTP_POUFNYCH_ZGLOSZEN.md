@@ -1,6 +1,6 @@
 # HTTP i Runtime poufnych zgłoszeń — CK-05c.3
 
-19 listopada 2026. **Trasy są podłączone do lokalnego kodu edge/Authority/Runtime i sprawdzone w rzeczywistym lokalnym workerd.** Konfiguracja wdrożeniowa ma REPORT_REVIEW_ENABLED=0 i REPORT_REVIEWER_IDS_JSON=[]; żadnej roli moderatora ani usługi nie aktywowano. [Wyniki](evidence/report-review-http-local-tests.json), [decyzje i recovery](DECYZJE_ZGLOSZEN_I_ODZYSKIWANIE.md).
+19 listopada 2026. **Trasy są podłączone do lokalnego kodu edge/Authority/Runtime i sprawdzone w rzeczywistym lokalnym workerd.** Konfiguracja wdrożeniowa ma REPORT_REVIEW_ENABLED=0 i REPORT_REVIEWER_IDS_JSON=[]; żadnej roli moderatora ani usługi nie aktywowano. Późniejszy [CK-05c.3a](ODPLYW_IO_KLIENTA_CLOUDKIT.md) domyka błędy anulowania wspólnego klienta CloudKit. [Wyniki HTTP](evidence/report-review-http-local-tests.json), [decyzje i recovery](DECYZJE_ZGLOSZEN_I_ODZYSKIWANIE.md).
 
 ## Kontrakt
 

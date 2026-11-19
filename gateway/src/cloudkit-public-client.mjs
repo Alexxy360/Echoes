@@ -9,7 +9,7 @@ const recordCodes = new Set(["NOT_FOUND", "EXISTS", "CONFLICT", "ACCESS_DENIED",
 const types = new Set([...Object.values(publicRecordTypes), checkpointRecordType]);
 /** Server-only, fixed Development/public target. It is never an HTTP proxy or a client signer. */
 export class CloudKitPublicClient {
-  #signer; #fetch; #enabled; #clock; #timeout; #pending = new Set();
+  #signer; #fetch; #enabled; #clock; #timeout; #pending = new Set(); #unsafeDrain = false;
   constructor({ container, environment, keyID, privateKeyPEM, fetchImplementation = fetch,
     isEnabled, clock = Date.now, timeoutMilliseconds = 8000 } = {}) {
     if (container !== "iCloud.mpvEcho.Echo" || environment !== "development" || typeof fetchImplementation !== "function" ||
@@ -19,24 +19,26 @@ export class CloudKitPublicClient {
     catch { throw new PublicRecordError(); }
     this.#fetch = fetchImplementation; this.#enabled = isEnabled; this.#clock = clock; this.#timeout = timeoutMilliseconds;
   }
-  #check(signal) { if (signal?.aborted || !this.#enabled()) throw new PublicRecordError(); }
+  #check(signal) {
+    if (this.#unsafeDrain || signal?.aborted) throw new PublicRecordError();
+    let enabled; try { enabled = this.#enabled(); } catch { throw new PublicRecordError(); }
+    if (enabled && typeof enabled.then === "function") { void Promise.resolve(enabled).catch(() => {}); throw new PublicRecordError(); }
+    if (enabled !== true) throw new PublicRecordError();
+  }
+  async #cancel(target) { try { await target?.cancel(); } catch { this.#unsafeDrain = true; } }
   async #json(response, signal) {
-    if (!(response instanceof Response) || !response.ok) {
-      await response?.body?.cancel().catch(() => {});
-      throw new PublicRecordError(response?.status === 429 ? "PUBLIC_THROTTLED" : "PUBLIC_UNAVAILABLE");
-    }
-    if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") || !response.body) {
-      void response.body?.cancel().catch(() => {}); throw new PublicRecordError("PUBLIC_RESPONSE");
-    }
-    const length = response.headers.get("Content-Length");
-    if (length !== null && (!/^\d+$/.test(length) || Number(length) > responseLimit)) {
-      await response.body.cancel().catch(() => {}); throw new PublicRecordError("PUBLIC_RESPONSE");
-    }
-    const reader = response.body.getReader(), parts = []; let size = 0, cancellation;
-    const cancel = () => cancellation ??= reader.cancel().catch(() => {});
-    const abort = () => { void cancel(); };
-    signal.addEventListener("abort", abort, { once: true });
+    if (!(response instanceof Response)) throw new PublicRecordError();
+    let reader, cancellation, abort;
     try {
+      this.#check(signal);
+      if (!response.ok) throw new PublicRecordError(response.status === 429 ? "PUBLIC_THROTTLED" : "PUBLIC_UNAVAILABLE");
+      if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") || !response.body) throw new PublicRecordError("PUBLIC_RESPONSE");
+      const length = response.headers.get("Content-Length");
+      if (length !== null && (!/^\d+$/.test(length) || Number(length) > responseLimit)) throw new PublicRecordError("PUBLIC_RESPONSE");
+      reader = response.body.getReader();
+      const cancel = () => cancellation ??= this.#cancel(reader);
+      abort = () => { void cancel(); }; signal.addEventListener("abort", abort, { once: true });
+      const parts = []; let size = 0;
       while (true) {
         this.#check(signal);
         const { value, done } = await reader.read();
@@ -51,7 +53,12 @@ export class CloudKitPublicClient {
       for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
       return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
     } finally {
-      signal.removeEventListener("abort", abort); await cancel(); reader.releaseLock();
+      if (reader) {
+        signal.removeEventListener("abort", abort); cancellation ??= this.#cancel(reader); await cancellation;
+        try { reader.releaseLock(); } catch { this.#unsafeDrain = true; }
+      } else if (response.body?.locked) this.#unsafeDrain = true;
+      else await this.#cancel(response.body);
+      if (this.#unsafeDrain) throw new PublicRecordError();
     }
   }
   async #call(operation, payload, names, parent) {
@@ -63,6 +70,7 @@ export class CloudKitPublicClient {
     try {
       const request = this.#signer.request(operation, payload, new Date(this.#clock()));
       const operationPromise = (async () => {
+        this.#check(controller.signal);
         const response = await this.#fetch(request, { signal: controller.signal });
         const body = await this.#json(response, controller.signal);
         if (!plain(body) || body.serverErrorCode || !Array.isArray(body.records) ||
@@ -93,7 +101,7 @@ export class CloudKitPublicClient {
     finally { clearTimeout(timer); controller.abort(); parent?.removeEventListener("abort", abort); }
   }
   /** Bounded callers retain their slot until actual fetch/body/cancellation work settles. */
-  async waitForPendingOperations() { await Promise.allSettled([...this.#pending]); }
+  async waitForPendingOperations() { await Promise.allSettled([...this.#pending]); if (this.#unsafeDrain) throw new PublicRecordError(); }
   async lookup(names, { metadataOnly = false, signal } = {}) {
     if (!Array.isArray(names) || names.length < 1 || names.length > 25 || new Set(names).size !== names.length ||
         names.some(name => typeof name !== "string" || !publicRecordName.test(name))) throw new PublicRecordError("PUBLIC_INPUT");
