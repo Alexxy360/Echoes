@@ -1,4 +1,4 @@
-# Konto Individual i tożsamość serwera — decyzja do zatwierdzenia
+# Konto Individual i tożsamość serwera — przyjęty model
 
 19 listopada 2026. **Model zatwierdzony przez właściciela: konto Individual z właścicielem jako administratorem backendu i oddzielnymi kluczami.** Nie nadano nowych ról, nie utworzono klucza ani nie aktywowano gateway. Właściciel potwierdził, że wydaje jako osoba fizyczna i nie dysponuje organizacją.
 
@@ -14,7 +14,7 @@ Wniosek z tych zasad i obecnej konfiguracji: zwykłe utworzenie drugiego Apple I
 
 Organization ma osobne wymagania, w tym kwalifikację podmiotu przez Apple; nie zakładamy ich spełnienia ani zmiany członkostwa. [Wymagania Apple](https://developer.apple.com/help/account/membership/program-enrollment/).
 
-## Proponowany wariant dla obecnego konta
+## Przyjęty wariant dla obecnego konta
 
 Po przedstawieniu skutków i rekomendacji właściciel odpowiedział „Tak, przyjmuję rekomendowany wariant”. Ta decyzja zastępuje wcześniejszy wymóg osobnego Apple ID serwera; nie jest dowodem jego utworzenia ani zgodą na konkretne operacje ról/kluczy. Testy dwóch nieuprzywilejowanych kont pozostają wymagane.
 

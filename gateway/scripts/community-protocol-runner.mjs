@@ -30,7 +30,7 @@ function records(body, names) {
   }
   return result;
 }
-function validWindow(window) {
+export function isCommunityProtocolWindow(window) {
   return plain(window) && Object.keys(window).sort().join() === "expiresAt,id,issuedAt,mode" && publicUUID.test(window.id ?? "") &&
     ["full", "cleanup"].includes(window.mode) && Number.isSafeInteger(window.issuedAt) && window.issuedAt >= 0 &&
     Number.isSafeInteger(window.expiresAt) && window.expiresAt > window.issuedAt && window.expiresAt - window.issuedAt <= 1800000;
@@ -40,7 +40,7 @@ function validState(state, plan) {
     phases.has(state.phase) && (state.errorCode === null || safeCodes.has(state.errorCode)) &&
     (state.cleanupWarning === undefined || safeCodes.has(state.cleanupWarning)) &&
     (state.unsafeCreateResponse === undefined || typeof state.unsafeCreateResponse === "boolean") &&
-    Number.isInteger(state.windowCalls) && state.windowCalls >= 0 && state.windowCalls <= 9 && state.windowCalls <= state.callsTotal && validWindow(state.window) &&
+    Number.isInteger(state.windowCalls) && state.windowCalls >= 0 && state.windowCalls <= 9 && state.windowCalls <= state.callsTotal && isCommunityProtocolWindow(state.window) &&
     Array.isArray(state.windowIDs) && state.windowIDs.length <= 8 && new Set(state.windowIDs).size === state.windowIDs.length &&
     state.windowIDs.every(id => publicUUID.test(id)) && state.windowIDs.includes(state.window.id) &&
     state.callsTotal <= state.windowIDs.length * 9 && Number.isSafeInteger(state.lastWall) && state.lastWall >= 0 && typeof state.createAttempted === "boolean" &&
@@ -57,7 +57,7 @@ function validState(state, plan) {
 export async function runCommunityProtocol({ journal, transport, window, isAuthorized = () => false, clock = Date.now,
   monotonic = () => performance.now(), signal, callMilliseconds = 8000 } = {}) {
   if (typeof journal?.snapshot !== "function" || typeof journal.write !== "function" || typeof journal.beginRun !== "function" || typeof journal.endRun !== "function" || typeof transport?.request !== "function" ||
-      typeof transport.waitForPendingOperations !== "function" || !validWindow(window) || typeof isAuthorized !== "function" ||
+      typeof transport.waitForPendingOperations !== "function" || !isCommunityProtocolWindow(window) || typeof isAuthorized !== "function" ||
       typeof clock !== "function" || typeof monotonic !== "function" || !Number.isInteger(callMilliseconds) || callMilliseconds < 1 || callMilliseconds > 8000) fail("PROTOCOL_SCOPE");
   const snapshot = journal.snapshot(), { plan, sha256 } = snapshot;
   let state = snapshot.state, storageFailed = false, drainFailed = false, drainVerified = false;

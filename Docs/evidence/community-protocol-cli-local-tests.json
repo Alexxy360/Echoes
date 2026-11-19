@@ -1,0 +1,73 @@
+{
+  "phase": "CK-05a.4g",
+  "dateEuropeWarsaw": "2026-11-19",
+  "baselineCommit": "509f8a66c83ee792c2f96bd6ebc336c928769162",
+  "status": "CLI/permit/report/recovery tested locally; concrete live scope prepared, not authorized or executed",
+  "runtimes": {
+    "node22": "22.23.5",
+    "node24": "24.22.1"
+  },
+  "fullSuite": {
+    "node22": {
+      "path": "/private/tmp/echoes-community-protocol-cli-final-node22.log",
+      "sha256": "a0f874dbd606d95c471cb97a3ed0825579504b611e2b6313404f3015bf91fbcd",
+      "tests": 691,
+      "passed": 691,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-community-protocol-cli-final-node24.log",
+      "sha256": "d9eba28910b9c2f75e314bcfa406bc5de00c9edaa65915b6a4eb5587728cbdbd",
+      "tests": 691,
+      "passed": 691,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "newTestFunctions": 12,
+  "filesSHA256": {
+    "gateway/scripts/community-protocol-cli.mjs": "d27e511a7afd5cbf5d9c1a6ecd4e823019c61a754d4a659159c6dfdb566639bd",
+    "gateway/scripts/community-protocol-files.mjs": "9b0627a92ba0c3c0e28ec0a5ff183310b6f9f5ef3a6540971caa61f913331b2a",
+    "gateway/scripts/community-protocol-runner.mjs": "6b269c4bbfc7caa8c41b23421d8f7ac4573c3a3bd82d4020987f1d357aae5546",
+    "gateway/test/community-protocol-cli.test.mjs": "f5e3753bed250ccc3e59e44f6ec105aeac40014a8104d11157aa66626b49db66"
+  },
+  "coverage": [
+    "no-network prepare/inspect, private durable inventory and opt-in refusal before file access",
+    "strict scope/hash/window/mode/freshness/known retired public identity and SPKI binding",
+    "private-file ownership/modes/no-follow/bounds and inventory tampering",
+    "nine real P-256 signatures with synthetic HTTP provider, durable receipt, no second create",
+    "revoked/expired permit after create stops IO; fresh cleanup only, preserves failed protocol result",
+    "atomic no-overwrite reservation/report, failure after IO is incomplete",
+    "real child CLI watchdog with substituted fetch: exit3 after window+8s, durable preflight_pending survives, no false cleanup"
+  ],
+  "provider": "explicit synthetic provider; no Apple or Cloudflare network; real child process/SQLite/files/crypto",
+  "testCredentials": "fresh ephemeral unregistered P-256 keys in private temporary directories, removed by teardown",
+  "publicOldKeyCheck": {
+    "privateKeyUsed": false,
+    "metadataAndPublicPEMRead": true,
+    "matchesPublicSPKISHA256": "8c42a2a2bcfc81ebff8ef0838923f84654ccf8dc8401777d9c26f51766e68b11"
+  },
+  "preparedLiveInventory": {
+    "planSHA256": "529f04556a612b06513b5418186345dd53b0fef3114ae416c20790d0622fbd26",
+    "records": 8,
+    "networkRequests": 0,
+    "windowActivated": false,
+    "privateJournalAndInventoryOutsideGit": true,
+    "permitCreated": false
+  },
+  "remote": {
+    "roleOrKeyChanges": false,
+    "serviceActivation": false,
+    "production": false
+  },
+  "unchangedNotRerun": [
+    "Swift/iOS/UI/Debug/Release",
+    "product gateway/dependencies/CI"
+  ],
+  "remaining": [
+    "read actual current key list and record consequences",
+    "specific old-key retirement/new-key/role/test approval",
+    "real Apple protocol, query, ASSET, ordinary accounts A/B and hosted Free acceptance"
+  ]
+}

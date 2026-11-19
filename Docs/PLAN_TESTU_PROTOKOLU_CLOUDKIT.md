@@ -1,6 +1,6 @@
 # Przygotowanie testu protokołu Development — CK-05a.4d
 
-19 listopada 2026. **Generator, weryfikator inwentarza, lokalny silnik z trwałym dziennikiem i adapter podpisanego HTTP są gotowe. CLI/permit i rzeczywisty test pozostają do przygotowania.** [Stan wykonawcy](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md), [transport](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). Nie uruchomiono operacji CloudKit, nie nadano roli i nie uzyskano nowego klucza. Model Individual zatwierdzono osobno w CK-01l.1.
+19 listopada 2026. **Generator, weryfikator inwentarza, lokalny silnik z trwałym dziennikiem i adapter podpisanego HTTP są gotowe. CLI/permit/raport są gotowe; rzeczywisty test nadal wymaga konkretnego zatwierdzenia. [CLI](CLI_TESTU_PROTOKOLU_CLOUDKIT.md), [zakres](ZAKRES_PROBY_COMMUNITY_DEVELOPMENT.md).** [Stan wykonawcy](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md), [transport](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). Nie uruchomiono operacji CloudKit, nie nadano roli i nie uzyskano nowego klucza. Model Individual zatwierdzono osobno w CK-01l.1.
 
 `gateway/scripts/community-protocol-plan.mjs` tworzy deterministyczny plan z nowego losowego runID, syntetycznego accountID i czasu. Nie ma transportu, dostępu do plików, sekretów, automatycznego uruchomienia ani aktywacji. Zwraca zamrożony plan i SHA-256; `verifyCommunityProtocolPlan` odtwarza jego treść z seed i odrzuca zmianę hash/scope/rekordów/pól/ograniczeń. **Hash wiąże inwentarz, nie dowodzi zgody użytkownika.**
 
@@ -23,7 +23,7 @@ Plan zastąpienia czterech rekordów retencji zawiera tylko schemaVersion, owner
 5. Nieznany wynik wymaga reconciliation dokładnego ID; nie uruchamia nowego create. Nierozstrzygnięty konflikt, brak dopasowania, anulowanie, upływ zgody lub błąd IO pozostawia jawny stan cleanup-pending i inwentarz do osobnego kontrolowanego odzyskania. Nie deklarować automatycznej skuteczności sprzątania.
 6. Plan przewiduje do dziewięciu wywołań batch, po maksymalnie osiem rekordów. Lokalny silnik egzekwuje licznik, okno, zegary, timer i czekanie na faktyczne IO; osobne cleanup wymaga nowego zatwierdzonego okna. Adapter HTTP egzekwuje ograniczone response/body i drain fetch/body/cancel. Samo pole constraints nie jest takim zabezpieczeniem.
 
-Lokalne failure/recovery opisują [CK-05a.4e](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md) i [CK-05a.4f](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). Nadal potrzebne są CLI/permit z własnymi testami, przygotowanie klucza/uprawnień i konkretna zgoda na operacje. Żadna dotychczasowa zgoda na import schematu lub model konta nie upoważnia do uruchomienia tego testu.
+Lokalne failure/recovery opisują [CK-05a.4e](WYKONAWCA_TESTU_PROTOKOLU_CLOUDKIT.md) i [CK-05a.4f](HTTP_TESTU_PROTOKOLU_CLOUDKIT.md). CLI/permit ma własne testy w CK-05a.4g. Nadal potrzebne są weryfikacja bieżącej listy kluczy, przygotowana zmiana klucza/uprawnień i konkretna zgoda na operacje. Żadna dotychczasowa zgoda na import schematu lub model konta nie upoważnia do uruchomienia tego testu.
 
 ## Weryfikacja przygotowania
 
@@ -32,3 +32,5 @@ Cztery testy generatora w CK-05a.4d zaliczone **4/4 na Node22.23.5 i 4/4 na Node
 Po dołączeniu adaptera CK-05a.4f pełny przebieg zaliczył **679/679 na obu wersjach Node**; [wyniki transportu](evidence/community-protocol-http-local-tests.json).
 
 Kod produktu iOS/gateway, zależności i CI są niezmienione; testów/kompilacji iOS nie ponawiano. W przygotowaniu generatora sprawdzano sam inwentarz, a później również lokalny wykonawca przeszedł opisane testy. Nadal nie wykonano rzeczywistego protokołu Apple, ACL, assetów lub Free. Pełny plan migracji i wszystkie te odbiory pozostają wymagane.
+
+CK-05a.4g: CLI/permit/raport/recovery zaliczyły12 nowych funkcji; pełne691/691 obu Node22/24. Przygotowano prywatny trwały inwentarz SHA529f0455… bez żądań lub aktywacji. [Kontrakt](CLI_TESTU_PROTOKOLU_CLOUDKIT.md), [dowody](evidence/community-protocol-cli-local-tests.json), [operacje do zatwierdzenia](ZAKRES_PROBY_COMMUNITY_DEVELOPMENT.md).
