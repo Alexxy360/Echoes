@@ -1,0 +1,186 @@
+{
+  "stage": "CK-05d.1c.2b.1",
+  "createdAt": "2026-11-19T19:13:34.008950+00:00",
+  "baselineCommit": "e9095dc8d466e6628496889f5f1ece57f0af0c34",
+  "backend": {
+    "Node22": "22.23.5",
+    "Node24": "24.22.1",
+    "previousFullEach": 814,
+    "fullEach": 838,
+    "passedEach": 838,
+    "failedEach": 0,
+    "cancelledEach": 0,
+    "skippedEach": 0,
+    "newFunctions": [
+      "cancellation of an unknown own nonce creates a content-free same-identity fence and blocks any later report",
+      "cancellation replaces exact own report by CAS and removes every content field",
+      "lost cancellation ACK recovers only from the exact remote fence without a second mutation",
+      "uncommitted cancellation stays unconfirmed and read-only recovery never creates its missing fence",
+      "another account's same UUID cannot cancel or recover the original reporter's record",
+      "cancellation requires synchronous true authorization before reservation checkpoint or provider IO",
+      "a delayed immutable CREATE cannot resurrect report content after cancellation fences its identity",
+      "a CAS conflict never force-writes and exact cancellation can be explicitly resumed",
+      "an untrusted fence response with extra content is never a cancellation confirmation",
+      "live report tampering or foreign type owner and identity are refused before replacing anything",
+      "cancelled receipt requires an extant exact fence rather than a cached local flag",
+      "cancellation survives session generation changes and registry repository re-instantiation",
+      "an older SQLite snapshot cannot reopen a cancelled nonce without its committed checkpoint",
+      "owner deletion cleans confirmed cancellation metadata in bounded pages without touching another account",
+      "account deletion after a lost cancellation ACK replaces its pending fence and removes cancellation metadata",
+      "an expired report fence can be explicitly closed as cancellation without resurrecting report data",
+      "account disable during fence IO cannot complete or acknowledge cancellation",
+      "cancellation fence uses only previously proposed CloudKit fields and stores no subject reason or location",
+      "cancellation migration is additive idempotent and preserves old reports and record counts",
+      "invalid cancellation metadata refuses registry startup instead of accepting a pretend terminal receipt",
+      "full own registry refuses an unknown cancellation reservation but still permits fencing an already registered report",
+      "unfinished cancellation retains the original thirty-day retention and background cleanup confirms its fence",
+      "an unseen cancellation has bounded retention even if its initial fence never reaches the provider",
+      "real local workerd SQLite signatures fence known and unseen report attempts and recover lost cancellation ACK without mutation and retain background expiry"
+    ],
+    "focused": 42,
+    "focusedPredatesFinalConstructorNonceBindingAssert": true,
+    "finalFullCoversLastHardening": true,
+    "syntaxMJSEach": 184
+  },
+  "internalOnly": {
+    "methods": [
+      "cancelAvatarReport",
+      "recoverAvatarReport cancellation branch"
+    ],
+    "HTTPOrCoordinatorRouteConnected": false,
+    "nativeContractOrJournalChanged": false,
+    "publicOutcomeContractUnchanged": true,
+    "notReadyForPublicActivation": true,
+    "next": "CK-05d.1c.2b.2 protected HTTP/Runtime and native cancelled/cancelling semantics before form1c.3"
+  },
+  "cancellation": {
+    "sameOwnRecordIdentityFromSessionAndRequestUUID": true,
+    "noCallerRecordNameTargetReasonPositionImage": true,
+    "strictSynchronousTrueMutationGuard": true,
+    "recheckOriginalAccountAndGenerationAfterAwait": true,
+    "checkpointBeforeProviderMutation": true,
+    "unknownNonceCountsAgainstExisting1000Owner10000TotalCaps": true,
+    "existingReportCanBeFencedWhenOwnerRegistryFull": true,
+    "unknown": "CREATE content-free fence at original recordName",
+    "known": "validate original immutable fields/hash then exact-tag CAS replacement",
+    "noDeleteOrForce": true,
+    "permanentRemoteFields": [
+      "schemaVersion",
+      "ownerKey",
+      "erased",
+      "retentionKey"
+    ],
+    "retentionKey": "domain-separated own cancellation marker",
+    "reportContentUUIDHashTimesClearedAfterFullFenceProof": true,
+    "noAcknowledgementFromCachedPrivateFlagOrPartialResponse": true,
+    "lostACKRecoveryDoesNotMutateRemoteFence": true,
+    "missingOrNonexactFenceRemainsUnconfirmed": true,
+    "delayedOriginalCREATECannotResurrectContent": true,
+    "sessionGenerationChangesAndRepositoryReinstantiation": "same SQLite process/connection, not process-restart/power-loss proof",
+    "oldSQLiteSnapshotRejectedByCommittedCheckpoint": true
+  },
+  "privateMigration": {
+    "additiveColumns": [
+      "avatar_report_cancel_key",
+      "avatar_report_cancel_tag"
+    ],
+    "oldDataAndCountsPreserved": true,
+    "idempotent": true,
+    "startupRejectsInvalidKindPhaseTagMarkerAndPendingNonceBinding": true,
+    "newCloudKitFieldsOrType": false,
+    "schemaProposalUnchangedAndNotImported": true
+  },
+  "retentionAndErasure": {
+    "pendingCancellationStillHasOriginal30DayDeadline": true,
+    "unknownReservationAlsoHasBoundedRetention": true,
+    "backfillScheduleAndRealProcessorIncludePendingCancellation": true,
+    "backgroundBuildsSameCancellationFenceAndConfirmsExactFullFields": true,
+    "expiredReportCanBeExplicitlyClosedWithoutContentResurrection": true,
+    "accountDeletionReplacesPendingCancellationFence": true,
+    "completedCancellationMetadataCleanupMaximumPerPage": 25,
+    "remainingTracksCancellationMetadataUntilGone": true,
+    "otherAccountPreserved": true
+  },
+  "workerd": {
+    "version": "1.20260730.1",
+    "actual": [
+      "DurableObject",
+      "SQLite additive migration and cancellation/retention SQL",
+      "P-256 signing and independent verification",
+      "authentication",
+      "registry/checkpoint/repository",
+      "retention processor"
+    ],
+    "synthetic": [
+      "Apple provider",
+      "accounts"
+    ],
+    "externalOutbound": "denied",
+    "knownReportCASAndUnknownNonceFenceTested": true,
+    "lostACKRecoveredWithoutExtraMutation": true,
+    "delayedCREATEGetsEXISTS": true,
+    "backgroundExpiresThirdPendingCancellation": true,
+    "reinstantiation": "same process and DO storage; not Cloudflare PITR or power-loss acceptance"
+  },
+  "negativeControl": {
+    "mutation": "isolated cancel implementation omits exact full fence field verification before local confirmation",
+    "executedFunctions": 1,
+    "failedFunctions": 1,
+    "assertions": 1,
+    "originalRepositoryPreserved": true
+  },
+  "correctedPreparationErrors": [
+    "An erasure test initially assumed a single batch would remove27 cancellation markers; verified first batch removes25/remainingtrue, advanced the existing one-second batch interval and completed the second page.",
+    "One workerd file-preparation invocation used root-relative paths from gateway directory and failed before writing. Its21 existing tests were not counted as workerd proof; corrected root, asserted both test paths exist and observed22 actual functions, then42 including records.",
+    "Review found that in-progress cancellation could bypass ordinary retention in erasing state; included it in backfill/schedule/claim and exact cancellation completion, with two new expiry regressions and actual workerd background case."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-report-cancellation.mjs": "79571f89e724ee9b1398733e1a1b62e214f7b9e7752990addbe3495def01133c",
+    "gateway/src/public-record-registry.mjs": "57bf272186e2550d391b039c1516fd20181285c9e7e1dea46ce3a41e8fffdf53",
+    "gateway/src/public-record-repository.mjs": "f4820495a103d19cbbdfb54ff16ee037c18fb966d76980a678b5590d500e1c9f",
+    "gateway/src/public-retention-processor.mjs": "befb587f8b64cd68faa0c666eaf130ab699e022fbda25148bea50676e8222921",
+    "gateway/test/avatar-report-cancellation.test.mjs": "84e61582a614432260d13d8fb6ae4137af0dfd8b4c3136f891ed70ed09c7c425",
+    "gateway/test/avatar-report-cancellation-workerd.test.mjs": "bbe706356495a91fe3c8bb98537c0ed81203fb980e697d8d8cfc3d192bff3ffc",
+    "gateway/test/support/avatar-report-cancellation-workerd-proof.mjs": "4bd357d9a73f16832c0f4837dadd1764907ad537ec41fb89771b14ac08ed286c",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "fb9310f3e9c5163eb59eff18132c1747995f065d09875d4e9fba337761b9da0c"
+  },
+  "logs": {
+    "fullNode22": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-full22-final.log",
+      "SHA256": "2d53db79ef0f3096c8b3bd437b7bd410e35dd4021898a0390aee0d2c247cfa63"
+    },
+    "fullNode24": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-full24-final.log",
+      "SHA256": "a46234188e40dac5073575da020714d4f76378958a2d1b228773a1305130c4ab"
+    },
+    "focusedBeforeLastHardening": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-target-final2.log",
+      "SHA256": "054df2729c093b508db15cb2160f3fc77f63467b5d364a0df3c9d5dbfb4ecd94"
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-negative.log",
+      "SHA256": "cd3e688814e1f5ad5061444f81c79af9e3a7057e8aa89114d3532f9b6f38d0a1"
+    },
+    "syntax": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-syntax-final.json",
+      "SHA256": "d3406e04788827317a515e06b7368a405f5b91ebea7f357df8bbcb53471d5ccd"
+    },
+    "initialBoundedErasureTest": {
+      "path": "/private/tmp/echoes-avatar-report-cancellation-target2.log",
+      "SHA256": "af12cbe252605e055123c748f695c69e894ff591dcbe82b29b8fbcecc67bbe78"
+    }
+  },
+  "nativeSwiftCoreUIChanged": false,
+  "nativeBuildAndUITestsRepeated": false,
+  "dependenciesCIChanged": false,
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "externalChanges": [],
+  "notAccepted": [
+    "cancel HTTP/Runtime flags quota deadlines retained IO admission",
+    "native cancelled result/cancelling journal state and API",
+    "foreground host/form and real mutation coupling",
+    "photo-report moderator",
+    "Apple schema import/privileges/hostedSIWA/ordinaryA-B/Free/query/ASSET/CDN/retention/physical device",
+    "Firebase removal/TestFlight readiness"
+  ]
+}

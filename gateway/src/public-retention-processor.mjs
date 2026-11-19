@@ -1,6 +1,10 @@
 import { PublicRecordError, plain, matchesFields, fieldValues, validTag } from "./public-record-schema.mjs";
+import { avatarReportCancellationFields } from "./avatar-report-cancellation.mjs";
 import { expiredPublicFields } from "./public-retention-policy.mjs";
 
+function fenceFields(lease) {
+  return lease.cancellationKey === undefined ? expiredPublicFields(lease.context) : avatarReportCancellationFields(lease.context, lease.cancellationKey);
+}
 function providerFailure(record) {
   return new PublicRecordError(["EXISTS", "CONFLICT", "NOT_FOUND"].includes(record?.serverErrorCode) ? "PUBLIC_CONFLICT" :
     record?.serverErrorCode === "THROTTLED" ? "PUBLIC_THROTTLED" : "PUBLIC_UNAVAILABLE");
@@ -74,13 +78,14 @@ export class CloudKitPublicRetentionProcessor {
           { metadataOnly: true, signal: controller.signal }), leases);
         check(); leases.forEach(current);
         const operations = leases.map(lease => {
-          const context = current(lease), record = found.get(context.recordName), fields = expiredPublicFields(context);
+          const context = current(lease), record = found.get(context.recordName), fields = fenceFields(lease);
           if (record?.serverErrorCode === "NOT_FOUND") return { operationType: "create", record: {
             recordName: context.recordName, recordType: context.recordType, fields } };
           if (record?.serverErrorCode) throw providerFailure(record);
           scopedRecord(record, context);
           const liveMetadata = fieldValues({ schemaVersion: 1, ownerKey: context.ownerKey, erased: 0 });
-          if (!matchesFields(record.fields, liveMetadata) && !matchesFields(record.fields, fields)) throw new PublicRecordError("PUBLIC_SCOPE");
+          if (!matchesFields(record.fields, liveMetadata) && !matchesFields(record.fields, fields) &&
+              !(lease.cancellationKey !== undefined && matchesFields(record.fields, expiredPublicFields(context)))) throw new PublicRecordError("PUBLIC_SCOPE");
           return { operationType: "replace", record: { recordName: context.recordName,
             recordType: context.recordType, recordChangeTag: record.recordChangeTag, fields } };
         });
@@ -92,7 +97,7 @@ export class CloudKitPublicRetentionProcessor {
           const context = current(lease), record = results.get(context.recordName);
           if (record?.serverErrorCode) { failure ??= providerFailure(record); continue; }
           scopedRecord(record, context);
-          if (!matchesFields(record.fields, expiredPublicFields(context))) throw new PublicRecordError("PUBLIC_RESPONSE");
+          if (!matchesFields(record.fields, fenceFields(lease))) throw new PublicRecordError("PUBLIC_RESPONSE");
           verified.push({ lease, tag: record.recordChangeTag });
         }
         for (const { lease, tag } of verified) {

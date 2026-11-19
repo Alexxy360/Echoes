@@ -2,6 +2,7 @@ import { PublicRecordError, publicUUID, publicRecordName, recordIdentity, record
 import { randomUUID } from "node:crypto";
 import { validCheckpoint, sameCheckpoint } from "./public-registry-checkpoint.mjs";
 import { publicRetentionDeadline, publicRetentionIntentKey, publicRetentionLeaseMilliseconds, publicRetentionSchema } from "./public-retention-policy.mjs";
+import { avatarReportCancellationKey, avatarReportCancellationFields } from "./avatar-report-cancellation.mjs";
 import { avatarRetirementDeadline, backfillAvatarRetirements, needsAvatarRetirementBackfill, expireAvatarTransferReceipts } from "./avatar-retirement-state.mjs";
 import { migrateAvatarSelectionExpiry, avatarSelectionExpirySchedule } from "./avatar-selection-expiry.mjs";
 
@@ -39,6 +40,18 @@ export class PublicRecordRegistry {
       if (existed && !this.#rows("SELECT name FROM sqlite_master WHERE type='table' AND name='avatar_asset_transfers_v1'").length &&
           this.#rows("SELECT record_name FROM public_records_v1 WHERE kind='avatar' LIMIT 1").length) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       for (const statement of [...schema, ...publicRetentionSchema]) storage.sql.exec(statement);
+      const cancellationColumns = new Set(this.#rows("PRAGMA table_info(public_records_v1)").map(row => row.name));
+      for (const name of ["avatar_report_cancel_key", "avatar_report_cancel_tag"]) {
+        if (!cancellationColumns.has(name)) storage.sql.exec(`ALTER TABLE public_records_v1 ADD COLUMN ${name} TEXT`);
+      }
+      for (const row of this.#rows("SELECT * FROM public_records_v1 WHERE avatar_report_cancel_key IS NOT NULL OR avatar_report_cancel_tag IS NOT NULL")) {
+        if (row.kind !== "avatarreport" || !["erasing", "erased"].includes(row.phase) ||
+            !/^[a-f0-9]{64}$/.test(row.avatar_report_cancel_key ?? "") ||
+            row.avatar_report_cancel_tag !== null && (row.phase !== "erased" || !validTag(row.avatar_report_cancel_tag) || row.record_tag !== row.avatar_report_cancel_tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        if (row.phase === "erasing" && (!publicUUID.test(row.request_id ?? "") ||
+            row.avatar_report_cancel_key !== avatarReportCancellationKey(row.account_id, row.request_id) ||
+            row.record_name !== recordIdentity(row.account_id, "avatarreport", row.request_id).recordName)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+      }
       migrateAvatarSelectionExpiry(storage);
       if (!this.#rows("PRAGMA table_info(public_records_v1)").some(row => row.name === "asset_claims")) {
         // NULL marks legacy avatar attempts: unknown claim history cannot safely authorize new uploads.
@@ -229,6 +242,94 @@ export class PublicRecordRegistry {
       this.#enqueueRetention(context); return context;
     });
     await this.#durable(); return result;
+  }
+  #avatarReportCancellation(accountID, requestID, generation = this.#active(accountID)) {
+    const identity = recordIdentity(accountID, "avatarreport", requestID), key = avatarReportCancellationKey(accountID, requestID);
+    this.#active(accountID, generation);
+    const row = this.#row(identity.recordName);
+    if (!row || row.avatar_report_cancel_key === null) return null;
+    if (row.account_id !== accountID || row.kind !== "avatarreport" || row.avatar_report_cancel_key !== key ||
+        !["erasing", "erased"].includes(row.phase) || row.avatar_report_cancel_tag !== null &&
+        (row.phase !== "erased" || !validTag(row.avatar_report_cancel_tag) || row.avatar_report_cancel_tag !== row.record_tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    if (row.phase === "erased" && !validTag(row.record_tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+    return Object.freeze({ ...identity, requestID, generation, cancellationKey: key,
+      cancellationTag: row.avatar_report_cancel_tag, recordTag: row.record_tag,
+      state: row.avatar_report_cancel_tag === null ? "pending" : "settled",
+      content: row.phase === "erased" ? null : this.#context(row) });
+  }
+  /** No arbitrary names. The row/count checkpoint permanently reserves the original own nonce. */
+  async beginAvatarReportCancellation(accountID, requestID) {
+    const identity = recordIdentity(accountID, "avatarreport", requestID), key = avatarReportCancellationKey(accountID, requestID), now = this.#now();
+    const result = this.#tx(() => {
+      const generation = this.#active(accountID), row = this.#row(identity.recordName);
+      if (row) {
+        if (row.account_id !== accountID || row.kind !== "avatarreport") throw new PublicRecordError("PUBLIC_SCOPE");
+        const known = this.#avatarReportCancellation(accountID, requestID, generation);
+        if (known) return known;
+        if (row.phase === "erasing") throw new PublicRecordError("PUBLIC_SCOPE");
+        if (row.phase === "erased") {
+          if (!validTag(row.record_tag)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        } else {
+          const current = this.#context(row);
+          if (current.logicalKey !== identity.logicalKey || current.requestID !== requestID || current.expectedTag !== null) throw new PublicRecordError("PUBLIC_SCOPE");
+          this.#storage.sql.exec("UPDATE public_records_v1 SET phase='erasing' WHERE record_name=?", identity.recordName);
+        }
+        this.#storage.sql.exec("UPDATE public_records_v1 SET avatar_report_cancel_key=?,avatar_report_cancel_tag=NULL WHERE record_name=?", key, identity.recordName);
+      } else {
+        const owned = this.#rows("SELECT value FROM public_record_counts_v1 WHERE scope=?", accountID)[0]?.value ?? 0;
+        const total = this.#rows("SELECT value FROM public_record_counts_v1 WHERE scope='*'")[0]?.value;
+        if (!Number.isSafeInteger(owned) || owned < 0 || !Number.isSafeInteger(total) || total < owned) throw new PublicRecordError();
+        if (owned >= 1000 || total >= 10000) throw new PublicRecordError("PUBLIC_LIMIT");
+        this.#storage.sql.exec("UPDATE public_record_counts_v1 SET value=value+1 WHERE scope='*'");
+        this.#storage.sql.exec("INSERT INTO public_record_counts_v1(scope,value) VALUES(?,1) ON CONFLICT(scope) DO UPDATE SET value=value+1", accountID);
+        this.#storage.sql.exec(`INSERT INTO public_records_v1(record_name,account_id,kind,logical_key,phase,request_id,payload_hash,
+          expected_tag,record_tag,generation,created_at,started_at,asset_claims,avatar_report_cancel_key,avatar_report_cancel_tag)
+          VALUES(?,?,?,?,'erasing',?,?,NULL,NULL,?,?,?,0,?,NULL)`, identity.recordName, accountID, "avatarreport", identity.logicalKey,
+          requestID, key, generation, now, now, key);
+      }
+      const cancellation = this.#avatarReportCancellation(accountID, requestID, generation);
+      if (cancellation.content) {
+        const context = cancellation.content, dueAt = publicRetentionDeadline(context);
+        if (context.createdAt > now) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
+        // Retention remains armed even if the caller disappears before its fence is confirmed.
+        this.#storage.sql.exec(`INSERT INTO public_retention_v1(record_name,intent_key,due_at,state) VALUES(?,?,?,'pending')
+          ON CONFLICT(record_name) DO UPDATE SET intent_key=excluded.intent_key,due_at=excluded.due_at,
+          state='pending',lease_id=NULL,lease_at=NULL,fence_tag=NULL`, context.recordName, publicRetentionIntentKey(context), dueAt);
+      }
+      return cancellation;
+    });
+    await this.#durable(); return result;
+  }
+  avatarReportCancellation(accountID, requestID) { return this.#tx(() => this.#avatarReportCancellation(accountID, requestID)); }
+  assertAvatarReportCancellation(lease) {
+    return this.#tx(() => {
+      const current = this.#avatarReportCancellation(lease?.accountID, lease?.requestID, lease?.generation);
+      if (!current || current.recordName !== lease.recordName || current.cancellationKey !== lease.cancellationKey) throw new PublicRecordError("PUBLIC_SCOPE");
+      return current;
+    });
+  }
+  #completeAvatarReportCancellationRecord(name, tag) {
+    this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
+      expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=?,avatar_report_cancel_tag=? WHERE record_name=?`, tag, tag, name);
+    this.#storage.sql.exec("DELETE FROM public_retention_v1 WHERE record_name=?", name);
+  }
+  async completeAvatarReportCancellation(lease, tag) {
+    if (!validTag(tag)) throw new PublicRecordError("PUBLIC_RESPONSE");
+    this.#tx(() => {
+      const current = this.#avatarReportCancellation(lease?.accountID, lease?.requestID, lease?.generation);
+      if (!current || current.cancellationKey !== lease.cancellationKey || current.recordName !== lease.recordName) throw new PublicRecordError("PUBLIC_SCOPE");
+      this.#completeAvatarReportCancellationRecord(current.recordName, tag);
+    });
+    await this.#durable(); return this.assertAvatarReportCancellation(lease);
+  }
+  cancellationFenceForErasure(context) {
+    return this.#tx(() => {
+      const row = this.#row(context?.recordName);
+      if (!row || row.avatar_report_cancel_key === null) return null;
+      const current = this.#context(row);
+      if (current.kind !== "avatarreport" || current.phase !== "erasing" || ["accountID", "requestID", "payloadHash", "startedAt"].some(key => current[key] !== context[key])) throw new PublicRecordError("PUBLIC_SCOPE");
+      return avatarReportCancellationFields(current, row.avatar_report_cancel_key);
+    });
   }
   #mutation(context) {
     const row = this.#context(this.#row(context?.recordName));
@@ -444,7 +545,7 @@ export class PublicRecordRegistry {
     const count = this.#tx(() => {
       backfillAvatarRetirements(this.#storage, this.#now(), maximumRecords);
       const rows = this.#rows(`SELECT p.* FROM public_records_v1 p LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name
-        WHERE p.kind IN ('presence','message','report','avatarreport') AND p.phase IN ('pending','settled') AND r.record_name IS NULL
+        WHERE p.kind IN ('presence','message','report','avatarreport') AND (p.phase IN ('pending','settled') OR (p.kind='avatarreport' AND p.phase='erasing' AND p.avatar_report_cancel_key IS NOT NULL AND p.avatar_report_cancel_tag IS NULL)) AND r.record_name IS NULL
         ORDER BY p.record_name LIMIT ?`, maximumRecords);
       if (rows.length < maximumRecords) rows.push(...this.#rows(`SELECT p.* FROM public_records_v1 p
         JOIN avatar_retirements_v1 a ON a.record_name=p.record_name LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name
@@ -463,12 +564,12 @@ export class PublicRecordRegistry {
     return this.#tx(() => {
       const row = this.#rows(`SELECT MIN(CASE WHEN r.state='fencing' THEN MAX(r.due_at,r.lease_at+?) ELSE r.due_at END) AS due_at
         FROM public_retention_v1 r JOIN public_records_v1 p ON p.record_name=r.record_name JOIN auth_accounts_v1 a ON a.account_id=p.account_id
-        WHERE a.disabled=0 AND p.phase IN ('pending','settled') AND r.state IN ('pending','fencing')`, publicRetentionLeaseMilliseconds)[0];
+        WHERE a.disabled=0 AND (p.phase IN ('pending','settled') OR (p.kind='avatarreport' AND p.phase='erasing' AND p.avatar_report_cancel_key IS NOT NULL AND p.avatar_report_cancel_tag IS NULL)) AND r.state IN ('pending','fencing')`, publicRetentionLeaseMilliseconds)[0];
       const dueAt = row?.due_at ?? null, wakeAt = avatarSelectionExpirySchedule(this.#storage, this.#now());
       if (dueAt !== null && (!Number.isSafeInteger(dueAt) || dueAt < 0)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       const legacy = this.#rows(`SELECT 1 FROM public_records_v1 p JOIN auth_accounts_v1 a ON a.account_id=p.account_id
         LEFT JOIN public_retention_v1 r ON r.record_name=p.record_name WHERE a.disabled=0
-        AND p.phase IN ('pending','settled') AND p.kind IN ('presence','message','report','avatarreport') AND r.record_name IS NULL LIMIT 1`).length > 0;
+        AND (p.phase IN ('pending','settled') OR (p.kind='avatarreport' AND p.phase='erasing' AND p.avatar_report_cancel_key IS NOT NULL AND p.avatar_report_cancel_tag IS NULL)) AND p.kind IN ('presence','message','report','avatarreport') AND r.record_name IS NULL LIMIT 1`).length > 0;
       return Object.freeze({ dueAt, wakeAt, needsBackfill: legacy || needsAvatarRetirementBackfill(this.#storage) || wakeAt !== null && wakeAt <= this.#now() });
     });
   }
@@ -482,7 +583,7 @@ export class PublicRecordRegistry {
       const cursor = this.#rows("SELECT record_name FROM public_retention_cursor_v1 WHERE singleton=1")[0]?.record_name;
       if (typeof cursor !== "string" || cursor !== "" && !publicRecordName.test(cursor)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
       const select = after => this.#rows(`SELECT p.* FROM public_records_v1 p JOIN public_retention_v1 r ON r.record_name=p.record_name
-        JOIN auth_accounts_v1 a ON a.account_id=p.account_id WHERE a.disabled=0 AND p.phase IN ('pending','settled')
+        JOIN auth_accounts_v1 a ON a.account_id=p.account_id WHERE a.disabled=0 AND (p.phase IN ('pending','settled') OR (p.kind='avatarreport' AND p.phase='erasing' AND p.avatar_report_cancel_key IS NOT NULL AND p.avatar_report_cancel_tag IS NULL))
         AND r.due_at<=? AND (r.state='pending' OR (r.state='fencing' AND r.lease_at+?<=?))
         AND p.record_name>? ORDER BY p.record_name LIMIT ?`, now, publicRetentionLeaseMilliseconds, now, after, maximumRecords);
       let rows = select(cursor);
@@ -492,7 +593,8 @@ export class PublicRecordRegistry {
         if (!retention || context.startedAt > now || this.#retentionDeadline(context) > now) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
         const leaseID = randomUUID();
         this.#storage.sql.exec("UPDATE public_retention_v1 SET state='fencing',lease_id=?,lease_at=?,fence_tag=NULL WHERE record_name=?", leaseID, now, context.recordName);
-        return Object.freeze({ context, leaseID, leasedAt: now, expiresAt: now + publicRetentionLeaseMilliseconds });
+        return Object.freeze({ context, leaseID, leasedAt: now, expiresAt: now + publicRetentionLeaseMilliseconds,
+          ...(row.phase === "erasing" ? { cancellationKey: row.avatar_report_cancel_key } : {}) });
       });
       if (rows.length) this.#storage.sql.exec("UPDATE public_retention_cursor_v1 SET record_name=? WHERE singleton=1", rows.at(-1).record_name);
       return Object.freeze(result);
@@ -503,9 +605,11 @@ export class PublicRecordRegistry {
   }
   #retentionLease(lease) {
     if (!publicRecordName.test(lease?.context?.recordName ?? "") || !publicUUID.test(lease?.leaseID ?? "")) throw new PublicRecordError("PUBLIC_SCOPE");
-    const context = this.#context(this.#row(lease.context.recordName)), retention = this.#retention(context), now = this.#now();
+    const row = this.#row(lease.context.recordName), context = this.#context(row), retention = this.#retention(context), now = this.#now();
+    const cancellation = row.kind === "avatarreport" && row.phase === "erasing" && /^[a-f0-9]{64}$/.test(row.avatar_report_cancel_key ?? "") && row.avatar_report_cancel_tag === null;
     this.#active(context.accountID);
-    if (!["pending", "settled"].includes(context.phase) || !retention || retention.state !== "fencing" ||
+    if ((!["pending", "settled"].includes(context.phase) && !cancellation) ||
+        (cancellation ? lease.cancellationKey !== row.avatar_report_cancel_key : lease.cancellationKey !== undefined) || !retention || retention.state !== "fencing" ||
         retention.intent_key !== publicRetentionIntentKey(lease.context) || retention.lease_id !== lease.leaseID ||
         retention.lease_at !== lease.leasedAt || lease.expiresAt !== retention.lease_at + publicRetentionLeaseMilliseconds ||
         now < retention.lease_at || now >= lease.expiresAt || retention.due_at > now) throw new PublicRecordError("PUBLIC_SCOPE");
@@ -530,6 +634,8 @@ export class PublicRecordRegistry {
         // Keep the singleton reusable, but only a fresh intent can replace its confirmed fence.
         this.#storage.sql.exec("UPDATE public_records_v1 SET phase='settled',record_tag=? WHERE record_name=?", recordTag, context.recordName);
         this.#storage.sql.exec("UPDATE public_retention_v1 SET state='fenced',lease_id=NULL,lease_at=NULL,fence_tag=? WHERE record_name=?", recordTag, context.recordName);
+      } else if (context.kind === "avatarreport" && lease.cancellationKey !== undefined) {
+        this.#completeAvatarReportCancellationRecord(context.recordName, recordTag);
       } else {
         if (context.kind === "avatar") {
           this.#storage.sql.exec("DELETE FROM avatar_asset_transfers_v1 WHERE record_name=?", context.recordName);
@@ -538,7 +644,7 @@ export class PublicRecordRegistry {
           this.#storage.sql.exec("DELETE FROM avatar_retirements_v1 WHERE record_name=?", context.recordName);
         }
         this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
-          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=? WHERE record_name=?`, recordTag, context.recordName);
+          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,avatar_report_cancel_key=NULL,avatar_report_cancel_tag=NULL,record_tag=? WHERE record_name=?`, recordTag, context.recordName);
         this.#storage.sql.exec("DELETE FROM public_retention_v1 WHERE record_name=?", context.recordName);
       }
     });
@@ -558,6 +664,7 @@ export class PublicRecordRegistry {
     if (!Number.isInteger(maximumRecords) || maximumRecords < 1 || maximumRecords > 100) throw new PublicRecordError("PUBLIC_INPUT");
     const records = this.#tx(() => {
       this.#deletion(context);
+      this.#storage.sql.exec("UPDATE public_records_v1 SET avatar_report_cancel_key=NULL,avatar_report_cancel_tag=NULL WHERE record_name IN (SELECT record_name FROM public_records_v1 WHERE account_id=? AND phase='erased' AND (avatar_report_cancel_key IS NOT NULL OR avatar_report_cancel_tag IS NOT NULL) ORDER BY record_name LIMIT 25)", context.accountID);
       const rows = this.#rows(`SELECT * FROM public_records_v1 WHERE account_id=? AND phase!='erased'
         ORDER BY record_name LIMIT ?`, context.accountID, Math.min(25, maximumRecords));
       for (const row of rows) {
@@ -588,7 +695,7 @@ export class PublicRecordRegistry {
           transfer_id=NULL,request_id=NULL,payload_hash=NULL,generation=NULL,content_sha256=NULL,byte_count=NULL,
           receipt_hash=NULL,file_checksum_hash=NULL,receipt_envelope=NULL,receipt_expires_at=NULL,started_at=0 WHERE record_name=?`, name);
         this.#storage.sql.exec(`UPDATE public_records_v1 SET phase='erased',logical_key=NULL,request_id=NULL,payload_hash=NULL,
-          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,record_tag=? WHERE record_name=?`, tag, name);
+          expected_tag=NULL,generation=0,created_at=0,started_at=0,asset_claims=NULL,avatar_report_cancel_key=NULL,avatar_report_cancel_tag=NULL,record_tag=? WHERE record_name=?`, tag, name);
         this.#storage.sql.exec("DELETE FROM public_retention_v1 WHERE record_name=?", name);
         this.#storage.sql.exec("DELETE FROM avatar_retirements_v1 WHERE record_name=?", name);
       }
@@ -596,7 +703,7 @@ export class PublicRecordRegistry {
     await this.#durable();
     return this.#tx(() => {
       this.#deletion(context);
-      const remaining = this.#rows("SELECT record_name FROM public_records_v1 WHERE account_id=? AND phase!='erased' LIMIT 1", context.accountID).length > 0;
+      const remaining = this.#rows("SELECT record_name FROM public_records_v1 WHERE account_id=? AND (phase!='erased' OR avatar_report_cancel_key IS NOT NULL OR avatar_report_cancel_tag IS NOT NULL) LIMIT 1", context.accountID).length > 0;
       return Object.freeze({ accountID: context.accountID, deletionID: context.deletionID, remaining });
     });
   }

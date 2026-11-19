@@ -1,5 +1,6 @@
 import { PublicRecordError, recordIdentity, normalizePublicInput, inputHash, liveFields, erasedFields,
-  matchesFields, plain } from "./public-record-schema.mjs";
+  matchesFields, plain, validTag } from "./public-record-schema.mjs";
+import { avatarReportCancellationFields } from "./avatar-report-cancellation.mjs";
 import { communityPolicy } from "./community-domain.mjs";
 import { expiredPublicFields } from "./public-retention-policy.mjs";
 
@@ -102,8 +103,21 @@ export class CloudKitPublicRepository {
       this.#authorize(accessToken, identity.accountID);
     };
     check(); await this.#checkpoint.verify({ signal }); check();
-    const old = this.#registry.owned(identity.accountID, "avatarreport", requestID);
     const receipt = outcome => Object.freeze({ schemaVersion: 1, reportID: name, outcome });
+    const cancellation = this.#registry.avatarReportCancellation(identity.accountID, requestID);
+    if (cancellation) {
+      const record = (await this.#client.lookup([name], { signal })).get(name); check();
+      this.#registry.assertAvatarReportCancellation(cancellation);
+      if (record?.serverErrorCode === "NOT_FOUND") return receipt("unconfirmed");
+      if (record?.serverErrorCode) throw providerFailure(record);
+      checkScope(record, cancellation);
+      if (!matchesFields(record.fields, avatarReportCancellationFields(cancellation, cancellation.cancellationKey))) return receipt("unconfirmed");
+      if (!validTag(record.recordChangeTag)) throw new PublicRecordError("PUBLIC_RESPONSE");
+      await this.#registry.completeAvatarReportCancellation(cancellation, record.recordChangeTag); check();
+      await this.#checkpoint.advance({ signal }); check(); this.#registry.assertAvatarReportCancellation(cancellation);
+      return receipt("cancelled");
+    }
+    const old = this.#registry.owned(identity.accountID, "avatarreport", requestID);
     if (!old) { check(); return receipt("unconfirmed"); }
     if (old.expectedTag !== null || !["pending", "settled"].includes(old.phase)) throw new PublicRecordError("PUBLIC_SCOPE");
     // Rebind the same existing immutable reservation to the current account generation after sign-in.
@@ -122,6 +136,51 @@ export class CloudKitPublicRepository {
     const saved = await this.#registry.settle(context, record.recordChangeTag); check();
     await this.#checkpoint.advance({ signal }); check(); this.#registry.assertMutationCurrent(saved);
     return receipt("accepted");
+  }
+  /** Explicit own-nonce cancellation. A missing record is fenced with CREATE; existing content is exact-CAS replaced. */
+  async cancelAvatarReport({ accessToken, requestID, signal, authorizeMutation } = {}) {
+    if (typeof authorizeMutation !== "function") throw new PublicRecordError("PUBLIC_INPUT");
+    const identity = this.#authorize(accessToken), name = recordIdentity(identity.accountID, "avatarreport", requestID).recordName;
+    const check = () => {
+      this.#check(signal); const allowed = authorizeMutation();
+      if (allowed && typeof allowed.then === "function") void Promise.resolve(allowed).catch(() => {});
+      if (allowed !== true) throw new PublicRecordError("PUBLIC_SCOPE");
+      this.#authorize(accessToken, identity.accountID);
+    };
+    check(); await this.#checkpoint.verify({ signal }); check();
+    const lease = await this.#registry.beginAvatarReportCancellation(identity.accountID, requestID); check();
+    const current = () => { check(); return this.#registry.assertAvatarReportCancellation(lease); };
+    await this.#checkpoint.advance({ signal }); current();
+    const fields = avatarReportCancellationFields(lease, lease.cancellationKey);
+    const found = (await this.#client.lookup([name], { signal })).get(name); current();
+    let saved = found;
+    if (!matchesFields(found?.fields, fields) || found?.serverErrorCode) {
+      let operation;
+      if (found?.serverErrorCode === "NOT_FOUND") operation = { operationType: "create", record: { recordName: name, recordType: lease.recordType, fields } };
+      else {
+        if (found?.serverErrorCode) throw providerFailure(found);
+        checkScope(found, lease);
+        if (!validTag(found.recordChangeTag)) throw new PublicRecordError("PUBLIC_RESPONSE");
+        const context = current().content;
+        if (found.fields.erased.value === 0) {
+          if (!context) throw new PublicRecordError("PUBLIC_SCOPE");
+          this.#decode(found, context);
+        } else {
+          const oldFence = Object.keys(found.fields).sort().join() === "erased,ownerKey,retentionKey,schemaVersion" &&
+            /^[a-f0-9]{64}$/.test(found.fields.retentionKey?.value ?? "") && found.recordChangeTag === current().recordTag;
+          const expired = context && matchesFields(found.fields, expiredPublicFields(context)) && context.createdAt + 2592000000 <= this.#clock();
+          if (!oldFence && !expired) throw new PublicRecordError("PUBLIC_SCOPE");
+        }
+        operation = { operationType: "replace", record: { recordName: name, recordType: lease.recordType, recordChangeTag: found.recordChangeTag, fields } };
+      }
+      current(); saved = (await this.#client.modify([operation], { signal })).get(name); current();
+      if (saved?.serverErrorCode) throw providerFailure(saved);
+    }
+    checkScope(saved, lease);
+    if (!validTag(saved.recordChangeTag) || !matchesFields(saved.fields, fields)) throw new PublicRecordError("PUBLIC_RESPONSE");
+    await this.#registry.completeAvatarReportCancellation(lease, saved.recordChangeTag); current();
+    await this.#checkpoint.advance({ signal }); current();
+    return Object.freeze({ schemaVersion: 1, reportID: name, outcome: "cancelled" });
   }
   #receipt(context, fields) {
     return Object.freeze({ recordName: context.recordName, recordType: context.recordType,
@@ -202,6 +261,7 @@ export class CloudKitPublicRepository {
           checkScope(found, row);
           const dueAt = this.#registry.retentionDeadlineForErasure(row);
           if (found.fields.erased.value === 1 && !matchesFields(found.fields, fields) &&
+              !matchesFields(found.fields, this.#registry.cancellationFenceForErasure(row) ?? {}) &&
               !(dueAt !== null && dueAt <= this.#clock() && matchesFields(found.fields, expiredPublicFields(row)))) throw new PublicRecordError("PUBLIC_SCOPE");
           // Replace even an existing fence: metadata-only lookup cannot prove absence of extra content.
           operations.push({ operationType: "replace", record: { recordName: row.recordName,
