@@ -1032,3 +1032,21 @@ Po etapie HTTP przegląd wykrył, że CloudKitPublicClient nie czekał na cancel
 8nowych funkcji (rzeczywiste Response/ReadableStream/AbortController i deferred/rejectedcancel), target8/8 obu Node oraz pełne750/750 Node22.23.5 i750/750 Node24.22.1. Trzy ścieżki przed parserem, failedcancel przed/po reader, lockedbody, latefetch/drain, błędna aktywacja i healthy-after-JSON. Integracja poufnego HTTP potwierdza brak dalszego provider/checkpoint i zachowanie busy po niepotwierdzonym drain. Dostawcy/konta/klucze jawnie syntetyczne; bez kontaktu z Apple/Cloudflare lub ponowienia zatwierdzonej wcześniejszej próby. Istniejące workerd testy pozostały zielone; hosted IO/PITR/A-B/Free nadal nieodebrane.
 
 Pliki: gateway/src/cloudkit-public-client.mjs, gateway/test/cloudkit-public-drain.test.mjs, Docs/ODPLYW_IO_KLIENTA_CLOUDKIT.md, HTTP_POUFNYCH_ZGLOSZEN.md, evidence/cloudkit-public-drain-local-tests.json oraz plan i dziennik. [Opis i granice](ODPLYW_IO_KLIENTA_CLOUDKIT.md). Brak nowych praw/kluczy/sekretów, deploy/usług/opłat, SDK telefonu/Production/Firebase/TestFlight; iOS/deps/CI niezmienione i bez ponowień. Zastana zmiana projektu zachowana. Następnie natywny panel/transport/intent/recovery i pełne pozostałe odbiory planu.
+
+
+## CK-05c.4a — 2026-11-19 — natywny kontrakt poufnych zgłoszeń i koniec zadania URLSession
+
+Cel: połączyć lokalnie odebrane HTTP zgłoszeń z typowanym klientem iOS oraz zabezpieczyć cykl życia anulowanego żądania. Etap pozostaje domyślnie wyłączony, bez ekranu lub aktywacji moderatorów.
+
+Zmiany:
+
+- GatewayReportReviewModels/HTTPClient: queue/inspect/decide/recover, exact pola/wersje/ID/bezpieczne daty/terminy 30 dni i 2 h/UTF-16/NFC, pusta strona z postępem markera, brak reporterID/GPS. Redagowane opisy, zamknięte status/error i brak kasowania zwykłej sesji przy odmowie roli.
+- Receipt przypięty do origin, tokenu i metadata elementu; do 90 s od początku request lub expiry wiadomości, dwa zegary i rollback. Brak wiadomości pozwala tylko dismiss. Osobny metadata recovery intent nie wymaga świeżej inspekcji i nie nadaje uprawnienia zapisu. Późne ACK wymaga recovery, bez nowego ID/retry.
+- NativeGatewayReportReviewTransport: przypięty URL/JSON/nagłówki przed task, ephemeral bez cookies/cache/credentials/redirectów; header-first no-store/nosniff/JSON, limity8192/12288/2048B, długość/128 callbacków / 15 s. Cancel/deadline/błąd kończy oczekiwanie caller, ale rezerwację zwalnia dopiero callback końca właściwego systemowego zadania. Stare/obce callbacki nie zwalniają nowej rezerwacji; brak pozytywnego zakończenia utrzymuje busy.
+- Dwa pliki testów i10 odpowiedzi wire wygenerowanych przez rzeczywisty lokalny edge/Authority/Runtime/SQLite; provider/konta syntetyczne, bez eksportu sesji/kluczy i zewnętrznej sieci. Dodano skrypt eksportu, kontrakt, dowody i aktualizację planu.
+
+Weryfikacja: 27 nowych funkcji; pełne591 zdefiniowanych / 589 zaliczonych / 2 jawne skipy FileProtection/0 błędów zarówno macOS jak i iPhone 17 Pro / iOS 26.1 Simulator. Debug build-for-testing i unsignedRelease poprawne, strict format 5 plików poprawny. Negatywna kontrola w odizolowanej kopii /tmp z celowo usuniętą ochroną slotu oblewa1 test / 2 problemy; właściwe źródła pozostały zachowane. Rzeczywisty deadline niedokończonego URLProtocol sprawdzony, bez automatycznego ponowienia. Node22 wygenerował fixture, Node24 sprawdził składnię nowego skryptu; backend produkcyjny niezmieniony i pełnych 750 Node z poprzedniego etapu nie powtarzano.
+
+Ograniczenia: host konta/foreground/ekranu, faktyczna prezentacja, trwały dziennik i panel są jeszcze do implementacji CK-05c.4b. To API, nie kompletny przepływ moderatora. Brak nowych zdalnych operacji, prób Development, ról/kluczy/sekretów/usług/opłat, zmian Production/Firebase lub TestFlight; urządzenia i A/B nie zaliczono. UI/deps/CI niezmienione; testów UI nie ponawiano. Zastany project.pbxproj zachowany.
+
+Pliki: trzy Sources/GatewayReportReview*.swift, Tests/GatewayReportReview{,Transport}Tests.swift, Tests/Fixtures/report-review/responses.json, gateway/scripts/export-report-review-native-fixture.mjs, ten dziennik, plan, [kontrakt](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md), [dowody](evidence/report-review-native-local-tests.json).

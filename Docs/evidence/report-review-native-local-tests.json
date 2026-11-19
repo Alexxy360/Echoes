@@ -1,0 +1,138 @@
+{
+  "stage": "CK-05c.4a",
+  "createdAt": "2026-11-19T11:42:22.872541+00:00",
+  "baselineCommit": "1a611f6fea3d9e1012c9f8a26689d856a2e1893c",
+  "native": {
+    "defined": 591,
+    "passed": 589,
+    "skipped": 2,
+    "failed": 0,
+    "newFunctions": [
+      "reportReviewNativeDecodesConcreteRuntimeQueueInspectionDecisionReplayAndClosedQueue",
+      "reportReviewNativeDecodesConcreteRuntimeAllReadOnlyRecoveryOutcomesAfterExpiryAndSessionChange",
+      "reportReviewNativeClosedWireNeverSendsReasonTextLocationOrRole",
+      "reportReviewNativeDefaultDisabledAndMalformedTokenDoNotTouchTransport",
+      "reportReviewNativeQueueEnforcesExactFieldsBooleansDatesOrderingAndProgress",
+      "reportReviewNativeInspectionBindsExactMetadataAndRejectsExtraPrivateFields",
+      "reportReviewNativeTextUsesUTF16NFCTrimAndControlRules",
+      "reportReviewNativeMissingMessageAllowsDismissAndCannotAuthorizeHide",
+      "reportReviewNativeReceiptPinsOriginSessionAndBothClocksBeforeAnyDecisionIO",
+      "reportReviewNativeWithholdsLateCancelledDisabledAndClockRollbackResponses",
+      "reportReviewNativeDecisionAndRecoveryMustMatchEverySavedIdentity",
+      "reportReviewNativeServerErrorsAreRedactedAndStatusBoundWithoutClearingSession",
+      "reportReviewNativeBoundaryRejectsMIMECacheCompressionRangeLengthAndInvalidUTF8",
+      "reportReviewNativePublicModelsRejectMalformedMetadataAndRedactReflection",
+      "reportReviewNativeQueueAcceptsTwentyDistinctRowsAndRejectsTwentyOneOrReverseOrder",
+      "reportReviewNativeReceiptDeadlineCannotBeExtendedBySlowInspectionOrOutliveMessage",
+      "reportReviewNativeDecisionACKAfterReceiptExpiryRequiresRecoveryInsteadOfClaimingSuccess",
+      "reportReviewURLSessionConcreteServerWireAcrossAllFourOperationsAndReplay",
+      "reportReviewURLSessionRefusesRedirectAndForeignResponseURLWithoutForwardingBearer",
+      "reportReviewURLSessionPinsRequestBeforeCreatingSystemTask",
+      "reportReviewURLSessionChecksHeadersBeforeBufferingOrWaitingForEOF",
+      "reportReviewURLSessionCapsUnknownLengthAndRequiresExactAdvertisedLength",
+      "reportReviewURLSessionBusyAndCancellationNeverAutomaticallyDispatchAnotherOperation",
+      "reportReviewURLSessionNoCookiesOrOfflineReuse",
+      "reportReviewNetworkGateRetainsFailedOrCancelledTaskUntilExactSystemCompletion",
+      "reportReviewNetworkGateLimitsNonemptyFragmentsBeforeSystemCompletion",
+      "reportReviewURLSessionAbsoluteDeadlineDoesNotWaitForAnUnfinishedBodyOrRetry"
+    ],
+    "platforms": [
+      "macOS",
+      "iPhone 17 Pro / iOS 26.1 Simulator"
+    ],
+    "physicalFileProtectionAccepted": false,
+    "resultBundle": "/private/tmp/echoes-report-native-package-ios.xcresult"
+  },
+  "builds": [
+    "Debug build-for-testing Simulator",
+    "unsigned Release generic iOS"
+  ],
+  "UIChanged": false,
+  "UIRerun": false,
+  "backendProductionCodeChanged": false,
+  "backendFullSuiteRerun": false,
+  "previousBackendBaseline": {
+    "commit": "1a611f6fea3d9e1012c9f8a26689d856a2e1893c",
+    "node22": 750,
+    "node24": 750
+  },
+  "fixture": {
+    "responses": 10,
+    "source": "Concrete local edge/Authority/Runtime/SQLite with modeled provider/identities; Node 22.23.5",
+    "externalNetwork": false,
+    "exportedCredentials": false,
+    "clock": "virtual contract clock, real URLSession deadline/lifecycle"
+  },
+  "negativeControl": {
+    "changed": "isolated /tmp copy clears gate on cancel before didComplete",
+    "expectedFailedFunctions": 1,
+    "recordedIssues": 2,
+    "originalSourcesPreserved": true
+  },
+  "logs": {
+    "mac": {
+      "path": "/private/tmp/echoes-report-native-full-mac.log",
+      "SHA256": "bb9ef727a6b2e433d58e0ca8fcd61d15770e6a28061296ecf9256a6f4bb24c9e"
+    },
+    "iOSSimulator": {
+      "path": "/private/tmp/echoes-report-native-package-ios.log",
+      "SHA256": "912db3f607fc10ecc743a84dea5aba13c2ea671e6326ef75b8a0cc0824e14814"
+    },
+    "iOSSummary": {
+      "path": "/private/tmp/echoes-report-native-package-ios-summary.json",
+      "SHA256": "13064b475573094c27ee5b5151d5d1c658d6d4f2324ce3319c46de16cd512849"
+    },
+    "Debug": {
+      "path": "/private/tmp/echoes-report-native-debug-build.log",
+      "SHA256": "aa088da0997a7e84fb47afcd95b8d6cbd219924610c93a33d79c62be4a2faeca"
+    },
+    "unsignedRelease": {
+      "path": "/private/tmp/echoes-report-native-release-build.log",
+      "SHA256": "cbbe295698a6f2ef50c49fabdee18430d9201ac16b97ab45bb29a3a10e352836"
+    },
+    "targeted": {
+      "path": "/private/tmp/echoes-report-native-target-final.log",
+      "SHA256": "ac5e169e73cadd2f783ef89ef8c070b7de4a62f139cdbd263a13171a038bff1d"
+    },
+    "negativeControl": {
+      "path": "/private/tmp/echoes-report-native-negative.log",
+      "SHA256": "a9d64aadf61be5fb78c08af47e05c3656a98eba170f32324c6d792baf8bad051"
+    },
+    "fixture": {
+      "path": "/private/tmp/echoes-report-native-fixture.log",
+      "SHA256": "18d74e0813c29b65d3f8af0ab039828e7545ef7557f1db72e6d34c3875420e20"
+    },
+    "strictFormat": {
+      "path": "/private/tmp/echoes-report-native-format.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "node24Syntax": {
+      "path": "/private/tmp/echoes-report-native-node24-syntax.log",
+      "SHA256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewModels.swift": "eb6178c73c856f2d9271b8635cdc77ef1989f7e0ec4f5792709eec0dba352595",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHTTPClient.swift": "5bb5c62045b36818da0c7205acc104503cc1e189d2ae5441c92e4cc285fe804d",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewTransport.swift": "3c40a5a49f595e7e754c21b870f111c8a0b9a7f4be0ed7ea10ad70fe3013cf15",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewTests.swift": "ed3cf580c70d17f6583034b5f0f78c924d62550ca35c118ea77cdc57f0531831",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewTransportTests.swift": "c06fc4f69c9cb004468e69f748da5ebcf6fde898c35d5a0c58eda9fa56fec513",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/report-review/responses.json": "7bc98435ee3ef025a64a15c71181de2c4330b7346ae0775f469a7abc6a8a576b",
+    "gateway/scripts/export-report-review-native-fixture.mjs": "d5696817ce743e6968128ae2aa8f4230a9993c28422da3e790c413fede6371ca"
+  },
+  "preservation": {
+    "projectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stageProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "dependenciesCIChanged": false
+  },
+  "notAccepted": [
+    "native host/UI and durable decision journal/recovery workflow",
+    "real SIWA and hosted runtime",
+    "ordinary accounts A/B",
+    "CloudKit query/indices/ASSET/CDN",
+    "Free CPU/SQL/RSS/alarms/capacity",
+    "physical device FileProtection/PhotosPicker",
+    "Firebase removal or TestFlight readiness"
+  ],
+  "externalChanges": []
+}
