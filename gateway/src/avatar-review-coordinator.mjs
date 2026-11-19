@@ -1,7 +1,7 @@
 import { plain, publicUUID, digest } from "./public-record-schema.mjs";
 import { validateAvatarRecord } from "./avatar-record-schema.mjs";
 import { inspectAvatarJPEG } from "./avatar-jpeg.mjs";
-import { AvatarDownloadError, avatarDownloadHosts, avatarDownloadURL, readAvatarDownload } from "./avatar-protected-download.mjs";
+import { AvatarDownloadError, avatarDownloadHosts, avatarDownloadURL, AvatarDownloadScope } from "./avatar-protected-download.mjs";
 import { AvatarReviewError, avatarReviewContentHash } from "./avatar-review-state.mjs";
 
 export const avatarReviewHeader = "X-Echoes-Avatar-Review";
@@ -10,13 +10,14 @@ export const avatarReviewHeader = "X-Echoes-Avatar-Review";
  */
 export class AvatarReviewCoordinator {
   #auth; #community; #policy; #receipts; #registry; #client; #checkpoint; #enabled; #operator; #clock; #fetch; #hosts; #timeout; #busy = false;
+  #downloads = new AvatarDownloadScope();
   constructor({ authentication, communityState, avatarPolicy, receipts, registry, client, checkpoint,
     isEnabled = () => false, isOperator = () => false, clock = Date.now, fetchImplementation = fetch,
     verifiedDownloadHosts = [], timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
         ["reviewContent", "assertReviewContent", "reviewQueue", "review", "assertReviewCurrent", "reviewOutcome"].some(k => typeof avatarPolicy?.[k] !== "function") ||
         ["get", "reserve", "confirm", "claim", "finish"].some(k => typeof receipts?.[k] !== "function") ||
-        typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" ||
+        typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" || typeof client.waitForPendingOperations !== "function" ||
         typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function" ||
         [isEnabled, isOperator, clock, fetchImplementation].some(f => typeof f !== "function") ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) throw new AvatarReviewError("AVATAR_REVIEW_INPUT");
@@ -56,6 +57,7 @@ export class AvatarReviewCoordinator {
     let startedAt; try { startedAt = this.#now(); } catch (e) { throw this.#error(e); }
     const deadline = startedAt + this.#timeout;
     if (!Number.isSafeInteger(deadline)) throw new AvatarReviewError();
+    let download; try { download = this.#downloads.operation(); } catch (error) { throw this.#error(error); }
     this.#busy = true;
     let closed = false, settled = false, released = false, timer, rejectCancelled;
     const controller = new AbortController();
@@ -64,6 +66,7 @@ export class AvatarReviewCoordinator {
     const cancelled = new Promise((_, reject) => { rejectCancelled = reject; });
     const cancel = () => { close(); rejectCancelled(new AvatarReviewError()); };
     const transport = () => {
+      this.#downloads.check();
       const now = this.#now();
       if (closed || controller.signal.aborted || o.signal?.aborted || this.#sync(this.#enabled()) !== true || now < startedAt ||
           !Number.isSafeInteger(deadline) || now >= deadline) throw new AvatarReviewError();
@@ -74,11 +77,15 @@ export class AvatarReviewCoordinator {
         try {
           transport(); const identity = this.#identity(o);
           const check = () => { transport(); this.#identity(o, identity); transport(); };
-          const finalize = await action({ identity, check, transport, signal: controller.signal }); check();
+          const finalize = await action({ identity, check, transport, signal: controller.signal, download }); check();
           return () => {
             try { check(); return finalize(); } catch (e) { throw this.#error(e); } finally { close(); }
           };
-        } finally { settled = true; release(); }
+        } finally {
+          let drained = false;
+          try { await download.finish(this.#client); drained = true; }
+          finally { settled = drained; release(); }
+        }
       })();
       return await Promise.race([work, cancelled]);
     } catch (e) { close(); throw this.#error(e); }
@@ -100,7 +107,7 @@ export class AvatarReviewCoordinator {
   }
   async prepareInspection(value = {}) {
     const o = this.#options(value, ["accountID", "requestID"]);
-    return this.#prepare(o, async ({ identity, check, transport, signal }) => {
+    return this.#prepare(o, async ({ identity, check, transport, signal, download }) => {
       let bytes, response;
       try {
         const content = this.#policy.reviewContent(o.accountID, o.requestID), manifest = content.descriptor.image;
@@ -120,8 +127,8 @@ export class AvatarReviewCoordinator {
         const projection = validateAvatarRecord(record, content.avatar, content.descriptor, commitments);
         const url = avatarDownloadURL(projection.assets.image.downloadURL, this.#hosts);
         permit(); response = await this.#fetch(new Request(url, { method: "GET", redirect: "manual", credentials: "omit",
-          headers: { Accept: "image/jpeg", "Cache-Control": "no-store" } }), { signal }); permit();
-        bytes = await readAvatarDownload(response, { url, manifest, signal, check: transport }); permit();
+          headers: { Accept: "image/jpeg", "Cache-Control": "no-store" } }), { signal }); download.adopt(response); permit();
+        bytes = await download.read({ url, manifest, signal, check: transport }); permit();
         if (digest(bytes) !== manifest.sha256) throw new AvatarReviewError("AVATAR_REVIEW_RESPONSE");
         const decoded = inspectAvatarJPEG(bytes, { maximumBytes: 256000, maximumPixels: 512 });
         try { if (decoded.width !== manifest.width || decoded.height !== manifest.height || digest(decoded.bytes) !== manifest.sha256) throw new AvatarReviewError("AVATAR_REVIEW_RESPONSE"); }
@@ -142,7 +149,7 @@ export class AvatarReviewCoordinator {
             } });
           } finally { signal.removeEventListener("abort", aborted); body.fill(0); }
         };
-      } finally { bytes?.fill(0); if (response?.body && !response.body.locked) void response.body.cancel().catch(() => {}); }
+      } finally { bytes?.fill(0); }
     });
   }
   async prepareDecision(value = {}) {

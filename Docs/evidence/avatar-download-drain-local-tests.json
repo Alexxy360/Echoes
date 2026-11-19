@@ -1,0 +1,128 @@
+{
+  "stage": "CK-05c.4c",
+  "createdAt": "2026-11-19T17:15:28.190003+00:00",
+  "baselineCommit": "aadea20c1342e61865f3bb7c0871b67dcd47e89b",
+  "backend": {
+    "node22": "22.23.5",
+    "node24": "24.22.1",
+    "fullTestsEach": 762,
+    "passedEach": 762,
+    "failedEach": 0,
+    "skippedEach": 0,
+    "newFunctions": 12,
+    "focusedEach": 77,
+    "newFunctionsList": [
+      "download header rejection waits for the exact body cancellation and never retries it",
+      "download reader abort preserves the first cancellation promise and lock until completion",
+      "failed download cancellation permanently closes its scope without leaking provider details",
+      "foreign locked download is never stolen or treated as drained after its lock is released",
+      "healthy download and ordinary validation errors do not poison confirmed cleanup",
+      "all four avatar slots stay occupied until invalid-response body cancellation actually finishes",
+      "failed peer image cancellation stops subsequent reads before any further provider call",
+      "owner late fetch after cancellation retains its slot through the returned response body drain",
+      "moderation failed body cancellation keeps admission closed and cannot produce an inspection receipt",
+      "owner waits for the concrete CloudKit pending operations even when lookup already rejected",
+      "rejected concrete CloudKit drain prevents owner reuse even after a fully downloaded valid image",
+      "moderation queue retains its slot and original authority while concrete provider drain is pending"
+    ],
+    "actualNodeWebStreams": true,
+    "actualLocalSQLite": true,
+    "providerAndIdentity": "synthetic fixtures",
+    "existingFullSuiteIncludesActualLocalWorkerdIntegrations": true,
+    "newHeldRejectedCancellationScenarios": "Node22 and Node24; hosted Cloudflare drain not accepted",
+    "syntaxMJSCountEach": 167,
+    "syntaxPassedBoth": true
+  },
+  "contract": {
+    "exactResponseAdoptedBeforePostFetchGuard": true,
+    "firstCancelPromiseRetainedAndAwaited": true,
+    "singleCancelAcrossAbortAndFinally": true,
+    "bodyReaderLockHeldThroughCancellationCompletion": true,
+    "foreignLockedReaderNeverStolen": true,
+    "failedOrUnknownDrainClosesScopeUntilRecreation": true,
+    "retainedAdmissionUntilImageAndCloudKitPendingOperationsComplete": true,
+    "concreteClientCompletionHookRequired": true,
+    "ordinaryBadPayloadWithConfirmedDrainAllowsExplicitFreshRead": true,
+    "limitsUnchanged": {
+      "peerReads": 4,
+      "ownerPreview": 1,
+      "moderation": 1,
+      "deadlineMilliseconds": 8000,
+      "maxChunks": 128
+    }
+  },
+  "negativeControl": {
+    "mutated": "isolated exact source copy of CloudKitAvatarOwnerPreview omits awaiting operation.finish",
+    "function": "owner late fetch after cancellation retains its slot through the returned response body drain",
+    "executed": 1,
+    "failedAsIntended": 1,
+    "originalSourcesPreserved": true,
+    "firstControlNotAcceptedAsNegativeProof": "Removing only the peer outer wait still passed one test because the inner download guard retained cancellation; the accepted control targets a late owner fetch before the inner read."
+  },
+  "correctedFailures": [
+    "Initial automated field placement selected AvatarReadError rather than CloudKitAvatarReader; corrected before 65 existing cases passed.",
+    "New receipt assertion used a nonexistent phase column; corrected to the actual verified integer flag without changing production SQL."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-protected-download.mjs": "068e7c6457e0696c2e887b547ae493f9789174e6a91a67e5e6f7756a411cafc0",
+    "gateway/src/cloudkit-avatar-reader.mjs": "f4cad70e5f792d131481db6b8f3006fde2edb44c2150ecc7073d7a6e75192750",
+    "gateway/src/cloudkit-avatar-owner-preview.mjs": "06ec7f4068b7c6485ee308860187e19cd466f9f4467a1553f483bf7b166f1958",
+    "gateway/src/avatar-review-coordinator.mjs": "4da9ec7a1db7a0e25728d9b56ccf620160b1e82856c149cc2620eb347a54e57a",
+    "gateway/test/avatar-download-drain.test.mjs": "a66f99f777c89d6bb6923dce92cc27cfc9903eaca8ef8c3714e75b28096a8a4d",
+    "gateway/test/avatar-owner-preview.test.mjs": "cbaf365f88f0a7b396e21d6c9cf95c8d8723c059266711ad0ba707221326a8b6"
+  },
+  "logs": {
+    "fullNode22": {
+      "path": "/private/tmp/echoes-avatar-download-drain-full22.log",
+      "SHA256": "e6e7a715ebbd52691942013b0cef57b741c1a05418c519c7e2ea698e4d4d6d2c"
+    },
+    "fullNode24": {
+      "path": "/private/tmp/echoes-avatar-download-drain-full24.log",
+      "SHA256": "f987189add111db6d7691010f46326b038253bbd596005412dda1273f9c359d1"
+    },
+    "focusedNode22": {
+      "path": "/private/tmp/echoes-avatar-download-drain-target22.log",
+      "SHA256": "3f516a45ec09ccd9962e6ae808847b68bcb749177cca9884ea4e31ba086ce314"
+    },
+    "focusedNode24": {
+      "path": "/private/tmp/echoes-avatar-download-drain-target24.log",
+      "SHA256": "9ccdbc1760e81173ad58c7c6eff44def9f7a55acd3acbddcb66cad02bfda7fdb"
+    },
+    "negativeOwner": {
+      "path": "/private/tmp/echoes-avatar-download-drain-negative-owner.log",
+      "SHA256": "324925b0c2943ec1d83d80a8572e254df57495973d6104a97a68fa0db08d8cc4"
+    },
+    "initialRedundantPeerControl": {
+      "path": "/private/tmp/echoes-avatar-download-drain-negative.log",
+      "SHA256": "49dcdf7ebf9c2efe873dee1ad7ca28ba28ede77cbfd67f9631910682f71dade4"
+    },
+    "initialDeclarationFailure": {
+      "path": "/private/tmp/echoes-avatar-drain-existing-target.log",
+      "SHA256": "f154196c71398d2aa353507760f6372218e911e64875ab1e536bc10152b278b6"
+    },
+    "correctedExisting65": {
+      "path": "/private/tmp/echoes-avatar-drain-existing-fixed.log",
+      "SHA256": "6ae35b49da309afa170c1b44e2facc122ea102e175458e31b5a2c38698c2faa0"
+    },
+    "initialReceiptTestFieldFailure": {
+      "path": "/private/tmp/echoes-avatar-download-drain-target.log",
+      "SHA256": "75e77b8e5e811b7a8e09b34c20c49917cfb170d37a197f90ac379294f7e0d8e0"
+    }
+  },
+  "nativeSwiftCoreUIChanged": false,
+  "nativeBuildsOrUITestsRerun": false,
+  "schemaSQLOrHTTPWireChanged": false,
+  "dependenciesCIChanged": false,
+  "previousNativeEvidence": "Docs/evidence/report-review-ui-local-tests.json",
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "notAccepted": [
+    "hosted Cloudflare abort/drain and Free resource limits",
+    "real CloudKit CDN/ASSET/query",
+    "ordinary A/B",
+    "real SIWA and account deletion",
+    "photo reporting/support contact",
+    "physical device checks",
+    "Firebase removal/TestFlight readiness"
+  ],
+  "externalChanges": []
+}

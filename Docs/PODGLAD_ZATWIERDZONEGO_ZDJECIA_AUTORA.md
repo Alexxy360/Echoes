@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.4c.1 — chroniony podgląd zatwierdzonego zdjęcia autora
 
+Aktualizacja CK-05c.4c: wspólne pobieranie zdjęć oczekuje teraz na zakończenie pierwszego cancel oraz rzeczywistej pracy klienta CloudKit, również dla późnego fetch. Niepotwierdzone sprzątanie zamyka dany scope; pełny kontrakt i granice w [odpływie IO zdjęć](ODPLYW_IO_ZDJEC_PROFILOWYCH.md).
+
 Serwer ma osobny odczyt pełnego, zatwierdzonego pliku na potrzeby świadomej publikacji po utracie dawnego upload journala. Działa także przy ready=0, bez publicznego wskaźnika zdjęcia. Odczyt nie publikuje pliku, nie wyraża zgody autora i nie zmienia decyzji moderacji.
 
 ## Zamknięty kontrakt

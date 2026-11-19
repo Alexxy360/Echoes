@@ -15,25 +15,65 @@ export function avatarDownloadURL(value, hosts) {
   if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash || url.href !== value || !hosts.has(url.hostname)) throw new AvatarDownloadError();
   return url.href;
 }
-export async function readAvatarDownload(response, { url, manifest, signal, check }) {
-  const length = response?.headers?.get("Content-Length"), encoding = response?.headers?.get("Content-Encoding");
-  if (!(response instanceof Response) || response.status !== 200 || response.redirected || response.url && response.url !== url || !response.body ||
-      !/^(image\/jpeg|application\/octet-stream)(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") ||
-      response.headers.has("Content-Range") || encoding !== null && encoding !== "identity" ||
-      length !== null && (!/^\d+$/.test(length) || Number(length) !== manifest.byteCount)) {
-    void response?.body?.cancel().catch(() => {}); throw new AvatarDownloadError();
+/** One scope per retained reader/coordinator. Unknown drain closes admission until recreation. */
+export class AvatarDownloadScope {
+  #unsafe = false;
+  check() { if (this.#unsafe) throw new AvatarDownloadError(); }
+  operation() { this.check(); return new AvatarDownloadOperation(() => { this.#unsafe = true; }); }
+}
+/** Own the exact response as soon as fetch returns, including after caller cancellation. */
+class AvatarDownloadOperation {
+  #response; #reader; #cancellation; #draining; #finishing; #unsafe;
+  constructor(unsafe) { this.#unsafe = unsafe; }
+  adopt(response) {
+    if (!(response instanceof Response) || this.#response !== undefined) throw new AvatarDownloadError();
+    this.#response = response;
   }
-  const reader = response.body.getReader(), parts = []; let size = 0;
-  const abort = () => { void reader.cancel().catch(() => {}); }; signal.addEventListener("abort", abort, { once: true });
-  try {
-    while (true) {
-      check(); const { value, done } = await reader.read(); if (done) break;
-      if (!(value instanceof Uint8Array) || value.byteLength === 0 || parts.length >= 128 || (size += value.byteLength) > manifest.byteCount) throw new AvatarDownloadError();
-      parts.push(value.slice());
+  #cancel() {
+    return this.#cancellation ??= Promise.resolve().then(() => (this.#reader ?? this.#response?.body)?.cancel())
+      .catch(() => { this.#unsafe(); throw new AvatarDownloadError(); });
+  }
+  drain() {
+    return this.#draining ??= (async () => {
+      try {
+        if (!this.#reader && this.#response?.body?.locked) throw new AvatarDownloadError();
+        await this.#cancel();
+        this.#reader?.releaseLock();
+      } catch { this.#unsafe(); throw new AvatarDownloadError(); }
+    })();
+  }
+  /** Also await the concrete CloudKit client's actual late fetch/body/cancel work. */
+  finish(client) {
+    return this.#finishing ??= (async () => {
+      const results = await Promise.allSettled([this.drain(), Promise.resolve().then(() => client.waitForPendingOperations())]);
+      if (results.some(result => result.status === "rejected")) { this.#unsafe(); throw new AvatarDownloadError(); }
+    })();
+  }
+  async read({ url, manifest, signal, check }) {
+    const response = this.#response, parts = []; let size = 0, bytes;
+    const abort = () => { void this.#cancel().catch(() => {}); };
+    try {
+      const length = response?.headers?.get("Content-Length"), encoding = response?.headers?.get("Content-Encoding");
+      if (!(response instanceof Response) || response.status !== 200 || response.redirected || response.url && response.url !== url || !response.body ||
+          !/^(image\/jpeg|application\/octet-stream)(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") ||
+          response.headers.has("Content-Range") || encoding !== null && encoding !== "identity" ||
+          length !== null && (!/^\d+$/.test(length) || Number(length) !== manifest.byteCount)) throw new AvatarDownloadError();
+      this.#reader = response.body.getReader();
+      signal.addEventListener("abort", abort, { once: true });
+      while (true) {
+        check(); const { value, done } = await this.#reader.read(); if (done) break;
+        if (!(value instanceof Uint8Array) || value.byteLength === 0 || parts.length >= 128 || (size += value.byteLength) > manifest.byteCount) throw new AvatarDownloadError();
+        parts.push(value.slice());
+      }
+      check(); if (size !== manifest.byteCount) throw new AvatarDownloadError();
+      bytes = new Uint8Array(size); let offset = 0;
+      for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
+      await this.drain(); check(); return bytes;
+    } catch (error) { bytes?.fill(0); throw error; }
+    finally {
+      signal.removeEventListener("abort", abort);
+      for (const part of parts) part.fill(0);
+      try { await this.drain(); } catch (error) { bytes?.fill(0); throw error; }
     }
-    check(); if (size !== manifest.byteCount) throw new AvatarDownloadError();
-    const bytes = new Uint8Array(size); let offset = 0;
-    for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
-    return bytes;
-  } finally { signal.removeEventListener("abort", abort); void reader.cancel().catch(() => {}); reader.releaseLock(); for (const part of parts) part.fill(0); }
+  }
 }

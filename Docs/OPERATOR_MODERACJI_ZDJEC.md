@@ -1,5 +1,7 @@
 # CK-04e.3j.3 — ogląd treści i decyzja operatora
 
+Aktualizacja CK-05c.4c: wspólne pobieranie zdjęć oczekuje teraz na zakończenie pierwszego cancel oraz rzeczywistej pracy klienta CloudKit, również dla późnego fetch. Niepotwierdzone sprzątanie zamyka dany scope; pełny kontrakt i granice w [odpływie IO zdjęć](ODPLYW_IO_ZDJEC_PROFILOWYCH.md).
+
 Celem jest rzeczywisty przepływ: uprawniony operator otwiera konkretną treść, ogląda ją i świadomie podejmuje decyzję. Zatwierdzenie nie publikuje zdjęcia za właściciela. Ten dokument nie traktuje modelowanego approved ani samej metody review jako gotowej moderacji.
 
 ## Kolejność wdrożenia

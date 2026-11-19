@@ -188,7 +188,8 @@ test("owner reader retains admission after timed-out lookup until the ignored de
   try {
     const blocked = new Promise(resolve => { release = resolve; });
     const reader = new CloudKitAvatarOwnerPreview({ ...f.configuration, isEnabled: () => true, timeoutMilliseconds: 40,
-      client: { async lookup(...args) { await blocked; return f.client.lookup(...args); } } });
+      client: { async lookup(...args) { await blocked; return f.client.lookup(...args); },
+        waitForPendingOperations: () => f.client.waitForPendingOperations() } });
     await assert.rejects(reader.prepare(f.selection()), code("AVATAR_READ_UNAVAILABLE"));
     await assert.rejects(reader.prepare(f.selection()), code("AVATAR_READ_LIMIT"));
     release(); await immediate(); await immediate();

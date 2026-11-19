@@ -1,5 +1,7 @@
 # CK-04e.3f — chroniony JPEG i świeża autoryzacja cache
 
+Aktualizacja CK-05c.4c: wspólne pobieranie zdjęć oczekuje teraz na zakończenie pierwszego cancel oraz rzeczywistej pracy klienta CloudKit, również dla późnego fetch. Niepotwierdzone sprzątanie zamyka dany scope; pełny kontrakt i granice w [odpływie IO zdjęć](ODPLYW_IO_ZDJEC_PROFILOWYCH.md).
+
 Stan z 16 listopada 2026. CloudKitAvatarReader łączy aktualną publikację z kontrolą odbiorcy, metadanymi CloudKit i ograniczonym pobraniem pliku. Zwraca jednorazowy finalizer Response do wykonania po ostatnim checkpoint/await hosta. Nie ma jeszcze publicznej trasy HTTP ani integracji iOS/cache; nie aktywowano usług. [Zgoda i publikacja](ZGODA_MODERACJA_I_PROFIL_ZDJECIA.md), [plan](PLAN_AVATAROW_CLOUDKIT.md).
 
 ## Polityka przed i po sieci

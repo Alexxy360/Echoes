@@ -1,7 +1,7 @@
 import { plain, publicUUID, recordIdentity, digest } from "./public-record-schema.mjs";
 import { validateAvatarRecord } from "./avatar-record-schema.mjs";
 import { inspectAvatarJPEG } from "./avatar-jpeg.mjs";
-import { AvatarDownloadError, avatarDownloadHosts, avatarDownloadURL, readAvatarDownload } from "./avatar-protected-download.mjs";
+import { AvatarDownloadError, avatarDownloadHosts, avatarDownloadURL, AvatarDownloadScope } from "./avatar-protected-download.mjs";
 import { communityCoordinate, communityPolicy, distanceMeters } from "./community-domain.mjs";
 
 export const avatarManifestHeader = "X-Echoes-Avatar-Manifest";
@@ -13,12 +13,13 @@ export class AvatarReadError extends Error {
  * persisted bytes. Trusted host must keep one instance and apply HTTP admission before prepare().
  */
 export class CloudKitAvatarReader {
+  #downloads = new AvatarDownloadScope();
   #authentication; #community; #policy; #profiles; #registry; #client; #checkpoint; #enabled; #clock; #fetch; #hosts; #timeout; #active = 0;
   constructor({ authentication, communityState, avatarPolicy, profileRepository, registry, client, checkpoint, isEnabled,
     verifiedDownloadHosts = [], fetchImplementation = fetch, clock = Date.now, timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" || typeof communityState.visible !== "function" ||
         typeof avatarPolicy?.readPublication !== "function" || typeof avatarPolicy.assertReadPublication !== "function" || typeof profileRepository?.beginRead !== "function" ||
-        typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" || typeof checkpoint?.advance !== "function" ||
+        typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" || typeof client.waitForPendingOperations !== "function" || typeof checkpoint?.advance !== "function" ||
         typeof isEnabled !== "function" || typeof fetchImplementation !== "function" || typeof clock !== "function" ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000 ||
         !Array.isArray(verifiedDownloadHosts)) throw new AvatarReadError("AVATAR_READ_INPUT");
@@ -63,6 +64,7 @@ export class CloudKitAvatarReader {
     const options = this.#options(value), startedAt = this.#now(), expiresAt = startedAt + this.#timeout;
     if (!Number.isSafeInteger(expiresAt)) throw new AvatarReadError();
     if (this.#active >= 4) throw new AvatarReadError("AVATAR_READ_LIMIT");
+    let download; try { download = this.#downloads.operation(); } catch (error) { throw this.#error(error); }
     this.#active++;
     const controller = new AbortController(); let timer, data, closed = false, settled = false, released = false, rejectCancellation;
     const cancelled = new Promise((_, reject) => { rejectCancellation = reject; });
@@ -70,7 +72,7 @@ export class CloudKitAvatarReader {
     const dispose = () => { if (closed) return; closed = true; clearTimeout(timer); controller.abort(); options.signal?.removeEventListener("abort", cancel);
       data?.fill(0); data = undefined; release(); };
     const cancel = () => { dispose(); rejectCancellation(new AvatarReadError()); };
-    const transport = () => { const now = this.#now(); if (closed || controller.signal.aborted || options.signal?.aborted || this.#enabled() !== true || now < startedAt || now >= expiresAt) throw new AvatarReadError(); };
+    const transport = () => { this.#downloads.check(); const now = this.#now(); if (closed || controller.signal.aborted || options.signal?.aborted || this.#enabled() !== true || now < startedAt || now >= expiresAt) throw new AvatarReadError(); };
     try {
       timer = setTimeout(cancel, this.#timeout); options.signal?.addEventListener("abort", cancel, { once: true });
       const work = (async () => {
@@ -106,8 +108,8 @@ export class CloudKitAvatarReader {
           if (!revalidated) {
             const url = avatarDownloadURL(projection.assets[options.variant].downloadURL, this.#hosts);
             const request = new Request(url, { method: "GET", redirect: "manual", credentials: "omit", headers: { Accept: "image/jpeg", "Cache-Control": "no-store" } });
-            guard(); response = await this.#fetch(request, { signal: controller.signal }); guard();
-            data = await readAvatarDownload(response, { url, manifest, signal: controller.signal, check: transport }); guard();
+            guard(); response = await this.#fetch(request, { signal: controller.signal }); download.adopt(response); guard();
+            data = await download.read({ url, manifest, signal: controller.signal, check: transport }); guard();
             if (digest(data) !== manifest.sha256) throw new AvatarReadError("AVATAR_READ_RESPONSE");
             const header = inspectAvatarJPEG(data, { maximumBytes: options.variant === "image" ? 256000 : 32000, maximumPixels: options.variant === "image" ? 512 : 128 });
             try { if (header.width !== manifest.width || header.height !== manifest.height || digest(header.bytes) !== manifest.sha256) throw new AvatarReadError("AVATAR_READ_RESPONSE"); }
@@ -123,10 +125,9 @@ export class CloudKitAvatarReader {
             } catch (e) { throw this.#error(e); } finally { dispose(); }
           };
         } finally {
-          if (response?.body && !response.body.locked) void response.body.cancel().catch(() => {});
-          settled = true;
-          if (closed) { data?.fill(0); data = undefined; }
-          release();
+          let drained = false;
+          try { await download.finish(this.#client); drained = true; }
+          finally { settled = drained; if (closed) { data?.fill(0); data = undefined; } release(); }
         }
       })();
       return await Promise.race([work, cancelled]);
