@@ -1,3 +1,4 @@
+import { avatarReportReviewWorkerdProof } from "./avatar-report-review-workerd-proof.mjs";
 import { DurableObject } from "cloudflare:workers";
 import { normalizedAvatarManifest } from "../../src/avatar-normalizer.mjs";
 import { createWorkerAvatarNormalizer } from "../../src/avatar-codecs-workerd.mjs";
@@ -41,6 +42,7 @@ export class AvatarCodecTestAuthority extends DurableObject {
   async fetch(request) {
     try {
       if (request.method !== "POST") return new Response(null, { status: 405 });
+      if (new URL(request.url).pathname === "/photo-report-review-proof") return await avatarReportReviewWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/photo-report-cancellation-proof") return await avatarReportCancellationWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/photo-report-proof") return await avatarReportWorkerdProof(request, this.ctx.storage);
       if (new URL(request.url).pathname === "/read-proof") return await avatarReadWorkerdProof(request, this.ctx.storage);

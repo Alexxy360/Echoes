@@ -1265,3 +1265,19 @@ Wykonane modyfikacje:
 Weryfikacja: finalne870/870 Node22.23.5 i870/870 Node24.22.1, syntax188MJS obu. Negatywna kopia bez moderation revision oblewa1test/1asercję, oryginał zachowany. Pierwszy focus nie załadował źle nazwanego eksportu; drugi15/16 miał zły klucz authorize fixture, poprawiono na authorizeMutation bez poluzowania odmowy produktu. Pierwszy pełny870Node22 zielony; po dodaniu indeksu/kontroli target_owner oba finały powtórzono. Parser dokumentacji skorygowano dla spec reporter Node24 bez ponawiania testów.
 
 Granice: testowe confirm nie dowodzi oglądu. Dalej2b chroniony koordynator i własny lokalny workerd,2c HTTP/Runtime,2d natywny journal/host/panel oraz cały rzeczywisty odbiór. File reopen to ten sam proces, nie power-loss/PITR. iOS/Core/deps/CI niezmienione i niepowtarzane. Bez zdalnych zmian/usług/aktywacji/praw/kluczy/sekretów/opłat/telefonu/Apple/Cloudflare/Production/Firebase/TestFlight; zastany projekt zachowany. [Kontrakt](OPERATOR_ZGLOSZEN_ZDJEC.md), [wyniki i SHA](evidence/avatar-report-review-state-local-tests.json).
+
+## CK-05d.2b — 2026-11-20 — chroniony ogląd zgłoszonego zdjęcia
+
+Cel: decyzja musi wynikać z rzeczywistego serwerowego odczytu dokładnego zgłoszonego materiału. Stan: lokalny koordynator, bez instalacji HTTP/Runtime/UI.
+
+Wykonane modyfikacje:
+
+- Nowy gateway/src/avatar-report-review-coordinator.mjs: osobna rola po authorize, domyślna odmowa i ponowne kontrole flagi/konta/sesji po await/finalizacji. Kolejka filtrowana, poufny raport i exact photo/pointer/commitments/JPEG/SHA, rezerwacja przed avatar/CDN, verified dopiero po IO. Nowy null-target receipt przy brakującym oryginale pozwala tylko dismiss; bez substytucji nowego zdjęcia.
+- Jednorazowy wewnętrzny wynik metadata+JPEGcopy, brak reporterID/GPS/URL/providerreceipt; oryginał czyszczony, kopia należy do trusted caller. Atomowa decyzja2a, exact replay i recovery bez ponownego hide; scope/outcome sprawdzane po trwałości/checkpoint.8s/wall+mono/retained slot do rzeczywistego drain, fail closed na błąd pierwszego cancel i brak zwalniania nowszego slotu starym finalizerem.
+- Avatar-report-review-state: getReserved nieuprawniający do decyzji oraz isOpen kontrolujący aktualność/cancel/retencję również w queue finalizer.
+- Nowy fixture i23 testy unit koordynatora; nowy proof/test workerd oraz trasa wyłącznie lokalnego avatar-normalizer-worker. Realny DO SQLite/klient/podpisy/chroniony JPEG, modelowany Apple/CDN/konta, outbound zablokowany; decyzja/replay/reinstancja/recovery po expiry, bez drugiego download.
+- Operator contract, trzy plany, evidence JSON i ten dziennik zaktualizowane.
+
+Weryfikacja: finalne894/894 Node22.23.5 i894/894 Node24.22.1, syntax193MJS obu.24 nowe funkcje (23 unit+1 workerd); wcześniejszy focus41/41 przed dwiema końcowymi próbami slotu. Negatywna kopia bez captured identity oblewa1test/1asercję; oryginał zachowany. Pierwszy focus40/41 miał błędny klucz tamper modelu, poprawiono na imageSha256. Pierwszy workerd model wymagał nieeksponowanego Request.credentials; fixture akceptuje undefined i sprawdza exact headers, produkt zachowuje omit. Ostateczne oba pełne zestawy obejmują wszystkie poprawki.
+
+Granice: nie jest to dowód oglądu człowieka; HTTP/Runtime/format/natywny journal/host/panel są jeszcze2c/2d. Odtworzenie state/koordynatora w tej samej DO bazie/procesie to nie restart/power-loss/PITR ani hosted Free. iOS/Core/deps/CI bez zmian i ponowień, zastany projekt zachowany. Bez nowych usług/aktywacji/uprawnień/sekretów/kluczy/opłat/SDK telefonu/Apple/Cloudflare/Production/Firebase/TestFlight. Cały rzeczywisty odbiór pozostaje obowiązkowy. [Kontrakt](OPERATOR_ZGLOSZEN_ZDJEC.md), [wyniki i SHA](evidence/avatar-report-review-coordinator-local-tests.json).

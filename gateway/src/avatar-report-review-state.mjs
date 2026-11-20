@@ -82,7 +82,11 @@ export class AvatarReportReviewState {
     if (retention && retention.state !== "pending") fail("AVATAR_REPORT_REVIEW_STALE");
   }
   isOpen(context) {
-    return this.#tx(() => { const row = this.#decision(context.recordName);
+    return this.#tx(() => {
+      try { this.#currentReport({ reportID: context.recordName, reportTag: context.recordTag, reportHash: context.payloadHash,
+        reportRequestID: context.requestID, reportExpiresAt: context.startedAt + 2592000000 }); }
+      catch (error) { if (error?.code === "AVATAR_REPORT_REVIEW_STALE") return false; throw error; }
+      const row = this.#decision(context.recordName);
       if (row && (row.report_tag !== context.recordTag || row.report_hash !== context.payloadHash)) fail("AVATAR_REPORT_REVIEW_STALE");
       return !row;
     });
@@ -105,6 +109,8 @@ export class AvatarReportReviewState {
     this.#currentReport(content); return { ...row, content: Object.freeze(content) };
   }
   get(reviewerID, sessionKey, inspectionID) { return this.#tx(() => this.#receipt(reviewerID, sessionKey, inspectionID)); }
+  /** Trusted coordinator guard during protected IO; this never authorizes a decision. */
+  getReserved(reviewerID, sessionKey, inspectionID) { return this.#tx(() => this.#receipt(reviewerID, sessionKey, inspectionID, true)); }
   async reserve(reviewerID, sessionKey, content) {
     if (!id(reviewerID) || !hash(sessionKey)) fail("AVATAR_REPORT_REVIEW_INPUT");
     const contentHash = avatarReportReviewContentHash(content), inspectionID = randomUUID(), key = reviewerKey(reviewerID);

@@ -1,0 +1,96 @@
+{
+  "stage": "CK-05d.2b",
+  "createdAt": "2026-11-20T11:22:44.090270+00:00",
+  "baselineCommit": "e3e1a433d145508eb0ffb5609f4d3d5eeb26a095",
+  "tests": {
+    "newFunctions": 24,
+    "newUnitFunctions": 23,
+    "newActualLocalWorkerdFunctions": 1,
+    "focusedBeforeFinalTwoDrainCases": 41,
+    "focusedPassed": 41,
+    "fullEach": {
+      "tests": 894,
+      "passed": 894,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "runtimes": [
+      "v22.23.5",
+      "v24.22.1"
+    ],
+    "syntaxMJSOnBoth": 193
+  },
+  "scope": {
+    "authorization": "default disabled and operator denied, sync true role only from actual authenticated account, session hash plus captured account rechecked after awaits and in finalizer, active accounts, no caller owner/role parameter",
+    "inspection": "actual private report read and payload hash; derive author from registered avatar only; exact publication/version/generation/hash/pointer/asset commitments; reserve before avatar/CDN reads (report metadata/checkpoint IO precedes reserve); strict provider URL/headers/download/SHA/JPEG dimensions, no fallback to newer image",
+    "receipt": "unverified guard getReserved never admits a decision, confirm only after exact image validation or explicit unavailable original; provider record NOT_FOUND or exact CDN404/410 produces NEW null-target dismiss-only receipt and uses second reservation",
+    "result": "internal one-use finalizer returns metadata plus bounded full JPEG copy or null; no HTTP/native wire installed. Caller owns image copy and must serialize/clear synchronously; originals zeroed on finish/abort, no all-RAM erasure claim",
+    "decision": "verified receipt and exact report/source checked before atomic state decision; same confirmed decision replays metadata without mutating; after durable IO/checkpoint recheck role/account and exact outcome; recovery read-only after inspection expiry",
+    "lifecycle": "one retained operation/finalizer,8s absolute timer plus wall/monotonic floors including partial rollback; actual late fetch/body FIRST cancel/client drain retains slot; failed drain closes scope; old finalizer cannot release new slot"
+  },
+  "workerd": {
+    "actual": "workerd/DO SQLite, real public client P256 signing, protected JPEG validation, decisions and checkpoint/re-instantiation recovery; global outbound denied",
+    "modeled": "Apple/CloudKit/CDN, identities and role predicate, process/time; generated synthetic PEM only. Same process/DO storage, no process restart/power-loss/PITR/hosted Free acceptance",
+    "verified": [
+      "ordinary account denied",
+      "role revoked finalizer denied",
+      "one queued report",
+      "exact reason and JPEG hash",
+      "exact decision replay",
+      "rejected exact publication",
+      "confirmed after coordinator/state recreation and90sec expiry",
+      "closed queue",
+      "one image download",
+      "real SQL and independently verified signatures"
+    ]
+  },
+  "negativeControl": {
+    "copy": "/private/tmp/echoes-avatar-report-review-coordinator-negative",
+    "mutation": "omit captured reviewerID/sessionKey equality only",
+    "test": "same bearer resolving to another permitted moderator cannot inherit an old prepared inspection",
+    "failedTests": 1,
+    "assertionsFailed": 1,
+    "finding": "old prepared private content reaches changed authority",
+    "originalSourcePreserved": true
+  },
+  "setupNotes": [
+    "Initial focus40/41: synthetic manifest-tamper case used wrong field case imageSHA256 vs actual imageSha256; fixed test only,41/41 passed.",
+    "First workerd returned redacted unavailable because model required Request.credentials although workerd may not expose that property. Fixture accepts undefined but validates exact accept/cache-control headers; production Request still explicitly uses omit. Next actual workerd1/1 and both final full894 passed.",
+    "Final review maps wait/drain errors through redacted coordinator error, proves partial clock rollback after forward observations, and adds two retained-body/old-finalizer cases before final full suites."
+  ],
+  "limits": [
+    "No installed photo-report moderator HTTP/Runtime/native transport/UI;2c/2d next. Receipt is trusted server IO proof, not proof a human saw the image.",
+    "JPEG structural/dimension/hash checks reuse protected reader; previous upload normalization and future native decode remain distinct.",
+    "No real CloudKit/SIWA/ordinary A-B/hosted capacity/Free/device acceptance.",
+    "No schema/roles/keys/secrets/services/activation/fees/device/Apple/Cloudflare/Production/Firebase/TestFlight changes.",
+    "iOS/Core/deps/CI unchanged and not retested."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-report-review-coordinator.mjs": "216a2ebe52c9d295cecb73ee5beecb936d168757dfcafd68c86329d8f60b136d",
+    "gateway/src/avatar-report-review-state.mjs": "a42e415f89b11467f15ae944c184763b2cd062e11aecdf14f74e0acba51be30b",
+    "gateway/test/avatar-report-review.test.mjs": "6b5c279bc1575ab5b58f78cedfaaa88bebe344b3ad3d2f06ef2f2d26b27a4839",
+    "gateway/test/avatar-report-review-workerd.test.mjs": "e149e6a77c842cea86e447d5e4cfaab161abb65d28f59631123047862a3f1c69",
+    "gateway/test/support/avatar-report-review-fixture.mjs": "2e842a694169fca5c7149142b5bf070c7230888f0eee39dfcd0daee1f56aea71",
+    "gateway/test/support/avatar-report-review-workerd-proof.mjs": "5b66ec3d62cc0cf6e8ca3505be5e991ffea39ccf8ba20970595b4ac9a1c8f5ce",
+    "gateway/test/support/avatar-normalizer-worker.mjs": "57e91fe8852d62a573029677559b6a400463149468be4df59501f2f37ea3320c"
+  },
+  "logsSHA256": {
+    "/private/tmp/echoes-avatar-report-review-focus.log": "387547e980d6cde509febd530f0fd68c5f2dace56aee29623d15bd008146cf55",
+    "/private/tmp/echoes-avatar-report-review-focus2.log": "d5ea02fbeded98e655da544bb1b31f96a77027929c8272e26f798da947fbafdc",
+    "/private/tmp/echoes-avatar-report-review-workerd.log": "6e1b8d60e1a386e63db0bb699465e6d103e0cf39c2ca1ffd09350fae50a97045",
+    "/private/tmp/echoes-avatar-report-review-workerd2.log": "ccecf623dc11882c63d6a4825db5807f5ab82116ddaf51bb5a251e2dadbf4217",
+    "/private/tmp/echoes-avatar-report-review-full22.log": "7d4b745bd425043c821c50191b3c9a7533c45f00a9962617b405b9df4137aade",
+    "/private/tmp/echoes-avatar-report-review-full24.log": "8828fff0b571ed7fb8381f704c6cd60ca5940b5ff0d088992ae1dbab57b3acd1",
+    "/private/tmp/echoes-avatar-report-review-negative.log": "b4db779d1df5ea3b366edaf825658c117eaa4790bdefe75f14588a7547adaf00"
+  },
+  "syntaxReportSHA256": "f4637561775d796e3ebd7662ae59ee21a0163ada5cabf685dce8a3e03fb09ef7",
+  "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "remoteChanges": false,
+  "newServicesFeesKeysRolesSecrets": false,
+  "remaining": [
+    "CK-05d.2c closed HTTP/Runtime, bounded private image+metadata framing and final authorization",
+    "CK-05d.2d typed native transport/journal/host/actual explicit moderator UI",
+    "all real full-plan acceptance and controlled TestFlight preparation"
+  ]
+}
