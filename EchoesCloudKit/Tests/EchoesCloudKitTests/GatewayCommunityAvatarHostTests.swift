@@ -5,7 +5,7 @@ import Testing
 
 @testable import EchoesCloudKit
 
-@MainActor private final class HostCommunityClient: CommunityClient {
+@MainActor final class CommunityAvatarHostClient: CommunityClient {
     var owner = "67000000-0000-4000-8000-000000000001"
     var people: [NearbyProfile] = []
     var page = MessagePage(messages: [], nextCursor: nil)
@@ -29,18 +29,18 @@ import Testing
     func report(messageID: String, reason: String) async throws {}
     func deleteOwnData() async throws { throw GatewayCommunityFailure.unavailable }
 }
-@MainActor private final class HostClock { var date = Date(timeIntervalSince1970: 1_794_603_600) }
-@MainActor private struct HostFixture {
+@MainActor final class CommunityAvatarHostClock { var date = Date(timeIntervalSince1970: 1_794_603_600) }
+@MainActor struct CommunityAvatarHostFixture {
     let photo: PhotoFixture
-    let data: HostCommunityClient
+    let data: CommunityAvatarHostClient
     let session: CommunitySession
     let host: GatewayCommunityAvatarHost
     let binding: GatewayCommunityAvatarBinding
-    let clock = HostClock()
+    let clock = CommunityAvatarHostClock()
     let position = Coordinate(latitude: 51.1123456, longitude: 17.0345678)
     init() async throws {
         photo = try .init()
-        data = HostCommunityClient()
+        data = CommunityAvatarHostClient()
         let clock = clock
         session = CommunitySession(client: data, now: { clock.date })
         host = try GatewayCommunityAvatarHost(
@@ -89,7 +89,7 @@ import Testing
         photo.cleanup()
     }
 }
-@MainActor private func hostEventually(_ predicate: @MainActor () -> Bool) async throws {
+@MainActor func communityAvatarEventually(_ predicate: @MainActor () -> Bool) async throws {
     for _ in 0..<5000 {
         if predicate() { return }
         try await Task.sleep(for: .milliseconds(1))
@@ -107,7 +107,7 @@ private final class HostObservationFlag: @unchecked Sendable {
 @Test @MainActor func avatarHostReadinessIsObservableBeforeRegistrationAndCannotReviveAnOldBinding()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let cold = CommunitySession(client: f.data, now: { f.clock.date })
     let newer = try f.host.bind(session: cold, isCurrent: { true })
@@ -129,7 +129,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     #expect(f.photo.source.tokenCalls == 0)
     await cold.refreshUsers()
     let lease = try newer.acquire(reference: f.photo.reference, surface: .map)
-    try await hostEventually { newer.image(for: lease) != nil }
+    try await communityAvatarEventually { newer.image(for: lease) != nil }
     let background = HostObservationFlag()
     withObservationTracking {
         #expect(newer.isAvailable)
@@ -153,17 +153,19 @@ private final class HostObservationFlag: @unchecked Sendable {
 
 @Test @MainActor func avatarHostDefersAllIOUntilAViewRegistersAndCoalescesOnlyPendingFreshReads() async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     await Task.yield()
     #expect(f.photo.source.tokenCalls == 0)
     let first = try f.acquire()
     let second = try f.acquire()
-    try await hostEventually { f.binding.image(for: first) != nil && f.binding.image(for: second) != nil }
+    try await communityAvatarEventually {
+        f.binding.image(for: first) != nil && f.binding.image(for: second) != nil
+    }
     #expect(await f.photo.api.captured().count == 1)
     let later = try f.acquire()
     #expect(f.binding.image(for: first) == nil)
-    try await hostEventually { f.binding.image(for: later) != nil }
+    try await communityAvatarEventually { f.binding.image(for: later) != nil }
     #expect(f.binding.image(for: first) != nil && f.binding.image(for: second) != nil)
     #expect(await f.photo.api.captured().count == 2)
     #expect(await f.photo.api.captured().last?.query.knownSHA256 != nil)
@@ -172,10 +174,10 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostMetadataOnlyRefreshDoesNotRefetchOrRemoveCurrentPixels() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let lease = try f.acquire()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     f.data.people = [
         f.person(
             f.photo.reference, name: "Inne imię", song: "Nowy utwór",
@@ -190,13 +192,13 @@ private final class HostObservationFlag: @unchecked Sendable {
 @Test @MainActor func avatarHostMapClearWinsOverOlderMessageMetadataAndCannotReuseOldPixelsAfterABA()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     f.session.isChatOpen = true
     f.data.page = .init(messages: [f.message(f.photo.reference)], nextCursor: nil)
     await f.session.refreshMessages()
     let lease = try f.acquire(surface: .message("message-1"))
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let old = f.data.people[0]
     f.data.people = [
         .init(
@@ -212,17 +214,17 @@ private final class HostObservationFlag: @unchecked Sendable {
     try await f.photo.api.gate.wait()
     #expect(f.binding.image(for: lease) == nil)
     await f.photo.api.gate.release()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == 2)
 }
 
 @Test @MainActor func avatarHostBlocksPixelsBeforeBlockRPCAcknowledgementAndReauthorizesAfterFailure()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let lease = try f.acquire()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let blockGate = PhotoGate()
     await blockGate.arm()
     defer { Task { await blockGate.release() } }
@@ -240,14 +242,14 @@ private final class HostObservationFlag: @unchecked Sendable {
     try await f.photo.api.gate.wait()
     #expect(f.binding.image(for: lease) == nil)
     await f.photo.api.gate.release()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == 2)
 }
 
 @Test @MainActor func avatarHostBackgroundForegroundFencesLateReadsAndRequiresFreshAuthorization()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     await f.photo.api.gate.arm()
     let lease = try f.acquire()
@@ -255,7 +257,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     await f.session.setForeground(false)
     #expect(f.binding.image(for: lease) == nil)
     await f.session.setForeground(true)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let count = await f.photo.api.captured().count
     #expect(count == 2)
     await f.photo.api.gate.release()
@@ -266,7 +268,7 @@ private final class HostObservationFlag: @unchecked Sendable {
 @Test @MainActor func avatarHostRebindingKeepsFourUnsettledSlotsAndOldBindingsCannotClearNewAccount()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let references = try (0..<4).map { _ in
         try AvatarReference(ownerID: UUID().uuidString.lowercased(), versionID: f.photo.reference.versionID)
@@ -277,7 +279,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     let old = try references.map { try f.acquire($0) }
     try await f.photo.api.gate.wait(4)
     try f.photo.source.select("67000000-0000-4000-8000-000000000002")
-    let data = HostCommunityClient()
+    let data = CommunityAvatarHostClient()
     data.owner = "67000000-0000-4000-8000-000000000002"
     data.people = [f.person(f.photo.reference)]
     let session = CommunitySession(client: data, now: { f.clock.date })
@@ -296,7 +298,7 @@ private final class HostObservationFlag: @unchecked Sendable {
         #expect(f.binding.image(for: lease) == nil)
     }
     await f.photo.api.gate.release()
-    try await hostEventually { newer.image(for: fresh) != nil }
+    try await communityAvatarEventually { newer.image(for: fresh) != nil }
     #expect(await f.photo.api.captured().count == 5)
     #expect(await f.photo.api.captured().last?.token.value.hasPrefix(data.owner + ".") == true)
     f.binding.invalidate()
@@ -304,11 +306,13 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostReleasingThumbnailKeepsSeparatelyPresentedFullImage() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let small = try f.acquire()
     let full = try f.acquire(surface: .profile)
-    try await hostEventually { f.binding.image(for: small) != nil && f.binding.image(for: full) != nil }
+    try await communityAvatarEventually {
+        f.binding.image(for: small) != nil && f.binding.image(for: full) != nil
+    }
     f.binding.release(small)
     #expect(f.binding.image(for: small) == nil && f.binding.image(for: full) != nil)
     f.binding.release(full)
@@ -316,11 +320,11 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostCapsReadAdmissionAndRetryDoesNotCreateAnAutomaticLoop() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     for _ in 0..<12 {
         let lease = try f.acquire()
-        try await hostEventually { f.binding.image(for: lease) != nil }
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
         f.binding.release(lease)
     }
     let denied = try f.acquire()
@@ -331,16 +335,16 @@ private final class HostObservationFlag: @unchecked Sendable {
     #expect(await f.photo.api.captured().count == 12)
     f.photo.state.time += 61
     f.binding.retry(denied)
-    try await hostEventually { f.binding.image(for: denied) != nil }
+    try await communityAvatarEventually { f.binding.image(for: denied) != nil }
     #expect(await f.photo.api.captured().count == 13)
 }
 
 @Test @MainActor func avatarHostHasSeparateFullImageCeilingAndBoundedConsumerRegistrations() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     for _ in 0..<4 {
         let lease = try f.acquire(surface: .profile)
-        try await hostEventually { f.binding.image(for: lease) != nil }
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
         f.binding.release(lease)
     }
     let denied = try f.acquire(surface: .profile)
@@ -350,7 +354,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     f.binding.release(denied)
     let leases = try (0..<320).map { _ in try f.acquire() }
     #expect(throws: GatewayAvatarFailure.limited(retryAfterSeconds: nil)) { try f.acquire() }
-    try await hostEventually { f.binding.image(for: leases[0]) != nil }
+    try await communityAvatarEventually { f.binding.image(for: leases[0]) != nil }
     #expect(await f.photo.api.captured().count == 5)
     for lease in leases { f.binding.release(lease) }
     #expect(f.binding.image(for: leases[0]) == nil)
@@ -358,37 +362,37 @@ private final class HostObservationFlag: @unchecked Sendable {
 
 @Test @MainActor func avatarHostChecksParentExpiryAndChatClosureWithoutRelyingOnANetworkRefresh() async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     f.session.isChatOpen = true
     f.data.page = .init(messages: [f.message(f.photo.reference)], nextCursor: nil)
     await f.session.refreshMessages()
     let chat = try f.acquire(surface: .message("message-1"))
-    try await hostEventually { f.binding.image(for: chat) != nil }
+    try await communityAvatarEventually { f.binding.image(for: chat) != nil }
     f.session.isChatOpen = false
     #expect(f.binding.image(for: chat) == nil)
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(surface: .message("message-1")) }
     f.data.people = [f.person(f.photo.reference, expiry: f.clock.date.timeIntervalSince1970 * 1000 + 100)]
     await f.session.refreshUsers()
     let map = try f.acquire()
-    try await hostEventually { f.binding.image(for: map) != nil }
+    try await communityAvatarEventually { f.binding.image(for: map) != nil }
     f.clock.date = f.clock.date.addingTimeInterval(0.2)
     #expect(f.binding.image(for: map) == nil)
 }
 
 @Test @MainActor func avatarHostConnectFailureStopsLoadingAndRequiresExplicitRetry() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     f.photo.source.tokenError = true
     let lease = try f.acquire()
-    try await hostEventually { !f.binding.isLoading(lease) }
+    try await communityAvatarEventually { !f.binding.isLoading(lease) }
     #expect(f.binding.image(for: lease) == nil && f.photo.source.tokenCalls == 1)
     #expect(await f.photo.api.captured().isEmpty)
     await f.session.refreshUsers()
     #expect(f.photo.source.tokenCalls == 1)
     f.photo.source.tokenError = false
     f.binding.retry(lease)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == 1)
 }
 
@@ -405,14 +409,14 @@ private final class HostObservationFlag: @unchecked Sendable {
             "reviewRevision": "67000000-0000-4000-8000-000000000089",
         ]))
 }
-@MainActor private func hostOwnReference(_ fixture: HostFixture) throws -> AvatarReference {
+@MainActor private func hostOwnReference(_ fixture: CommunityAvatarHostFixture) throws -> AvatarReference {
     try .init(
         ownerID: #require(fixture.photo.source.communityAuthorization).identity.accountID,
         versionID: fixture.photo.reference.versionID)
 }
 
 @Test @MainActor func avatarHostOwnerEditorReadsOnlyPublishedOwnSelectionWithoutLocation() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let own = try hostOwnReference(f)
     f.session.updateLocation(nil)
@@ -423,7 +427,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     #expect(await f.photo.api.captured().isEmpty)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
     let lease = try f.acquire(own, surface: .ownerEditor)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let query = try #require(await f.photo.api.captured().last?.query)
     #expect(query.reference == own && query.variant == .image && query.coordinate == nil)
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(surface: .ownerEditor) }
@@ -433,7 +437,7 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostOwnerFenceDropsMessagesAndOwnEditorButPreservesPeerPixels() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let own = try hostOwnReference(f)
     f.session.isChatOpen = true
@@ -443,7 +447,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     let message = try f.acquire(own, surface: .message("own-message"))
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
     let editor = try f.acquire(own, surface: .ownerEditor)
-    try await hostEventually {
+    try await communityAvatarEventually {
         f.binding.image(for: peer) != nil && f.binding.image(for: message) != nil
             && f.binding.image(for: editor) != nil
     }
@@ -464,7 +468,7 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostLateOwnReadCannotRestorePixelsAfterWithdrawalOrABA() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let own = try hostOwnReference(f)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
@@ -475,7 +479,7 @@ private final class HostObservationFlag: @unchecked Sendable {
     #expect(f.binding.image(for: lease) == nil)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
     await f.photo.api.gate.release()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == 2)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 2, status: .rejected))
     #expect(f.binding.image(for: lease) == nil)
@@ -485,18 +489,18 @@ private final class HostObservationFlag: @unchecked Sendable {
 }
 
 @Test @MainActor func avatarHostOwnEditorCannotBorrowForeignScopeOrReviveBackgroundBinding() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let own = try hostOwnReference(f)
     f.host.observeOwner(f.photo.reference.ownerID, snapshot: try hostOwnerSnapshot(f.photo.reference))
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
     let lease = try f.acquire(own, surface: .ownerEditor)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     await f.session.setForeground(false)
     #expect(!f.binding.isOwnerAvailable && f.binding.image(for: lease) == nil)
     await f.session.setForeground(true)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     f.photo.source.cloudName = "another-private-scope"
     #expect(!f.binding.isOwnerAvailable && f.binding.image(for: lease) == nil)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
@@ -516,7 +520,7 @@ private func hostModerationIntent(
 @Test @MainActor func avatarHostModerationPendingFencesEveryPeerSurfaceAndPreservesUnrelatedOwner()
     async throws
 {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let peer = f.photo.reference
     let other = try AvatarReference(
@@ -530,7 +534,7 @@ private func hostModerationIntent(
     let profile = try f.acquire(peer, surface: .profile)
     let message = try f.acquire(peer, surface: .message("message-1"))
     let unrelated = try f.acquire(other)
-    try await hostEventually {
+    try await communityAvatarEventually {
         f.binding.image(for: map) != nil && f.binding.image(for: profile) != nil
             && f.binding.image(for: message) != nil && f.binding.image(for: unrelated) != nil
     }
@@ -543,10 +547,10 @@ private func hostModerationIntent(
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(peer) }
 }
 @Test @MainActor func avatarHostModerationExactResolutionRequiresFreshProtectedRead() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let lease = try f.acquire()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let before = await f.photo.api.captured().count
     let intent = try hostModerationIntent(f.photo.reference)
     f.host.observeModeration(.pending(intent))
@@ -555,16 +559,16 @@ private func hostModerationIntent(
     try await f.photo.api.gate.wait()
     #expect(f.binding.image(for: lease) == nil)
     await f.photo.api.gate.release()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     #expect(await f.photo.api.captured().count == before + 1)
 }
 @Test @MainActor func avatarHostModerationOldDecisionCannotClearANewerFence() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let first = try hostModerationIntent(f.photo.reference)
     let second = try hostModerationIntent(f.photo.reference)
     let lease = try f.acquire()
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     f.host.observeModeration(.pending(first))
     f.host.observeModeration(.pending(second))
     f.host.observeModeration(.resolved(.init(intent: first, outcome: .superseded)))
@@ -573,10 +577,10 @@ private func hostModerationIntent(
     f.host.observeModeration(.resolved(.init(intent: first, outcome: .notApplied)))
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
     f.host.observeModeration(.resolved(.init(intent: second, outcome: .superseded)))
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
 }
 @Test @MainActor func avatarHostModerationLateReadCannotRestorePendingPixels() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     await f.photo.api.gate.arm()
     let lease = try f.acquire()
@@ -589,7 +593,7 @@ private func hostModerationIntent(
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
 }
 @Test @MainActor func avatarHostModerationBootstrapFenceAppliesBeforeNewBindingStartsReads() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let intent = try hostModerationIntent(f.photo.reference)
     let before = await f.photo.api.captured().count
@@ -602,12 +606,12 @@ private func hostModerationIntent(
     #expect(await f.photo.api.captured().count == before)
 }
 @Test @MainActor func avatarHostModerationOwnImageNeedsFreshOwnerObservationAfterResolution() async throws {
-    let f = try await HostFixture()
+    let f = try await CommunityAvatarHostFixture()
     defer { f.close() }
     let own = try hostOwnReference(f)
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
     let lease = try f.acquire(own, surface: .ownerEditor)
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
     let intent = try hostModerationIntent(own)
     f.host.observeModeration(.pending(intent))
     f.host.observeModeration(
@@ -615,5 +619,5 @@ private func hostModerationIntent(
     #expect(f.binding.image(for: lease) == nil)
     #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 2))
-    try await hostEventually { f.binding.image(for: lease) != nil }
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
 }

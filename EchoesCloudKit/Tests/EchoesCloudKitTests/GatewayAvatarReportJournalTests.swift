@@ -8,12 +8,18 @@ final class PhotoReportJournalMemoryStorage: GatewayAvatarReportJournalStorage, 
     private struct State {
         var records: [String: Data] = [:], owners: [String: String] = [:]
         var writes = 0, reads = 0
+        var dispatchedReadsToPause: Int?
         var failAt: Int?
         var afterWrite = false, corruptWrite = false, failErase = false, mainThreadIO = false
     }
     private let lock = NSLock()
     private var state = State()
     let gate = ReviewStorageGate()
+    let readGate = ReviewStorageGate()
+    func pauseDispatchedRead(_ count: Int) {
+        lock.withLock { state.dispatchedReadsToPause = count }
+        readGate.arm()
+    }
     var records: [String: Data] {
         get { lock.withLock { state.records } }
         set { lock.withLock { state.records = newValue } }
@@ -38,11 +44,22 @@ final class PhotoReportJournalMemoryStorage: GatewayAvatarReportJournalStorage, 
     }
     var mainThreadIO: Bool { lock.withLock { state.mainThreadIO } }
     func read(scope: GatewayAvatarReportScope) throws -> Data? {
-        lock.withLock {
+        let (data, pause) = lock.withLock {
             state.reads += 1
             state.mainThreadIO = state.mainThreadIO || Thread.isMainThread
-            return state.records[scope.digest]
+            let data = state.records[scope.digest]
+            var pause = false
+            if let remaining = state.dispatchedReadsToPause, remaining > 0, let data,
+                let value = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                let entry = value["entry"] as? [String: Any], entry["phase"] as? String == "dispatched"
+            {
+                state.dispatchedReadsToPause = remaining - 1
+                pause = remaining == 1
+            }
+            return (data, pause)
         }
+        if pause { readGate.blockIfArmed() }
+        return data
     }
     func write(_ data: Data, scope: GatewayAvatarReportScope) throws {
         gate.blockIfArmed()

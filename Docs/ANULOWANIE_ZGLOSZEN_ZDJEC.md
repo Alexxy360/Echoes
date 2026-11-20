@@ -48,3 +48,8 @@ Natywne API/operacja cancel wysyła tylko ten sam UUID przez istniejący przypi�
 Lokalny rzeczywisty workerd/SQLite/Runtime/Edge sprawdził CAS anulowania z utraconym ACK i read-only recovery po odtworzeniu Runtime przy wyłączonym cancel/READ, bez drugiej mutacji raportu. Provider, konta i platforma są modelowane, outbound pozostaje zablokowany. Z siedmiu odpowiedzi tego Runtime korzystają rzeczywiste natywne HTTPClient i URLSession z URLProtocol. Osobny app-hosted test Keychain zamyka i uruchamia proces, odtwarza cancelling, przyjmuje syntetyczny odczyt cancelled, potwierdza i czyści wyłącznie własny losowy scope. To nie dowód power loss, rzeczywistego konta A/B lub zdalnego Apple/Cloudflare.
 
 [Dowody 2b.2](evidence/avatar-report-cancel-api-native-local-tests.json) zawierają wyniki, hashe i ograniczenia. Host/formularz i sprzężenie mutacji z lifecycle/erasure w Runtime aplikacji pozostają do 1c.3. Klient i usługi nadal domyślnie wyłączone; schemat zdjęć nadal lokalną propozycją. Operator zdjęć i wszystkie rzeczywiste odbiory pełnej migracji pozostają otwarte. Brak zmian Apple/Cloudflare/Firebase/Production, kluczy/praw/sekretów, opłat lub TestFlight. Kontakt właściciel poda później.
+
+
+## Podłączenie w sterowniku — CK-05d.1c.3a
+
+GatewayAvatarReportHost utrwala cancelling przed API i sprawdza aktualny scope oraz grant po zapisach/odczytach i odpowiedzi. Błąd wymaga reopen, a pierwotna metadana pozostaje. Accepted/unconfirmed w cancelling nie dają handle do potwierdzenia wyniku; cancelled może zamknąć próbę. Recovery działa bez grantu mutacji cancel. Host nadal nie jest podłączony do formularza/Runtime aplikacji. [Kontrakt hosta](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md), [lokalny odbiór](evidence/avatar-report-host-local-tests.json).

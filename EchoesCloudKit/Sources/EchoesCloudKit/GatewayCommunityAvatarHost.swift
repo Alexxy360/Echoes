@@ -36,7 +36,43 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         host?.isLoading(binding: id, lease: lease) == true
     }
     public func retry(_ lease: GatewayCommunityAvatarLease) { host?.retry(binding: id, lease: lease) }
+    /// An opaque claim for this currently decoded full profile photo. The reporting host
+    /// must still render/acknowledge it and obtain explicit consent before any dispatch.
+    public func reportPhoto(for lease: GatewayCommunityAvatarLease) throws -> GatewayAvatarReportPhoto {
+        guard let host else { throw GatewayAvatarReportHostFailure.displayRequired }
+        return try host.reportPhoto(binding: id, lease: lease)
+    }
     public func invalidate() { host?.invalidate(binding: id) }
+}
+
+/// Minted only by the protected avatar host. Holds no pixels, location or bearer. Every read
+/// resolves the exact original binding/consumer/group/client presentation and retires on refusal.
+@MainActor public final class GatewayAvatarReportPhoto: CustomStringConvertible, CustomReflectable {
+    let origin: String
+    let authorization: GatewayCommunityAuthorization
+    let owner: PrivateAccountScope
+    let reference: AvatarReference
+    private let resolve: @MainActor () -> (CGImage, Coordinate)?
+    private var retired = false
+    fileprivate init(
+        origin: String, authorization: GatewayCommunityAuthorization, owner: PrivateAccountScope,
+        reference: AvatarReference, resolve: @escaping @MainActor () -> (CGImage, Coordinate)?
+    ) {
+        self.origin = origin
+        self.authorization = authorization
+        self.owner = owner
+        self.reference = reference
+        self.resolve = resolve
+    }
+    func snapshot() throws -> (image: CGImage, coordinate: Coordinate) {
+        guard !retired, let value = resolve() else {
+            retired = true
+            throw GatewayAvatarReportHostFailure.displayRequired
+        }
+        return value
+    }
+    public nonisolated var description: String { "GatewayAvatarReportPhoto(<redacted>)" }
+    public nonisolated var customMirror: Mirror { Mirror(self, children: [:]) }
 }
 
 /// One runtime owns one host/client, including unsettled work across foreground bindings. Views
@@ -70,6 +106,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         let group: UUID
         let task: Task<Void, Never>
     }
+    @ObservationIgnored private let gatewayOrigin: String
     @ObservationIgnored private let client: GatewayAvatarClient
     @ObservationIgnored private let source: any GatewayAvatarAuthorizationSource
     @ObservationIgnored private let cloudKit: CloudKitConfiguration
@@ -109,6 +146,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         uptime: @escaping @MainActor () -> Double = { ProcessInfo.processInfo.systemUptime }
     ) throws {
         let relay = Relay()
+        self.gatewayOrigin = configuration.origin.absoluteString
         self.source = authorization
         self.cloudKit = cloudKit
         self.enabled = isEnabled
@@ -364,6 +402,33 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
             let group = groups[consumer.key], group.consumers.contains(lease.id), let handle = group.handle
         else { return nil }
         return client.image(for: handle)
+    }
+    fileprivate func reportPhoto(binding: UUID, lease: GatewayCommunityAvatarLease) throws
+        -> GatewayAvatarReportPhoto
+    {
+        guard context == binding, let consumer = consumers[lease.id], consumer.surface == .profile,
+            eligibility(consumer) != nil, let group = groups[consumer.key],
+            group.consumers.contains(lease.id),
+            let handle = group.handle, client.image(for: handle) != nil,
+            let authorization, let privateScope,
+            consumer.reference.ownerID != authorization.identity.accountID,
+            session?.usableCoordinate != nil
+        else { throw GatewayAvatarReportHostFailure.displayRequired }
+        return .init(
+            origin: gatewayOrigin, authorization: authorization, owner: privateScope,
+            reference: consumer.reference
+        ) { [weak self] in
+            guard let self, self.context == binding, self.authorization == authorization,
+                self.privateScope == privateScope,
+                let latest = self.consumers[lease.id], latest.surface == .profile,
+                latest.reference == consumer.reference,
+                self.eligibility(latest) != nil, let current = self.groups[latest.key],
+                current.id == group.id,
+                current.consumers.contains(lease.id), current.handle == handle,
+                let coordinate = self.session?.usableCoordinate, let image = self.client.image(for: handle)
+            else { return nil }
+            return (image, coordinate)
+        }
     }
     fileprivate func isLoading(binding: UUID, lease: GatewayCommunityAvatarLease) -> Bool {
         _ = presentationRevision

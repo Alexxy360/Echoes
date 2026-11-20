@@ -1,0 +1,31 @@
+# Formularz zgłoszenia oglądanego zdjęcia — CK-05d.1c.3
+
+Stan 1c.3a: zaimplementowany lokalnie odebrany sterownik i zaufane powiązanie z chronionym widokiem zdjęcia. Nie ma jeszcze formularza SwiftUI, połączenia z Runtime aplikacji ani aktywacji. Kolejna część 1c.3b obejmuje te elementy oraz lifecycle i usuwanie własnego journala; nie jest to zakończenie migracji. [Plan zdjęć](ZGLOSZENIA_ZDJEC_PLAN.md), [anulowanie](ANULOWANIE_ZGLOSZEN_ZDJEC.md).
+
+## Dokładne źródło i świadome wysłanie
+
+GatewayCommunityAvatarBinding.reportPhoto(for:) wydaje opaque GatewayAvatarReportPhoto tylko dla istniejącego własnego consumer lease pełnego zdjęcia na powierzchni profile. Zdjęcie musi pochodzić z zakończonego chronionego odczytu i dekodowania, nadal mieć bieżący client presentation, mapową wersję/zasięg i ważną pozycję. Właściciel nie zgłasza własnego zdjęcia. Mapa, miniatura, wiadomość, fallback z inicjałem, surowy AvatarReference ani edytor właściciela nie stanowią takiego źródła. Formularz ma być otwierany z profilu z faktycznie wczytanym zdjęciem.
+
+Claim nie przechowuje pikseli, powodu, GPS lub bearer. Przechowuje odniesienie do chronionego hosta i niejawne metadata wiązania. Każde użycie rozwiązuje dokładnie pierwotny binding/consumer/group/client handle, prywatny scope i natywną autoryzację. Zwolnienie consumer, odświeżenie nawet tej samej wersji, zmiana publikacji/rodzica, utrata zasięgu, blokada lub tło odcinają stare uprawnienie. Odmowa przy odczycie claim trwale go wycofuje; powrót dawnych wartości nie odtwarza go. Publiczne opisy i reflection są redagowane.
+
+GatewayAvatarReportHost sprawdza ten sam origin, konto, natywny binding i prywatnego właściciela oraz foreground i aktualność ekranu rodzica. Present nie wystarcza do submit: przed ACK host musi zwrócić obraz dokładnego handle. UI musi rozwiązać aktualne image(for:), faktycznie je wyświetlić i potwierdzić opaque presentation przez acknowledgeDisplay. Dopiero jawna akcja użytkownika z powodem wywołuje submit. Host nie traktuje nazwy użytkownika, znalezionego ID lub samego wywołania present jako dowodu wyświetlenia. W przyszłym formularzu ACK musi pochodzić z lifecycle rzeczywiście widocznego obrazu, a wysyłka z osobnego świadomego potwierdzenia.
+
+Materiał obowiązuje do 30 s, krócej jeżeli chroniony client/parent straci prawo do obrazu. Sprawdzane są wall time, uptime i rzeczywisty ContinuousClock; oba pierwsze zegary nie mogą cofnąć się nawet względem pośredniego odczytu. Timer powiadamia Observation, a gettery niezależnie sprawdzają aktualność. Gettery wycofują stan bez publikowania zmian podczas renderowania SwiftUI. Wygaśnięcie nie uruchamia odświeżenia lub żądania sieciowego.
+
+## Trwałość i granice mutacji
+
+Connect otwiera wyłącznie własny journal po kontroli sesji i ponawia kontrolę po każdym await. Brak zgody/aktywacji domyślnie odmawia przed tokenem, Keychain lub API. Jedna operacja na host; tło/invalidate anuluje pracę, ale slot jest zatrzymany do jej rzeczywistego zakończenia, nawet przy API ignorującym cancellation. Stary callback nie zwalnia nowego slotu. Zaobserwowana odmowa scope nie odżywa po przywróceniu dawnych wartości.
+
+Submit zużywa aktualny handle wyświetlenia; generuje jedno własne requestID, zapisuje prepared, potem dispatched i odczytuje dokładny journal. Po ostatnim odczycie ponownie sprawdza obraz i scope, a współrzędne pobiera z aktualnej CommunitySession bez parametru GPS od formularza. Powód jest normalizowany i walidowany przez istniejący zamknięty DTO. API widzi dokładną oglądaną wersję. Stan i rezultat sprawdzane są również po odpowiedzi oraz po zapisie końcowym. Accepted wymaga właściwej tożsamości; błędny outcome lub obcy wynik odmawia.
+
+Błąd po dowolnym zapisie zamyka kontekst i wymaga jawnego reopen; trwała intencja pozostaje. Nie ma automatycznego submit, nowego UUID albo przyjęcia, że błąd oznacza brak zapisu. Reopen nigdy nie odtwarza zdjęcia/powodu/pozycji lub zgody; udostępnia własną metadaną do recovery/cancel. Wcześniej utrwalone resolved można potwierdzić pod nowym opaque result handle bez powtarzania sieci. Stary handle nie potwierdza nowej instancji.
+
+Cancel zapisuje cancelling przed API i ponownie sprawdza grant po zapisach/odczytach/odpowiedzi. Recover nie wymaga grantu cancel i nie ponawia mutacji. Accepted/unconfirmed w cancelling nie dają handle do ack; tylko cancelled zamyka anulowanie. Wszystkie żądania nadal używają tego samego pierwotnego UUID i aktualnej sesji własnego konta. Błąd sign-in odrzuca tylko przechwyconą sesję, zachowując metadane próby.
+
+## Odbiór i następne części
+
+[Dowody 1c.3a](evidence/avatar-report-host-local-tests.json): 16 nowych funkcji obejmuje wyświetlenie/zgodę, protected full photo, najnowszą pozycję, dispatched widoczne przed API, lost ACK, reopen, anulowanie, brak ponowienia, zmiany natywnego/prywatnego scope, tło/parent, wycofanie claim po retry/release, cofnięcie zegarów, origin, błędne outcomes i stare result handles. Test ostatniego await zatrzymuje drugi odczyt dispatched (pierwszy to readback zapisu), zwalnia widok zdjęcia i potwierdza brak mutacji przy zachowanej metadanej dispatched. W kopii bez warunku acknowledgeDisplay test faktycznie oblewa. Chroniony pipeline obrazu/decoder/cache i journal są rzeczywistymi implementacjami lokalnymi; API raportowania, provider zdjęcia i natywne konta są syntetyczne. Nie jest to odbiór rzeczywistego CloudKit, SIWA lub ordinary A/B.
+
+1c.3b: formularz SwiftUI z aktualnym obrazem, jawnym potwierdzeniem i powodem w pamięci; komunikaty accepted/unconfirmed/cancelling/cancelled, jawne recovery/cancel/ack i ponowne otwarcie po błędzie. Podłączenie jednego hosta i journala w izolowanym GatewayDevelopmentRuntime, rodzica/foreground/native changes, prywatnego bootstrap peek i selektywnego account erasure przed usuwaniem sesji. Testy zachowania i UI z kontrolą dostępności oraz cleanup. Kontakt właściciel poda później.
+
+Następnie osobny operator zdjęć oraz wszystkie rzeczywiste odbiory pełnego planu: schemat/ACL, SIWA, zwykłe A/B, zapytania regionalne, ASSET/CDN, Free/capacity, retencja i fizyczne urządzenia. Nie zmieniono backendu, schematu, zależności/CI, uprawnień lub sekretów. Nie uruchomiono usług, opłat, telefonu, Apple/Cloudflare/Production/Firebase lub TestFlight. Zastany project.pbxproj zachowany.

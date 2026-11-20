@@ -1,0 +1,102 @@
+{
+  "stage": "CK-05d.1c.3a",
+  "createdAt": "2026-11-20T08:59:06.479293+00:00",
+  "baselineCommit": "89a9ddc527b63d8c32c590c5893b38b2a2f2ee47",
+  "native": {
+    "newFunctions": [
+      "avatarReportHostRequiresProtectedFullPhotoAndActualDisplayBeforeConsentDispatch",
+      "avatarReportHostSubmitsExactShownVersionCurrentCoordinateAndPersistsBeforeAPI",
+      "avatarReportHostLostACKReopensOnlyOriginalMetadataAndNeverRepeatsSubmission",
+      "avatarReportHostUnknownResultCannotAckOrReplaceUntilExplicitCancellationConfirmsFence",
+      "avatarReportHostLostCancelACKKeepsCancellingThroughAcceptedAndUnknownRecovery",
+      "avatarReportHostBackgroundRetainsBusyUntilActualLateAPICompletesAndPreservesRecovery",
+      "avatarReportHostParentFenceDuringDurablePrepareWithholdsMutationAndKeepsOwnPendingMetadata",
+      "avatarReportHostTokenNativeChangeBeforeDispatchNeverBorrowedByNewAccount",
+      "avatarReportHostOriginalPhotoClaimCannotBorrowRefreshedOrReleasedPixels",
+      "avatarReportHostExpiryRollbackParentAndObservedNativeFenceNeverReviveConsent",
+      "avatarReportHostConfirmedPendingReopensAsExactResultWithoutNetworkReplay",
+      "avatarReportHostRejectsForgedActionOutcomeAndCancelFlagRevokedAfterIO",
+      "avatarReportHostSignInFailureRevokesOnlyCapturedSessionWithoutErasingPending",
+      "avatarReportHostConfigurationAndPhotoOriginArePinnedAndPublicDescriptionsRedacted",
+      "avatarReportHostRechecksExactPhotoAfterLastJournalReadBeforeDispatch",
+      "avatarReportHostDefaultsClosedBeforeTokenJournalAndNetworkIO"
+    ],
+    "focusedBeforeFinalImageRetrievalMarker": 16,
+    "definedEach": 714,
+    "passedEach": 712,
+    "skippedEach": 2,
+    "failedEach": 0,
+    "platforms": [
+      "macOS arm64",
+      "iPhone 17 Pro iOS26.1 Simulator"
+    ],
+    "physicalSkips": [
+      "avatarUploadJournalPhysicalFileProtectionIsComplete",
+      "avatarDiskCachePhysicalFileProtectionIsComplete"
+    ],
+    "debugBuildForTesting": "passed",
+    "unsignedReleaseBuild": "passed",
+    "strictSwiftFormatFiles": 5,
+    "uiChanges": false,
+    "uiTestsRepeated": false
+  },
+  "scope": {
+    "claim": "minted only by protected avatar binding for live decoded full profile; exact original binding/consumer/group/client handle, non-self target; origin/native/private/account/parent/location checked; no pixels/GPS/bearer stored",
+    "consent": "same current handle must return image before display ACK; explicit submit(reason:) requires that ACK; no submission from AvatarReference or present alone",
+    "clock": "30sec maximum, wall/uptime floors including partial rollback, real ContinuousClock and local timer; underlying source may expire sooner",
+    "dispatch": "one UUID; durable prepared/dispatched and exact pending read; check source/scope after last await; latest session position immediately before API; validate result and durable terminal result after IO",
+    "recovery": "same persisted identity only; no restored photo/reason/GPS/consent or resubmission; old result handle cannot ACK reopened/new intent; terminal metadata reopens without network replay",
+    "cancel": "persist cancelling before API; accepted/unconfirmed keep cancelling; only cancelled permits ACK; recover works with cancel grant off",
+    "lifecycle": "retained single slot until actual API task completes; epoch/lease/revision/native/private/parent/background fences; failures require reopen and preserve metadata"
+  },
+  "boundaryTest": "Second dispatched read pauses after save-readback, exact photo consumer is released, then no API mutation; original dispatched remains durable.",
+  "limits": [
+    "Reporting API/photo provider/native accounts synthetic. Actual protected host/client/decoder/disk cache and memory-backed journal execute locally.",
+    "No product SwiftUI form or GatewayDevelopmentRuntime/account-erasure composition yet; next1c.3b.",
+    "No real SIWA/CloudKit/ordinary A-B/ASSET-CDN/Free capacity/power-loss evidence.",
+    "Backend/schema/deps/CI unchanged; prior850/850 Node22/24 at89a9ddc and UI3/3 not repeated."
+  ],
+  "negativeControl": {
+    "copy": "/private/tmp/echoes-avatar-report-host-negative",
+    "mutation": "final source/test copy, omit displayedID guard only in submit",
+    "test": "avatarReportHostRequiresProtectedFullPhotoAndActualDisplayBeforeConsentDispatch",
+    "failedTests": 1,
+    "issues": 3,
+    "finding": "submission without ACK wrongly succeeds; source preserved"
+  },
+  "setupNotes": [
+    "Grouped Observable test variables and conflicting exported HostFixture initially did not compile; split variables and reused uniquely named CommunityAvatarHost helpers.",
+    "Async assertion at right side of Testing autoclosure split into separate assertions, without relaxing product guards.",
+    "Initial full714 passed; final review added renderedID requirement before ACK, so full Mac/iOS and Debug/Release repeated on final sources.",
+    "Two initial final-test requests were not executed: automatic approval review hit Codex usage limit, not an unsafe-action finding. Explicit goal continuation retried approved local operations successfully."
+  ],
+  "logsSHA256": {
+    "/private/tmp/echoes-avatar-report-host-focus.log": "d8cbf8d0aa6073f059ba7f35b10a0afb03a821a80df98e7c64dd83e5ca1bab10",
+    "/private/tmp/echoes-avatar-report-host-focus2.log": "a038f9a6d2232207fd488450924934643f24d963809dd81767a9fc3349776bf9",
+    "/private/tmp/echoes-avatar-report-host-focus3.log": "9ebb880776e3d333aef53f7b94678457ebf2bf784a086217cc74896c6e530be2",
+    "/private/tmp/echoes-avatar-report-host-focus4.log": "887705648bd70c0601ed9fba3c612c9b1a79c6c2512ff4fe0a45a53566dd17b1",
+    "/private/tmp/echoes-avatar-report-host-full-mac-final.log": "8490cca83a844e635a71a5792c2e00f702220c25f02a4645c64d12e9f4bfa04d",
+    "/private/tmp/echoes-avatar-report-host-package-ios-final.log": "edc0b1107d52395b5142cfb96d7d24de0125a26e3084f90019c8b5ffc8b257df",
+    "/private/tmp/echoes-avatar-report-host-debug-build-final.log": "73eebd148405d3b83a63982cfae67bce89f4e72cda2e76f9916a6771c45215f0",
+    "/private/tmp/echoes-avatar-report-host-release-final.log": "5c57f9928a8fa0ffee6514f5e0db8f88ce439f4d332fc98b70a84456b3938b0d",
+    "/private/tmp/echoes-avatar-report-host-negative-final.log": "fb3c8ef735e568a5a67c3140ca18b35f5359c5180ca6da8f65c0d67da3d79b8e"
+  },
+  "iosSummarySHA256": "8a80b414444e5c8178524323e3f0e94f88c584741d917eec20de209b609cd17a",
+  "sourceSHA256": {
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportHost.swift": "65de93d9fabd921ad2f66093de728d3a877a9210c8c63d6c302076788b050b66",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "b820329ee4c965096a861fa602cd548a55a24e01c17fac5063ab9711596aa8e2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportHostTests.swift": "2258ea5f19bfdf02d3268137629d30d820db0245cabba564c1f2e4abd93344c2",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportJournalTests.swift": "5a6232091f217e4e4997f16050a82717bdb904d87bd67f8b08bd14e575ed809b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "5e11dabc9d2489b929d374eb8429d152dfaaed5d7fdedc0c43d0eb0ea84d2cee"
+  },
+  "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stageOverrideProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "remoteChanges": false,
+  "newServicesFeesKeysRolesSecrets": false,
+  "remaining": [
+    "1c.3b SwiftUI current-photo form and explicit confirmation",
+    "Runtime single-host/journal composition, foreground/parent/native changes, pending-recovery entry, exact owner erasure",
+    "photo-report operator",
+    "all real acceptance and controlled TestFlight preparation"
+  ]
+}
