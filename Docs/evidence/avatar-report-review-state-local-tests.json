@@ -1,0 +1,77 @@
+{
+  "stage": "CK-05d.2a",
+  "createdAt": "2026-11-20T11:06:54.453006+00:00",
+  "baselineCommit": "f789d2221aab70c120e1802942e5a575d899db05",
+  "tests": {
+    "newFunctions": 20,
+    "focusedPassed": 20,
+    "fullEach": {
+      "tests": 870,
+      "passed": 870,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "runtimes": [
+      "Node22.23.5",
+      "Node24.22.1"
+    ],
+    "syntaxMJSOnBoth": 188
+  },
+  "scope": {
+    "snapshot": "metadata only; exact report tag/hash/request/30-day deadline, avatar/version/generation/image hash and optional current publication/revision/pointer; no reason/bytes/GPS/URL/token",
+    "receipt": "trusted inner state, 1 per reviewer,256 global,10/min,90sec bounded by report deadline; unverified until trusted confirmation, session/content hashes",
+    "decision": "strict synchronous true caller authorization plus active reviewer; exact settled noncancelled report; hide requires exact still-approved published generation, revision, canonical descriptor/hash, avatar/pointer tags and active author; rejection and immutable report decision in SAME SQLite transaction",
+    "recovery": "read-only historical confirmed/not-applied/superseded; never replays hide or promises photo remains hidden after later actions",
+    "queue": "local keyset<=20 with progress marker, separate partial index/namespace, excludes cancelling and expired reports, no provider queries",
+    "cleanup": "inspections256/decisions100 and budgets, maintenance wake; disabled-owner erasure removes related operator/reporter/known target metadata without republishing"
+  },
+  "negativeControl": {
+    "copy": "/private/tmp/echoes-avatar-report-review-state-negative",
+    "mutation": "omit exact target.moderation_revision equality only",
+    "test": "changed tags, descriptor, revision or pointer never turn an old photo report into a new hide",
+    "failedTests": 1,
+    "assertionsFailed": 1,
+    "finding": "old receipt incorrectly hides changed revision",
+    "sourcePreserved": true
+  },
+  "setupNotes": [
+    "First focus did not load due to stale lower-case export name; fixed name, not acceptance.",
+    "Second focus15/16: fixture used authorize instead of repository authorizeMutation and correctly got PUBLIC_SCOPE. Only fixture corrected; final20/20.",
+    "First full870/870 Node22 passed. Added partial queue index and target-owner metadata validation; final870/870 repeated on Node22+24.",
+    "Documentation preflight initially expected TAP from both runtimes; Node24 used spec reporter. Verified actual870/870 summaries; no source edits or test reruns for this documentation-only parser correction."
+  ],
+  "limits": [
+    "No protected image coordinator/HTTP/native photo-report moderator yet. Explicit trusted confirm in tests is not viewing evidence.",
+    "Real local SQLite/file/hash/policy/repository; synthetic auth/CloudKit/provider. Second file connection in same process is not process restart/power-loss/PITR.",
+    "Full suite includes existing workerd integrations, but NEW state flow only Node SQLite; own workerd integration remains.",
+    "No cloud schema/roles/keys/secrets/activation/deployment/device/Production/Firebase/TestFlight or fees.",
+    "iOS/Core/deps/CI unchanged, not retested; ordinary A-B remains mandatory."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-report-review-state.mjs": "16da87fa514d807a8ad5bb83c9cfc1b0da27504abd43b713e006174730cf232f",
+    "gateway/src/public-record-registry.mjs": "7d5d5e7984a3969eb2832e747b0eb4e5b3c8790e011c0e6c4cc8177a3b8c1a42",
+    "gateway/src/community-state.mjs": "2711231499d13d3cdcdc6fd8594f2782dd46e360b1b26ceaaf46be6e9b789a5d",
+    "gateway/src/gateway-maintenance.mjs": "1ba1b3f9ba3e76f83f5460937ca932cf2a0bd2d519ab0a5cd3cb6c96bb0651eb",
+    "gateway/test/avatar-report-review-state.test.mjs": "1675ffefcbbfaaf7688bd22e85e998c1fafcdd60b34bca1ccb71cbf624caa142",
+    "gateway/test/support/avatar-report-review-state-fixture.mjs": "f74f2600284f4a9788a5a4b7adcbd182a7a34ea6c7aa5b1fe8bf1c8b0a10c41e"
+  },
+  "logsSHA256": {
+    "/private/tmp/echoes-avatar-report-review-state-focus.log": "299fbec75127ad68db09abb0e27233a7fa167e865ca94d2003776b3b7d81b8c4",
+    "/private/tmp/echoes-avatar-report-review-state-focus2.log": "8e52ab2d0c49fa60e67b8dec5c551055c1b8e679d2efc8cbcca553e37b7c126b",
+    "/private/tmp/echoes-avatar-report-review-state-focus3.log": "075530ddc3effe576bede4846886065f4608d01dea77cda2e705cd91cfe9748b",
+    "/private/tmp/echoes-avatar-report-review-state-full22.log": "2360f6dd9edc0aff7779d5f45d69c431c0b8f632a98ead5eedef519a7cbce313",
+    "/private/tmp/echoes-avatar-report-review-state-final22.log": "f4e8d55b1d53b766bfc7dd08a12afbf32d9edf5bf4cabb64e0829561d71ed0a1",
+    "/private/tmp/echoes-avatar-report-review-state-final24.log": "ca06f4d865c1c5b7456953a4050f47c6daba3c4b7762433cc81340888135ff80",
+    "/private/tmp/echoes-avatar-report-review-state-negative.log": "2828ab1f4172fcf85f82f91e62862b510a921873bc16b74fa80ed9488311826c"
+  },
+  "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "remoteChanges": false,
+  "newServicesFeesKeysRolesSecrets": false,
+  "remaining": [
+    "2b trusted coordinator/exact protected image/confidential reason and own local workerd integration",
+    "2c closed HTTP/Runtime/flags/operator grants/limits",
+    "2d native typed transport/journal/host/explicit moderator UI",
+    "all real full-plan acceptance"
+  ]
+}

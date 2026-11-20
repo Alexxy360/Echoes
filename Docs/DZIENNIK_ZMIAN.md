@@ -1249,3 +1249,19 @@ Weryfikacja: 75/75 target; finalne722 defined /720 pass /2 physical skip /0 fail
 Poprawki po błędach: pierwszy7UI miał5pass, odświeżony obraz nie aktualizował buforowanego Bool geometrii; zastąpiono go current CGRect/viewport, nową identity i przewinięciem materiału. Największy tekst wymagał poprawnego przewijania leniwych pól w helperach. Jedno częściowe przygotowanie omyłkowo uruchomiło test mimo assertion; workflow sprawdza teraz cały etap przed startem. Jeden znany nieudany pełny9 przerwano po błędzie helpera i zawieszeniu; nie liczy się do odbioru. Guarded throwing helpers i oczekiwanie prawdziwego ACK dały końcowe9/9. Trzy osierocone własne syntetyczne rooty usunięto po zakończeniu procesów z ograniczonym inwentarzem/no-symlink; finał sprząta każdy własny root.
 
 Ograniczenia: restart nowego UI używa plików fixture, nie realnego Keychain/Apple/CloudKit lub dwóch kont; wcześniejszy realny Keychain3/3 pozostaje osobnym dowodem. Nie zmieniono backendu/schematu/deps/CI, nie powtórzono ich850Node. Zachowano project.pbxproj użytkownika. Brak aktywacji, zdalnych zmian/usług/kluczy/ról/sekretów/opłat/telefonu/Production/Firebase/TestFlight. Dalej CK-05d.2 operator zdjęć oraz pełny rzeczywisty odbiór; kontakt właściciel poda później. [Dowody i hashe](evidence/avatar-report-ui-local-tests.json), [kontrakt](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md).
+
+## CK-05d.2a — 2026-11-20 — trwała decyzja o zgłoszonym zdjęciu
+
+Cel: stary raport odcina wyłącznie dokładną publikację, a wynik i efekt są atomowe. Stan: lokalny magazyn wewnętrzny, bez trasy/aktywacji.
+
+Wykonane modyfikacje:
+
+- Nowy gateway/src/avatar-report-review-state.mjs: zamknięty metadata snapshot/hash, tabele receipt/decision/budget,90s/256slotów/10min, dwufazowe confirm, aktywny reviewer i synchroniczne true. Hide_photo sprawdza aktualną approved publikację/version/generation/revision/descriptor/hash/tagi/zgodę/konto/retirement i atomowo ustawia rejected/ready0 z decyzją. Dismiss-only bez źródła; historyczne recovery bez ponownej mutacji.
+- Public-record-registry: reviewAvatarReportPage20/keyset, addytywny częściowy indeks, brak queries dostawcy i wykluczenie cancel/expiry.
+- Community-state: selektywne erasure moderatora/zgłaszającego/znanego autora w istniejącej disabled-owner transakcji. Gateway-maintenance: bounded purge/wake bez providerów i ponownej publikacji.
+- Nowy test/support fixture i20 funkcji testów: lokalne repo/SQLite/polityka, modele kont/provider; kolejka43, konflikt/rollback/lostACK/zegar/erasure i drugi connection pliku.
+- Nowy OPERATOR_ZGLOSZEN_ZDJEC, evidence JSON i aktualizacja trzech planów oraz dziennika.
+
+Weryfikacja: finalne870/870 Node22.23.5 i870/870 Node24.22.1, syntax188MJS obu. Negatywna kopia bez moderation revision oblewa1test/1asercję, oryginał zachowany. Pierwszy focus nie załadował źle nazwanego eksportu; drugi15/16 miał zły klucz authorize fixture, poprawiono na authorizeMutation bez poluzowania odmowy produktu. Pierwszy pełny870Node22 zielony; po dodaniu indeksu/kontroli target_owner oba finały powtórzono. Parser dokumentacji skorygowano dla spec reporter Node24 bez ponawiania testów.
+
+Granice: testowe confirm nie dowodzi oglądu. Dalej2b chroniony koordynator i własny lokalny workerd,2c HTTP/Runtime,2d natywny journal/host/panel oraz cały rzeczywisty odbiór. File reopen to ten sam proces, nie power-loss/PITR. iOS/Core/deps/CI niezmienione i niepowtarzane. Bez zdalnych zmian/usług/aktywacji/praw/kluczy/sekretów/opłat/telefonu/Apple/Cloudflare/Production/Firebase/TestFlight; zastany projekt zachowany. [Kontrakt](OPERATOR_ZGLOSZEN_ZDJEC.md), [wyniki i SHA](evidence/avatar-report-review-state-local-tests.json).

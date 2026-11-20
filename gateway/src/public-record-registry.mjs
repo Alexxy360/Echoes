@@ -15,6 +15,7 @@ const schema = [
     UNIQUE(account_id,kind,logical_key))`,
   `CREATE INDEX IF NOT EXISTS public_record_owner_v1 ON public_records_v1(account_id,phase,record_name)`,
   `CREATE INDEX IF NOT EXISTS public_report_review_v1 ON public_records_v1(record_name) WHERE kind='report' AND phase='settled'`,
+  `CREATE INDEX IF NOT EXISTS public_avatar_report_review_v1 ON public_records_v1(record_name) WHERE kind='avatarreport' AND phase='settled'`,
   `CREATE TABLE IF NOT EXISTS avatar_asset_transfers_v1 (
     record_name TEXT NOT NULL,variant TEXT NOT NULL CHECK(variant IN ('image','thumbnail')),
     transfer_id TEXT,request_id TEXT,payload_hash TEXT,generation INTEGER,content_sha256 TEXT,byte_count INTEGER,
@@ -488,6 +489,17 @@ export class PublicRecordRegistry {
         WHERE p.kind='report' AND p.phase='settled' AND p.record_name>? AND p.started_at<=? AND p.started_at>?
         ORDER BY p.record_name LIMIT 21`, after ?? "", now, now - 2592000000);
       const scanned = rows.slice(0, 20), items = scanned.map(row => this.#readable(row.record_name, "report")).filter(Boolean);
+      return Object.freeze({ items: Object.freeze(items), after: rows.length > 20 ? scanned.at(-1).record_name : null });
+    });
+  }
+  reviewAvatarReportPage(after = null) {
+    if (after !== null && (typeof after !== "string" || !/^community-v1-avatarreport-[a-f0-9]{64}$/.test(after))) throw new PublicRecordError("PUBLIC_INPUT");
+    return this.#tx(() => {
+      const now = this.#now(), rows = this.#rows(`SELECT p.record_name FROM public_records_v1 p
+        JOIN auth_accounts_v1 a ON a.account_id=p.account_id AND a.disabled=0
+        WHERE p.kind='avatarreport' AND p.avatar_report_cancel_key IS NULL AND p.phase='settled' AND p.record_name>? AND p.started_at<=? AND p.started_at>?
+        ORDER BY p.record_name LIMIT 21`, after ?? "", now, now - 2592000000);
+      const scanned = rows.slice(0, 20), items = scanned.map(row => this.#readable(row.record_name, "avatarreport")).filter(Boolean);
       return Object.freeze({ items: Object.freeze(items), after: rows.length > 20 ? scanned.at(-1).record_name : null });
     });
   }

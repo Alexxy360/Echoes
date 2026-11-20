@@ -1,3 +1,4 @@
+import { purgeAvatarReportReviews, avatarReportReviewWakeAt } from "./avatar-report-review-state.mjs";
 import { purgeAuthenticationStorage } from "./authentication-state.mjs";
 import { purgeAvatarReviewReceipts } from "./avatar-review-state.mjs";
 import { purgeCommunityReportReviews, communityReportReviewWakeAt } from "./community-report-review-state.mjs";
@@ -45,6 +46,7 @@ export class GatewayMaintenance {
     await purgeAuthenticationStorage(this.#storage, this.#clock);
     await purgeAvatarReviewReceipts(this.#storage, this.#clock);
     await purgeCommunityReportReviews(this.#storage, this.#clock);
+    await purgeAvatarReportReviews(this.#storage, this.#clock);
     this.#storage.transactionSync(() => expireAvatarTransferReceipts(this.#storage, this.#now()));
     await this.#storage.sync();
     await this.#limits.purgeExpired(); await this.#deletions.purgeCompletedReceipts();
@@ -82,6 +84,8 @@ export class GatewayMaintenance {
     const receipts = this.#storage.sql.exec("SELECT 1 FROM auth_account_deletions_v1 WHERE completed_at IS NOT NULL LIMIT 1").toArray().length > 0;
     const now = this.#now(), candidates = [];
     const reviewWakeAt = communityReportReviewWakeAt(this.#storage, this.#clock);
+    const photoReviewWakeAt = avatarReportReviewWakeAt(this.#storage, this.#clock);
+    if (photoReviewWakeAt !== null) candidates.push(Math.max(now + 60000, photoReviewWakeAt));
     if (reviewWakeAt !== null) candidates.push(Math.max(now + 60000, reviewWakeAt));
     if (timedRows || receipts || retentionSchedule.needsBackfill) candidates.push(now + 60000);
     if (processor && this.#deletions.dueDeletionIDs().length) candidates.push(retry.deletion ?? now + 60000);
