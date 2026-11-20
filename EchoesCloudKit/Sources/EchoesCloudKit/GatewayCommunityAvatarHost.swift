@@ -52,18 +52,23 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     let authorization: GatewayCommunityAuthorization
     let owner: PrivateAccountScope
     let reference: AvatarReference
+    private let reload: @MainActor () async throws -> GatewayAvatarReportPhoto
     private let resolve: @MainActor () -> (CGImage, Coordinate)?
     private var retired = false
     fileprivate init(
         origin: String, authorization: GatewayCommunityAuthorization, owner: PrivateAccountScope,
-        reference: AvatarReference, resolve: @escaping @MainActor () -> (CGImage, Coordinate)?
+        reference: AvatarReference, reload: @escaping @MainActor () async throws -> GatewayAvatarReportPhoto,
+        resolve: @escaping @MainActor () -> (CGImage, Coordinate)?
     ) {
         self.origin = origin
         self.authorization = authorization
         self.owner = owner
         self.reference = reference
+        self.reload = reload
         self.resolve = resolve
     }
+    /// Explicit fresh protected read for the same still-valid consumer. Never revives this claim.
+    public func refreshed() async throws -> GatewayAvatarReportPhoto { try await reload() }
     func snapshot() throws -> (image: CGImage, coordinate: Coordinate) {
         guard !retired, let value = resolve() else {
             retired = true
@@ -416,19 +421,53 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         else { throw GatewayAvatarReportHostFailure.displayRequired }
         return .init(
             origin: gatewayOrigin, authorization: authorization, owner: privateScope,
-            reference: consumer.reference
-        ) { [weak self] in
-            guard let self, self.context == binding, self.authorization == authorization,
-                self.privateScope == privateScope,
-                let latest = self.consumers[lease.id], latest.surface == .profile,
-                latest.reference == consumer.reference,
-                self.eligibility(latest) != nil, let current = self.groups[latest.key],
-                current.id == group.id,
-                current.consumers.contains(lease.id), current.handle == handle,
-                let coordinate = self.session?.usableCoordinate, let image = self.client.image(for: handle)
-            else { return nil }
-            return (image, coordinate)
+            reference: consumer.reference,
+            reload: { [weak self] in
+                guard let self else { throw GatewayAvatarReportHostFailure.displayRequired }
+                return try await self.refreshReportPhoto(
+                    binding: binding, lease: lease,
+                    authorization: authorization, owner: privateScope, reference: consumer.reference)
+            },
+            resolve: { [weak self] in
+                guard let self, self.context == binding, self.authorization == authorization,
+                    self.privateScope == privateScope,
+                    let latest = self.consumers[lease.id], latest.surface == .profile,
+                    latest.reference == consumer.reference,
+                    self.eligibility(latest) != nil, let current = self.groups[latest.key],
+                    current.id == group.id,
+                    current.consumers.contains(lease.id), current.handle == handle,
+                    let coordinate = self.session?.usableCoordinate,
+                    let image = self.client.image(for: handle)
+                else { return nil }
+                return (image, coordinate)
+            }
+        )
+    }
+    private func refreshReportPhoto(
+        binding: UUID, lease: GatewayCommunityAvatarLease,
+        authorization: GatewayCommunityAuthorization, owner: PrivateAccountScope,
+        reference: AvatarReference
+    ) async throws -> GatewayAvatarReportPhoto {
+        func check() throws {
+            guard !Task.isCancelled else { throw GatewayFailure.cancelled }
+            guard context == binding, self.authorization == authorization, privateScope == owner,
+                let consumer = consumers[lease.id], consumer.surface == .profile,
+                consumer.reference == reference, reference.ownerID != authorization.identity.accountID,
+                eligibility(consumer) != nil
+            else { throw GatewayAvatarReportHostFailure.displayRequired }
         }
+        try check()
+        guard let consumer = consumers[lease.id], let group = groups[consumer.key],
+            !pending.values.contains(where: { $0.group == group.id })
+        else { throw GatewayAvatarReportFailure.busy }
+        retry(binding: binding, lease: lease)
+        guard let task = pending.values.first(where: { $0.group == group.id })?.task else {
+            throw GatewayAvatarFailure.limited(retryAfterSeconds: nil)
+        }
+        // This is shared avatar work. A reporting caller never cancels another consumer's task.
+        await task.value
+        try check()
+        return try reportPhoto(binding: binding, lease: lease)
     }
     fileprivate func isLoading(binding: UUID, lease: GatewayCommunityAvatarLease) -> Bool {
         _ = presentationRevision

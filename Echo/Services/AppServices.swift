@@ -10,6 +10,8 @@ final class AppServices {
     let session: CommunitySession
     let privateProfile: PrivateProfileStore?
     let avatars: GatewayCommunityAvatarBinding?
+    let avatarReports: GatewayAvatarReportPresenter?
+    private let reportOwnerID = UUID()
     private let avatarEditorHost: GatewayAvatarEditorHost?
     let avatarPreviewSelection: GatewayAvatarPreparation?
     @ObservationIgnored private weak var activeAvatarEditor: GatewayAvatarEditorSession?
@@ -30,6 +32,7 @@ final class AppServices {
     ) {
         privateProfile = nil
         avatars = nil
+        avatarReports = nil
         avatarEditorHost = nil
         avatarPreviewSelection = nil
         self.preferences = preferences
@@ -47,6 +50,7 @@ final class AppServices {
         nativeSession: CommunitySession, privateProfile: PrivateProfileStore? = nil,
         avatars: GatewayCommunityAvatarBinding? = nil,
         avatarEditorHost: GatewayAvatarEditorHost? = nil,
+        avatarReports: GatewayAvatarReportPresenter? = nil,
         avatarPreviewSelection: GatewayAvatarPreparation? = nil,
         simulatedCoordinate: Coordinate? = nil,
         isCurrent: @escaping @MainActor () -> Bool
@@ -54,6 +58,7 @@ final class AppServices {
         session = nativeSession
         self.privateProfile = privateProfile
         self.avatars = avatars
+        self.avatarReports = avatarReports
         self.avatarEditorHost = avatarEditorHost
         self.avatarPreviewSelection = avatarPreviewSelection
         preferences = nil
@@ -67,6 +72,7 @@ final class AppServices {
 
     func invalidateNativePresentation() {
         guard isGatewayDevelopment else { return }
+        avatarReports?.invalidate(ownerID: reportOwnerID)
         avatars?.invalidate()
         activeAvatarEditor?.close()
         activeAvatarEditor = nil
@@ -82,6 +88,12 @@ final class AppServices {
     var canEnterProfile: Bool {
         isCurrent() && !isUpdatingName && (privateProfile?.didLoad ?? true)
             && !(privateProfile?.isBusy ?? false)
+    }
+    var canReportAvatar: Bool { isCurrent() && avatarReports != nil }
+    func openAvatarReport(photo: GatewayAvatarReportPhoto? = nil) throws -> GatewayAvatarReportSession {
+        guard canReportAvatar, let avatarReports else { throw GatewayFailure.signInRequired }
+        return try avatarReports.open(
+            photo: photo, ownerID: reportOwnerID, isCurrent: { [weak self] in self?.isCurrent() == true })
     }
     var canEditAvatar: Bool { isCurrent() && avatarEditorHost != nil }
     func openAvatarEditor() throws -> GatewayAvatarEditorSession {
@@ -136,6 +148,7 @@ final class AppServices {
     }
 
     func deactivate() async {
+        avatarReports?.invalidate(ownerID: reportOwnerID)
         activeAvatarEditor?.close()
         location.pause()
         guard isCurrent() else { return }

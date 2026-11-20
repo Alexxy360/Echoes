@@ -13,10 +13,12 @@
         weak var avatars: GatewayCommunityAvatarHost?
         weak var avatarReviews: GatewayAvatarReviewHost?
         weak var reportReviews: GatewayReportReviewHost?
+        weak var avatarReports: GatewayAvatarReportPresenter?
         func clearServices() {
             avatarEditor?.invalidate()
             avatarReviews?.invalidate()
             reportReviews?.invalidate()
+            avatarReports?.invalidate()
             services?.invalidateNativePresentation()
         }
     }
@@ -34,6 +36,8 @@
         let avatarReviews: GatewayAvatarReviewHost
         let reportReviewJournal: GatewayReportReviewJournal
         let reportReviews: GatewayReportReviewHost
+        let avatarReportJournal: GatewayAvatarReportJournal
+        let avatarReports: GatewayAvatarReportPresenter
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
         private(set) var openingCommunity = false
@@ -47,10 +51,12 @@
             communityServices = nil
             communityPresentationID = nil
             avatarReviews.setForeground(false)
+            avatarReports.invalidate()
         }
 
         @discardableResult func openCommunity() async throws -> UUID {
             guard !openingCommunity else { throw GatewayAvatarReviewFailure.busy }
+            avatarReports.invalidate()
             openingCommunity = true
             defer { openingCommunity = false }
             avatarReviews.setForeground(false)
@@ -97,6 +103,7 @@
             let services = AppServices(
                 nativeSession: presentation.domain.session,
                 privateProfile: profile, avatars: avatarBinding, avatarEditorHost: avatarEditor,
+                avatarReports: avatarReports,
                 isCurrent: current)
             relay.services = services
             communityServices = services
@@ -188,6 +195,18 @@
                 authorization: auth, journal: reportJournal, isEnabled: { activation.isActive() })
             reportReviews = reports
             relay.reportReviews = reports
+            let photoJournal = GatewayAvatarReportJournal(
+                storage: KeychainGatewayAvatarReportJournalStorage())
+            avatarReportJournal = photoJournal
+            let photoReports = GatewayAvatarReportPresenter(
+                host: try GatewayAvatarReportHost(
+                    api: GatewayAvatarReportHTTPClient(
+                        configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                    configuration: activation.configuration, cloudKit: activation.cloudKit,
+                    authorization: auth, journal: photoJournal, isEnabled: { activation.isActive() },
+                    canCancel: { activation.isActive() }))
+            avatarReports = photoReports
+            relay.avatarReports = photoReports
             let communityStorage = KeychainGatewayCommunityJournalStorage()
             let communityAPI = try ActivatedGatewayCommunityAPI(
                 api: GatewayCommunityHTTPClient(configuration: activation.configuration),
@@ -219,8 +238,10 @@
                         fenceLocalAccess: { binding, accountID in
                             reviews.invalidate()
                             reports.invalidate()
+                            photoReports.invalidate()
                             try reviewJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             try reportJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
+                            try photoJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             do {
                                 try await auth.prepareForAccountDeletion(
                                     binding: binding, accountID: accountID)
@@ -242,6 +263,7 @@
                             try await avatarUploads.erase(scope: scope)
                             try await reviewJournal.erase(owner: scope)
                             try await reportJournal.erase(owner: scope)
+                            try await photoJournal.erase(owner: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )

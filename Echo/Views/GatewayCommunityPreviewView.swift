@@ -47,6 +47,18 @@
                             Button("Zamknij sesję testową") { fixture?.invalidate() }
                             Button("Zakończ opóźniony odczyt") { fixture?.releaseProfileRead() }
                             Button("Zwolnij wysyłkę zdjęcia") { Task { await fixture?.releaseOwnerUpload() } }
+                            if fixture?.hasReports == true {
+                                Text("Wysyłki: \(fixture?.reportSubmits ?? 0)").accessibilityIdentifier(
+                                    "avatar.report.preview.submits")
+                                Text("Anulowania: \(fixture?.reportCancels ?? 0)").accessibilityIdentifier(
+                                    "avatar.report.preview.cancels")
+                                Button("Usuń test zgłoszeń") { fixture?.cleanupReports() }
+                                    .accessibilityIdentifier("avatar.report.preview.cleanup")
+                                if fixture?.reportCleaned == true {
+                                    Text("Stan testu usunięty").accessibilityIdentifier(
+                                        "avatar.report.preview.cleaned")
+                                }
+                            }
                             if fixture?.hasAvatars == true {
                                 Button("Ukryj zdjęcie testowe") { Task { await fixture?.clearAvatar() } }
                                 Button("Przywróć zdjęcie testowe") { Task { await fixture?.restoreAvatar() } }
@@ -57,6 +69,20 @@
                             }
                         }.accessibilityIdentifier("community.preview.actions")
                     }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                if let fixture, fixture.hasReports {
+                    HStack {
+                        Text("Wysyłki: \(fixture.reportSubmits)").accessibilityIdentifier(
+                            "avatar.report.preview.submits")
+                        Text("Anulowania: \(fixture.reportCancels)").accessibilityIdentifier(
+                            "avatar.report.preview.cancels")
+                        if fixture.reportCleaned {
+                            Text("Stan testu usunięty").accessibilityIdentifier(
+                                "avatar.report.preview.cleaned")
+                        }
+                    }.font(.caption).padding(6)
                 }
             }
             .task {

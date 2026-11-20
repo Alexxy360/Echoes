@@ -11,7 +11,7 @@ public enum GatewayAvatarReportHostFailure: Error, Equatable, Sendable, Localize
         }
     }
 }
-public struct GatewayAvatarReportPresentation: Equatable, Sendable, CustomStringConvertible, CustomReflectable
+public struct GatewayAvatarReportPresentation: Hashable, Sendable, CustomStringConvertible, CustomReflectable
 {
     fileprivate let id: UUID
     public var description: String { "GatewayAvatarReportPresentation(<redacted>)" }
@@ -210,6 +210,9 @@ public struct GatewayAvatarReportResolution: Equatable, Sendable, CustomStringCo
     }
     public func present(_ value: GatewayAvatarReportPhoto) throws {
         guard !isBusy, storedPending == nil else { throw GatewayAvatarReportJournalFailure.pendingExists }
+        try installPhoto(value)
+    }
+    private func installPhoto(_ value: GatewayAvatarReportPhoto) throws {
         let context = try bound()
         let wall = date().timeIntervalSince1970
         let tick = uptime()
@@ -227,6 +230,20 @@ public struct GatewayAvatarReportResolution: Equatable, Sendable, CustomStringCo
             self?.dropPhoto()
         }
         presentationRevision = UUID()
+    }
+    public func refreshPhoto(_ value: GatewayAvatarReportPhoto) async throws {
+        guard storedPending == nil else { throw GatewayAvatarReportJournalFailure.pendingExists }
+        let context = try bound()
+        guard value.origin == api.origin, value.authorization == context.authorization,
+            value.owner == context.scope.owner
+        else { throw GatewayAvatarReportHostFailure.superseded }
+        dropPhoto()
+        try await exclusive {
+            try await self.match(nil, context)
+            let fresh = try await value.refreshed()
+            try await self.match(nil, context)
+            try self.installPhoto(fresh)
+        }
     }
     public func acknowledgeDisplay(_ handle: GatewayAvatarReportPresentation) throws {
         guard let photo = livePhoto(), photo.id == handle.id, renderedID == photo.id else {

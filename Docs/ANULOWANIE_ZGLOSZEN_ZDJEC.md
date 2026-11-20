@@ -53,3 +53,7 @@ Lokalny rzeczywisty workerd/SQLite/Runtime/Edge sprawdził CAS anulowania z utra
 ## Podłączenie w sterowniku — CK-05d.1c.3a
 
 GatewayAvatarReportHost utrwala cancelling przed API i sprawdza aktualny scope oraz grant po zapisach/odczytach i odpowiedzi. Błąd wymaga reopen, a pierwotna metadana pozostaje. Accepted/unconfirmed w cancelling nie dają handle do potwierdzenia wyniku; cancelled może zamknąć próbę. Recovery działa bez grantu mutacji cancel. Host nadal nie jest podłączony do formularza/Runtime aplikacji. [Kontrakt hosta](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md), [lokalny odbiór](evidence/avatar-report-host-local-tests.json).
+
+## Formularz i recovery aplikacji — CK-05d.1c.3b
+
+Podłączono formularz/Runtime z osobnym potwierdzeniem anulowania. Cancelling pozostaje w zapisanej próbie po restarcie, accepted/unconfirmed nie dają ACK, a readonly recovery cancelled kończy tę samą barierę. Wejście z ustawień działa bez zdjęcia, powodu lub GPS. Test UI lost cancel ACK przechodzi terminate/launch i odczyt bez drugiej mutacji; provider i trwały magazyn są syntetyczne. Realne usługi nieaktywne. [Pełny opis](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md), [dowody](evidence/avatar-report-ui-local-tests.json).

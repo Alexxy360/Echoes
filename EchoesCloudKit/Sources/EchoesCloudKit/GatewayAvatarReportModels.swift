@@ -56,6 +56,15 @@ public struct GatewayAvatarReportSubmission: Equatable, Sendable, CustomStringCo
         guard identity.accountID != reference.ownerID, coordinate.isValid, reason.utf8.count <= 4096 else {
             throw GatewayAvatarReportFailure.invalidInput
         }
+        let normalized = try Self.normalizeReason(reason)
+        self.identity = identity
+        self.reference = reference
+        self.reason = normalized
+        self.coordinate = coordinate
+        _ = try GatewayAvatarReportOperation.submit(self).wire()
+    }
+    public static func normalizeReason(_ reason: String) throws -> String {
+        guard reason.utf8.count <= 4096 else { throw GatewayAvatarReportFailure.invalidInput }
         let white = CharacterSet(
             charactersIn:
                 "\u{0009}\u{000a}\u{000b}\u{000c}\u{000d}\u{0020}\u{00a0}\u{1680}\u{2000}\u{2001}\u{2002}\u{2003}\u{2004}\u{2005}\u{2006}\u{2007}\u{2008}\u{2009}\u{200a}\u{2028}\u{2029}\u{202f}\u{205f}\u{3000}\u{feff}"
@@ -64,11 +73,7 @@ public struct GatewayAvatarReportSubmission: Equatable, Sendable, CustomStringCo
         guard reportReviewText(normalized, maximum: 500) else {
             throw GatewayAvatarReportFailure.invalidInput
         }
-        self.identity = identity
-        self.reference = reference
-        self.reason = normalized
-        self.coordinate = coordinate
-        _ = try GatewayAvatarReportOperation.submit(self).wire()
+        return normalized
     }
     public var description: String { "GatewayAvatarReportSubmission(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }

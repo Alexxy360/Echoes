@@ -63,3 +63,7 @@ Zamknięte kodowanie dopuszcza wyłącznie prepared:nil, dispatched:nil/unconfir
 ## Sterownik formularza — CK-05d.1c.3a
 
 Lokalnie odebrany GatewayAvatarReportHost wymaga claim pełnego zdjęcia z chronionego GatewayCommunityAvatarBinding, image i ACK dokładnego handle przed wysłaniem. Rewaliduje konto/native/private/origin/parent/foreground oraz source po ostatnim await journala. Działa z powyższym trwałym requestID i cancelling; błąd wymaga reopen, nie replay. UI SwiftUI i Runtime/erasure to następny1c.3b. [Kontrakt i ograniczenia](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md), [dowody](evidence/avatar-report-host-local-tests.json).
+
+## Formularz i Runtime — CK-05d.1c.3b
+
+Lokalnie odebrany formularz wykorzystuje powyższy DTO/HTTPClient/journal, jeden presenter Runtime i sesję z odrębną tożsamością UI. Recovery jest dostępne w ustawieniach bez zdjęcia/powodu/GPS. Tło odcina zgodę, a erasure zakłada fence przed usuwaniem auth. Nowe scenariusze UI po restarcie używają syntetycznych plików; poprzedni rzeczywisty Keychain pozostaje odrębnym dowodem. Runtime nie jest aktywowany, normalny adapter Firebase pozostaje. [Przepływ, wyniki i ograniczenia](FORMULARZ_ZGLOSZEN_ZDJEC_IOS.md), [dowody](evidence/avatar-report-ui-local-tests.json). Następny jest operator zdjęć i pełny rzeczywisty odbiór.

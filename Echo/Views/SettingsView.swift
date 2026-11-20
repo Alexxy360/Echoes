@@ -11,7 +11,17 @@ struct SettingsView: View {
     @State private var musicBusy = false
     @State private var confirmDeletion = false
     @State private var deleting = false
-    @State private var avatarEditor: GatewayAvatarEditorSession?
+    @State private var sheet: SettingsSheet?
+    private enum SettingsSheet: Identifiable {
+        case editor(GatewayAvatarEditorSession)
+        case report(GatewayAvatarReportSession)
+        var id: String {
+            switch self {
+            case .editor(let value): "editor-" + value.id.uuidString
+            case .report(let value): "report-" + value.id.uuidString
+            }
+        }
+    }
     @State private var avatarError: String?
     @FocusState private var nameFocused: Bool
     var body: some View {
@@ -50,6 +60,16 @@ struct SettingsView: View {
                         Text(
                             "Zdjęcie wybierasz i wysyłasz osobno. Publikacja wymaga sprawdzenia przez obsługę i Twojego potwierdzenia."
                         ).font(.caption)
+                    }
+                }
+                if services.canReportAvatar {
+                    Section("Zgłoszenia zdjęć") {
+                        Button("Sprawdź zapisane zgłoszenie zdjęcia") {
+                            do { sheet = .report(try services.openAvatarReport()) } catch {
+                                avatarError = error.localizedDescription
+                            }
+                        }.accessibilityIdentifier("settings.avatarReport")
+                        if let avatarError { Text(avatarError).font(.caption).foregroundStyle(.secondary) }
                     }
                 }
                 Section("Muzyka") {
@@ -125,12 +145,17 @@ struct SettingsView: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Gotowe") { dismiss() } }
             }
             .onAppear { name = services.session.name }
-            .sheet(item: $avatarEditor) { session in
-                AvatarEditorView(
-                    session: session, avatars: services.avatars,
-                    previewSelection: services.avatarPreviewSelection
-                )
-                .presentationDetents([.large])
+            .sheet(item: $sheet) { destination in
+                switch destination {
+                case .editor(let session):
+                    AvatarEditorView(
+                        session: session, avatars: services.avatars,
+                        previewSelection: services.avatarPreviewSelection
+                    )
+                    .presentationDetents([.large])
+                case .report(let session):
+                    AvatarReportView(session: session).presentationDetents([.large])
+                }
             }
             .confirmationDialog(
                 "Usunąć Twoje konto, profil i wiadomości?", isPresented: $confirmDeletion,
@@ -161,7 +186,7 @@ struct SettingsView: View {
     }
     private func openAvatar() {
         do {
-            avatarEditor = try services.openAvatarEditor()
+            sheet = .editor(try services.openAvatarEditor())
             avatarError = nil
         } catch { avatarError = "Nie udało się otworzyć edytora zdjęcia. Sprawdź logowanie." }
     }

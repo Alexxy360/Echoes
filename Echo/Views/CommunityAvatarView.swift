@@ -10,6 +10,8 @@ struct CommunityAvatarView: View {
     let name: String
     let size: CGFloat
     var color: Color = .meddleCoral
+    var onReport: ((GatewayAvatarReportPhoto) -> Void)? = nil
+    @State private var reportError: String?
     @State private var registration: Registration?
 
     private struct Request: Equatable {
@@ -47,43 +49,55 @@ struct CommunityAvatarView: View {
     var body: some View {
         let value = current
         let image = value.flatMap { $0.binding.image(for: $0.lease) }
-        ZStack {
-            Circle().fill(color)
-            if let image {
-                Image(decorative: image, scale: 1).resizable().scaledToFill()
-            } else {
-                Text(String(name.prefix(1)).uppercased()).font(
-                    .system(size: min(32, size * 0.45), weight: .semibold)
-                )
-                .foregroundStyle(.white)
-            }
-        }
-        .frame(width: size, height: size).clipShape(Circle())
-        .privacySensitive()
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Zdjęcie profilowe")
-        .accessibilityValue(image == nil ? "Inicjał" : "Wczytane")
-        .accessibilityIdentifier("community.avatar." + surfaceName)
-        .overlay(alignment: .bottomTrailing) {
-            if surface == .profile || surface == .ownerEditor, let value, image == nil {
-                if value.binding.isLoading(value.lease) {
-                    ProgressView().padding(10).background(.regularMaterial, in: Circle())
-                        .accessibilityIdentifier("community.avatar.loading")
+        VStack(spacing: 12) {
+            ZStack {
+                Circle().fill(color)
+                if let image {
+                    Image(decorative: image, scale: 1).resizable().scaledToFill()
                 } else {
-                    Button(action: retry) {
-                        Image(systemName: "arrow.clockwise").frame(width: 44, height: 44)
-                    }
-                    .buttonStyle(.bordered).background(.regularMaterial, in: Circle())
-                    .accessibilityLabel("Wczytaj zdjęcie ponownie")
-                    .accessibilityIdentifier("community.avatar.retry")
+                    Text(String(name.prefix(1)).uppercased()).font(
+                        .system(size: min(32, size * 0.45), weight: .semibold)
+                    )
+                    .foregroundStyle(.white)
                 }
             }
+            .frame(width: size, height: size).clipShape(Circle())
+            .privacySensitive()
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Zdjęcie profilowe")
+            .accessibilityValue(image == nil ? "Inicjał" : "Wczytane")
+            .accessibilityIdentifier("community.avatar." + surfaceName)
+            .overlay(alignment: .bottomTrailing) {
+                if surface == .profile || surface == .ownerEditor, let value, image == nil {
+                    if value.binding.isLoading(value.lease) {
+                        ProgressView().padding(10).background(.regularMaterial, in: Circle())
+                            .accessibilityIdentifier("community.avatar.loading")
+                    } else {
+                        Button(action: retry) {
+                            Image(systemName: "arrow.clockwise").frame(width: 44, height: 44)
+                        }
+                        .buttonStyle(.bordered).background(.regularMaterial, in: Circle())
+                        .accessibilityLabel("Wczytaj zdjęcie ponownie")
+                        .accessibilityIdentifier("community.avatar.retry")
+                    }
+                }
+            }
+            if surface == .profile, let onReport, let value, image != nil {
+                Button("Zgłoś zdjęcie", systemImage: "flag") {
+                    do {
+                        onReport(try value.binding.reportPhoto(for: value.lease))
+                        reportError = nil
+                    } catch { reportError = "Zdjęcie nie jest już dostępne. Wczytaj je ponownie." }
+                }.buttonStyle(.bordered).accessibilityIdentifier("avatar.report.open")
+            }
+            if let reportError { Text(reportError).font(.caption).foregroundStyle(.secondary) }
         }
         .task(id: request) { register() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { release() } }
         .onDisappear(perform: release)
     }
     private func register() {
+        reportError = nil
         release()
         guard !Task.isCancelled, scenePhase == .active, let avatars, request.available, let reference
         else { return }

@@ -1,0 +1,140 @@
+{
+  "stage": "CK-05d.1c.3b",
+  "createdAt": "2026-11-20T10:50:36.605732+00:00",
+  "baselineCommit": "6dd124d0668441fb8866358686c6a2447d56f555",
+  "native": {
+    "newFunctions": [
+      "avatarReportRefreshMakesNewProtectedHandleAndRequiresDisplayAgainWithoutSubmitting",
+      "avatarReportExpiredClaimCanRequestFreshReadButNeverRevivesOriginalConsent",
+      "avatarReportRefreshRetainsBusyUntilSharedReadDrainsAndCannotBorrowReleasedConsumer",
+      "avatarReportRefreshRejectsNativeAndParentChangeAcrossProtectedRead",
+      "avatarReportRefreshUsesExistingFullPhotoQuotaAndNeverFallsBackAfterRefusal",
+      "avatarReportPresenterOldSheetAndOwnerCannotCloseOrOperateNewSession",
+      "avatarReportRecoverySessionWithoutPhotoKeepsOriginalIdentityAndDoesNotRestoreConsent",
+      "avatarReportDeletionFenceInvalidatesPresenterAndWithholdsLateACKWithoutErasingOtherOwner"
+    ],
+    "definedEach": 722,
+    "passedEach": 720,
+    "skippedEach": 2,
+    "failedEach": 0,
+    "platforms": [
+      "macOS arm64",
+      "iPhone 17 Pro iOS26.1 Simulator"
+    ],
+    "physicalSkips": [
+      "avatarDiskCachePhysicalFileProtectionIsComplete",
+      "avatarUploadJournalPhysicalFileProtectionIsComplete"
+    ],
+    "focusedPassed": 75,
+    "strictSwiftFormatFiles": 19,
+    "debugBuildForTesting": "passed as part of final UI test build",
+    "unsignedReleaseBuild": "passed"
+  },
+  "ui": {
+    "newTests": 7,
+    "regressionTests": 2,
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "runtimeWarnings": [],
+    "resultBundle": "/private/tmp/echoes-avatar-report-ui-final-nine2.xcresult",
+    "scenarios": [
+      "actual protected profile image, reason, immutable confirmation/back, one submit and ACK",
+      "background removes old photo/reason/confirmation",
+      "expiry retains draft, explicit fresh protected read and NEW display ACK",
+      "largest accessibility font reaches reason/confirmation/back",
+      "lost cancel ACK survives process restart as cancelling; read-only recovery confirms fence",
+      "lost submit ACK survives process restart; Settings recovery without photo/reason or second submit",
+      "unknown remains pending until explicit cancellation confirmation"
+    ],
+    "provider": "synthetic identity/provider/HTTP transport; actual SwiftUI, avatar host/client/decode/cache, native HTTPClient and journal; synthetic file journal/provider persist across process restart, NOT app Keychain or actual CloudKit acceptance"
+  },
+  "scope": {
+    "presentation": "one Runtime presenter, UUID per sheet and scoped UI owner; retired sheet/Services cannot close newer session",
+    "consent": "full protected non-self profile image only, current handle, 90% current viewport, actual image getter then ACK, immutable normalized reason plus separate confirmation",
+    "refresh": "explicit new read for same original still-valid consumer/reference/auth/private scope, no revival of old claim/ACK, same 4full/min quota, retained shared read drain",
+    "lifecycle": "background/parent/native/root invalidation clear memory draft and consent; journal remains; exact owner deletion fence before auth cleanup and selective erasure",
+    "recovery": "Settings entry without photo; no automatic submit/retry/new UUID; cancelling only ends with cancelled; terminal explicit ACK"
+  },
+  "negativeControl": {
+    "copy": "/private/tmp/echoes-avatar-report-ui-negative",
+    "mutation": "omit only activeID equality guard in Presenter.close(id)",
+    "test": "avatarReportPresenterOldSheetAndOwnerCannotCloseOrOperateNewSession",
+    "failedTests": 1,
+    "issues": 2,
+    "originalSourcePreserved": true
+  },
+  "setupNotes": [
+    "Initial 7 UI:5 passed. Expiry exposed stale cached geometry visibility; largest-text confirmation was below fold. Fixed current CGRect vs viewport, new presentation identity, scroll-to-material and correct test scrolling; did not lower 90% threshold or TTL.",
+    "Partial preparation assertion left only geometry edit applied; shell still started 2 tests, both failed. Corrected workflow prevalidates all replacement patterns and checks preparation exit before build. This run is not acceptance.",
+    "SwiftUI .id required Hashable over private presentation UUID. Focused expiry passed; oversized test viewport margin then caused largest-text helper failure, corrected margin and typed control lookup.",
+    "First full9 run was deliberately interrupted after known largest-text missing lazy reason field failure and stuck follow-on launch, exit143. It is not acceptance. Throwing guarded helpers reveal lazy fields, wait actual display ACK and reset font arguments; isolated largest1/1 then final9/9 passed.",
+    "Removed 3 owned synthetic orphan roots only after failed runs ended: canonical UUID namespace, bounded JSON inventory and no symlinks; other namespaces/Keychain untouched. Every final UI cleanup asserted removal of its own root.",
+    "After final UI9/9, strict lint found mixed argument/trailing closure and block-comment style only. Fixed these two syntactic styles, strict19 passed, full Mac/iOS and Release repeated on exact style-final source; executable UI behavior unchanged."
+  ],
+  "limits": [
+    "No real SIWA/CloudKit/ordinary A-B/ASSET-CDN/Free capacity/device/power-loss acceptance. Synthetic UI-owner UUID test is not two Apple accounts.",
+    "Runtime composes actual Keychain journal, but new process-restart UI uses bounded synthetic files. Earlier real Keychain3/3 is prior evidence, not repeated here.",
+    "MapKit renders system map and may load tiles; application data/auth/photo/report providers are synthetic.",
+    "Normal Firebase adapter remains unchanged; gateway isolated Development still requires separately approved real activation.",
+    "Backend/schema/dependencies/CI unchanged; prior850/850 Node22+24 at89a9ddc not repeated."
+  ],
+  "screenshotsViewed": {
+    "avatar-report-confirmation.png": "c2122333ed742da5ab7fa3e71dab8dd89611aabeb2ef777bab84255bb272efbe",
+    "avatar-report-fresh-draft.png": "4a7e189112ba86c770570b4d3c0be9bae5e84ca0fdd44c09a4630a639f4107c6",
+    "avatar-report-largest-text.png": "1c2ae7347e05c599d195afab8817c74363af961c8e32d443cafce14134eb1220",
+    "avatar-report-cancelled-restart.png": "f09cfaac2665795cff59e56ece689e455facdadfb0dbd0014ba0c8be9a99a6b7",
+    "avatar-report-recovered-restart.png": "84156212bf3260ce338976f3a3b626ef44f2a46326d3f4b95826944c83a23d9b"
+  },
+  "logsSHA256": {
+    "/private/tmp/echoes-avatar-report-ui-native-focus.log": "510633d1e6733742ebe350f61b8c0c4d6494e8af3d320b827147d57642c96067",
+    "/private/tmp/echoes-avatar-report-ui-full-mac-verified.log": "3552f65a48624a0ae7f07cedcae44425fc5f2faf789003b7a10c9f14aff66748",
+    "/private/tmp/echoes-avatar-report-ui-package-ios.log": "a8d522d4788df2fef76ebe2e550825a5ba8109de72761acc4e951885028952b4",
+    "/private/tmp/echoes-avatar-report-ui-release-verified.log": "c20a716b1cd583a68a60454e4cc821f814d4b34b98a80fe808377bc099a35c01",
+    "/private/tmp/echoes-avatar-report-ui-final-nine2.log": "a8003156510d2b75d19d2bb06d2a8dd38e1583dd65c746e762e93cb5adc0bed3",
+    "/private/tmp/echoes-avatar-report-ui-negative.log": "4eeaf56e3e9675c43d70889a1d3143a4e630731be6a4be066f61bac115db2c31",
+    "/private/tmp/echoes-avatar-report-ui-seven.log": "9520f7408b88a1676b0fd2e47553995f866939da15ab90897b65fe400b8f8ebe",
+    "/private/tmp/echoes-avatar-report-ui-layout-fix.log": "6b357f5da344cf0703ecce3d003c7b43c11089c11719c27dcfe29405a31746df",
+    "/private/tmp/echoes-avatar-report-ui-layout-complete2.log": "9a96207ff15dd79a49876b0cada87060b6a5dfcb11c032bc40368d7d2c80a864",
+    "/private/tmp/echoes-avatar-report-ui-final-nine.log": "d9b5c24ce27f13e149adb30eb92593214268caa9f7c4437699834ff40052d8cb",
+    "/private/tmp/echoes-avatar-report-ui-largest-scrolled.log": "4e6f23f498d322dafbcadd71b0d3528f3f985c8527a5b2a7cadc2288f3ad0ffd"
+  },
+  "iosSummary": {
+    "path": "/private/tmp/echoes-avatar-report-ui-package-ios-summary.json",
+    "sha256": "d91eb2122b4d362a7560b2b1f47ec1d82af2e6515e7bc115bef5a97f94c8fb3f"
+  },
+  "uiSummary": {
+    "path": "/private/tmp/echoes-avatar-report-ui-summary.json",
+    "sha256": "26708a77b13f631f87c0c04441082d478ec4d8b2c1cc2506204c457679841a4b"
+  },
+  "strictFormatReportSHA256": "f3d329ded1062417b0afbfb3729bf770d462a3233bd0e39f5203c3cb66e0f82c",
+  "sourceSHA256": {
+    "Echo/ContentView.swift": "f51837b94ce97277273941cd57d5a1c8543927244d90ebb5687942f08e9830f2",
+    "Echo/Services/AppServices.swift": "3c0452ab3c8b44d1a985011cbd8b8bfb7424e1f0963dd97734fbbbafc2d288df",
+    "Echo/Services/CommunityPreviewFixture.swift": "cd0cd1d7229a251bc971a7d840cbcba6c358d15d339fd7619f4d94741b6a2d68",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "9ad9e5fb588e19d9cba12838b38b90ed12f388f7bc14d632819b3f861901be30",
+    "Echo/Views/CommunityAvatarView.swift": "ecc906a8fa5c5f4d04ac9ce45afc64fad8e34460c52e054c0d062708649f2e07",
+    "Echo/Views/GatewayCommunityPreviewView.swift": "b9a31aa116bc47491e32882cb6f9f565b2e07a5fa75d0c9603b0edc412f36ea8",
+    "Echo/Views/SettingsView.swift": "d31efdb6503aac474a20701bafc3b5a23f32865c8d9d7e43528995512bf8e5dc",
+    "Echo/Views/UserProfileView.swift": "15334e8922c300874e8f8b45b97d01974c1ca45222ac37d3af2240ee0bf2f711",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportHost.swift": "9f41849751eb9463da4412149e7aafed54ae26b245469c104501999877cbf97c",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportModels.swift": "4d40edcbe10fa385c07997cca8ae57f112eb7609ef0950b81150aac490f3c504",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "c53fc41f110adf530944104e40222cd9152a2bb9b349ce8718790b1f5b65605e",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportSession.swift": "95957722be20307a29c494c13c9ff43e76d4f597612751b9f48b655a95b79207",
+    "Echo/Services/AvatarReportPreviewFixture.swift": "dcf65cfa11cb7b3589817cc7164aa1561c9cab15b58dc1f630114201d0c476d5",
+    "Echo/Views/AvatarReportView.swift": "743e4787f3e2673c9d5f20acc01fe8fbb44e2a1952287f1e3ae070a6f7f07ae9",
+    "Echo/Views/AvatarReportPhotoView.swift": "909fd9f0d8a2937ae2dca74505e99dd1b1fdc8bcac5b249e8da879e02c377c71",
+    "Echo/Views/AvatarReportConfirmationView.swift": "757ec07262a45c26f3b0d224c86c1fa431607bb97f139d9309d840f681f73d6e",
+    "Echo/Views/AvatarReportPreviews.swift": "0280738517381c347356ee89310d27e6096e8e720b525de2230fbe222e0e583d",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportSessionTests.swift": "0231ad3e8ac1544db90392ae3fbbc112f5afd9d464413a87777081a9fda029e5",
+    "EchoesUITests/GatewayAvatarReportUITests.swift": "62998066178dfa25cf06bd44bb3003a84228b2febc91175f26112bffa085f70e"
+  },
+  "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "stageOverrideProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+  "remoteChanges": false,
+  "newServicesFeesKeysRolesSecrets": false,
+  "remaining": [
+    "CK-05d.2 photo-report operator",
+    "all real full-migration acceptance and controlled TestFlight preparation"
+  ]
+}

@@ -15,6 +15,7 @@
         private let avatarAPI: CommunityAvatarPreviewAPI?
         private let avatarHost: GatewayCommunityAvatarHost?
         private let ownerPhotos: AvatarEditorPreviewFixture?
+        private let reportPhotos: AvatarReportPreviewFixture?
         private let cloud = CommunityPreviewProfileCloud()
         private let profileDatabase = CommunityPreviewProfileDatabase()
         private let profileConfiguration: CloudKitConfiguration
@@ -27,6 +28,8 @@
                 [
                     "happy", "pending", "profile-onboarding", "profile-offline", "profile-conflict",
                     "profile-unknown", "profile-delayed", "profile-empty",
+                    "avatar-report", "avatar-report-lost", "avatar-report-cancel-lost",
+                    "avatar-report-unknown",
                     "avatars", "avatars-denied", "avatars-corrupt", "avatars-delayed",
                     "avatar-owner", "avatar-owner-approved", "avatar-owner-lost", "avatar-owner-delayed",
                     "avatar-owner-no-location", "avatar-owner-publish-lost",
@@ -35,7 +38,7 @@
             else { throw GatewayFailure.configuration }
             self.mode = mode
             source = try CommunityPreviewAuthorization()
-            api = CommunityPreviewAPI(avatars: mode.hasPrefix("avatars"))
+            api = CommunityPreviewAPI(avatars: mode.hasPrefix("avatars") || mode.hasPrefix("avatar-report"))
             profileConfiguration = try .init(
                 containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development)
             profileAccount = CloudKitAccountSession(source: cloud)
@@ -43,7 +46,11 @@
                 mode.hasPrefix("avatar-owner")
                 ? try AvatarEditorPreviewFixture(mode: mode, source: source, cloudKit: profileConfiguration)
                 : nil
-            if mode.hasPrefix("avatars") {
+            reportPhotos =
+                mode.hasPrefix("avatar-report")
+                ? try AvatarReportPreviewFixture(mode: mode, source: source, cloudKit: profileConfiguration)
+                : nil
+            if mode.hasPrefix("avatars") || mode.hasPrefix("avatar-report") {
                 let photoAPI = CommunityAvatarPreviewAPI.make(mode: mode)
                 avatarAPI = photoAPI
                 let root = FileManager.default.temporaryDirectory.appendingPathComponent(
@@ -100,7 +107,8 @@
                 let current = AppServices(
                     nativeSession: presentation.domain.session, privateProfile: profile,
                     avatars: try avatarHost?.bind(session: presentation.domain.session, isCurrent: gate),
-                    avatarEditorHost: ownerPhotos?.host, avatarPreviewSelection: ownerPhotos?.selection,
+                    avatarEditorHost: ownerPhotos?.host, avatarReports: reportPhotos?.presenter,
+                    avatarPreviewSelection: ownerPhotos?.selection,
                     simulatedCoordinate: PreviewCommunityClient.center, isCurrent: gate)
                 services = current
                 await current.prepareProfile()
@@ -133,6 +141,11 @@
                 }
             } catch { invalidate() }
         }
+        var hasReports: Bool { reportPhotos != nil }
+        var reportSubmits: Int { reportPhotos?.stats.submits ?? 0 }
+        var reportCancels: Int { reportPhotos?.stats.cancels ?? 0 }
+        var reportCleaned: Bool { reportPhotos?.stats.cleaned == true }
+        func cleanupReports() { try? reportPhotos?.cleanup() }
         var hasAvatars: Bool { avatarAPI != nil }
         func clearAvatar() async {
             await api.setPhotoPublished(false)
@@ -154,6 +167,7 @@
             await host.close(id)
         }
         func invalidate() {
+            reportPhotos?.presenter.invalidate()
             ownerPhotos?.host.invalidate()
             host.invalidate()
             services?.invalidateNativePresentation()

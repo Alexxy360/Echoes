@@ -141,7 +141,9 @@ struct ContentView: View {
                                     requestedNativeAccount = true
                                 })
                     case .profile(let id):
-                        UserProfileView(userID: id, session: services.session, avatars: services.avatars)
+                        UserProfileView(
+                            userID: id, session: services.session, avatars: services.avatars,
+                            reportServices: services)
                     }
                 }.frame(maxWidth: .infinity, maxHeight: .infinity)
                 if let presentationNotice {
