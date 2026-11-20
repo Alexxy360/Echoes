@@ -10,7 +10,7 @@ export async function avatarReportReviewHTTPFixture(t, { runtime = false, settin
   const f = await avatarReportReviewFixture(t, options), limits = new GatewayLimits(f.storage, { clock: f.clock });
   let enabled = true, feature = true, prepared = false, afterAdvance;
   const counts = { networkLimits: 0, accountLimits: 0, scheduled: 0, verifies: 0 };
-  const methods = Object.fromEntries(["prepareQueue", "prepareInspection", "prepareDecision", "prepareRecovery"].map(method => [method, async input => {
+  const methods = Object.fromEntries(["prepareQueue", "prepareInspection", "prepareDecision", "prepareRecovery", "prepareRetirement"].map(method => [method, async input => {
     const final = await f.review[method](input); prepared = true; return final;
   }]));
   const deps = { authentication: f.state, login: { login() {} }, renewal: { renew() {} }, sessionReset: { reset() {} },

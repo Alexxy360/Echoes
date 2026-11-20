@@ -32,7 +32,10 @@
             }
         }
     }
-    @MainActor @Observable final class ReportReviewPreviewStats { var decisions = 0 }
+    @MainActor @Observable final class ReportReviewPreviewStats {
+        var decisions = 0
+        var retirements = 0
+    }
 
     /// All HTTP replies are local wire fixtures. No URLSession/CloudKit/credentials are used.
     actor ReportReviewPreviewTransport: GatewayReportReviewTransport {
@@ -40,6 +43,7 @@
         private let root: URL, mode: String, stats: ReportReviewPreviewStats
         private var createdAt = Int(Date().timeIntervalSince1970 * 1000) - 5000
         private var decisions = 0, applied: [String: [String: String]] = [:]
+        private var retirements = 0, retired: [String: [String: String]] = [:]
         private var loaded = false, released = false
         private var waiting: [CheckedContinuation<Void, Never>] = []
         init(root: URL, mode: String, stats: ReportReviewPreviewStats) {
@@ -67,13 +71,21 @@
                 createdAt = date
                 decisions = count
                 applied = entries
+                let fences = value["retired"] as? [String: [String: String]] ?? [:]
+                let requests = value["retirements"] as? Int ?? 0
+                guard fences.count <= 41, requests >= 0, requests <= 100 else {
+                    throw GatewayReportReviewFailure.invalidResponse
+                }
+                retired = fences
+                retirements = requests
             }
             loaded = true
             await publishStats()
         }
         private func save() throws {
             let data = try JSONSerialization.data(withJSONObject: [
-                "createdAt": createdAt, "decisions": decisions, "applied": applied,
+                "createdAt": createdAt, "decisions": decisions, "applied": applied, "retired": retired,
+                "retirements": retirements,
             ])
             guard data.count <= 32768 else { throw GatewayReportReviewFailure.invalidResponse }
             try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
@@ -82,7 +94,11 @@
         }
         private func publishStats() async {
             let count = decisions
-            await MainActor.run { stats.decisions = count }
+            let closed = retirements
+            await MainActor.run {
+                stats.decisions = count
+                stats.retirements = closed
+            }
         }
         func release() {
             released = true
@@ -179,8 +195,11 @@
                 return reply
             case .decide(let intent):
                 let id = intent.receipt.item.reportID
+                if retired[intent.decisionID] != nil {
+                    return try json(["protocolVersion": 1, "error": "REPORT_REVIEW_STALE"], status: 409)
+                }
                 decisions += 1
-                if !["not-applied", "superseded"].contains(mode) {
+                if !["not-applied", "superseded", "retire-lost"].contains(mode) {
                     applied[id] = [
                         "id": intent.decisionID, "verdict": intent.verdict.rawValue,
                         "hash": intent.receipt.contentHash, "revision": UUID().uuidString.lowercased(),
@@ -188,7 +207,7 @@
                 }
                 try save()
                 await publishStats()
-                if ["lost", "not-applied", "superseded"].contains(mode) {
+                if ["lost", "not-applied", "superseded", "retire-lost"].contains(mode) {
                     throw GatewayReportReviewFailure.unavailable
                 }
                 return try json([
@@ -197,16 +216,37 @@
                     "verdict": intent.verdict.rawValue, "contentHash": intent.receipt.contentHash,
                     "revision": applied[id]!["revision"]!,
                 ])
-            case .recover(let intent):
+            case .recover(let intent), .retire(let intent):
                 let entry = applied[intent.reportID]
                 let confirmed =
                     entry?["id"] == intent.decisionID && entry?["verdict"] == intent.verdict.rawValue
                     && entry?["hash"] == intent.contentHash
+                let closing: Bool
+                if case .retire = operation { closing = true } else { closing = false }
+                let freshFence = retired[intent.decisionID] == nil
+                if closing {
+                    retirements += 1
+                    if !confirmed && mode != "superseded" {
+                        retired[intent.decisionID] = [
+                            "reportID": intent.reportID, "verdict": intent.verdict.rawValue,
+                            "hash": intent.contentHash,
+                        ]
+                    }
+                    try save()
+                    await publishStats()
+                    if mode == "retire-lost" && freshFence { throw GatewayReportReviewFailure.unavailable }
+                }
+                let fence = retired[intent.decisionID]
+                let sealed =
+                    fence?["reportID"] == intent.reportID && fence?["verdict"] == intent.verdict.rawValue
+                    && fence?["hash"] == intent.contentHash
                 return try json([
                     "protocolVersion": 1, "schemaVersion": 1, "reportID": intent.reportID,
                     "decisionID": intent.decisionID, "verdict": intent.verdict.rawValue,
                     "contentHash": intent.contentHash,
-                    "outcome": confirmed ? "confirmed" : mode == "superseded" ? "superseded" : "not-applied",
+                    "outcome": confirmed
+                        ? "confirmed"
+                        : sealed ? "retired" : mode == "superseded" ? "superseded" : "not-applied",
                     "revision": confirmed ? entry!["revision"]! : NSNull(),
                 ])
             }
@@ -234,7 +274,7 @@
             guard UUID(uuidString: runID)?.uuidString.lowercased() == runID,
                 [
                     "normal", "long", "lost", "not-applied", "superseded", "expiry", "delayed", "denied",
-                    "empty", "missing", "pages", "unavailable",
+                    "empty", "missing", "pages", "unavailable", "retire-lost",
                 ].contains(mode)
             else { throw GatewayFailure.invalidInput }
             let cache = try FileManager.default.url(

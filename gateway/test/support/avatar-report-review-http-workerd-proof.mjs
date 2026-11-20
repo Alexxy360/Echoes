@@ -25,17 +25,29 @@ export async function avatarReportReviewHTTPWorkerdProof(p, storage, provider, a
   const queueResponse = await call("queue", { after: null }), queue = await queueResponse.json();
   const response = await call("inspect", { reportID: p.reportID });
   if (response.status !== 200) throw Error("Synthetic HTTP inspection failed");
-  const bytes = new Uint8Array(await response.arrayBuffer()), inspection = decodeAvatarReportReviewInspection(bytes, { reportID: p.reportID }, clock());
+  const bytes = new Uint8Array(await response.arrayBuffer()); let inspection = decodeAvatarReportReviewInspection(bytes, { reportID: p.reportID }, clock());
   const exactImage = digest(inspection.image) === p.imageSHA256 && inspection.metadata.reason === p.reason;
   inspection.image.fill(0); bytes.fill(0);
-  const input = { inspectionID: inspection.metadata.inspectionID, decisionID: crypto.randomUUID(), verdict: "hide_photo" };
+  let input = { inspectionID: inspection.metadata.inspectionID, decisionID: crypto.randomUUID(), verdict: "hide_photo" };
+  let retirement;
+  if (p.retirement === true) {
+    const query = { reportID: p.reportID, decisionID: input.decisionID, verdict: input.verdict, contentHash: inspection.metadata.contentHash };
+    const before = await (await call("recover", query)).json(), closedResponse = await call("retire", query), closed = await closedResponse.json();
+    runtime = createGatewayRuntime(storage, env, runtimeOptions);
+    const recovered = await (await call("recover", query)).json(), late = await call("decide", input); await late.body?.cancel();
+    retirement = { unconfirmedBefore: before.outcome === "not-applied", retired: closedResponse.status === 200 && closed.outcome === "retired", recovered: recovered.outcome === "retired",
+      lateBlocked: late.status === 409, noEffect: storage.sql.exec("SELECT ready FROM avatar_profiles_v1 WHERE account_id=?", p.authorID).toArray()[0]?.ready === 1 };
+    const next = await call("inspect", { reportID: p.reportID }), bytes = new Uint8Array(await next.arrayBuffer());
+    inspection = decodeAvatarReportReviewInspection(bytes, { reportID: p.reportID }, clock()); inspection.image.fill(0); bytes.fill(0);
+    input = { inspectionID: inspection.metadata.inspectionID, decisionID: crypto.randomUUID(), verdict: "hide_photo" };
+  }
   const decidedResponse = await call("decide", input), decided = await decidedResponse.json();
   const replayResponse = await call("decide", input), replay = await replayResponse.json();
   runtime = createGatewayRuntime(storage, env, runtimeOptions); p.now += 90001;
   const recoveredResponse = await call("recover", { reportID: p.reportID, decisionID: input.decisionID, verdict: input.verdict, contentHash: inspection.metadata.contentHash }), recovered = await recoveredResponse.json();
   const remaining = await (await call("queue", { after: null })).json();
   env.AVATAR_REPORT_REVIEW_ENABLED = "0"; const disabled = await call("queue", { after: null }); await disabled.body?.cancel();
-  return Response.json({ ordinaryDenied: foreign.status === 403, queued: queue.items.length, exactImage,
+  return Response.json({ ...(retirement ? { retirement } : {}), ordinaryDenied: foreign.status === 403, queued: queue.items.length, exactImage,
     privateFrame: response.headers.get("Cache-Control") === "private, no-store" && response.headers.get("X-Content-Type-Options") === "nosniff",
     exactReplay: decidedResponse.status === 200 && replayResponse.status === 200 && JSON.stringify(decided) === JSON.stringify(replay),
     confirmedAfterRecreationAndExpiry: recoveredResponse.status === 200 && recovered.outcome === "confirmed" && recovered.revision === decided.revision,

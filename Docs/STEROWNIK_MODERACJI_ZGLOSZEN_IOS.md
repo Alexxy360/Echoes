@@ -1,5 +1,7 @@
 # Sterownik moderacji zgłoszeń iOS — CK-05c.4b.2a
 
+Zmiany CK-05d.2c.1: [aktualne zamykanie prób i dowody](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Poniższe wyniki pierwotnego etapu są historyczne.
+
 `GatewayReportReviewHost` łączy [typowany klient HTTP](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md), natywną autoryzację i [trwały dziennik](DZIENNIK_DECYZJI_ZGLOSZEN_IOS.md). Jest domyślnie wyłączony. Izolowany Runtime Development tworzy jedną instancję oraz wspólny journal Keychain i odcina je przy zmianie domeny, otwarciu mapy/czatu lub rozpoczęciu usuwania konta. Ekran i nawigację dodano następnie w CK-05c.4b.2b; opis i osobne dowody prezentacji znajdują się w [panelu zgłoszeń](PANEL_ZGLOSZEN_IOS.md). Same testy sterownika nie stanowią odbioru UI.
 
 ## Granice konta i prezentacji
@@ -16,7 +18,7 @@ Host utrzymuje jedną stronę do 20 rosnących unikalnych ID. `nextPage` wymaga 
 
 Po osobnym wywołaniu decide host utrwala prepared i dispatched, sprawdza ich dokładną tożsamość oraz ponownie kontroluje scope, token i czas przed wysłaniem. Długi zapis lokalny nie może wysłać wygasłej inspekcji. Dispatched jest znacznikiem zapisu przed transferem: nie dowodzi, że żądanie dotarło do serwera. Wpis pozostaje do recovery także wtedy, gdy końcowa kontrola zatrzymała transfer.
 
-ACK musi odpowiadać dokładnej intencji i poprawnej revision, a receipt nadal być ważna. Późny ACK daje nieznany wynik do odzyskania. Host nie ponawia decyzji, nie generuje kolejnego ID po błędzie i nie odtwarza receipt z trwałych metadanych. Wpis prepared/dispatched/resolved blokuje nową kolejkę/inspekcję/decyzję. Recovery odczytuje wyłącznie zapisane identyfikatory, również w nowej sesji tego samego konta, po wygaśnięciu materiału. Odtworzony resolved wymaga świeżego recovery, zanim pokaże wynik i zezwoli na lokalne potwierdzenie. Stary handle wyniku nie usuwa nowego wpisu.
+ACK musi odpowiadać dokładnej intencji i poprawnej revision, a receipt nadal być ważna. Późny ACK daje nieznany wynik do odzyskania. Host nie ponawia decyzji, nie generuje kolejnego ID po błędzie i nie odtwarza receipt z trwałych metadanych. Wpis prepared/dispatched/retiring/resolved blokuje nową kolejkę/inspekcję/decyzję. Recovery odczytuje wyłącznie zapisane identyfikatory, również w nowej sesji tego samego konta, po wygaśnięciu materiału. Odtworzony terminalny resolved tworzy świeży lokalny handle wyłącznie dla dokładnego zachowanego wyniku; nie odtwarza treści lub prawa do decyzji. Dawny resolved/not-applied staje się dispatched i nie daje ACK. Sam notApplied pozostaje widoczną nieostateczną obserwacją. `retirePending` wymaga jawnie przechwyconej dokładnej intencji, zapisuje retiring przed tokenem/API, akceptuje tylko terminalny wynik i ponownie sprawdza scope po każdym await. Błąd lub utrata ACK zachowuje tę samą próbę do ręcznego recovery/retire, bez ponownego decide. Stary handle wyniku nie usuwa nowego wpisu.
 
 Jedna operacja zajmuje host do rzeczywistego powrotu zależności. Invalidation/cancel zamyka prezentację natychmiast, lecz nie zwalnia slotu niekooperującego wywołania. Natywny transport HTTP dodatkowo zatrzymuje własny slot do systemowego didComplete, również gdy przerwał już oczekiwanie caller.
 

@@ -1,0 +1,245 @@
+{
+  "stage": "CK-05d.2c.1",
+  "createdAt": "2026-11-20T19:14:05.034715+00:00",
+  "baselineCommit": "521e57eb3cfb5be5db28c71eb4509c4eaf676d82",
+  "finding": {
+    "message": {
+      "pointInTimeOutcome": "not-applied",
+      "delayedDecisionAccepted": true,
+      "messageHiddenAfterDelayedDecision": true
+    },
+    "photo": {
+      "pointInTimeOutcome": "not-applied",
+      "delayedDecisionAccepted": true,
+      "publicationAfterDelayedDecision": "rejected",
+      "finding": "not-applied is not a terminal proof that an already-consented delayed request cannot still arrive"
+    },
+    "meaning": "Point-in-time not-applied cannot authorize forgetting a still viable delayed decision."
+  },
+  "tests": {
+    "gatewayNewFunctions": 32,
+    "stateCoordinator": 24,
+    "HTTP": 6,
+    "actualLocalWorkerd": 2,
+    "gatewayFinalEach": {
+      "tests": 941,
+      "passed": 941,
+      "failed": 0,
+      "skipped": 0,
+      "runtimes": [
+        "v22.23.5",
+        "v24.22.1"
+      ]
+    },
+    "syntaxMJSBoth": 203,
+    "nativeNewFunctions": 9,
+    "nativeFullEach": {
+      "defined": 731,
+      "passed": 729,
+      "skippedPhysicalDeviceOnly": 2,
+      "platforms": [
+        "macOS host",
+        "iOS26.1 iPhone17Pro Simulator"
+      ]
+    },
+    "extraNativeTransportTest": "Existing test extended to five HTTP operations after full package runs; actual1/1 Mac and actual1/1 iOS passed. Initial iOS selector ran ZERO; not counted. Correct exact function() identifier inspected from xcresult tree and 1/1 verified. Product sources unchanged.",
+    "UIFinal": {
+      "distinctScenariosPassed": 15,
+      "secondFullRun": {
+        "tests": 15,
+        "passed": 14,
+        "failed": 1
+      },
+      "finalFocusedAXRun": {
+        "tests": 2,
+        "passed": 2,
+        "failed": 0
+      },
+      "realKeychainChecks": 1,
+      "reportScreenTests": 14,
+      "scope": "Final focused run changes only two UI tests and adds a test helper. Product/preview/native sources remain identical to14 passing full-run cases; no unnecessary rerun of those13 other cases."
+    },
+    "DebugBuildForTesting": true,
+    "ReleaseUnsignedIOS": true,
+    "strictChangedSwift": 15,
+    "concreteRuntimeWireCases": 14
+  },
+  "implementation": {
+    "server": "Separate own-nonce tables for message/photo reports; retirement checked inside the same SQLite transaction as decision/policy. Explicit retire and readonly recover; closed role/flag/HTTP/checkpoint boundaries. Fresh inspection/new UUID remains possible for open report.",
+    "retention": "30-day logical lifetime from first active fence; retries do not extend. Bounded100-per-domain expiry maintenance and wake. Caps256/reviewer4096/domain include expired-but-not-yet-purged entries conservatively. Erasure removes moderator/report-owner mapped entries; unknown-report markers have no report-owner mapping. No exact physical deletion deadline or eternal nonce history claimed.",
+    "data": "reviewer hash,decisionID,intent hash,optional reporter-owner hash,timestamps only; no reportID/text/reason/pixels/GPS/token.",
+    "native": "notApplied is nonterminal; legacy resolved/not-applied projects dispatched preserving exact ID/revision without read-side repair. Persist retiring before token/API, exact scope/context/slot fencing. Only terminal result acknowledged; terminal persisted entry creates a fresh ACK handle after reconnect; old handles rejected. No automatic retire or decide retry.",
+    "UI": "One mutually-exclusive confirmation enum, explicit cancelable retirement Form, no undo claim, no private material in State. Real process restart with synthetic isolated disk provider/journal. Separate real app-hosted simulator Keychain check covers retiring/reopen/retired/attributes/exact erasure."
+  },
+  "followUpUploadApproval": {
+    "status": "confirmed local issue, NOT FIXED by report-specific2c.1;2c.2 planned before2d",
+    "observation": {
+      "pointInTimeOutcome": "not-applied",
+      "delayedDecisionAccepted": true,
+      "recoveredAfterDelayedDecision": "confirmed",
+      "publishedVersionID": null,
+      "scope": "synthetic local edge/Authority/Runtime/SQLite upload approval namespace; no remote accounts or services"
+    },
+    "scriptSHA256": "cee5c04ef8bb2107e8d54cf8c719b1594569039b9041e316bd5930625c77e2d3",
+    "logSHA256": "41b38419ac3f745f1d140368ba889914b91a25532b416543ff58b9b13a99ba89"
+  },
+  "negativeControls": [
+    {
+      "domain": "backend",
+      "mutation": "Remove only retirement check immediately before photo decision mutation",
+      "failedTests": 1,
+      "failedAssertions": 1,
+      "consequence": "Delayed effect executes despite stale reply",
+      "originalSHA256": "745f70c012b4e2f3b04c0c1f3d71c85fc0f5b8e37745ad3737e97231deebb88c"
+    },
+    {
+      "domain": "native",
+      "mutation": "Remove only terminal-outcome validation after explicit retire reply",
+      "failedTests": 1,
+      "failedAssertions": 2,
+      "originalSHA256": "f069e912e966e44502dd97681ce00ddfef3a4a9ae3b13634c9e16e58a3506a42"
+    }
+  ],
+  "setupNotes": [
+    "First full941 Node22:940pass/1fail. Default-route test accidentally included nonexistent upload-approval /moderation/avatar/retire expecting503. Corrected test to five operations only for message/photo-report namespaces; final941/941 on both runtimes.",
+    "Initial Swift compile exposed new exhaustive enum cases; next compile exposed missing await grouping and throwing expression in new tests. Corrected before acceptance. First focused90 run had6 obsolete terminal/reconnect expectations; updated to nonterminal-notApplied and fresh terminal ACK handles, preserving stale-handle assertions; new negative tests detect missing guards.",
+    "Expanded wire generator initially reached real local edge heavy limit and returned429 before expected403. Added60s synthetic clock advance before final role/disabled cases. Both Node generators export14 cases.",
+    "Native negative copy first failed package path resolution before tests. Adjusted only its local dependency path to unchanged EchoesCore, then actual test failed1/2 as required.",
+    "First UI run13/15 passed. AX largest-text screenshot showed oversized new DEBUG diagnostics footer; moved closure counter to accessibilityValue while retaining old visible footer. The material-end gate remains; test now explicitly scrolls to each action after end instead of requiring simultaneous visibility at the end marker.",
+    "New retirement AX test helper queried old navigation title; updated shared scrolling helper to use actual current title. First footer preparation assertion expected6 occurrences but found5; stopped that edit, inspected actual state, corrected all5 before final build/tests. No test acceptance from failed prep.",
+    "Additional focused iOS transport selector initially ran0 tests despite Xcode success; excluded, inspected actual identifiers, reran with parentheses and asserted actual1/1.",
+    "Second full15 UI run:14pass/1fail. The new AX background case awaited an offscreen lazy-Form text without scrolling; continuation still found reconnect and confirmed no sent retire. Final test-only correction scrolls to the closed text and checks full button geometry; both AX cases rerun2/2. All15 distinct UI scenarios passed across these final checks; unchanged product/fixture sources. No permission or service activation performed."
+  ],
+  "limits": [
+    "Local real SQLite/workerd/DO HTTP and crypto, synthetic Apple/CDN/SIWA/accounts/IP/provider with outbound denied; not real ordinary A/B, hosted Free/capacity, power-loss/eviction/PITR or CloudKit trial.",
+    "Real simulator Keychain attributes/roundtrip do not prove physical-device encryption or locked-phone protection. Process restart uses separate synthetic disk storage; not Keychain restart evidence.",
+    "Native photo-report moderator transport/journal/host/UI2d still required. Separate upload-approval moderator namespace is not extended by this report-specific change; same local issue confirmed and2c.2 planned before2d; not globally accepted.",
+    "All actual SIWA/CloudKit query/ASSET/CDN/ordinary A-B/Free/device gates and full migration/cutover remain.",
+    "No Apple/Cloudflare/phone/schema/roles/keys/secrets/deployment/service activation/fees/Production/Firebase/TestFlight change. Ordinary application remains legacy adapter pending cutover."
+  ],
+  "sourceSHA256": {
+    "Echo/Services/ReportReviewJournalStorageCheck.swift": "2f77d6ae666cc30fce07ecf3428958c8788a9e00ee18a5425a8583bd78166776",
+    "Echo/Services/ReportReviewPreviewFixture.swift": "74a24fcb53cbe55cf52862929ab56c1fb2dc093bf1710629ac3aef391c2a03b2",
+    "Echo/Views/ReportReviewConfirmationView.swift": "f02bc820e42f4497361a67d7a97285fd1d52be2558cc6309190f28df3667a46a",
+    "Echo/Views/ReportReviewPreviewView.swift": "93bd45cdf92bd707e1815e309fb7ccc617203b5b2623870cd0c61c28f5c94ab9",
+    "Echo/Views/ReportReviewView.swift": "e693b8b2104cbce5ab6a9250fadc6380b67b75f699ead88d6cee7b3ab9f42bed",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHTTPClient.swift": "30319829be4e27513d995f482c25bbc8e04957a4cff3a274985e31842643b62c",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHost.swift": "f069e912e966e44502dd97681ce00ddfef3a4a9ae3b13634c9e16e58a3506a42",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewJournal.swift": "635a3b9a9051dd9044f8cbbd2b3c3d9fc2b56ed8410bed446170412cbff0fc9c",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewModels.swift": "b90fe2769a8440ed96736ddd065fe41756d09bda7f00e7f9c218a3ab546544e7",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/report-review/responses.json": "764058cad3caa29eac82591ff6d6dbf95fc69e49f78d6de523866f7bbd0a1687",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewHostTests.swift": "f346ab8b99b88ff175faf3dc7a7ebbbce21593ced743ff276ca33976eb8bf7b6",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewJournalTests.swift": "74ac23ad5b2fc8200ffbf0981c733c046dea0351f48626a4a5f4ecc71f457f38",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewRetirementTests.swift": "878ec2507705022152458ffd8528cf31a9848086f7f2f44caf400ca65e730211",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewTests.swift": "e45a41249ef0b2b5a50b7b5e67b67800294374e76de3ea8b21f2ba2034a0f3ec",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewTransportTests.swift": "fe66e1c6ddfc26e6bab58df03dfbb3fb1cbdad256f6d3436b71a1709d021c7b7",
+    "EchoesUITests/GatewayReportReviewUITests.swift": "4fa63002d9466070c36201f26d2fe92ef01172314614fc314ed0dd28bfe49846",
+    "gateway/scripts/export-report-review-native-fixture.mjs": "1afec1360da06dcddd55ddbfdbd82b47e9b22a6877d69c5e7e3d1d0cfaa79e02",
+    "gateway/src/avatar-report-review-coordinator.mjs": "2842eff5465f1776cba023c0d0dbe377e7cc12f705d53c97d8145cef6984bec5",
+    "gateway/src/avatar-report-review-http.mjs": "76544cde6fbd313e9995089dc5377a342c76ce93e961fc841f4bea5fece00e91",
+    "gateway/src/avatar-report-review-state.mjs": "745f70c012b4e2f3b04c0c1f3d71c85fc0f5b8e37745ad3737e97231deebb88c",
+    "gateway/src/community-report-review-state.mjs": "2e885e28f81295b1e273f3d9053b4297e39fb849295795fd7872f2ad59d4b499",
+    "gateway/src/community-report-review.mjs": "26fa1f225c96e038d31caf57514273aa4d6114bab858bd04cb052658549a3018",
+    "gateway/src/community-state.mjs": "51ab6d3adfb1252f56db7c9562a3d6581d03176c4c61b1b0e3c3b0b4de823f37",
+    "gateway/src/gateway-avatar-report-review.mjs": "959ae4be8f0975d51a27184e36fbb98ef021039168fe63115917930fefffc2af",
+    "gateway/src/gateway-maintenance.mjs": "f4073ac0bc8b1675eca118d3e6f5106ed10f98f76fe1ec8d26ae417005a373a6",
+    "gateway/src/gateway-report-review.mjs": "38085896eb53de1dc192e9783f1f34ccf836bf8fa57e3c24ef65c45b30d094e9",
+    "gateway/src/moderation-decision-retirements.mjs": "e1e657ae1722098d5bc87b00a4de10deda9dc29e9bfa13826a6e43328e51c8dc",
+    "gateway/src/report-review-http.mjs": "b0cd91fe5d8a38c1be43a1ff30f25b0c120a1dfd828e8f0dffb2bf537a5d3007",
+    "gateway/test/avatar-review-workerd.test.mjs": "ed8a455d46623458377638694eddd145237043f616045406db9ff62d5a38079c",
+    "gateway/test/moderation-retirement-http.test.mjs": "7faee20e274acb050120ccd2067245249fdced0b7654690b5957033acb059e9d",
+    "gateway/test/moderation-retirement-workerd.test.mjs": "07871661f7c3fd3106aab1626609eec5b27e6bc5a30e18d8a43269c8b1f84ff1",
+    "gateway/test/moderation-retirement.test.mjs": "4e46b8cda2dafde3ee1d7446903a49cc3dc6916cbb3dda1e9f2f6b09020e4833",
+    "gateway/test/support/avatar-report-review-http-fixture.mjs": "d1e52750c21bf7b8998e1062168296d709a4a39bfaa12f19c8cb24a89b8269d7",
+    "gateway/test/support/avatar-report-review-http-workerd-proof.mjs": "96fc7eeab51198bcca75202fe526f00df607130865e9ebf0cd0e3d3891128e7a",
+    "gateway/test/support/report-review-http-fixture.mjs": "7dd829f8d0b3b2356e9ea979445c8b1d7d74bacaa1755b6a8c1c31972d4991a2",
+    "gateway/test/support/report-review-worker.mjs": "181dd3d759713c490712451114bdaade75f00f001387b90c1d578e707a2ae48b"
+  },
+  "logsSHA256": {
+    "/private/tmp/echoes-moderator-retirement-focus.log": "80fad58f513132f5fd04222e0c3585f78c58e3ae54940709a9a8f70795d0e9e5",
+    "/private/tmp/echoes-moderator-retirement-http-focus.log": "8272bbb3b915a9714b44545a0ac2ce40b68f162c9290b05041fde01223446ded",
+    "/private/tmp/echoes-moderator-retirement-workerd.log": "4f26bad9c4c802f3db1765a0c6d20d9afd92bb0cd2d8c1c51e29043116dacce2",
+    "/private/tmp/echoes-moderator-retirement-regression-focus.log": "05c871eca5ddf46f4a0e6a6f44f9cb7c946f8b28df930f850d714700716bb5c2",
+    "/private/tmp/echoes-moderator-retirement-final22.log": "069c23fa4185b2af838cdcf8917c49c1482449f80537220db8246fc197f8d1d4",
+    "/private/tmp/echoes-moderator-retirement-final24.log": "385fb3a4fd2548f7428105f771e61dbe738752d1b876c63c8e317b6cda55c3d1",
+    "/private/tmp/echoes-moderator-retirement-wire22.log": "d9aa395d063fb93b81e8bc84540f89dcc14434638554cb59e979ae2da4921b41",
+    "/private/tmp/echoes-moderator-retirement-wire24.log": "6b3946bd632b6c252920e769d00601b160c28ac0bc1c29ef36709df51ae5ccd3",
+    "/private/tmp/echoes-moderator-retirement-native-first.log": "83ca701b5c739d790f8cac13f7e0fa123c58c671204959bad16bdeeef1222463",
+    "/private/tmp/echoes-moderator-retirement-native-focus.log": "1687e4256b11803e6ae21c0fab9c51f5852dfc2a768dd92676ec59868782be5a",
+    "/private/tmp/echoes-moderator-retirement-native-focus2.log": "b5c47189921b36271f5630350aa2252af56e91eb110795c68a0276b54c694d4e",
+    "/private/tmp/echoes-moderator-retirement-swift-full.log": "3dac68d8cc8457d7e969031ed60768f4bdf8d8562bac9c680af688d225da35ea",
+    "/private/tmp/echoes-moderator-retirement-package-sim.log": "ea01c6ede6303d9e0b76e3566069abdfe52c3491d79cf779c04539584869b654",
+    "/private/tmp/echoes-moderator-retirement-debug-build.log": "739668433d736fb198ccec27852200253794295fbb0519b35e10ab1b5cc5cbb8",
+    "/private/tmp/echoes-moderator-retirement-debug-final.log": "49a30255b082b87701640debfe634437ce05ec75644cb6158250f53d15319bf2",
+    "/private/tmp/echoes-moderator-retirement-release.log": "a497efcfa75fab9278f5d3eac7d8a6511baa800729162c7229fcdad216564753",
+    "/private/tmp/echoes-moderator-retirement-swift-lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/private/tmp/echoes-moderator-retirement-native-transport-final.log": "2a8e6a7df39c2d2707f0d9ad4523fee497ab88d36588e1d0fc450ec323b0f11a",
+    "/private/tmp/echoes-moderator-retirement-native-transport-lint.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/private/tmp/echoes-moderator-retirement-native-transport-final-sim.log": "4395492077654274d3f301ab3b8e1c0648bf39150b72935272703551afea0de5",
+    "/private/tmp/echoes-moderator-retirement-native-transport-final-sim2.log": "8af21e1a553b59d704409ddc3dcb304e7e4994dc01e21b8ba797d879ea4b6833",
+    "/private/tmp/echoes-moderator-retirement-native-negative.log": "949f2b5dec70b2f171d56996cb8704993a368a3be69c8005d5278d7a5b6996a3",
+    "/private/tmp/echoes-moderator-retirement-ui.log": "d71a04c99e3055dd2346609937132c0859726a2b6d97d036c504aee2abcc64bd",
+    "/private/tmp/echoes-moderator-retirement-ui-final.log": "bbd14c58b98b27c4493ee344ae33566083cf941a16ba341a8a72757a3ee5011d",
+    "/private/tmp/echoes-moderator-retirement-ui-ax-final.log": "95cd164d098d910bd5ee04311d8a3810326e0db6036e0207e2e054071fab3052",
+    "/private/tmp/echoes-moderator-retirement-ui-lint-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "/private/tmp/echoes-moderator-retirement-negative.log": "1f96e7d03b43d2724b9b53d37a2ced3a771b82b8c847ec1fa6ce1cc255b4eb05"
+  },
+  "protectedProject": {
+    "actualSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "testStageOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  },
+  "releaseDebugFixtureExclusion": {
+    "ReleaseDebugFixtureExcluded": true,
+    "absentStrings": [
+      "retire-lost",
+      "EchoesReportReviewUIPreview",
+      "ECHOES_REPORT_REVIEW_UI_PREVIEW",
+      "synthetic-material/"
+    ],
+    "bundleSHA256": "eaf4305e3476a9edd8f1d2deec55ad965671e0aae99a702c80634491c6b2f1fc"
+  },
+  "screenshots": [
+    {
+      "file": "Docs/evidence/moderation-retirement/report-largest-text-confirmation-end.png",
+      "SHA256": "118fbbe33406909df6310e930249085641db236c7364bc7229b3d6c9a41b0f0f",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-ax-attachments/E1419875-8867-4FF0-B03F-43224AEBA23C.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    },
+    {
+      "file": "Docs/evidence/moderation-retirement/report-retired-no-undo-claim.png",
+      "SHA256": "cc30dc3f82157dd7ff7d17e1ca24609aba3fe2464edf4ebb5a7ea40c56dbf1db",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-attachments/DB434B64-606A-475A-BB42-20EDF01DA355.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    },
+    {
+      "file": "Docs/evidence/moderation-retirement/report-retirement-accessibility-size.png",
+      "SHA256": "40bf0db48722a2175939ae336fcfb67921da7e7eae6287b3153889ffdfa80b99",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-ax-attachments/E8275AD1-5974-49FA-9C70-E207EAAD23B6.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    },
+    {
+      "file": "Docs/evidence/moderation-retirement/report-retirement-background-closed-large.png",
+      "SHA256": "8bb0d56fd7bd405a495195ae8831d00a174f0b465d16753e9b4cc2fde807bfb6",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-ax-attachments/491D0E72-0C9A-43CC-9ED2-5271D1A3E127.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    },
+    {
+      "file": "Docs/evidence/moderation-retirement/report-retirement-explicit-confirmation.png",
+      "SHA256": "ca43ce4ed20c0c648b5c4ac25420f35404ef20dd3b13e36a78c753bc1b35986e",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-attachments/7FBCB3C9-8C59-4B89-A0F6-7B09685001A0.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    },
+    {
+      "file": "Docs/evidence/moderation-retirement/report-retiring-after-process-restart.png",
+      "SHA256": "787fc5c6c9a34c65dc29f21b916408d4427ff39bcd57cf0dc53aced9dc63e8dd",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-moderator-retirement-ui-attachments/17E1E4E5-D5C8-4845-9645-541BB06A4464.png",
+      "note": "Synthetic simulator screenshot; default or AX XXXL. All captions/actions readable after scrolling. Not real provider/device acceptance."
+    }
+  ]
+}

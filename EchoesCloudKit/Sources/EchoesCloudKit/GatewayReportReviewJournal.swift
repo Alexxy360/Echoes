@@ -37,7 +37,9 @@ public struct GatewayReportReviewJournalLease: Sendable, CustomStringConvertible
     public var description: String { "GatewayReportReviewJournalLease(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
-public enum GatewayReportReviewJournalPhase: String, Codable, Sendable { case prepared, dispatched, resolved }
+public enum GatewayReportReviewJournalPhase: String, Codable, Sendable {
+    case prepared, dispatched, retiring, resolved
+}
 public struct GatewayReportReviewJournalEntry: Equatable, Sendable, CustomStringConvertible, CustomReflectable
 {
     public let intent: GatewayReportReviewRecoveryIntent
@@ -80,6 +82,7 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
             return .entry(try load(scope)?.entry?.value())
         case .prepare(let intent, let lease): return .entry(try prepare(intent, lease: lease))
         case .dispatch(let entry, let lease): return .entry(try dispatched(entry, lease: lease))
+        case .retire(let entry, let lease): return .entry(try retiring(entry, lease: lease))
         case .resolve(let entry, let result, let lease):
             return .entry(try resolve(entry, result: result, lease: lease))
         case .acknowledge(let entry, let lease):
@@ -131,6 +134,7 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
             let intent = try intent.value()
             guard gatewayUUID(revision) else { throw GatewayReportReviewJournalFailure.unavailable }
             let result: GatewayReportReviewOutcome?
+            var returnedPhase = phase
             switch outcome {
             case nil:
                 guard phase != .resolved, resultRevision == nil else {
@@ -141,14 +145,21 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
                 guard phase == .resolved, let resultRevision, gatewayUUID(resultRevision)
                 else { throw GatewayReportReviewJournalFailure.unavailable }
                 result = .confirmed(revision: resultRevision)
-            case "not-applied", "superseded":
+            case "not-applied":
+                guard phase != .prepared, resultRevision == nil else {
+                    throw GatewayReportReviewJournalFailure.unavailable
+                }
+                // V1 formerly stored this point-in-time observation as resolved. Preserve its ID but withhold ACK.
+                if phase == .resolved { returnedPhase = .dispatched }
+                result = .notApplied
+            case "superseded", "retired":
                 guard phase == .resolved, resultRevision == nil else {
                     throw GatewayReportReviewJournalFailure.unavailable
                 }
-                result = outcome == "not-applied" ? .notApplied : .superseded
+                result = outcome == "retired" ? .retired : .superseded
             default: throw GatewayReportReviewJournalFailure.unavailable
             }
-            return .init(intent: intent, phase: phase, revision: revision, outcome: result)
+            return .init(intent: intent, phase: returnedPhase, revision: revision, outcome: result)
         }
     }
     private struct Record: Codable {
@@ -255,13 +266,28 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
         try save(value, scope: lease.scope)
         return try value.entry!.value()
     }
+    private func retiring(_ entry: GatewayReportReviewJournalEntry, lease: GatewayReportReviewJournalLease)
+        throws -> GatewayReportReviewJournalEntry
+    {
+        var value = try exact(entry, lease)
+        guard entry.phase != .resolved else { throw GatewayReportReviewJournalFailure.invalidTransition }
+        if entry.phase == .retiring { return entry }
+        value.entry!.phase = .retiring
+        value.entry!.revision = UUID().uuidString.lowercased()
+        try save(value, scope: lease.scope)
+        return try value.entry!.value()
+    }
     private func resolve(
         _ entry: GatewayReportReviewJournalEntry, result: GatewayReportReviewRecoveryResult,
         lease: GatewayReportReviewJournalLease
     ) throws -> GatewayReportReviewJournalEntry {
         var value = try exact(entry, lease)
         guard result.intent == entry.intent else { throw GatewayReportReviewJournalFailure.invalidTransition }
-        value.entry!.phase = .resolved
+        guard entry.phase != .resolved || entry.outcome == result.outcome && result.outcome.isTerminal else {
+            throw GatewayReportReviewJournalFailure.invalidTransition
+        }
+        value.entry!.phase =
+            result.outcome.isTerminal ? .resolved : entry.phase == .retiring ? .retiring : .dispatched
         value.entry!.revision = UUID().uuidString.lowercased()
         switch result.outcome {
         case .confirmed(let revision):
@@ -272,6 +298,9 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
             value.entry!.resultRevision = nil
         case .superseded:
             value.entry!.outcome = "superseded"
+            value.entry!.resultRevision = nil
+        case .retired:
+            value.entry!.outcome = "retired"
             value.entry!.resultRevision = nil
         }
         let result = try value.entry!.value()
@@ -289,7 +318,9 @@ private final class ReportReviewJournalBackend: @unchecked Sendable {
         throws
     {
         var value = try exact(entry, lease)
-        guard entry.phase == .resolved else { throw GatewayReportReviewJournalFailure.invalidTransition }
+        guard entry.phase == .resolved, entry.outcome?.isTerminal == true else {
+            throw GatewayReportReviewJournalFailure.invalidTransition
+        }
         value.entry = nil
         try save(value, scope: lease.scope)
     }
@@ -311,6 +342,7 @@ private enum ReportReviewJournalCommand: Sendable {
     case pending(GatewayReportReviewJournalLease)
     case prepare(GatewayReportReviewRecoveryIntent, GatewayReportReviewJournalLease)
     case dispatch(GatewayReportReviewJournalEntry, GatewayReportReviewJournalLease)
+    case retire(GatewayReportReviewJournalEntry, GatewayReportReviewJournalLease)
     case resolve(
         GatewayReportReviewJournalEntry, GatewayReportReviewRecoveryResult, GatewayReportReviewJournalLease)
     case acknowledge(GatewayReportReviewJournalEntry, GatewayReportReviewJournalLease)
@@ -437,6 +469,14 @@ private enum ReportReviewJournalReply: Sendable {
         async throws -> GatewayReportReviewJournalEntry
     {
         guard let result = try await entry(.dispatch(value, lease), lease: lease) else {
+            throw GatewayReportReviewJournalFailure.unavailable
+        }
+        return result
+    }
+    public func retiring(_ value: GatewayReportReviewJournalEntry, lease: GatewayReportReviewJournalLease)
+        async throws -> GatewayReportReviewJournalEntry
+    {
+        guard let result = try await entry(.retire(value, lease), lease: lease) else {
             throw GatewayReportReviewJournalFailure.unavailable
         }
         return result

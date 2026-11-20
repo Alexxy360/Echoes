@@ -10,6 +10,14 @@ public protocol GatewayReportReviewAPI: Sendable {
         -> GatewayReportReviewDecisionResult
     func recover(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
         -> GatewayReportReviewRecoveryResult
+    func retire(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayReportReviewRecoveryResult
+}
+extension GatewayReportReviewAPI {
+    /// Legacy implementations remain closed until explicitly supporting the server fence.
+    public func retire(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayReportReviewRecoveryResult
+    { throw GatewayReportReviewFailure.unavailable }
 }
 public protocol GatewayReportReviewTransport: Sendable {
     func send(_ request: URLRequest, operation: GatewayReportReviewOperation) async throws
@@ -172,7 +180,18 @@ public struct GatewayReportReviewHTTPClient: GatewayReportReviewAPI {
     public func recover(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
         -> GatewayReportReviewRecoveryResult
     {
-        let (response, _) = try await perform(.recover(intent), token: token)
+        try await outcome(intent, operation: .recover(intent), token: token)
+    }
+    public func retire(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayReportReviewRecoveryResult
+    {
+        try await outcome(intent, operation: .retire(intent), token: token)
+    }
+    private func outcome(
+        _ intent: GatewayReportReviewRecoveryIntent, operation: GatewayReportReviewOperation,
+        token: GatewaySecret
+    ) async throws -> GatewayReportReviewRecoveryResult {
+        let (response, _) = try await perform(operation, token: token)
         _ = try reportReviewObject(
             response.body,
             keys: [
@@ -196,11 +215,14 @@ public struct GatewayReportReviewHTTPClient: GatewayReportReviewAPI {
                 throw GatewayReportReviewFailure.invalidResponse
             }
             outcome = .confirmed(revision: revision)
-        case "not-applied", "superseded":
+        case "not-applied", "superseded", "retired":
             guard value.revision == nil else { throw GatewayReportReviewFailure.invalidResponse }
-            outcome = value.outcome == "not-applied" ? .notApplied : .superseded
+            outcome =
+                value.outcome == "not-applied"
+                ? .notApplied : value.outcome == "retired" ? .retired : .superseded
         default: throw GatewayReportReviewFailure.invalidResponse
         }
+        if case .retire = operation, !outcome.isTerminal { throw GatewayReportReviewFailure.invalidResponse }
         try checkActivation()
         return .init(intent: intent, outcome: outcome)
     }

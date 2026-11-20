@@ -12,7 +12,7 @@ const reportID = value => typeof value === "string" && /^community-v1-avatarrepo
 const verdict = value => ["dismiss", "hide_photo"].includes(value);
 const time = value => Number.isSafeInteger(value) && value >= 0;
 const text = (value, maximum) => { try { return communityText(value, maximum) === value && [...value].every(c => c.codePointAt(0) < 0xd800 || c.codePointAt(0) > 0xdfff); } catch { return false; } };
-export const avatarReportReviewPaths = new Map(["queue", "inspect", "decide", "recover"].map(action => ["/v1/moderation/avatar-reports/" + action, action]));
+export const avatarReportReviewPaths = new Map(["queue", "inspect", "decide", "recover", "retire"].map(action => ["/v1/moderation/avatar-reports/" + action, action]));
 export function avatarReportReviewers(json = "[]") {
   try {
     if (typeof json !== "string" || json.length > 2048) fail("AVATAR_REPORT_REVIEW_INPUT");
@@ -22,7 +22,7 @@ export function avatarReportReviewers(json = "[]") {
   } catch { fail("AVATAR_REPORT_REVIEW_INPUT"); }
 }
 export function avatarReportReviewInput(action, value) {
-  const keys = { queue: ["after"], inspect: ["reportID"], decide: ["inspectionID", "decisionID", "verdict"], recover: ["reportID", "decisionID", "verdict", "contentHash"] }[action];
+  const keys = { queue: ["after"], inspect: ["reportID"], decide: ["inspectionID", "decisionID", "verdict"], recover: ["reportID", "decisionID", "verdict", "contentHash"], retire: ["reportID", "decisionID", "verdict", "contentHash"] }[action];
   if (!keys || !exact(value, keys) || action === "queue" && value.after !== null && !reportID(value.after) ||
       keys.includes("reportID") && !reportID(value.reportID) || keys.includes("inspectionID") && !id(value.inspectionID) ||
       keys.includes("decisionID") && !id(value.decisionID) || keys.includes("verdict") && !verdict(value.verdict) ||
@@ -63,9 +63,9 @@ export function avatarReportReviewResult(action, value, input, now = Date.now())
     }
   } else {
     const keys = ["schemaVersion", "reportID", "decisionID", "verdict", "contentHash", "revision", action === "decide" ? "inspectionID" : "outcome"];
-    if (!["decide", "recover"].includes(action) || !exact(value, keys) || !reportID(value.reportID) || !id(value.decisionID) || !verdict(value.verdict) || !hash(value.contentHash) ||
+    if (!["decide", "recover", "retire"].includes(action) || !exact(value, keys) || !reportID(value.reportID) || !id(value.decisionID) || !verdict(value.verdict) || !hash(value.contentHash) ||
         action === "decide" && (!id(value.inspectionID) || !id(value.revision)) ||
-        action === "recover" && (!["confirmed", "not-applied", "superseded"].includes(value.outcome) || (value.outcome === "confirmed" ? !id(value.revision) : value.revision !== null))) fail("AVATAR_REPORT_REVIEW_RESPONSE");
+        ["recover", "retire"].includes(action) && (!(action === "retire" ? ["retired", "confirmed", "superseded"] : ["confirmed", "not-applied", "superseded", "retired"]).includes(value.outcome) || (value.outcome === "confirmed" ? !id(value.revision) : value.revision !== null))) fail("AVATAR_REPORT_REVIEW_RESPONSE");
     if (input && Object.keys(input).some(key => value[key] !== input[key])) fail("AVATAR_REPORT_REVIEW_RESPONSE");
   }
   return Object.freeze(structuredClone(value));

@@ -23,7 +23,7 @@ export class AvatarReportReviewCoordinator {
         ["readPublication", "assertReadPublication"].some(k => typeof avatarPolicy?.[k] !== "function") || typeof repository?.beginRead !== "function" ||
         ["readable", "reviewAvatarReportPage", "readAvatarAssetCommitments"].some(k => typeof registry?.[k] !== "function") ||
         ["lookup", "waitForPendingOperations"].some(k => typeof client?.[k] !== "function") ||
-        ["isOpen", "reserve", "getReserved", "confirm", "get", "decide", "recover", "outcome"].some(k => typeof reviews?.[k] !== "function") ||
+        ["isOpen", "reserve", "getReserved", "confirm", "get", "decide", "retire", "recover", "outcome"].some(k => typeof reviews?.[k] !== "function") ||
         ["verify", "advance"].some(k => typeof checkpoint?.[k] !== "function") ||
         [isEnabled, isOperator, clock, monotonic, fetchImplementation].some(f => typeof f !== "function") ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) fail("AVATAR_REPORT_REVIEW_INPUT");
@@ -190,7 +190,7 @@ export class AvatarReportReviewCoordinator {
       const receipt = this.#reviews.get(identity.reviewerID, identity.sessionKey, o.inspectionID), content = receipt.content;
       const query = { reviewerID: identity.reviewerID, reportID: content.reportID, decisionID: o.decisionID, verdict: o.verdict, contentHash: receipt.content_hash };
       const previous = this.#reviews.outcome(query); let result;
-      if (previous.outcome === "superseded") fail("AVATAR_REPORT_REVIEW_STALE");
+      if (!["not-applied", "confirmed"].includes(previous.outcome)) fail("AVATAR_REPORT_REVIEW_STALE");
       if (previous.outcome === "confirmed") {
         await this.#checkpoint.verify({ signal }); check();
         result = { reportID: content.reportID, decisionID: o.decisionID, verdict: o.verdict, contentHash: receipt.content_hash, revision: previous.revision };
@@ -217,6 +217,23 @@ export class AvatarReportReviewCoordinator {
         const current = this.#reviews.outcome(query);
         if (current.outcome !== "confirmed" || current.revision !== result.revision) fail("AVATAR_REPORT_REVIEW_STALE");
         return { schemaVersion: 1, inspectionID: o.inspectionID, ...result };
+      };
+    });
+  }
+  async prepareRetirement(value) {
+    const keys = ["reportID", "decisionID", "verdict", "contentHash"], o = this.#options(value, keys);
+    if (!reportID(o.reportID) || !id(o.decisionID) || !["dismiss", "hide_photo"].includes(o.verdict) || typeof o.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(o.contentHash)) fail("AVATAR_REPORT_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      await this.#checkpoint.verify({ signal }); check();
+      const query = { reviewerID: identity.reviewerID, ...Object.fromEntries(keys.map(k => [k, o[k]])) };
+      let result;
+      try { result = await this.#reviews.retire({ ...query, authorize: () => { check(); return true; } }); }
+      catch (error) { check(); await this.#checkpoint.advance({ signal }); throw error; }
+      check(); await this.#checkpoint.advance({ signal }); check();
+      return () => {
+        const latest = this.#reviews.outcome(query);
+        if (!["retired", "confirmed", "superseded"].includes(latest.outcome) || latest.outcome !== result.outcome || latest.revision !== result.revision) fail("AVATAR_REPORT_REVIEW_STALE");
+        return { schemaVersion: 1, ...latest };
       };
     });
   }

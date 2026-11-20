@@ -17,14 +17,20 @@ try {
   }
   const queue = await run("queue-open", "queue"); assert.equal(queue.items.length, 1);
   const inspection = await run("inspect-message", "inspect"); assert.equal(inspection.message.text, "PRIVATE-SYNTHETIC-MESSAGE");
+  const retiring = { reportID: inspection.reportID, decisionID: randomUUID(), verdict: "hide_message", contentHash: inspection.contentHash };
+  assert.equal((await run("retire-pending", "retire", retiring)).outcome, "retired");
+  assert.equal((await run("recover-retired", "recover", retiring)).outcome, "retired");
+  await run("late-retired-decision", "decide", { inspectionID: inspection.inspectionID, decisionID: retiring.decisionID, verdict: retiring.verdict }, 409);
   const decision = { inspectionID: inspection.inspectionID, decisionID: randomUUID(), verdict: "hide_message" };
   const recovery = { reportID: inspection.reportID, decisionID: decision.decisionID, verdict: decision.verdict, contentHash: inspection.contentHash };
   assert.equal((await run("recover-not-applied", "recover", recovery)).outcome, "not-applied");
   const result = await run("decide-hidden", "decide", decision);
   assert.deepEqual(await run("decide-replay", "decide", decision), result);
   assert.equal((await run("recover-confirmed", "recover", recovery)).revision, result.revision);
+  assert.equal((await run("retire-already-confirmed", "retire", recovery)).revision, result.revision);
   assert.equal((await run("recover-superseded", "recover", { ...recovery, decisionID: randomUUID() })).outcome, "superseded");
   assert.deepEqual((await run("queue-closed", "queue")).items, []);
+  f.advance(60_000); // Keep the expanded capture within real edge network limits.
   await run("queue-ordinary-denied", "queue", {}, 403, { token: f.reporter.sessionToken });
   f.env.REPORT_REVIEW_ENABLED = "0"; await run("queue-disabled", "queue", {}, 503);
   const payload = JSON.stringify({ schemaVersion: 1, source: "Concrete offline edge/Authority/Runtime/SQLite; synthetic provider and identities", nowMilliseconds, cases }, null, 2) + "\n";

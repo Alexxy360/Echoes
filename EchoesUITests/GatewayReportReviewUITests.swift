@@ -25,7 +25,8 @@ import XCTest
     private func scroll(
         _ app: XCUIApplication, up: Bool, confirmation: Bool = false, toward target: XCUIElement? = nil
     ) {
-        let top = app.navigationBars[confirmation ? "Potwierdzenie" : "Zgłoszenia"].frame.maxY + 8
+        let title = app.navigationBars["Potwierdzenie"].exists ? "Potwierdzenie" : "Zgłoszenia"
+        let top = app.navigationBars[title].frame.maxY + 8
         let lower =
             confirmation
             ? app.buttons["report.review.confirm"].frame.minY
@@ -53,12 +54,27 @@ import XCTest
         let target = element(app, id)
         for _ in 0..<16 {
             if target.exists && target.isHittable { return target }
-            let top = app.navigationBars[confirmation ? "Potwierdzenie" : "Zgłoszenia"].frame.maxY
+            let title = app.navigationBars["Potwierdzenie"].exists ? "Potwierdzenie" : "Zgłoszenia"
+            let top = app.navigationBars[title].frame.maxY
             scroll(
                 app, up: !target.exists || target.frame.midY > top, confirmation: confirmation,
                 toward: target)
         }
         XCTAssertTrue(target.isHittable, String(app.debugDescription.suffix(6000)))
+        return target
+    }
+    private func fullyVisibleButton(_ app: XCUIApplication, _ id: String) -> XCUIElement {
+        let target = app.buttons[id]
+        for _ in 0..<16 {
+            let title = app.navigationBars["Potwierdzenie"].exists ? "Potwierdzenie" : "Zgłoszenia"
+            let top = app.navigationBars[title].frame.maxY + 8
+            let bottom = element(app, "report.review.fixture.count").frame.minY - 8
+            if target.exists, target.isHittable, target.frame.minY >= top, target.frame.maxY <= bottom {
+                return target
+            }
+            scroll(app, up: !target.exists || target.frame.maxY > bottom, toward: target)
+        }
+        XCTFail("Button is not fully visible: " + id)
         return target
     }
     private func tap(_ app: XCUIApplication, _ id: String, confirmation: Bool = false) {
@@ -165,19 +181,77 @@ import XCTest
         count(app, 1)
         attach(app, "report-recovered-after-process-restart")
     }
-    func testNotAppliedNeedsAcknowledgementAndNewInspection() {
+    func testNotAppliedCannotBeAcknowledgedUntilExplicitCancelableServerClosure() {
         let app = application("not-applied")
         openItem(app)
         choose(app)
         confirm(app)
         XCTAssertTrue(element(app, "report.review.unknown").waitForExistence(timeout: 10))
         tap(app, "report.review.recover")
-        outcome(app, contains: "nie została zastosowana")
+        outcome(app, contains: "nie jest potwierdzona")
+        XCTAssertFalse(app.buttons["report.review.acknowledge"].exists)
+        tap(app, "report.review.retire")
+        XCTAssertTrue(element(app, "report.review.retireConfirmation").waitForExistence(timeout: 5))
+        attach(app, "report-retirement-explicit-confirmation")
+        tap(app, "report.review.retireCancel")
+        wait(element(app, "report.review.fixture.count"), "value CONTAINS 'Zamknięcia: 0'")
+        tap(app, "report.review.retire")
+        tap(app, "report.review.retireConfirm")
+        outcome(app, contains: "próba została zamknięta")
+        wait(element(app, "report.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        attach(app, "report-retired-no-undo-claim")
         count(app, 1)
         XCTAssertFalse(app.buttons["report.review.item.0"].exists)
         tap(app, "report.review.acknowledge")
         tap(app, "report.review.refresh")
         openItem(app)
+        count(app, 1)
+    }
+    func testLostRetirementACKSurvivesProcessRestartAndReadOnlyRecovery() {
+        let app = application("retire-lost")
+        openItem(app)
+        choose(app)
+        confirm(app)
+        XCTAssertTrue(element(app, "report.review.unknown").waitForExistence(timeout: 10))
+        tap(app, "report.review.retire")
+        tap(app, "report.review.retireConfirm")
+        wait(element(app, "report.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        wait(element(app, "report.review.unknown"), "label CONTAINS 'potwierdzenie zamknięcia'")
+        XCTAssertFalse(app.buttons["report.review.acknowledge"].exists)
+        app.terminate()
+        app.launch()
+        wait(element(app, "report.review.unknown"), "exists == true", timeout: 15)
+        count(app, 1)
+        attach(app, "report-retiring-after-process-restart")
+        tap(app, "report.review.recover")
+        outcome(app, contains: "próba została zamknięta")
+        wait(element(app, "report.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        count(app, 1)
+        app.terminate()
+        app.launch()
+        outcome(app, contains: "próba została zamknięta")
+        tap(app, "report.review.acknowledge")
+        count(app, 1)
+    }
+    func testRetirementConfirmationAccessibilitySizeAndBackgroundCannotSend() {
+        let app = application("not-applied", large: true)
+        openItem(app)
+        choose(app)
+        confirm(app)
+        XCTAssertTrue(element(app, "report.review.unknown").waitForExistence(timeout: 10))
+        tap(app, "report.review.retire")
+        XCTAssertTrue(element(app, "report.review.retireConfirmation").waitForExistence(timeout: 5))
+        let confirm = fullyVisibleButton(app, "report.review.retireConfirm")
+        XCTAssertTrue(confirm.isEnabled && confirm.isHittable)
+        attach(app, "report-retirement-accessibility-size")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(visible(app, "report.review.closed").exists)
+        XCTAssertFalse(app.buttons["report.review.retireConfirm"].exists)
+        attach(app, "report-retirement-background-closed-large")
+        tap(app, "report.review.reconnect")
+        XCTAssertTrue(element(app, "report.review.unknown").waitForExistence(timeout: 10))
+        wait(element(app, "report.review.fixture.count"), "value CONTAINS 'Zamknięcia: 0'")
         count(app, 1)
     }
     func testSupersededDoesNotClaimSuccessAndCannotRestoreOldMaterial() {
@@ -285,9 +359,9 @@ import XCTest
         XCTAssertFalse(app.buttons["report.review.confirm"].isEnabled)
         reachEnd(app, confirmation: true)
         wait(app.buttons["report.review.confirm"], "enabled == true")
-        XCTAssertTrue(
-            app.buttons["report.review.confirm"].isHittable
-                && app.buttons["report.review.confirmCancel"].isHittable)
+        // After reaching the material end, actions may require further scrolling at AX XXXL.
+        XCTAssertTrue(fullyVisibleButton(app, "report.review.confirmCancel").isEnabled)
+        XCTAssertTrue(fullyVisibleButton(app, "report.review.confirm").isEnabled)
         attach(app, "report-largest-text-confirmation-end")
         app.buttons["report.review.confirm"].tap()
         outcome(app, contains: "Ukrycie wiadomości")

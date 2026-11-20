@@ -1,5 +1,7 @@
 # Panel zgłoszeń iOS — CK-05c.4b.2b
 
+Aktualizacja CK-05d.2c.1: [zamykanie niepewnych decyzji](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md); nowy odbiór obejmuje anulowanie zamknięcia, utratę jego ACK/restart i AX XXXL. Historyczne dowody pierwotnego UI poniżej pozostają bez zmian.
+
 `ReportReviewView` pokazuje kolejkę, powód zgłoszenia i dostępną wiadomość przez [sterownik](STEROWNIK_MODERACJI_ZGLOSZEN_IOS.md). W izolowanym Runtime Development wejście „Zgłoszenia” znajduje się obok oceny zdjęć i usuwania konta, po zalogowaniu. Otwarcie zamyka poprzednią domenę mapy/czatu przed tworzeniem dzierżawy moderatora. Rola nadal pochodzi z backendu; brak roli wyświetla odmowę bez wylogowania zwykłego konta. Zwykłe wejście aplikacji pozostaje przy adapterze Firebase, a zdalna aktywacja nowych usług jest wyłączona.
 
 ## Odczyt i jawna decyzja
@@ -14,7 +16,7 @@ Znacznik używa `onGeometryChange`: sprawdza, czy co najmniej 90% szerokości i 
 
 ## Nieznany wynik, tło i strony
 
-Decyzja od początku operacji usuwa materiał z widoku i korzysta z zapisu prepared/dispatched przed HTTP. Utrata odpowiedzi pokazuje zapisane metadane wyboru oraz ręczne „Sprawdź wynik”. Nie ma przycisku ponownego wysłania lub odtworzenia dawnego tekstu. Odtworzony wpis po restarcie nie pokazuje wyniku przed świeżym recovery. Panel przewija do nowej zapisanej intencji i następnie aktualnego wyniku; potwierdzenie wyniku pozostaje ręczne. Dopiero bieżący wynik ma „Rozumiem”, usuwające dokładną lokalną intencję; kolejna ocena wymaga nowego odczytu.
+Decyzja od początku operacji usuwa materiał z widoku i korzysta z zapisu prepared/dispatched przed HTTP. Utrata odpowiedzi pokazuje zapisane metadane wyboru oraz ręczne „Sprawdź wynik”. Nie ma przycisku ponownego wysłania lub odtworzenia dawnego tekstu. Nierozstrzygnięty wpis po restarcie wymaga ręcznego recovery lub jawnego zamknięcia próby. Not-applied wyjaśnia, że decyzja może jeszcze zostać zapisana; nie ma ACK. „Zamknij tę próbę” otwiera osobny anulowalny Form, objaśniający blokadę późniejszego wykonania bez cofania już zapisanych zmian. Dopiero terminalny wynik daje ACK; taki wynik przechowany w journal może być pokazany po restarcie przez świeży handle. Decyzja i zamknięcie próby są rozłączne w jednym enum stanu potwierdzenia, bez kopii materiału. Tło/zmiana pending zamyka stare potwierdzenie. Panel przewija do nowej zapisanej intencji i następnie aktualnego wyniku; potwierdzenie wyniku pozostaje ręczne. Dopiero bieżący wynik ma „Rozumiem”, usuwające dokładną lokalną intencję; kolejna ocena wymaga nowego odczytu.
 
 Wyjście z aktywnej sceny usuwa treść i potwierdzenie oraz odcina host. Powrót wymaga jawnego otwarcia panelu; początkowa aktywacja nie tworzy pętli automatycznych prób. Zmiana natywnego konta zamyka panel także podczas niekooperującej odpowiedzi. Czas życia ekranu i sprawdzenie po await nie pozwalają starej operacji zapisać błędu/treści w nowszym ekranie.
 

@@ -16,7 +16,7 @@ export function createReportReviewHandler({ authentication, limits, checkpoint, 
   return async (request, budget, action) => {
     let admission, deadline;
     try {
-      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision", recover: "prepareRecovery" }[action];
+      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision", recover: "prepareRecovery", retire: "prepareRetirement" }[action];
       const flag = fn => { try { return sync(fn()) === true; } catch { return false; } };
       const enabled = () => flag(isEnabled) && flag(isReportReviewEnabled);
       if (!enabled() || typeof reportReview?.[method] !== "function" || typeof reportReview?.waitForPendingOperations !== "function" || typeof limits.consumeReportReview !== "function") return response({ error: "FEATURE_DISABLED" }, 503);

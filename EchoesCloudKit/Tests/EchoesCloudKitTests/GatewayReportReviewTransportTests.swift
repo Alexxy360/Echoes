@@ -114,7 +114,7 @@ private func reportRequest(_ origin: URL) throws -> URLRequest {
     return request
 }
 
-@Test func reportReviewURLSessionConcreteServerWireAcrossAllFourOperationsAndReplay() async throws {
+@Test func reportReviewURLSessionConcreteServerWireAcrossAllFiveOperationsAndReplay() async throws {
     let f = try ReportWireFixture()
     let origin = ReportURLProtocol.plan.install(.init(response: f.queue))
     defer { ReportURLProtocol.plan.remove(origin) }
@@ -131,8 +131,14 @@ private func reportRequest(_ origin: URL) throws -> URLRequest {
     #expect(
         try await client.recover(f.recovery, token: reviewBearer).outcome
             == .confirmed(revision: first.revision))
+    ReportURLProtocol.plan.replace(origin, .init(response: f.cases["retire-already-confirmed"]!))
+    #expect(
+        try await client.retire(f.recovery, token: reviewBearer).outcome
+            == .confirmed(revision: first.revision))
     let (requests, bodies) = ReportURLProtocol.plan.captured(origin)
-    #expect(requests.count == 5 && bodies[2] == bodies[3])
+    #expect(requests.count == 6 && bodies[2] == bodies[3])
+    #expect(requests[5].url?.path == "/v1/moderation/reports/retire")
+    #expect(try bodies[5] == GatewayReportReviewOperation.retire(f.recovery).wire())
     #expect(try bodies[4] == GatewayReportReviewOperation.recover(f.recovery).wire())
     #expect(
         requests.allSatisfy {

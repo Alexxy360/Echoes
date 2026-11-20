@@ -2,6 +2,10 @@ import EchoesCloudKit
 import SwiftUI
 
 @MainActor private final class ReportReviewScreenLifetime { var id: UUID? }
+private enum ReportReviewScreenConfirmation {
+    case decision(ReportReviewDecisionChoice)
+    case retirement(GatewayReportReviewRecoveryIntent)
+}
 
 /// One feature in the parent's stack. State holds handles and metadata, never report/message text.
 struct ReportReviewView: View {
@@ -14,7 +18,7 @@ struct ReportReviewView: View {
     @State private var lifetime = ReportReviewScreenLifetime()
     @State private var attemptedInitialOpen = false
     @State private var selected: GatewayReportReviewItem?
-    @State private var confirmation: ReportReviewDecisionChoice?
+    @State private var confirmation: ReportReviewScreenConfirmation?
     @State private var error: String?
     @State private var pageNumber = 1
 
@@ -23,8 +27,14 @@ struct ReportReviewView: View {
             if scenePhase != .active {
                 Text("Echoes").font(.title.bold())
             } else if let confirmation {
-                ReportReviewConfirmationView(
-                    host: host, choice: confirmation, confirm: confirm, cancel: { self.confirmation = nil })
+                switch confirmation {
+                case .decision(let choice):
+                    ReportReviewConfirmationView(
+                        host: host, choice: choice, confirm: confirm, cancel: { self.confirmation = nil })
+                case .retirement(let intent):
+                    ReportReviewRetirementConfirmationView(
+                        host: host, intent: intent, confirm: retire, cancel: { self.confirmation = nil })
+                }
             } else {
                 mainContent
             }
@@ -37,7 +47,12 @@ struct ReportReviewView: View {
         }
         .task { await open(initial: true) }
         .onChange(of: host.presentation) { _, value in
-            if let confirmation, confirmation.presentation != value { self.confirmation = nil }
+            if case .decision(let choice) = confirmation, choice.presentation != value {
+                self.confirmation = nil
+            }
+        }
+        .onChange(of: host.pendingOperation?.intent) { _, value in
+            if case .retirement(let intent) = confirmation, intent != value { self.confirmation = nil }
         }
         .onChange(of: host.isConnected) { _, connected in
             if !connected {
@@ -120,13 +135,15 @@ struct ReportReviewView: View {
                                 }
                                 Section("Decyzja") {
                                     Button("Odrzuć zgłoszenie") {
-                                        confirmation = .init(presentation: presentation, verdict: .dismiss)
+                                        confirmation = .decision(
+                                            .init(presentation: presentation, verdict: .dismiss))
                                     }
                                     .disabled(!host.canDecide).accessibilityIdentifier(
                                         "report.review.dismiss")
                                     Button("Ukryj wiadomość", role: .destructive) {
-                                        confirmation = .init(
-                                            presentation: presentation, verdict: .hideMessage)
+                                        confirmation = .decision(
+                                            .init(
+                                                presentation: presentation, verdict: .hideMessage))
                                     }
                                     .disabled(!host.canHideMessage).accessibilityIdentifier(
                                         "report.review.hide")
@@ -229,21 +246,30 @@ struct ReportReviewView: View {
                 Text(outcomeText(outcome, verdict: entry.intent.verdict)).id("report.review.outcome")
                     .accessibilityIdentifier(
                         "report.review.outcome")
-                if let resolution = host.resolution {
-                    Button("Rozumiem") {
-                        Task {
-                            await run {
-                                try await host.acknowledgeResult(resolution)
-                                selected = nil
-                            }
+            }
+            if let resolution = host.resolution {
+                Button("Rozumiem") {
+                    Task {
+                        await run {
+                            try await host.acknowledgeResult(resolution)
+                            selected = nil
                         }
-                    }.disabled(host.isBusy).accessibilityIdentifier("report.review.acknowledge")
-                }
+                    }
+                }.disabled(host.isBusy).accessibilityIdentifier("report.review.acknowledge")
             } else {
-                Text("Zachowana decyzja czeka na sprawdzenie wyniku.").accessibilityIdentifier(
-                    "report.review.unknown")
+                if host.outcome == nil {
+                    Text(
+                        entry.phase == .retiring
+                            ? "Czekamy na potwierdzenie zamknięcia próby."
+                            : "Zachowana decyzja czeka na sprawdzenie wyniku."
+                    )
+                    .accessibilityIdentifier("report.review.unknown")
+                }
                 Button("Sprawdź wynik") { Task { await run { try await host.recover() } } }
                     .disabled(host.isBusy).accessibilityIdentifier("report.review.recover")
+                Button(entry.phase == .retiring ? "Ponów zamknięcie próby" : "Zamknij tę próbę") {
+                    confirmation = .retirement(entry.intent)
+                }.disabled(!host.canRetirePending).accessibilityIdentifier("report.review.retire")
             }
         }
     }
@@ -255,8 +281,9 @@ struct ReportReviewView: View {
             return verdict == .hideMessage
                 ? "Ukrycie wiadomości zostało zapisane." : "Odrzucenie zgłoszenia zostało zapisane."
         case .notApplied:
-            return "Decyzja nie została zastosowana. Kolejna ocena wymaga nowego odczytu zgłoszenia."
+            return "Decyzja nie jest potwierdzona. Może jeszcze zostać zapisana."
         case .superseded: return "Stan zgłoszenia się zmienił. Nie możemy potwierdzić poprzedniej decyzji."
+        case .retired: return "Ta próba została zamknięta. Nie cofa to wcześniej zapisanych zmian."
         }
     }
     private func open(initial: Bool = false) async {
@@ -289,6 +316,10 @@ struct ReportReviewView: View {
     private func confirm(_ choice: ReportReviewDecisionChoice) {
         confirmation = nil
         Task { await run { try await host.decide(choice.verdict, presentation: choice.presentation) } }
+    }
+    private func retire(_ intent: GatewayReportReviewRecoveryIntent) {
+        confirmation = nil
+        Task { await run { try await host.retirePending(intent) } }
     }
     private func close() {
         lifetime.id = nil

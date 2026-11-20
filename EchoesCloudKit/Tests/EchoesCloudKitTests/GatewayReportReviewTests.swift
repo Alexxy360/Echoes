@@ -119,7 +119,7 @@ func reportIntent(_ f: ReportWireFixture, clock: ReviewClock? = nil) async throw
         "6a000000-0000-4000-8000-000000000098." + String(repeating: "b", count: 43))
     for (label, expected) in [
         ("recover-not-applied", "not-applied"), ("recover-confirmed", "confirmed"),
-        ("recover-superseded", "superseded"),
+        ("recover-superseded", "superseded"), ("recover-retired", "retired"),
     ] {
         let response = f.cases[label]!
         let body = try #require(JSONSerialization.jsonObject(with: response.body) as? [String: Any])
@@ -132,6 +132,7 @@ func reportIntent(_ f: ReportWireFixture, clock: ReviewClock? = nil) async throw
         case .confirmed(let revision): #expect(expected == "confirmed" && gatewayUUID(revision))
         case .notApplied: #expect(expected == "not-applied")
         case .superseded: #expect(expected == "superseded")
+        case .retired: #expect(expected == "retired")
         }
     }
 }
@@ -150,6 +151,7 @@ func reportIntent(_ f: ReportWireFixture, clock: ReviewClock? = nil) async throw
         case .inspect: _ = try await client.inspect(f.item, token: reviewBearer)
         case .decide: _ = try await client.decide(intent, token: reviewBearer)
         case .recover: _ = try await client.recover(f.recovery, token: reviewBearer)
+        case .retire: _ = try await client.retire(f.recovery, token: reviewBearer)
         }
         let request = try #require(await stub.requests.first)
         #expect(

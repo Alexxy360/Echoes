@@ -1,5 +1,7 @@
 # Trwałe decyzje zgłoszeń i odzyskiwanie — CK-05c.2
 
+Aktualizacja CK-05d.2c.1: niepewne `not-applied` pozostaje stanem chwilowym. Jawne `retire` utrwala barierę własnej próby; nie cofa skutków wcześniejszego zapisu. Aktualny kontrakt oraz granice historycznych wyników: [zamykanie prób](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Wyniki poprzednich etapów poniżej są historyczne.
+
 19 listopada 2026. Wewnętrzny serwis obsługuje inspekcję, decyzję i sprawdzenie nieznanego wyniku. **Późniejszy CK-05c.3 podłączył ograniczone HTTP/Runtime i wykonał lokalny odbiór; panel i rzeczywista aktywacja pozostają do wykonania.** W CK-05c.2 nie aktywowano uprawnień moderatora ani usługi i nie wykonano nowej próby Apple. Administracyjna rola właściciela z CK-05a.4h pozostaje przypisana. [HTTP i granice](HTTP_POUFNYCH_ZGLOSZEN.md), [historyczne dowody lokalne](evidence/community-report-decisions-local-tests.json).
 
 ## Inspekcja i decyzja

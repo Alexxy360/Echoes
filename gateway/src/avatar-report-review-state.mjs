@@ -1,3 +1,4 @@
+import { ModerationRetirementError, moderationRetirementSchema, readModerationRetirement, createModerationRetirement } from "./moderation-decision-retirements.mjs";
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
 import { randomUUID } from "node:crypto";
 import { plain, publicUUID, validTag, digest, recordIdentity, inputHash } from "./public-record-schema.mjs";
@@ -42,6 +43,7 @@ export function avatarReportReviewContentHash(c) {
   return digest(JSON.stringify(fields.map(name => c[name])));
 }
 const schema = [
+  ...moderationRetirementSchema("photo"),
   `CREATE TABLE IF NOT EXISTS avatar_report_inspections_v1(reviewer_key TEXT PRIMARY KEY,session_key TEXT NOT NULL,
     inspection_key TEXT NOT NULL,report_id TEXT NOT NULL,content TEXT NOT NULL,content_hash TEXT NOT NULL,target_owner TEXT,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,
     verified INTEGER NOT NULL DEFAULT 0)`,
@@ -63,7 +65,7 @@ export class AvatarReportReviewState {
     this.#tx(() => { for (const statement of schema) storage.sql.exec(statement); });
   }
   #rows(sql, ...args) { return this.#storage.sql.exec(sql, ...args).toArray(); }
-  #tx(action) { try { return this.#storage.transactionSync(action); } catch (error) { throw error instanceof AvatarReportReviewError ? error : new AvatarReportReviewError(); } }
+  #tx(action) { try { return this.#storage.transactionSync(action); } catch (error) { if (error instanceof ModerationRetirementError) throw new AvatarReportReviewError(error.code === "CONFLICT" ? "AVATAR_REPORT_REVIEW_STALE" : error.code === "CAPACITY" ? "AVATAR_REPORT_REVIEW_CAPACITY" : undefined); throw error instanceof AvatarReportReviewError ? error : new AvatarReportReviewError(); } }
   #now() { const n = this.#clock(); if (!Number.isSafeInteger(n) || n < 0) fail(); return n; }
   async #durable() { try { await this.#storage.sync(); } catch { fail(); } }
   #decision(reportID) {
@@ -151,6 +153,8 @@ export class AvatarReportReviewState {
     if (permitted && typeof permitted.then === "function") { void Promise.resolve(permitted).catch(() => {}); fail("AVATAR_REPORT_REVIEW_SCOPE"); }
     if (permitted !== true) fail("AVATAR_REPORT_REVIEW_SCOPE");
     const result = this.#tx(() => {
+      this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "photo", { reviewerKey: reviewerKey(reviewerID), reportID: content.reportID, decisionID, verdict, contentHash }, this.#now())) fail("AVATAR_REPORT_REVIEW_STALE");
       const receipt = this.#receipt(reviewerID, sessionKey, inspectionID);
       if (receipt.content_hash !== contentHash) fail("AVATAR_REPORT_REVIEW_STALE");
       const previous = this.#decision(content.reportID);
@@ -198,6 +202,8 @@ export class AvatarReportReviewState {
     if (!id(reviewerID) || !reportName(reportID) || !id(decisionID) || !verdicts.has(verdict) || !hash(contentHash)) fail("AVATAR_REPORT_REVIEW_INPUT");
     return this.#tx(() => {
       this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "photo", { reviewerKey: reviewerKey(reviewerID), reportID, decisionID, verdict, contentHash }, this.#now()))
+        return Object.freeze({ reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null });
       const context = this.#rows("SELECT * FROM public_records_v1 WHERE record_name=? AND phase='settled'", reportID)[0];
       if (!context) fail("AVATAR_REPORT_REVIEW_STALE");
       this.#currentReport({ reportID, reportTag: context.record_tag, reportHash: context.payload_hash, reportRequestID: context.request_id, reportExpiresAt: context.started_at + 2592000000 });
@@ -206,6 +212,29 @@ export class AvatarReportReviewState {
       const matched = row && row.reviewer_key === reviewerKey(reviewerID) && row.decision_id === decisionID && row.verdict === verdict && row.content_hash === contentHash;
       return Object.freeze({ reportID, decisionID, verdict, contentHash, outcome: !row ? "not-applied" : matched ? "confirmed" : "superseded", revision: matched ? row.revision : null });
     });
+  }
+  async retire({ reviewerID, reportID, decisionID, verdict, contentHash, authorize } = {}) {
+    if (!id(reviewerID) || !reportName(reportID) || !id(decisionID) || !verdicts.has(verdict) || !hash(contentHash) || typeof authorize !== "function") fail("AVATAR_REPORT_REVIEW_INPUT");
+    let permitted; try { permitted = authorize(); } catch { fail("AVATAR_REPORT_REVIEW_SCOPE"); }
+    if (permitted && typeof permitted.then === "function") { void Promise.resolve(permitted).catch(() => {}); fail("AVATAR_REPORT_REVIEW_SCOPE"); }
+    if (permitted !== true) fail("AVATAR_REPORT_REVIEW_SCOPE");
+    const query = { reviewerKey: reviewerKey(reviewerID), reportID, decisionID, verdict, contentHash };
+    const result = this.#tx(() => {
+      this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "photo", query, this.#now())) return { reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null };
+      const previous = this.#decision(reportID);
+      if (previous) {
+        const matched = previous.reviewer_key === query.reviewerKey && previous.decision_id === decisionID && previous.verdict === verdict && previous.content_hash === contentHash;
+        return { reportID, decisionID, verdict, contentHash, outcome: matched ? "confirmed" : "superseded", revision: matched ? previous.revision : null };
+      }
+      if (this.#rows("SELECT report_id FROM avatar_report_decisions_v1 WHERE decision_id=?", decisionID).length) fail("AVATAR_REPORT_REVIEW_STALE");
+      createModerationRetirement(this.#storage, "photo", query, this.#now());
+      return { reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null };
+    });
+    await this.#durable();
+    const latest = this.outcome({ reviewerID, reportID, decisionID, verdict, contentHash });
+    if (latest.outcome !== result.outcome || latest.revision !== result.revision) fail("AVATAR_REPORT_REVIEW_STALE");
+    return Object.freeze(latest);
   }
   async recover(options) {
     this.outcome(options); await this.#durable(); return this.outcome(options);

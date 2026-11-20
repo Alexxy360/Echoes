@@ -16,7 +16,7 @@ export function createAvatarReportReviewHandler({ authentication, limits, checkp
   return async (request, budget, action) => {
     let admission, deadline;
     try {
-      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision", recover: "prepareRecovery" }[action];
+      const method = { queue: "prepareQueue", inspect: "prepareInspection", decide: "prepareDecision", recover: "prepareRecovery", retire: "prepareRetirement" }[action];
       const flag = fn => { try { return sync(fn()) === true; } catch { return false; } };
       const enabled = () => flag(isEnabled) && flag(isAvatarReportReviewEnabled);
       if (!enabled() || typeof avatarReportReview?.[method] !== "function" || typeof avatarReportReview?.waitForPendingOperations !== "function" || typeof limits.consumeAvatarReportReview !== "function") return response({ error: "FEATURE_DISABLED" }, 503);

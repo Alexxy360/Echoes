@@ -1,3 +1,4 @@
+import { ModerationRetirementError, moderationRetirementSchema, readModerationRetirement, createModerationRetirement } from "./moderation-decision-retirements.mjs";
 import { randomUUID } from "node:crypto";
 import { plain, publicUUID, validTag, digest } from "./public-record-schema.mjs";
 
@@ -34,6 +35,7 @@ export function reportReviewContentHash(c) {
   return digest(JSON.stringify(fields.map(name => c[name])));
 }
 const schema = [
+  ...moderationRetirementSchema("message"),
   `CREATE TABLE IF NOT EXISTS community_report_inspections_v1(reviewer_key TEXT PRIMARY KEY,session_key TEXT NOT NULL,
     inspection_key TEXT NOT NULL,report_id TEXT NOT NULL,content TEXT NOT NULL,content_hash TEXT NOT NULL,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,
     verified INTEGER NOT NULL DEFAULT 0)`,
@@ -55,7 +57,7 @@ export class CommunityReportReviewState {
     this.#tx(() => { for (const statement of schema) storage.sql.exec(statement); });
   }
   #rows(sql, ...args) { return this.#storage.sql.exec(sql, ...args).toArray(); }
-  #tx(action) { try { return this.#storage.transactionSync(action); } catch (error) { throw error instanceof CommunityReportReviewError ? error : new CommunityReportReviewError(); } }
+  #tx(action) { try { return this.#storage.transactionSync(action); } catch (error) { if (error instanceof ModerationRetirementError) throw new CommunityReportReviewError(error.code === "CONFLICT" ? "REPORT_REVIEW_STALE" : error.code === "CAPACITY" ? "REPORT_REVIEW_CAPACITY" : undefined); throw error instanceof CommunityReportReviewError ? error : new CommunityReportReviewError(); } }
   #now() { const n = this.#clock(); if (!Number.isSafeInteger(n) || n < 0) fail(); return n; }
   async #durable() { try { await this.#storage.sync(); } catch { fail(); } }
   #decision(reportID) {
@@ -79,8 +81,15 @@ export class CommunityReportReviewState {
       return !row;
     });
   }
+  #activeReviewer(reviewerID) {
+    if (!id(reviewerID)) fail("REPORT_REVIEW_INPUT");
+    const actor = this.#rows(`SELECT a.disabled,COALESCE(c.suspended,0) AS suspended FROM auth_accounts_v1 a
+      LEFT JOIN community_accounts_v1 c ON c.account_id=a.account_id WHERE a.account_id=?`, reviewerID)[0];
+    if (!actor || actor.disabled || actor.suspended) fail("REPORT_REVIEW_SCOPE");
+  }
   #receipt(reviewerID, sessionKey, inspectionID, unverified = false) {
     if (!id(reviewerID) || !hash(sessionKey) || !id(inspectionID)) fail("REPORT_REVIEW_INPUT");
+    this.#activeReviewer(reviewerID);
     const row = this.#rows("SELECT * FROM community_report_inspections_v1 WHERE reviewer_key=?", reviewerKey(reviewerID))[0], now = this.#now();
     if (!row || row.session_key !== sessionKey || row.inspection_key !== inspectionKey(inspectionID) || !unverified && row.verified !== 1 ||
         !Number.isSafeInteger(row.created_at) || row.created_at < 0 || row.created_at > now || !Number.isSafeInteger(row.expires_at) ||
@@ -94,7 +103,7 @@ export class CommunityReportReviewState {
     if (!id(reviewerID) || !hash(sessionKey)) fail("REPORT_REVIEW_INPUT");
     const contentHash = reportReviewContentHash(content), inspectionID = randomUUID(), key = reviewerKey(reviewerID);
     this.#tx(() => {
-      const now = this.#now(), window = Math.floor(now / 60000); this.#currentReport(content);
+      const now = this.#now(), window = Math.floor(now / 60000); this.#activeReviewer(reviewerID); this.#currentReport(content);
       if (this.#decision(content.reportID)) fail("REPORT_REVIEW_STALE");
       const old = this.#rows("SELECT * FROM community_report_inspections_v1 WHERE reviewer_key=?", key)[0];
       if (old?.created_at > now || !Number.isSafeInteger(now + 90000)) fail();
@@ -130,6 +139,8 @@ export class CommunityReportReviewState {
     if (permitted && typeof permitted.then === "function") { void Promise.resolve(permitted).catch(() => {}); fail("REPORT_REVIEW_SCOPE"); }
     if (permitted !== true) fail("REPORT_REVIEW_SCOPE");
     const result = this.#tx(() => {
+      this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "message", { reviewerKey: reviewerKey(reviewerID), reportID: content.reportID, decisionID, verdict, contentHash }, this.#now())) fail("REPORT_REVIEW_STALE");
       const receipt = this.#receipt(reviewerID, sessionKey, inspectionID);
       if (receipt.content_hash !== contentHash) fail("REPORT_REVIEW_STALE");
       const previous = this.#decision(content.reportID);
@@ -160,6 +171,9 @@ export class CommunityReportReviewState {
   outcome({ reviewerID, reportID, decisionID, verdict, contentHash } = {}) {
     if (!id(reviewerID) || !reportName(reportID) || !id(decisionID) || !verdicts.has(verdict) || !hash(contentHash)) fail("REPORT_REVIEW_INPUT");
     return this.#tx(() => {
+      this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "message", { reviewerKey: reviewerKey(reviewerID), reportID, decisionID, verdict, contentHash }, this.#now()))
+        return Object.freeze({ reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null });
       const context = this.#rows("SELECT * FROM public_records_v1 WHERE record_name=? AND phase='settled'", reportID)[0];
       if (!context) fail("REPORT_REVIEW_STALE");
       this.#currentReport({ reportID, reportTag: context.record_tag, reportHash: context.payload_hash, reportRequestID: context.request_id, reportExpiresAt: context.started_at + 2592000000 });
@@ -168,6 +182,29 @@ export class CommunityReportReviewState {
       const matched = row && row.reviewer_key === reviewerKey(reviewerID) && row.decision_id === decisionID && row.verdict === verdict && row.content_hash === contentHash;
       return Object.freeze({ reportID, decisionID, verdict, contentHash, outcome: !row ? "not-applied" : matched ? "confirmed" : "superseded", revision: matched ? row.revision : null });
     });
+  }
+  async retire({ reviewerID, reportID, decisionID, verdict, contentHash, authorize } = {}) {
+    if (!id(reviewerID) || !reportName(reportID) || !id(decisionID) || !verdicts.has(verdict) || !hash(contentHash) || typeof authorize !== "function") fail("REPORT_REVIEW_INPUT");
+    let permitted; try { permitted = authorize(); } catch { fail("REPORT_REVIEW_SCOPE"); }
+    if (permitted && typeof permitted.then === "function") { void Promise.resolve(permitted).catch(() => {}); fail("REPORT_REVIEW_SCOPE"); }
+    if (permitted !== true) fail("REPORT_REVIEW_SCOPE");
+    const query = { reviewerKey: reviewerKey(reviewerID), reportID, decisionID, verdict, contentHash };
+    const result = this.#tx(() => {
+      this.#activeReviewer(reviewerID);
+      if (readModerationRetirement(this.#storage, "message", query, this.#now())) return { reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null };
+      const previous = this.#decision(reportID);
+      if (previous) {
+        const matched = previous.reviewer_key === query.reviewerKey && previous.decision_id === decisionID && previous.verdict === verdict && previous.content_hash === contentHash;
+        return { reportID, decisionID, verdict, contentHash, outcome: matched ? "confirmed" : "superseded", revision: matched ? previous.revision : null };
+      }
+      if (this.#rows("SELECT report_id FROM community_report_decisions_v1 WHERE decision_id=?", decisionID).length) fail("REPORT_REVIEW_STALE");
+      createModerationRetirement(this.#storage, "message", query, this.#now());
+      return { reportID, decisionID, verdict, contentHash, outcome: "retired", revision: null };
+    });
+    await this.#durable();
+    const latest = this.outcome({ reviewerID, reportID, decisionID, verdict, contentHash });
+    if (latest.outcome !== result.outcome || latest.revision !== result.revision) fail("REPORT_REVIEW_STALE");
+    return Object.freeze(latest);
   }
   async recover(options) {
     this.outcome(options); await this.#durable(); return this.outcome(options);

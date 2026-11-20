@@ -163,7 +163,13 @@ public struct GatewayReportReviewRecoveryIntent: Equatable, Sendable, CustomStri
 }
 public enum GatewayReportReviewOutcome: Equatable, Sendable, CustomStringConvertible, CustomReflectable {
     case confirmed(revision: String)
-    case notApplied, superseded
+    case notApplied, superseded, retired
+    public var isTerminal: Bool {
+        switch self {
+        case .notApplied: false
+        case .confirmed, .superseded, .retired: true
+        }
+    }
     public var description: String { "GatewayReportReviewOutcome(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
@@ -180,19 +186,21 @@ public enum GatewayReportReviewOperation: Equatable, Sendable, CustomStringConve
     case inspect(GatewayReportReviewItem)
     case decide(GatewayReportReviewDecisionIntent)
     case recover(GatewayReportReviewRecoveryIntent)
+    case retire(GatewayReportReviewRecoveryIntent)
     var action: String {
         switch self {
         case .queue: "queue"
         case .inspect: "inspect"
         case .decide: "decide"
         case .recover: "recover"
+        case .retire: "retire"
         }
     }
     var maximumResponseBytes: Int {
         switch self {
         case .queue: 8192
         case .inspect: 12288
-        case .decide, .recover: 2048
+        case .decide, .recover, .retire: 2048
         }
     }
     func wire() throws -> Data {
@@ -205,7 +213,7 @@ public enum GatewayReportReviewOperation: Equatable, Sendable, CustomStringConve
                 "inspectionID": intent.receipt.inspectionID, "decisionID": intent.decisionID,
                 "verdict": intent.verdict.rawValue,
             ]
-        case .recover(let intent):
+        case .recover(let intent), .retire(let intent):
             fields = [
                 "reportID": intent.reportID, "decisionID": intent.decisionID,
                 "verdict": intent.verdict.rawValue, "contentHash": intent.contentHash,

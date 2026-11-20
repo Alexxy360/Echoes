@@ -66,8 +66,20 @@
                 let bearer = try GatewaySecret(
                     UUID().uuidString.lowercased() + "." + String(repeating: "a", count: 43))
                 let recovery = try await client.recover(intent, token: bearer)
-                let resolved = try await restored.resolve(dispatched, result: recovery, lease: current)
-                guard resolved.phase == .resolved else { throw GatewayReportReviewFailure.invalidResponse }
+                let observed = try await restored.resolve(dispatched, result: recovery, lease: current)
+                guard observed.phase == .dispatched else { throw GatewayReportReviewFailure.invalidResponse }
+                phase = "retiring-reopen"
+                let retiring = try await restored.retiring(observed, lease: current)
+                let restarted = GatewayReportReviewJournal(storage: storage)
+                let fresh = try await restarted.open(scope: a)
+                guard try await restarted.pending(lease: fresh) == retiring else {
+                    throw GatewayReportReviewFailure.invalidResponse
+                }
+                let closed = try await client.retire(intent, token: bearer)
+                let resolved = try await restarted.resolve(retiring, result: closed, lease: fresh)
+                guard resolved.phase == .resolved, closed.outcome == .retired else {
+                    throw GatewayReportReviewFailure.invalidResponse
+                }
                 phase = "attributes"
                 for scope in scopes {
                     let valid = await Task.detached {
@@ -134,12 +146,22 @@
         func send(_ request: URLRequest, operation: GatewayReportReviewOperation) async throws
             -> GatewayReportReviewHTTPResponse
         {
-            guard case .recover(let intent) = operation else { throw GatewayReportReviewFailure.invalidInput }
+            let intent: GatewayReportReviewRecoveryIntent
+            let outcome: String
+            switch operation {
+            case .recover(let value):
+                intent = value
+                outcome = "not-applied"
+            case .retire(let value):
+                intent = value
+                outcome = "retired"
+            default: throw GatewayReportReviewFailure.invalidInput
+            }
             let body: [String: Any] = [
                 "protocolVersion": 1, "schemaVersion": 1, "reportID": intent.reportID,
                 "decisionID": intent.decisionID, "verdict": intent.verdict.rawValue,
                 "contentHash": intent.contentHash,
-                "outcome": "confirmed", "revision": UUID().uuidString.lowercased(),
+                "outcome": outcome, "revision": NSNull(),
             ]
             return .init(
                 status: 200,

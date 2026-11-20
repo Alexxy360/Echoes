@@ -66,3 +66,32 @@ struct ReportReviewConfirmationView: View {
             && (choice.verdict == .dismiss || host.canHideMessage)
     }
 }
+
+/// Metadata only; the captured attempt is checked again by the host before any IO.
+struct ReportReviewRetirementConfirmationView: View {
+    let host: GatewayReportReviewHost
+    let intent: GatewayReportReviewRecoveryIntent
+    let confirm: @MainActor (GatewayReportReviewRecoveryIntent) -> Void
+    let cancel: @MainActor () -> Void
+    var body: some View {
+        Form {
+            Section("Zamknąć tę próbę?") {
+                Text(
+                    "Serwer zablokuje późniejsze wykonanie tej próby decyzji. Jeśli decyzja została już zapisana, pokażemy jej wynik."
+                )
+                Text(
+                    "Zamknięcie próby nie cofa wcześniej zapisanych zmian. Po potwierdzeniu wyniku będzie można ponownie otworzyć zgłoszenie, jeśli pozostaje dostępne."
+                )
+            }
+            Section {
+                Button("Potwierdź zamknięcie próby") {
+                    guard host.canRetirePending, host.pendingOperation?.intent == intent else { return }
+                    confirm(intent)
+                }.disabled(!host.canRetirePending || host.pendingOperation?.intent != intent)
+                    .accessibilityIdentifier("report.review.retireConfirm")
+                Button("Wróć", role: .cancel, action: cancel)
+                    .accessibilityIdentifier("report.review.retireCancel")
+            }
+        }.accessibilityIdentifier("report.review.retireConfirmation")
+    }
+}

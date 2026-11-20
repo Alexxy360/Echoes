@@ -15,7 +15,7 @@ export class CommunityReportReview {
     clock = Date.now, monotonic = () => performance.now(), timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
         typeof registry?.reviewReportPage !== "function" || typeof registry?.readable !== "function" || typeof repository?.beginRead !== "function" || typeof client?.waitForPendingOperations !== "function" ||
-        ["isOpen", "reserve", "confirm", "get", "decide", "recover", "outcome"].some(name => typeof reviews?.[name] !== "function") ||
+        ["isOpen", "reserve", "confirm", "get", "decide", "retire", "recover", "outcome"].some(name => typeof reviews?.[name] !== "function") ||
         ["verify", "advance"].some(name => typeof checkpoint?.[name] !== "function") ||
         [isEnabled, isOperator, clock, monotonic].some(value => typeof value !== "function") ||
         !Number.isInteger(timeoutMilliseconds) || timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) fail("REPORT_REVIEW_INPUT");
@@ -136,6 +136,23 @@ export class CommunityReportReview {
         const outcome = this.#reviews.outcome(query);
         if (outcome.outcome !== "confirmed" || outcome.revision !== result.revision) fail("REPORT_REVIEW_STALE");
         return { schemaVersion: 1, inspectionID: o.inspectionID, ...result };
+      };
+    });
+  }
+  async prepareRetirement(value) {
+    const keys = ["reportID", "decisionID", "verdict", "contentHash"], o = this.#options(value, keys);
+    if (!reportName.test(o.reportID ?? "") || !publicUUID.test(o.decisionID ?? "") || !["dismiss", "hide_message"].includes(o.verdict) || typeof o.contentHash !== "string" || !/^[a-f0-9]{64}$/.test(o.contentHash)) fail("REPORT_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      await this.#checkpoint.verify({ signal }); check();
+      const query = { reviewerID: identity.accountID, ...Object.fromEntries(keys.map(k => [k, o[k]])) };
+      let result;
+      try { result = await this.#reviews.retire({ ...query, authorize: () => { check(); return true; } }); }
+      catch (error) { check(); await this.#checkpoint.advance({ signal }); throw error; }
+      check(); await this.#checkpoint.advance({ signal }); check();
+      return () => {
+        const latest = this.#reviews.outcome(query);
+        if (!["retired", "confirmed", "superseded"].includes(latest.outcome) || latest.outcome !== result.outcome || latest.revision !== result.revision) fail("REPORT_REVIEW_STALE");
+        return { schemaVersion: 1, ...latest };
       };
     });
   }

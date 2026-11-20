@@ -1,5 +1,7 @@
 # HTTP i Runtime poufnych zgłoszeń — CK-05c.3
 
+Aktualizacja CK-05d.2c.1: dodatkowe POST `/v1/moderation/reports/retire` ma te same cztery pola co recover i te same role/limity/deadline. Tylko retired/confirmed/superseded są terminalnym wynikiem retire; recover dodatkowo odczytuje retired, zachowując readonly. `not-applied` nie daje obietnicy niewykonania. [Aktualny kontrakt](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md); liczby poprzedniego etapu poniżej są historyczne.
+
 19 listopada 2026. **Trasy są podłączone do lokalnego kodu edge/Authority/Runtime i sprawdzone w rzeczywistym lokalnym workerd.** Konfiguracja wdrożeniowa ma REPORT_REVIEW_ENABLED=0 i REPORT_REVIEWER_IDS_JSON=[]; żadnej roli moderatora ani usługi nie aktywowano. Późniejszy [CK-05c.3a](ODPLYW_IO_KLIENTA_CLOUDKIT.md) domyka błędy anulowania wspólnego klienta CloudKit. [Wyniki HTTP](evidence/report-review-http-local-tests.json), [decyzje i recovery](DECYZJE_ZGLOSZEN_I_ODZYSKIWANIE.md).
 
 ## Kontrakt

@@ -1,3 +1,4 @@
+import { eraseModerationRetirements } from "./moderation-decision-retirements.mjs";
 import { eraseAvatarReportReviews } from "./avatar-report-review-state.mjs";
 import { CommunityError, communityUUID } from "./community-domain.mjs";
 import { avatarPolicySchema, eraseAvatarPolicy } from "./avatar-policy-state.mjs";
@@ -164,6 +165,7 @@ export class CommunityState {
     communityUUID(accountID);
     this.#tx(() => {
       if (!this.#rows("SELECT account_id FROM auth_accounts_v1 WHERE account_id=? AND disabled=1", accountID).length) throw new CommunityError("COMMUNITY_STALE");
+      eraseModerationRetirements(this.#storage, accountID);
       eraseAvatarReportReviews(this.#storage, accountID);
       eraseAvatarPolicy(this.#storage, accountID);
       this.#storage.sql.exec("DELETE FROM community_intents_v1 WHERE account_id=?", accountID);

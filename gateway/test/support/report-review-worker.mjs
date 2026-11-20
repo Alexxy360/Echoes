@@ -78,8 +78,19 @@ export class ReportProofAuthority extends DurableObject {
         const response = await forwardGatewayRequest(req, env, { clock }); return { status: response.status, body: await response.json(), headers: response.headers };
       };
       const queue = await call("queue", { after: null }); if (queue.status !== 200 || queue.body.items[0]?.reportID !== p.reportID) throw new Error("queue");
-      const inspection = await call("inspect", { reportID: p.reportID }); if (inspection.status !== 200 || !inspection.body.message) throw new Error("inspect");
-      const intent = { inspectionID: inspection.body.inspectionID, decisionID: randomUUID(), verdict: "hide_message" };
+      let inspection = await call("inspect", { reportID: p.reportID }); if (inspection.status !== 200 || !inspection.body.message) throw new Error("inspect");
+      let intent = { inspectionID: inspection.body.inspectionID, decisionID: randomUUID(), verdict: "hide_message" };
+      let retirement;
+      if (p.retirement === true) {
+        const query = { reportID: p.reportID, decisionID: intent.decisionID, verdict: intent.verdict, contentHash: inspection.body.contentHash };
+        const before = await call("recover", query), closedAttempt = await call("retire", query);
+        runtime = createGatewayRuntime(storage, env, { clock, fetchImplementation: provider });
+        const closedRecovery = await call("recover", query), late = await call("decide", intent);
+        const unchanged = storage.sql.exec("SELECT hidden FROM community_intents_v1 WHERE account_id=? AND kind='message'", p.authorID).toArray()[0]?.hidden === 0;
+        retirement = { unconfirmedBefore: before.body.outcome === "not-applied", retired: closedAttempt.status === 200 && closedAttempt.body.outcome === "retired",
+          recovered: closedRecovery.body.outcome === "retired", lateBlocked: late.status === 409, noEffect: unchanged };
+        inspection = await call("inspect", { reportID: p.reportID }); intent = { inspectionID: inspection.body.inspectionID, decisionID: randomUUID(), verdict: "hide_message" };
+      }
       const result = await call("decide", intent); if (result.status !== 200) throw new Error("decide");
       runtime = createGatewayRuntime(storage, env, { clock, fetchImplementation: provider }); // Fresh Runtime, same actual DO SQLite.
       const recovered = await call("recover", { reportID: p.reportID, decisionID: intent.decisionID, verdict: intent.verdict, contentHash: inspection.body.contentHash });
@@ -89,7 +100,7 @@ export class ReportProofAuthority extends DurableObject {
       const privateSQL = JSON.stringify(storage.sql.exec("SELECT * FROM community_report_inspections_v1").toArray()) + JSON.stringify(storage.sql.exec("SELECT * FROM community_report_decisions_v1").toArray());
       const noContentsInSQL = !privateSQL.includes(inspection.body.reason) && !privateSQL.includes(inspection.body.message.text) && !privateSQL.includes(p.token);
       await storage.deleteAlarm(); await storage.sync();
-      return Response.json({ actualSQL: true, hidden, closed: closed.status === 200 && closed.body.items.length === 0,
+      return Response.json({ ...(retirement ? { retirement } : {}), actualSQL: true, hidden, closed: closed.status === 200 && closed.body.items.length === 0,
         confirmedAfterNewRuntime: recovered.status === 200 && recovered.body.outcome === "confirmed" && recovered.body.revision === result.body.revision,
         ordinaryDenied: denied.status === 403, disabled: disabled.status === 503, noContentsInSQL,
         privateNoStore: inspection.headers.get("Cache-Control") === "no-store", signatures });

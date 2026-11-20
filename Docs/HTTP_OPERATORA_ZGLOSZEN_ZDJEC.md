@@ -1,10 +1,12 @@
 # HTTP operatora zgłoszonych zdjęć — CK-05d.2c
 
+CK-05d.2c.1 rozszerza kontrakt o [zamykanie niepewnych prób](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Wcześniejsze liczby i dowody2c poniżej są historyczne; kolejny panel iOS zdjęć2d ma używać terminalnego retire od początku.
+
 Stan: lokalnie zaimplementowane i odebrane edge/Authority/Runtime. AVATAR_REPORT_REVIEW_ENABLED=0 i AVATAR_REPORT_REVIEWER_IDS_JSON=[] w konfiguracji; brak wdrożenia lub nadania roli. [Koordynator i cały proces](OPERATOR_ZGLOSZEN_ZDJEC.md).
 
 ## Zakres i uprawnienia
 
-Osobne POST /v1/moderation/avatar-reports/queue, inspect, decide i recover. Nie współdzielą typów z przyjmowaniem zgłoszenia zdjęcia, moderacją wiadomości albo approved/rejected uploadu. Nowa flaga wymaga COMMUNITY/PUBLIC_RECORDS/ACCOUNT_DELETION i zaufanych hostów pobierania. Jest niezależna od READ, uploadu, intake oraz pozostałych list moderatorów. Lista do16 kont pochodzi wyłącznie z konfiguracji serwera; domyślnie pusta. Zwykły bearer użytkownika nie nadaje tej roli, pole owner/operator w JSON jest odrzucane.
+Osobne POST /v1/moderation/avatar-reports/queue, inspect, decide, recover i retire (CK-05d.2c.1). Nie współdzielą typów z przyjmowaniem zgłoszenia zdjęcia, moderacją wiadomości albo approved/rejected uploadu. Nowa flaga wymaga COMMUNITY/PUBLIC_RECORDS/ACCOUNT_DELETION i zaufanych hostów pobierania. Jest niezależna od READ, uploadu, intake oraz pozostałych list moderatorów. Lista do16 kont pochodzi wyłącznie z konfiguracji serwera; domyślnie pusta. Zwykły bearer użytkownika nie nadaje tej roli, pole owner/operator w JSON jest odrzucane.
 
 Authority weryfikuje sesję i rolę przed body/checkpoint/provider, ponownie po limitach/IO i końcowym checkpoint. Runtime i edge przypinają listę moderatorów oraz hostów do aktywnej konfiguracji; zmiana/wygaśnięcie odcina stary przebieg. Tylko prawdziwe request.cf/IP wylicza budżet na edge, a stały prywatny Authority dostaje zamknięte nagłówki. Pełna integracja2c nie uruchamia usług lub nowych sekretów.
 
@@ -17,7 +19,8 @@ Request ma zamknięte JSON512B/128fragmentów/3s, natywny bearer, brak Origin/ra
 | queue | after:string lub null | JSON schemaVersion1, do20 pozycji reportID/createdAt/expiresAt i marker postępu |
 | inspect | reportID | prywatna ramka metadata+JPEG lub metadata bez zdjęcia |
 | decide | inspectionID,decisionID,verdict dismiss/hide_photo | JSON dokładnej decyzji/contentHash/revision, bez powodu lub obrazu |
-| recover | reportID,decisionID,verdict,contentHash | JSON confirmed/not-applied/superseded, wyłącznie odczyt |
+| recover | reportID,decisionID,verdict,contentHash | JSON confirmed/not-applied/superseded/retired, wyłącznie odczyt |
+| retire | reportID,decisionID,verdict,contentHash | JSON retired/confirmed/superseded; jawna bariera przyszłego wykonania własnej próby, bez cofania skutków |
 
 JSON ma protocolVersion1, no-store/nosniff; limity odpowiedzi queue8192B, decide/recover/błąd2048B. Zamknięte kody i statusy obejmują input400, scope403, stale409, quota429 i unavailable/response503. Nieznany wynik nie oznacza cofnięcia mutacji i nie daje automatycznego nowego decisionID. Te same dane decyzji mogą odtworzyć wynik, a readonly recovery działa po wygaśnięciu inspekcji, w terminie raportu.
 

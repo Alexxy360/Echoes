@@ -11,7 +11,7 @@ const messageID = value => typeof value === "string" && /^community-v1-message-[
 const verdict = value => ["dismiss", "hide_message"].includes(value);
 const time = value => Number.isSafeInteger(value) && value >= 0;
 const text = (value, maximum) => { try { return communityText(value, maximum) === value; } catch { return false; } };
-export const reportReviewPaths = new Map(["queue", "inspect", "decide", "recover"].map(action => ["/v1/moderation/reports/" + action, action]));
+export const reportReviewPaths = new Map(["queue", "inspect", "decide", "recover", "retire"].map(action => ["/v1/moderation/reports/" + action, action]));
 export function reportReviewers(json = "[]") {
   try {
     if (typeof json !== "string" || json.length > 2048) fail("REPORT_REVIEW_INPUT");
@@ -21,7 +21,7 @@ export function reportReviewers(json = "[]") {
   } catch { fail("REPORT_REVIEW_INPUT"); }
 }
 export function reportReviewInput(action, value) {
-  const keys = { queue: ["after"], inspect: ["reportID"], decide: ["inspectionID", "decisionID", "verdict"], recover: ["reportID", "decisionID", "verdict", "contentHash"] }[action];
+  const keys = { queue: ["after"], inspect: ["reportID"], decide: ["inspectionID", "decisionID", "verdict"], recover: ["reportID", "decisionID", "verdict", "contentHash"], retire: ["reportID", "decisionID", "verdict", "contentHash"] }[action];
   if (!keys || !exact(value, keys) || action === "queue" && value.after !== null && !reportID(value.after) ||
       keys.includes("reportID") && !reportID(value.reportID) || keys.includes("inspectionID") && !id(value.inspectionID) ||
       keys.includes("decisionID") && !id(value.decisionID) || keys.includes("verdict") && !verdict(value.verdict) ||
@@ -57,9 +57,9 @@ export function reportReviewResult(action, value, input, now = Date.now()) {
         !id(value.message.authorID) || !text(value.message.name, 40) || !text(value.message.text, 500) || !dates(value.message, 7200000))) fail("REPORT_REVIEW_RESPONSE");
   } else {
     const keys = ["schemaVersion", "reportID", "decisionID", "verdict", "contentHash", "revision", action === "decide" ? "inspectionID" : "outcome"];
-    if (!["decide", "recover"].includes(action) || !exact(value, keys) || !reportID(value.reportID) || !id(value.decisionID) || !verdict(value.verdict) || !hash(value.contentHash) ||
+    if (!["decide", "recover", "retire"].includes(action) || !exact(value, keys) || !reportID(value.reportID) || !id(value.decisionID) || !verdict(value.verdict) || !hash(value.contentHash) ||
         action === "decide" && (!id(value.inspectionID) || !id(value.revision)) ||
-        action === "recover" && (!["confirmed", "not-applied", "superseded"].includes(value.outcome) || (value.outcome === "confirmed" ? !id(value.revision) : value.revision !== null))) fail("REPORT_REVIEW_RESPONSE");
+        ["recover", "retire"].includes(action) && (!(action === "retire" ? ["retired", "confirmed", "superseded"] : ["confirmed", "not-applied", "superseded", "retired"]).includes(value.outcome) || (value.outcome === "confirmed" ? !id(value.revision) : value.revision !== null))) fail("REPORT_REVIEW_RESPONSE");
     if (input && Object.keys(input).some(key => value[key] !== input[key])) fail("REPORT_REVIEW_RESPONSE");
   }
   return Object.freeze(structuredClone(value));

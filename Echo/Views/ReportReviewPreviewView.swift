@@ -26,6 +26,7 @@
                                 )
                                 .font(.caption).frame(maxWidth: .infinity).padding(8).background(.bar)
                                 .accessibilityIdentifier("report.review.fixture.count")
+                                .accessibilityValue("Zamknięcia: \(fixture.stats.retirements)")
                             }
                     } else if failed {
                         ContentUnavailableView("Podgląd niedostępny", systemImage: "exclamationmark.triangle")
@@ -46,6 +47,8 @@
         }
     }
     #Preview("Zgłoszenia") { ReportReviewPreviewView(mode: "normal") }
+    #Preview("Niepewna decyzja") { ReportReviewPreviewView(mode: "not-applied") }
+    #Preview("Utracone potwierdzenie zamknięcia") { ReportReviewPreviewView(mode: "retire-lost") }
     #Preview("Brak roli") { ReportReviewPreviewView(mode: "denied") }
     #Preview("Brak wiadomości") { ReportReviewPreviewView(mode: "missing") }
 #endif

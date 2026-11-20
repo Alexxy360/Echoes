@@ -142,7 +142,7 @@ func reportStoreIntent() throws -> GatewayReportReviewRecoveryIntent {
     async throws
 {
     for outcome in [
-        GatewayReportReviewOutcome.confirmed(revision: UUID().uuidString.lowercased()), .notApplied,
+        GatewayReportReviewOutcome.confirmed(revision: UUID().uuidString.lowercased()), .retired,
         .superseded,
     ] {
         let storage = ReportJournalMemoryStorage()
@@ -439,7 +439,7 @@ private func reportStoreEventually(_ predicate: @Sendable () -> Bool) async thro
     let entry = try await journal.prepare(intent, lease: lease)
     let writes = storage.writes
     let reads = storage.reads
-    for command in ["open", "peek", "pending", "prepare", "dispatch", "resolve", "acknowledge"] {
+    for command in ["open", "peek", "pending", "prepare", "dispatch", "retire", "resolve", "acknowledge"] {
         let running = Task { @MainActor in
             withUnsafeCurrentTask { $0?.cancel() }
             switch command {
@@ -448,6 +448,7 @@ private func reportStoreEventually(_ predicate: @Sendable () -> Bool) async thro
             case "pending": _ = try await journal.pending(lease: lease)
             case "prepare": _ = try await journal.prepare(intent, lease: lease)
             case "dispatch": _ = try await journal.dispatched(entry, lease: lease)
+            case "retire": _ = try await journal.retiring(entry, lease: lease)
             case "resolve":
                 _ = try await journal.resolve(
                     entry, result: .init(intent: intent, outcome: .notApplied), lease: lease)
@@ -481,7 +482,7 @@ func reportReviewJournalAmbiguousDispatchAndResolutionAreReopenedWithoutInventin
                     _ = try await journal.dispatched(old, lease: lease)
                 } else {
                     _ = try await journal.resolve(
-                        old, result: .init(intent: intent, outcome: .notApplied), lease: lease)
+                        old, result: .init(intent: intent, outcome: .superseded), lease: lease)
                 }
             }
             storage.failAt = nil
@@ -678,7 +679,7 @@ func reportReviewJournalConcreteRuntimeRecoveryIsPersistedAndReopenedWithSameDec
         result: .init(intent: intent, outcome: .confirmed(revision: UUID().uuidString.lowercased())),
         lease: lease)
     let next = try await journal.resolve(
-        first, result: .init(intent: intent, outcome: .superseded), lease: lease)
+        first, result: .init(intent: intent, outcome: first.outcome!), lease: lease)
     #expect(first != next && next.intent == first.intent)
     await #expect(throws: GatewayReportReviewJournalFailure.inactive) {
         try await journal.acknowledge(first, lease: lease)

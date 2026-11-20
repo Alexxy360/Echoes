@@ -5,12 +5,17 @@ import Testing
 
 actor ReportHostAPI: GatewayReportReviewAPI {
     nonisolated let origin = "https://review-host.example.invalid"
-    enum Mode: Sendable { case normal, denied, signIn, unknown, lostACK, beforeAccept, superseded }
+    enum Mode: Sendable {
+        case normal, denied, signIn, unknown, lostACK, beforeAccept, superseded, lostRetirementACK,
+            unsafeRetirement
+    }
     var mode: Mode = .normal
     var calls: [String] = []
     var decisions: [GatewayReportReviewDecisionIntent] = []
     var recoveries: [GatewayReportReviewRecoveryIntent] = []
     var applied: [String: String] = [:]
+    var retired: [String: GatewayReportReviewRecoveryIntent] = [:]
+    var retirements: [GatewayReportReviewRecoveryIntent] = []
     var pages: [GatewayReportReviewPage] = []
     var cursors: [GatewayReportReviewCursor?] = []
     var inspectionOverride: GatewayReportReviewInspection?
@@ -87,6 +92,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         let callback = beforeDecision
         beforeDecision = nil
         try await callback?(intent)
+        if retired[intent.decisionID] != nil { throw GatewayReportReviewFailure.stale }
         if mode == .beforeAccept { throw GatewayReportReviewFailure.unavailable }
         let revision = UUID().uuidString.lowercased()
         applied[intent.decisionID] = revision
@@ -102,8 +108,28 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         let outcome: GatewayReportReviewOutcome =
             mode == .superseded
             ? .superseded
-            : applied[intent.decisionID].map { .confirmed(revision: $0) } ?? .notApplied
+            : retired[intent.decisionID] == intent
+                ? .retired : applied[intent.decisionID].map { .confirmed(revision: $0) } ?? .notApplied
         await hold("recover")
+        return .init(intent: intent, outcome: outcome)
+    }
+    func retire(_ intent: GatewayReportReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayReportReviewRecoveryResult
+    {
+        try begin("retire")
+        retirements.append(intent)
+        if mode == .unsafeRetirement { return .init(intent: intent, outcome: .notApplied) }
+        let outcome: GatewayReportReviewOutcome
+        if let revision = applied[intent.decisionID] {
+            outcome = .confirmed(revision: revision)
+        } else if mode == .superseded {
+            outcome = .superseded
+        } else {
+            retired[intent.decisionID] = intent
+            outcome = .retired
+        }
+        await hold("retire")
+        if mode == .lostRetirementACK { throw GatewayReportReviewFailure.unavailable }
         return .init(intent: intent, outcome: outcome)
     }
 }
@@ -227,8 +253,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
     #expect(await f.api.decisions.count == 1)
 }
 
-@Test @MainActor func reportReviewHostNotAppliedAndSupersededNeedExplicitResultAcknowledgement() async throws
-{
+@Test @MainActor func reportReviewHostOnlyTerminalOutcomeCanBeAcknowledged() async throws {
     for mode in [ReportHostAPI.Mode.beforeAccept, .superseded] {
         let f = try ReportHostFixture()
         let shown = try await f.show()
@@ -240,8 +265,14 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         try await f.host.recover()
         #expect(f.host.outcome == (mode == .superseded ? .superseded : .notApplied))
         #expect(f.host.pendingOperation != nil && !f.host.canDecide && f.host.presentation == nil)
-        try await f.host.acknowledgeResult(#require(f.host.resolution))
-        #expect(f.host.pendingOperation == nil)
+        if mode == .superseded {
+            try await f.host.acknowledgeResult(#require(f.host.resolution))
+            #expect(f.host.pendingOperation == nil)
+        } else {
+            #expect(f.host.resolution == nil && f.host.canRetirePending)
+            #expect(f.host.pendingOperation?.phase == .dispatched)
+            #expect(await f.api.retirements.isEmpty)
+        }
     }
 }
 
@@ -387,7 +418,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         #expect(await f.api.decisions.count == (phase == "resolve" ? 1 : 0))
         f.storage.failAt = nil
         try await f.connect()
-        #expect(f.host.pendingOperation != nil && f.host.outcome == nil)
+        #expect(f.host.pendingOperation != nil && (f.host.outcome != nil) == (phase == "resolve"))
         try await f.host.recover()
         if phase == "resolve" {
             guard case .confirmed = f.host.outcome else {
@@ -415,7 +446,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
     await #expect(throws: GatewayReportReviewJournalFailure.inactive) { try await f.connect() }
 }
 
-@Test @MainActor func reportReviewHostRestoredResolvedRecordNeedsFreshOutcomeAndRejectsOldAcknowledgement()
+@Test @MainActor func reportReviewHostRestoredTerminalRecordCreatesFreshHandleAndRejectsOldAcknowledgement()
     async throws
 {
     let f = try ReportHostFixture()
@@ -424,7 +455,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
     let old = try #require(f.host.resolution)
     f.host.invalidate()
     try await f.connect()
-    #expect(f.host.pendingOperation?.phase == .resolved && f.host.resolution == nil && f.host.outcome == nil)
+    #expect(f.host.pendingOperation?.phase == .resolved && f.host.resolution != nil && f.host.outcome != nil)
     await #expect(throws: GatewayReportReviewJournalFailure.invalidTransition) {
         try await f.host.acknowledgeResult(old)
     }
@@ -454,9 +485,16 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         host.setForeground(true)
         try await host.connect()
         try await host.recover()
-        #expect(host.pendingOperation?.phase == .resolved && host.outcome != nil && host.presentation == nil)
-        try await host.acknowledgeResult(#require(host.resolution))
-        #expect(host.pendingOperation == nil)
+        #expect(host.outcome != nil && host.presentation == nil)
+        if label == "recover-not-applied" {
+            #expect(
+                host.pendingOperation?.phase == .dispatched && host.resolution == nil && host.canRetirePending
+            )
+        } else {
+            #expect(host.pendingOperation?.phase == .resolved)
+            try await host.acknowledgeResult(#require(host.resolution))
+            #expect(host.pendingOperation == nil)
+        }
         host.invalidate()
     }
 }
@@ -497,7 +535,7 @@ actor ReportHostAPI: GatewayReportReviewAPI {
         f.storage.failAt = nil
         try await f.connect()
         #expect((f.host.pendingOperation == nil) == afterWrite)
-        #expect(f.host.outcome == nil && f.host.resolution == nil)
+        #expect((f.host.outcome == nil) == afterWrite && (f.host.resolution == nil) == afterWrite)
         #expect(await f.api.decisions.count == 1)
     }
 }

@@ -1,5 +1,7 @@
 # Trwała intencja decyzji zgłoszenia — CK-05c.4b.1
 
+Aktualny odbiór CK-05d.2c.1 i migracja starego not-applied: [zamykanie niepewnych prób](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Historyczne dowody pierwszego etapu pozostają poniżej; nowa kontrola aplikacyjnego Keychain obejmuje retiring → ponowne otwarcie → retired.
+
 `GatewayReportReviewJournal` zapisuje jedną intencję decyzji moderatora w lokalnym zakresie: origin bramki, kontener/Development, konto Echoes, konto iCloud i natywna tożsamość Apple. Zmiana sesji tego samego konta nie zmienia klucza magazynu. Zakres ten nie nadaje roli moderatora i nie zastępuje autoryzacji hosta lub serwera.
 
 To część przepływu [natywnego klienta zgłoszeń](NATYWNY_KLIENT_POUFNYCH_ZGLOSZEN.md). Host i połączenia z Runtime/usuwaniem konta dodaje [CK-05c.4b.2a](STEROWNIK_MODERACJI_ZGLOSZEN_IOS.md). Panel i faktyczna prezentacja materiału pozostają w CK-05c.4b.2b. Dziennik jest współdzielony wyłącznie w izolowanym Runtime Development i sam nie uruchamia HTTP; zwykłe wejście aplikacji nadal korzysta z adaptera Firebase.
@@ -9,8 +11,9 @@ To część przepływu [natywnego klienta zgłoszeń](NATYWNY_KLIENT_POUFNYCH_ZG
 1. `open` obraca trwałą dzierżawę zakresu; starsza instancja nie może potwierdzić lub nadpisać nowszego wpisu. `peek` jest odczytem bez tworzenia rekordu i bez zmiany dzierżawy.
 2. `prepare` zapisuje dokładne `reportID`, `decisionID`, `verdict`, `contentHash`. Nie przechowuje tekstu/powodu zgłoszenia, profilu, GPS, tokenu, inspectionID, potwierdzenia odczytu ani prawa do ponowienia zapisu.
 3. `dispatched` wymaga dokładnego prepared i zmienia jego lokalną revision. Przyszły host musi ukończyć ten zapis i ponownie potwierdzić konto/ekran/sesję przed HTTP. Błąd IO lub niejednoznaczny zapis nie uprawnia do wysłania decyzji.
-4. `resolve` przyjmuje wyłącznie wynik recovery związany ze wszystkimi czterema zapisanymi polami. Przechowuje confirmed z poprawną serwerową revision, albo not-applied/superseded bez revision. Wynik nie daje uprawnienia do nowej decyzji.
-5. `acknowledge` usuwa tylko dokładny resolved, po przyszłym świeżym sprawdzeniu i jawnym potwierdzeniu operatora w hoście. Nierozstrzygniętego wpisu nie można zastąpić lub skasować tym poleceniem. Nowe otwarcie aplikacji nie odtwarza treści ani inspekcji i nie uruchamia automatycznego retry.
+4. `resolve` przyjmuje wyłącznie wynik recovery związany ze wszystkimi czterema zapisanymi polami. Przechowuje confirmed z poprawną serwerową revision albo not-applied/superseded/retired bez revision. Tylko confirmed, superseded i retired są terminalne. Not-applied zachowuje dispatched lub retiring. Dawny resolved/not-applied jest odczytywany jako dispatched z tym samym UUID i lokalną revision, bez przepisywania lub kasowania w odczycie. Wynik nie daje uprawnienia do nowej decyzji.
+5. `retiring` utrwala jawną intencję zamknięcia przed tokenem i HTTP, z tym samym decisionID. Recovery nie tworzy serwerowej bariery.
+6. `acknowledge` usuwa tylko dokładny resolved z terminalnym wynikiem i po jawnym potwierdzeniu operatora w hoście. Odtworzony z tego samego chronionego magazynu terminalny wynik otrzymuje świeży lokalny handle; nie wymaga ponownej decyzji ani sieci, również po wygaśnięciu serwerowej historii. Stary handle nie może go usunąć. Nierozstrzygniętego wpisu nie można zastąpić lub skasować tym poleceniem. Nowe otwarcie aplikacji nie odtwarza treści ani inspekcji i nie uruchamia automatycznego retry.
 
 Zapis jest weryfikowany przez odczyt zwrotny. Wyjątek przed/po zapisie lub niezgodność odczytu daje zamknięty błąd; zachowany wpis wymaga późniejszego odczytu i recovery tych samych identyfikatorów. Uszkodzona, zbyt długa, obca lub rozszerzona struktura jest odrzucana bez automatycznej naprawy/usunięcia.
 
