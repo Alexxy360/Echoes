@@ -1,0 +1,92 @@
+{
+  "stage": "CK-05d.2c",
+  "createdAt": "2026-11-20T17:58:57.136078+00:00",
+  "baselineCommit": "de1886b2a33104f10a41aa9efb2043fdcdbdfd9b",
+  "tests": {
+    "newFunctions": 15,
+    "newHTTPFunctions": 14,
+    "newActualLocalWorkerdFunctions": 1,
+    "fullEach": {
+      "tests": 909,
+      "passed": 909,
+      "failed": 0,
+      "cancelled": 0,
+      "skipped": 0
+    },
+    "runtimes": [
+      "v22.23.5",
+      "v24.22.1"
+    ],
+    "syntaxMJSOnBoth": 199,
+    "configurationJSON": 2
+  },
+  "scope": {
+    "routes": "four closed POST /v1/moderation/avatar-reports/{queue,inspect,decide,recover}; separate namespace from photo intake, message reports and upload approval",
+    "frame": "application/vnd.echoes.avatar-report-inspection.v1;4B big-endian metadata length1..12288,UTF8 JSON protocolVersion1 plus exact closed metadata, JPEG1..256000 or zero tail for photo:null; max268292B; exact Content-Length/private,no-store/nosniff; no base64 image, reason header or provider URL",
+    "validation": "encoder and edge validate dates/IDs/contentHash/canonical500UTF16 reason/no lone surrogates, image manifest owner/version/full variant,length,SHA/JPEG dimensions; full frame before release; fresh whitelist headers",
+    "authorization": "session+server role before body/checkpoint/provider; after limits/IO and final checkpoint; roles/hosts pinned to active configuration; no grants from body; failed scope suppresses private frame/ACK",
+    "budgets": "global/IP heavy plus reviewer30/min and inspection10/min before parsing; request512B/128chunks/3s; coordinator8s/Authority12s/edge15s; retained streams/pending work/first cancel; wall+mono floors include partial rollback",
+    "runtime": "AVATAR_REPORT_REVIEW_ENABLED=0 and IDS_JSON=[] default; requires community/public/deletion parent and verified hosts; separate role list; READ/upload/intake/other moderation flags independent; owner withdrawal and maintenance busy fence included"
+  },
+  "workerd": {
+    "actual": "real edge/private Authority/Runtime/DO SQLite/P256 client/HTTP frame/JPEG validation/decision/replay and readonly recovery after recreation+expiry; expanded default-disabled route checks",
+    "synthetic": "Apple/CloudKit/CDN/SIWA identities/IP metadata. global outbound denied; wall-aligned synthetic clock and refreshed synthetic sessions avoid alarms set in past. Same process/storage; not restart,power-loss,PITR,hosted Free or ordinary A-B"
+  },
+  "negativeControl": {
+    "copy": "/private/tmp/echoes-avatar-report-review-http-negative-final",
+    "mutation": "omit only declared JPEG byteCount equality in checkedInspectionImage",
+    "test": "photo-report encoder rejects changed identity/hash or noncanonical reason and clears rejected image copies",
+    "failedTests": 1,
+    "assertionsFailed": 1,
+    "finding": "wrong manifest length accepted despite valid bytes/hash",
+    "originalSourcePreserved": true
+  },
+  "setupNotes": [
+    "Initial generator assertion stopped after HTTP module preparation, before tests; fixed cascading identifier replacements and prepared handler. No failed build or UI acceptance claimed.",
+    "Initial10HTTP and then13HTTP passed, local workerd2/2 passed. Initial full908/908 both runtimes passed.",
+    "Review strengthened HTTP wall/monotonic floors and added partial rollback test; full909 Node22 passed.",
+    "Aligned NEW HTTP workerd test synthetic clock to real alarm wall time and issued fresh synthetic operator/foreign sessions; final909/909 both runtimes on these final sources.",
+    "Previous remote-head verification was rejected by automatic approval review due Codex usage limit. After user reactivated goal, same reviewed command succeeded and verified de1886b; no bypass."
+  ],
+  "limits": [
+    "No native photo-report moderator transport/journal/host/UI yet (2d). Server IO receipt is not evidence a human saw the image.",
+    "No actual CloudKit/SIWA/ordinary A-B/hosted capacity/Free/device acceptance.",
+    "No external roles/keys/secrets/services/activation/deployment/fees/phone/Apple/Cloudflare/Production/Firebase/TestFlight changes.",
+    "iOS/Core/dependencies/CI unchanged and not retested; normal app remains on legacy adapter pending full acceptance/cutover."
+  ],
+  "sourceSHA256": {
+    "gateway/src/avatar-report-review-http.mjs": "0622bd463d1960839bd45aa3a83fc422c4c8bb0bdfd77929c30366e542d89943",
+    "gateway/src/gateway-avatar-report-review.mjs": "3c10d24c3c70718168751ff800cc2c83c103987d5c6daba16c86b313bb04460f",
+    "gateway/src/gateway-http.mjs": "dc8d1984f4ac6d170b290c7f523b11e7fd3117671730ede33a9b28b676fbdd98",
+    "gateway/src/gateway-runtime.mjs": "75fdd2e0b13dab83448c2c3cdd77c3398068f242e9969c207ced54bc18dbe586",
+    "gateway/src/gateway-limits.mjs": "ed24a85e7c41fa8eadb99babd843db766876c4760d85550ba8ab30b4a553bc30",
+    "gateway/wrangler.community.jsonc": "ede83ef39d39ab726a7e175031f2d15c3aeb19f5d3ca632431477a512c461a63",
+    "gateway/test/avatar-report-review-http.test.mjs": "02c28ba8b29d07d40a26b26d72934f37142dda4569c271e79f75eea84ab4cde8",
+    "gateway/test/avatar-report-review-http-workerd.test.mjs": "b256140d0cb7187bbf28ddaf98d466c84deba7aeb99487effaae094571657d04",
+    "gateway/test/avatar-review-workerd.test.mjs": "d0fa8aba9b13174f40763b961d82f199f3d11172dcee145425c1f9bd4d94113d",
+    "gateway/test/support/avatar-report-review-http-fixture.mjs": "c7cbab1d690b407c9c052bb79f1c6e4f0643c6a0fdf30f6736c8a9cb4173fc30",
+    "gateway/test/support/avatar-report-review-http-workerd-proof.mjs": "461a892053791f58d65b547bd4171503fb51233dac1524e3c143c8a14cdf7d8d",
+    "gateway/test/support/avatar-report-review-workerd-proof.mjs": "2263811b1c8eb16757a4bd02ab5234bc89a5e7231a261e4e23608f645cf3ec60"
+  },
+  "logsSHA256": {
+    "/private/tmp/echoes-avatar-report-review-http-focus.log": "cdad443c4005611c39945d697537c99610cbca3e5c8857236b031b6d82cb2018",
+    "/private/tmp/echoes-avatar-report-review-http-focus2.log": "49755841e9999cc59d1b12927dadec9bd39136169a1da0033f0df59c6b19504c",
+    "/private/tmp/echoes-avatar-report-review-http-focus3.log": "83efe89fbb9c9f07a3616e1eb710d1dda9d32080528a7e5e8dafc843c0aba8d5",
+    "/private/tmp/echoes-avatar-report-review-http-focus4.log": "63d20d895b0335925ad4725902940b6d597b6b4cad005f397d9ee31fd92d2331",
+    "/private/tmp/echoes-avatar-report-review-http-workerd.log": "70d687895f242b3876c4df5833ad69fa488251958de75f00e9ef92d40214407d",
+    "/private/tmp/echoes-avatar-report-review-http-full22.log": "1daccdb7b88f03a2555036da89de5b055ad4e08aa3ebd511362b383c80348d8b",
+    "/private/tmp/echoes-avatar-report-review-http-full24.log": "956857e8702bd382f1bcb65de257b02ea5192b0923cc542d6f60809add202248",
+    "/private/tmp/echoes-avatar-report-review-http-final22.log": "e0ba9cac9aaf9ff62ba7e6b07d36c482e08bb74ebd704d3ddc0945045a2c15c6",
+    "/private/tmp/echoes-avatar-report-review-http-verified22.log": "e3d1eed776f58b14b00febac7360d86dfe3230f312c52c61a89935cb0f8880b1",
+    "/private/tmp/echoes-avatar-report-review-http-verified24.log": "6e02b48402404aed2cb2292dd44ba4f8f87c313a81f3d30cdb7f0f17a710202e",
+    "/private/tmp/echoes-avatar-report-review-http-negative-final.log": "b7791898d8538da819f38b9cf58fe84ca6ab1585ac06ec5ccc7dfcda345d342d"
+  },
+  "syntaxReportSHA256": "8188e01fafc106807867e529cc9bcbe092b248c85586e2fe9182df990e0b9a09",
+  "actualProtectedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "remoteChanges": false,
+  "newServicesFeesKeysRolesSecrets": false,
+  "remaining": [
+    "CK-05d.2d typed native framed transport/journal/host/actual explicit moderator UI",
+    "all real full-plan acceptance and controlled TestFlight preparation"
+  ]
+}

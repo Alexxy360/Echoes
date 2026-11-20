@@ -1,12 +1,12 @@
 # Obsługa zgłoszonych zdjęć — CK-05d.2
 
-Stan: CK-05d.2a i2b zaimplementowane i odebrane lokalnie. To wewnętrzny magazyn metadanych, bez nowych tras, operatorów lub aktywacji. [Plan zgłoszeń](ZGLOSZENIA_ZDJEC_PLAN.md).
+Stan: CK-05d.2a–2c zaimplementowane i odebrane lokalnie. Kod obejmuje magazyn, koordynator i zamknięte API; usługi pozostają nieaktywne, bez przypisanych moderatorów. Panel natywny2d jest kolejną częścią. [Plan zgłoszeń](ZGLOSZENIA_ZDJEC_PLAN.md).
 
 ## Kolejność
 
 1. **2a — lokalnie odebrany:** trwały snapshot/receipt, atomowy zapis decyzji i odcięcie dokładnej publikacji, readonly recovery, kolejka, retencja i erasure.
 2. **2b — lokalnie odebrany koordynator:** rola ze zweryfikowanej sesji przed/po IO, poufny powód i dokładny nadal opublikowany pełny obraz przez chroniony download/manifest/hash. Rezerwacja przed avatar/CDN po metadanych raportu, confirm dopiero po walidacji; brak oryginału pozwala tylko dismiss. Retained IO/drain,8s,checkpoint i jednorazowy finalizer. Własna rzeczywista lokalna integracja workerd.
-3. **2c — zamknięte HTTP/Runtime:** domyślnie wyłączone flagi/pusta lista moderatorów, limity przed body/checkpoint/provider, ścisłe odpowiedzi i końcowy guard. Metadata/powód i obraz muszą być związane z tym samym receipt; dokładny protokół transportu zostanie zamknięty przed implementacją. Bez aktywacji/sekretów.
+3. **2c — lokalnie odebrane HTTP/Runtime:** domyślnie wyłączone flagi/pusta lista moderatorów, limity przed body/checkpoint/provider, ścisłe odpowiedzi i końcowy guard. Metadata/powód i obraz są związane z tym samym receipt w jednej zamkniętej ramce HTTP. Bez aktywacji/sekretów.
 4. **2d — iOS:** typowany transport, trwała intencja przed mutacją, aktualne dekodowanie/wyświetlenie, osobna zgoda moderatora, foreground/native/private/parent/expiry i readonly recovery bez ponownej decyzji; testy UI.
 5. Wszystkie rzeczywiste odbiory pełnego planu, w tym CloudKit/SIWA/hosting/Free/zwykłe A/B i urządzenie. Kontakt właściciel poda później.
 
@@ -31,7 +31,7 @@ Pierwszy focus nie załadował źle nazwanego eksportu; drugi15/16 miał zły kl
 Dostawcy/konta i confirm są modelowane. W etapie2a nowy stan nie miał własnego odbioru workerd; późniejszy lokalny odbiór2b opisano niżej. Hosting nadal nieodebrany. iOS/Core/deps/CI niezmienione i niepowtarzane. Bez nowych uprawnień/kluczy/sekretów/usług/opłat/SDK telefonu/Apple/Cloudflare/Production/Firebase/TestFlight. Zastany projekt zachowany. Migracja trwa; postęp2b opisano niżej,2c/2d i rzeczywiste odbiory pozostają obowiązkowe.
 
 
-## CK-05d.2b — chroniony koordynator i rzeczywiste lokalne workerd
+## CK-05d.2b — odbiór koordynatora przed podłączeniem2c
 
 AvatarReportReviewCoordinator jest domyślnie wyłączony i odmawia zwykłym kontom. Używa zweryfikowanego authorize i synchronicznego serwerowego predykatu roli, bez uprawnień z JSON. Konto/skrót sesji, aktywność oraz flaga i rola są sprawdzane po await i w jednorazowym finalizerze. Nawet ten sam bearer zaczynający wskazywać inne uprawnione konto nie dziedziczy przygotowanego materiału.
 
@@ -52,6 +52,8 @@ Jeden slot jest zachowany do rzeczywistego zakończenia CloudKit/fetch/body i pi
 HTTP/Runtime i natywny panel dla tego nowego procesu nadal niewdrożone. Brak iOS/Core/deps/CI i ich ponowień, nowych uprawnień/kluczy/sekretów/usług/opłat/SDK telefonu/Apple/Cloudflare/Production/Firebase/TestFlight. Zastany projekt zachowany; wszystkie rzeczywiste odbiory pełnego planu nadal wymagane.
 
 
-## Przygotowany kierunek transportu2c — jeszcze niewdrożony
+## CK-05d.2c — zamknięte HTTP i Runtime
 
-Jedna odpowiedź inspekcji ma związać powód i zdjęcie bez dodatkowego cache obrazów lub drugiego request. Proponowana zamknięta ramka:4B unsigned big-endian długości metadata, następnie do12288B UTF-8 JSON powyższych metadata oraz dokładnie manifest.byteCount JPEG do256000B; przy photo:null brak pozostałych bajtów. Łącznie do268292B. Content-Type application/vnd.echoes.avatar-report-inspection.v1, private/no-store, nosniff, bez kompresji/range/przekierowań. Błędy pozostają osobnym małym JSON. To kierunek dla2c, nie istniejący endpoint; przed wdrożeniem otrzyma ścisły parser/serializer i testy obu granic. Nie używamy base64 obrazu ani reason w nagłówku. Runtime skonsumuje/wyczyści przekazaną kopię synchronicznie po ostatnim finalizerze. Natywny klient2d będzie miał własne limity i dekodowanie.
+Wdrożono lokalnie cztery osobne trasy, ramkę4B metadata-length + UTF8 JSON + JPEG, ścisłe walidatory obu granic, role/limity przed body w Authority oraz retained8/12/15s. Default0/pusta lista; READ/upload/intake/inna moderacja są niezależne. Finalne909/909 obu Node, syntax199MJS/2JSON, rzeczywisty lokalny workerd edge/Runtime/SQLite/frame/decision/recovery i negatywna kontrola byteCount. [Kontrakt i ograniczenia](HTTP_OPERATORA_ZGLOSZEN_ZDJEC.md), [dowody](evidence/avatar-report-review-http-local-tests.json).
+
+Następny2d: natywny typowany transport ramki, metadata-only intencja decyzji przed mutacją, host z prawdziwym dekodowaniem/wyświetleniem i jawnym potwierdzeniem, recovery bez nowej decyzji, panel i lifecycle/erasure/UI. Następnie wszystkie rzeczywiste odbiory pełnego planu. Nie aktywowano usług, praw, sekretów, opłat lub TestFlight.

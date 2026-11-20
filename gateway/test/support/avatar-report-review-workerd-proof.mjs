@@ -1,3 +1,4 @@
+import { avatarReportReviewHTTPWorkerdProof } from "./avatar-report-review-http-workerd-proof.mjs";
 import { randomBytes, randomUUID, createPublicKey, createHash, verify } from "node:crypto";
 import { Buffer } from "node:buffer";
 import { AuthenticationState } from "../../src/authentication-state.mjs";
@@ -59,6 +60,7 @@ export async function avatarReportReviewWorkerdProof(request, storage) {
       if (url.hostname !== "synthetic-avatar.icloud-content.com" || request.method !== "GET" || request.redirect !== "manual" || request.credentials !== undefined && request.credentials !== "omit" || [...request.headers.keys()].sort().join() !== "accept,cache-control" || !image) throw Error("Unexpected synthetic asset request");
       downloads++; return new Response(image.slice(), { headers: { "Content-Type": "image/jpeg", "Content-Length": String(image.length) } });
     } };
+  if (p.http === true) return avatarReportReviewHTTPWorkerdProof(p, storage, provider, configuration.fetchImplementation, () => ({ signatures, downloads }));
   let coordinator = new AvatarReportReviewCoordinator({ ...configuration, reviews: new AvatarReportReviewState(storage, { clock }) });
   const options = body => ({ accessToken: p.operatorToken, ...body }); let ordinaryDenied = false, revoked = false;
   try { await coordinator.prepareQueue({ accessToken: p.foreignToken }); } catch (e) { ordinaryDenied = e.code === "AVATAR_REPORT_REVIEW_SCOPE"; }

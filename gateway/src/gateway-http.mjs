@@ -1,3 +1,6 @@
+import { AvatarReportReviewError } from "./avatar-report-review-state.mjs";
+import { avatarReportReviewPaths, avatarReportReviewErrorStatuses } from "./avatar-report-review-http.mjs";
+import { createAvatarReportReviewHandler } from "./gateway-avatar-report-review.mjs";
 import { AuthenticationStateError } from "./authentication-state.mjs";
 import { GatewayLimitError } from "./gateway-limits.mjs";
 import { CommunityError } from "./community-domain.mjs";
@@ -26,7 +29,7 @@ export const gatewayPaths = new Set(["/v1/auth/challenge", "/v1/auth/login", "/v
 for (const action of communityActions) gatewayPaths.add("/v1/community/" + action);
 gatewayPaths.add(avatarReadPath);
 gatewayPaths.add(avatarOwnerPreviewPath);
-for (const path of [...avatarMutationPaths.keys(), ...avatarReviewPaths.keys(), ...reportReviewPaths.keys(), ...avatarReportPaths.keys()]) gatewayPaths.add(path);
+for (const path of [...avatarMutationPaths.keys(), ...avatarReviewPaths.keys(), ...reportReviewPaths.keys(), ...avatarReportPaths.keys(), ...avatarReportReviewPaths.keys()]) gatewayPaths.add(path);
 const uuid = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/;
 export function gatewayJSON(value, status = 200, extra = {}) {
   return Response.json({ protocolVersion: 1, ...value }, { status, headers: {
@@ -37,6 +40,10 @@ export class GatewayHTTPError extends Error {
   constructor(code = "INVALID_REQUEST", status = 400) { super("Gateway request could not be processed."); this.code = code; this.status = status; }
 }
 export function gatewayFailure(error) {
+  if (error instanceof AvatarReportReviewError) {
+    const status = avatarReportReviewErrorStatuses[error.code] ?? 503;
+    return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
+  }
   if (error instanceof AvatarReportError) {
     const status = avatarReportErrorStatuses[error.code] ?? 503;
     return gatewayJSON({ error: error.code }, status, [429, 503].includes(status) ? { "Retry-After": "5" } : {});
@@ -171,6 +178,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
   avatarReview, isAvatarReviewEnabled = () => false, isAvatarReviewer = () => false, reviewTimeoutMilliseconds = 12000, clock = Date.now,
   avatarOwnerPreview, isAvatarOwnerPreviewEnabled = () => false, previewTimeoutMilliseconds = 12000,
   avatarReports, isAvatarReportEnabled = () => false, isAvatarReportCancelEnabled = () => false, avatarReportTimeoutMilliseconds = 12000,
+  avatarReportReview, isAvatarReportReviewEnabled = () => false, isAvatarReportReviewer = () => false, avatarReportReviewTimeoutMilliseconds = 12000,
   reportReview, isReportReviewEnabled = () => false, isReportReviewer = () => false, reportTimeoutMilliseconds = 12000,
   limits, scheduleMaintenance, isEnabled, checkpoint, inputTimeoutMilliseconds = 3000, avatarTimeoutMilliseconds = 12000 } = {}) {
   let activeAvatar = 0;
@@ -189,6 +197,8 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
     isAvatarOwnerPreviewEnabled, previewTimeoutMilliseconds, inputTimeoutMilliseconds });
   const photoReportHandler = createAvatarReportHandler({ authentication, limits, checkpoint, avatarReports, isEnabled,
     isAvatarReportEnabled, isAvatarReportCancelEnabled, isAvatarReadEnabled, scheduleMaintenance, avatarReportTimeoutMilliseconds, inputTimeoutMilliseconds });
+  const avatarReportReviewHandler = createAvatarReportReviewHandler({ authentication, limits, checkpoint, avatarReportReview, isEnabled,
+    isAvatarReportReviewEnabled, isAvatarReportReviewer, scheduleMaintenance, clock, avatarReportReviewTimeoutMilliseconds, inputTimeoutMilliseconds });
   const reportHandler = createReportReviewHandler({ authentication, limits, checkpoint, reportReview, isEnabled,
     isReportReviewEnabled, isReportReviewer, scheduleMaintenance, clock, reportTimeoutMilliseconds, inputTimeoutMilliseconds });
   return async (request, serverBudgetHash) => {
@@ -199,6 +209,7 @@ export function createGatewayHTTPHandler({ authentication, login, renewal, sessi
       if (isEnabled() !== true) return gatewayJSON({ error: "GATEWAY_DISABLED" }, 503);
       if (path === avatarOwnerPreviewPath) return await previewHandler(request, serverBudgetHash);
       if (avatarReportPaths.has(path)) return await photoReportHandler(request, serverBudgetHash, avatarReportPaths.get(path));
+      if (avatarReportReviewPaths.has(path)) return await avatarReportReviewHandler(request, serverBudgetHash, avatarReportReviewPaths.get(path));
       if (reportReviewPaths.has(path)) return await reportHandler(request, serverBudgetHash, reportReviewPaths.get(path));
       if (avatarReviewPaths.has(path)) return await reviewHandler(request, serverBudgetHash, avatarReviewPaths.get(path));
       if (avatarMutationPaths.has(path)) return await uploadHandler(request, serverBudgetHash, avatarMutationPaths.get(path));

@@ -30,7 +30,7 @@ test("actual local workerd routes protected moderation HTTP through edge and aut
 test("actual community entry leaves operator endpoints disabled without activation or secrets", { timeout: 30000 }, async () => {
   const worker = await avatarWorker({ communityEntry: true });
   try {
-    for (const path of ["queue", "inspect", "decide", "recover"].map(action => "/v1/moderation/avatar/" + action).concat("/v1/community/avatar/preview")) {
+    for (const path of ["queue", "inspect", "decide", "recover"].flatMap(action => ["/v1/moderation/avatar/" + action, "/v1/moderation/avatar-reports/" + action]).concat("/v1/community/avatar/preview")) {
       const response = await fetch(new URL(path, worker.origin), { method: "POST",
         headers: { "Content-Type": "application/json", Connection: "close" }, body: "{}" });
       assert.equal(response.status, 503); assert.equal((await response.json()).error, "GATEWAY_DISABLED");
