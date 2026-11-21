@@ -1,0 +1,166 @@
+{
+  "stage": "R-04a: local Sign in with Apple entitlements and inactive real deployment bundle",
+  "baselineCommit": "6fa2c88d03be665934fcbaea304530b09a0150aa",
+  "date": "2026-11-21",
+  "entitlements": {
+    "Echo/Echo-Debug.entitlements": {
+      "sha256": "227cb8bda590a6919e07317d70f2183436a6ca74981c04dd83b723b3492ce43c",
+      "existingValuesPreserved": true,
+      "appleSignIn": [
+        "Default"
+      ]
+    },
+    "Echo/Echo.entitlements": {
+      "sha256": "b784587f3b7673d065442fe7910fc38c006ee69b8fb8f502733ee452a372e746",
+      "existingValuesPreserved": true,
+      "appleSignIn": [
+        "Default"
+      ]
+    }
+  },
+  "simulatorEntitlements": {
+    "simulatedEntitlementsSHA256": "780a564af1005d32e42dbed874e030e7ec7bf3ee0cdfaad9fbaf4ca22b53cc1e",
+    "embeddedInActualSimulatorBinary": true,
+    "appleSignIn": [
+      "Default"
+    ],
+    "cloudKitEnvironment": "Development",
+    "physicalProvisioning": false,
+    "codesignSimulatorSignatureDictionaryEmpty": true,
+    "initialCheck": "codesign dictionary was empty; Xcode uses __TEXT/__entitlements on Simulator; verified generated xcent bytes in linked binary"
+  },
+  "builds": {
+    "DebugSimulator": "passed build-for-testing",
+    "unsignedReleaseGenericIOS": "passed"
+  },
+  "ui": {
+    "test": "GatewayDeletionUITests/testUnconfiguredNativeGatewayDoesNotOfferADeletionOrSignInFallback",
+    "passed": 1,
+    "failed": 0,
+    "resultBundle": "/private/tmp/echoes-siwa-entitlements-root-ui.xcresult"
+  },
+  "deploymentBundle": {
+    "target": "echoes-community-development",
+    "directory": "/private/tmp/echoes-community-bundle-tW72R8",
+    "inactive": true,
+    "deployed": false,
+    "networkRequests": 0,
+    "ordinaryAppCutover": false,
+    "modules": [
+      "index.mjs",
+      "jpeg_decoder.wasm",
+      "jpeg_encoder.wasm"
+    ],
+    "files": {
+      "THIRD_PARTY_NOTICES.txt": {
+        "bytes": 31798,
+        "sha256": "7aa36e3027a47263e05a0a6b974be1c6a92c17675f6e68078bc049bcfb7b212f"
+      },
+      "index.mjs": {
+        "bytes": 773561,
+        "sha256": "9226dc25f56c6e767e2cfc2b2ee1c5d0baf0bfe5e81c5127d2974ded9dbcb8c4"
+      },
+      "jpeg_decoder.wasm": {
+        "bytes": 166470,
+        "sha256": "a7c4b12169817e779ff4af137981393ae924944e167ad1bd95747c9199162d3e"
+      },
+      "jpeg_encoder.wasm": {
+        "bytes": 52375,
+        "sha256": "414534c47e59f8b0bd0d8b1a2cd325400611521b98315e02cb00a2a93d7bd448"
+      },
+      "metadata.json": {
+        "bytes": 3099,
+        "sha256": "15d64a6c10b6707051ec7229d14c8995c26fbb8e89aacdbb9dea29db28ce2354"
+      }
+    }
+  },
+  "secondNodeDirectory": "/private/tmp/echoes-community-bundle-6VuVrK",
+  "node22And24FilesIdentical": true,
+  "runtimeModuleBytes": 992406,
+  "packagedWorkerdTest": {
+    "passedPerNode": 1,
+    "nodes": [
+      "22.23.5",
+      "24.22.1"
+    ],
+    "compatibilityDate": "2026-07-30",
+    "outbound": "denied",
+    "healthStatus": 200,
+    "communityStatus": 503,
+    "communityError": "GATEWAY_DISABLED",
+    "notHosted": true
+  },
+  "accountReadOnlyPreflight": {
+    "apple": {
+      "team": "22YC9RAP4P",
+      "bundleID": "mpvEcho.Echo",
+      "appID": "6N82L6Z6ZS",
+      "iCloudEnabled": true,
+      "signInWithAppleEnabled": false,
+      "developerKeysListEmpty": true,
+      "changed": false
+    },
+    "cloudflare": {
+      "currentPlan": "Free",
+      "priceUSD": 0,
+      "requestsTodayObserved": 0,
+      "dailyRequestsLimit": 100000,
+      "workerInventory": [
+        "echoes-development-probe"
+      ],
+      "newTargetExists": false,
+      "subdomain": "2rnd2bt6rd.workers.dev",
+      "diagnosticEnabled": false,
+      "diagnosticSecretBindings": 0,
+      "logsAndTracesEnabled": false,
+      "changed": false
+    }
+  },
+  "screenshots": [
+    {
+      "path": "Docs/evidence/apple-siwa-preflight-20261121.jpg",
+      "sha256": "1338acf6c4b29c2c5872ce66505cbd7c8d53fe260d8f3eaa69ee538b2960434f",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "Docs/evidence/cloudflare-free-preflight-20261121.jpg",
+      "sha256": "0f78fec2e66015fd6feae1dab8f9f7944b51a5cc8e4807ff9af379ff7a2db263",
+      "visuallyReviewed": true
+    }
+  ],
+  "logs": {
+    "/private/tmp/echoes-siwa-entitlements-debug.log": {
+      "sha256": "b84c0666fa7cef71ca8ec70c28300483cf7327248c98c94ffb7dd9a7cb99d8c2",
+      "result": "passed"
+    },
+    "/private/tmp/echoes-siwa-entitlements-release.log": {
+      "sha256": "d353cfe0f8a83985d7899c139c63f850bd081f3752ae5213ed8904499d6a0bf6",
+      "result": "passed"
+    },
+    "/private/tmp/echoes-siwa-entitlements-root-ui.log": {
+      "sha256": "eb91efb4932ad8f123a0a4500b026fd0e842bd01fa54452b0b8f24301c11733e",
+      "result": "passed"
+    },
+    "/private/tmp/echoes-community-deployment-bundle-node22-final.log": {
+      "sha256": "590135b56ab745a66dbbb48dfa31419898ce8bfec3854a26f195b0b1ef5e5ec5",
+      "result": "passed"
+    },
+    "/private/tmp/echoes-community-deployment-bundle-node24-final.log": {
+      "sha256": "a9fd62c0e7a13106cad1f375a4e5a9175317e2baad444108e3106d3d0fec60c4",
+      "result": "passed"
+    }
+  },
+  "initialIssues": [
+    "Initial bundler integration assumed index.mjs.LEGAL.txt existed; switched to actual output inventory and included five full upstream license texts; final focus test passed on both Nodes",
+    "codesign ad-hoc Simulator dictionary is empty; verified Xcode-generated simulated entitlements are embedded in the actual linked binary instead"
+  ],
+  "notPerformed": [
+    "Apple capability/key registration or secret transfer",
+    "provisioning, physical-device installation or real Apple authorization",
+    "Cloudflare resource creation, deployment, activation or secrets",
+    "CloudKit record queries/writes/assets or Production changes",
+    "ordinary A-B, full Runtime acceptance, physical CPU/SQL/Free load acceptance",
+    "repeat of unchanged historical full backend/native test suites",
+    "Firebase removal, paid plans or TestFlight publication"
+  ]
+}
