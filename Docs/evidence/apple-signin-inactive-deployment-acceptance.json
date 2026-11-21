@@ -1,0 +1,366 @@
+{
+  "stage": "R-04b: actual Sign in with Apple configuration and inactive CommunityAuthority deployment",
+  "date": "2026-11-21",
+  "baselineCommit": "15ff4ac0d6d3b662d1388003a583e01ca53d53a3",
+  "approval": {
+    "scopeCommit": "15ff4ac",
+    "scopeDocument": "Docs/ZAKRES_AKTYWACJI_SIWA_I_NIEAKTYWNEGO_HOSTINGU.md",
+    "explicitReply": "nie wem o co chodzi ale zatwirdzam. chcialem tylko migracje zrobic",
+    "scopeExpanded": false
+  },
+  "apple": {
+    "team": "22YC9RAP4P",
+    "bundleID": "mpvEcho.Echo",
+    "primaryAppIDEnabledAndSaved": true,
+    "savedConfigurationReopenedAndVerified": true,
+    "otherCapabilitiesChanged": false,
+    "existingProfilesNeedRegenerationForFutureInstall": true,
+    "newProvisioningProfiles": 0,
+    "newSignInKey": {
+      "keyID": "QPBMSAY553",
+      "name": "Echoes Sign in with Apple 20261121",
+      "service": "Sign in with Apple",
+      "primaryAppID": "mpvEcho.Echo",
+      "team": "22YC9RAP4P",
+      "publicKeySHA256": "0676ced4f6ae6ec4e822b24d88dc25317c527709e2a09338006a68d00515e377",
+      "algorithm": "EC P-256",
+      "fileMode": "0600",
+      "directoryMode": "0700",
+      "downloadCopyRemovedAfterVerifiedPrivateCopy": true,
+      "cloudflareTransfer": false
+    },
+    "nameAdjustment": "Apple disallows hyphens in key names; date rendered as 20261121, same service/App ID/scope",
+    "localKeyChecks": [
+      {
+        "node": "22.23.5",
+        "keyID": "QPBMSAY553",
+        "publicKeySHA256": "0676ced4f6ae6ec4e822b24d88dc25317c527709e2a09338006a68d00515e377",
+        "existingProductionClientSecretClassUsed": true,
+        "signatureVerified": true,
+        "algorithm": "ES256/P-256/P1363",
+        "clientID": "mpvEcho.Echo",
+        "team": "22YC9RAP4P",
+        "lifetimeSeconds": 300,
+        "networkRequests": 0,
+        "jwtPersisted": false,
+        "appleAcceptance": false
+      },
+      {
+        "node": "24.22.1",
+        "keyID": "QPBMSAY553",
+        "publicKeySHA256": "0676ced4f6ae6ec4e822b24d88dc25317c527709e2a09338006a68d00515e377",
+        "existingProductionClientSecretClassUsed": true,
+        "signatureVerified": true,
+        "algorithm": "ES256/P-256/P1363",
+        "clientID": "mpvEcho.Echo",
+        "team": "22YC9RAP4P",
+        "lifetimeSeconds": 300,
+        "networkRequests": 0,
+        "jwtPersisted": false,
+        "appleAcceptance": false
+      }
+    ]
+  },
+  "cloudflare": {
+    "stage": "R-04b inactive actual deployment",
+    "target": "echoes-community-development",
+    "activeVersionID": "3a7ada53-3000-4c70-a8bb-30f49c59b670",
+    "activeDeploymentID": "9270f237-06fc-4d72-bec8-741794acc91c",
+    "createdOn": "2026-11-21T17:23:38.543948Z",
+    "subdomain": {
+      "enabled": false,
+      "previews_enabled": false
+    },
+    "settings": {
+      "placement": {},
+      "compatibility_date": "2026-11-14",
+      "compatibility_flags": [
+        "nodejs_compat",
+        "enable_request_signal"
+      ],
+      "usage_model": "standard",
+      "tags": [],
+      "tail_consumers": [],
+      "logpush": false,
+      "annotations": {
+        "workers/triggered_by": "upload"
+      },
+      "bindings": [
+        {
+          "name": "ACCOUNT_DELETION_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_DOWNLOAD_HOSTS_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_OWNER_PREVIEW_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_READ_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REPORT_CANCEL_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REPORT_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REPORT_REVIEW_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REPORT_REVIEWER_IDS_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REVIEW_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_REVIEWER_IDS_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_UPLOAD_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "AVATAR_UPLOAD_HOSTS_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        },
+        {
+          "name": "CLOUDKIT_CONTAINER",
+          "text": "iCloud.mpvEcho.Echo",
+          "type": "plain_text"
+        },
+        {
+          "name": "CLOUDKIT_ENVIRONMENT",
+          "text": "development",
+          "type": "plain_text"
+        },
+        {
+          "class_name": "CommunityAuthority",
+          "name": "COMMUNITY_AUTHORITY",
+          "namespace_id": "c56ebf43cfc246edb56e6615987b4c57",
+          "type": "durable_object_namespace"
+        },
+        {
+          "name": "COMMUNITY_BLOCKED_PHRASES_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        },
+        {
+          "name": "COMMUNITY_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "COMMUNITY_SUPPORT_URL",
+          "text": "",
+          "type": "plain_text"
+        },
+        {
+          "name": "GATEWAY_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "GATEWAY_ENVIRONMENT",
+          "text": "development",
+          "type": "plain_text"
+        },
+        {
+          "name": "GATEWAY_EXPIRES_AT",
+          "text": "",
+          "type": "plain_text"
+        },
+        {
+          "name": "PUBLIC_RECORDS_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "PUBLIC_RETENTION_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "REFRESH_ACTIVE_KEY_ID",
+          "text": "v1",
+          "type": "plain_text"
+        },
+        {
+          "name": "RENEWAL_ACTIVE_KEY_ID",
+          "text": "v1",
+          "type": "plain_text"
+        },
+        {
+          "name": "REPORT_REVIEW_ENABLED",
+          "text": "0",
+          "type": "plain_text"
+        },
+        {
+          "name": "REPORT_REVIEWER_IDS_JSON",
+          "text": "[]",
+          "type": "plain_text"
+        }
+      ]
+    },
+    "modules": {
+      "THIRD_PARTY_NOTICES.txt": {
+        "bytes": 31798,
+        "sha256": "7aa36e3027a47263e05a0a6b974be1c6a92c17675f6e68078bc049bcfb7b212f"
+      },
+      "index.mjs": {
+        "bytes": 773561,
+        "sha256": "9226dc25f56c6e767e2cfc2b2ee1c5d0baf0bfe5e81c5127d2974ded9dbcb8c4"
+      },
+      "jpeg_decoder.wasm": {
+        "bytes": 166470,
+        "sha256": "a7c4b12169817e779ff4af137981393ae924944e167ad1bd95747c9199162d3e"
+      },
+      "jpeg_encoder.wasm": {
+        "bytes": 52375,
+        "sha256": "414534c47e59f8b0bd0d8b1a2cd325400611521b98315e02cb00a2a93d7bd448"
+      }
+    },
+    "migrationTag": "community-v1",
+    "script": {
+      "etag": "135c5cc1f6c9cecedb8c4e874869b03668c677497fc0041b513caf0f814d4705",
+      "handlers": [
+        "fetch"
+      ],
+      "named_handlers": [
+        {
+          "name": "CommunityAuthority",
+          "handlers": [
+            "class"
+          ]
+        }
+      ],
+      "last_deployed_from": "api"
+    },
+    "scriptRuntime": {
+      "migration_tag": "community-v1",
+      "compatibility_date": "2026-11-14",
+      "compatibility_flags": [
+        "nodejs_compat",
+        "enable_request_signal"
+      ],
+      "usage_model": "standard"
+    },
+    "calls": [
+      {
+        "method": "GET",
+        "path": "/deployments",
+        "status": 200,
+        "responseSHA256": "cf88bae21adc24c932414d5d91a6e0582089ba04c152319bbae7439815db363b"
+      },
+      {
+        "method": "GET",
+        "path": "/versions/3a7ada53-3000-4c70-a8bb-30f49c59b670",
+        "status": 200,
+        "responseSHA256": "ae09ec31a58a13a748a2a3ccb20ded402269610f0f30e802dddf0e7714e50ab3"
+      }
+    ],
+    "verified": true,
+    "liveAuthentication": false,
+    "cloudkitOperations": 0,
+    "privateApplicationKeyTransfers": 0,
+    "ordinaryAppCutover": false
+  },
+  "deploymentCredential": {
+    "target": "echoes-community-development",
+    "permission": "Individual Workers Editor",
+    "tokenID": "2c1c748b250dbc7dbc42afb1fff4746d",
+    "scopeVerifiedBeforeCreation": true,
+    "created": true,
+    "revoked": true,
+    "revocationVerifiedByAPI": true,
+    "deniedStatus": 401,
+    "errorCodes": [
+      10000
+    ],
+    "deniedResponseSHA256": "6979949596e21188252f2394e828a8d535daec89ca894ea4aa85179c83e27e00",
+    "localTokenFileRemoved": true
+  },
+  "screenshots": [
+    {
+      "path": "Docs/evidence/apple-siwa-enabled-20261121.jpg",
+      "sha256": "d58693d5a49afa5af18e91440a111931a6ff1658ac021dbc90bd2dea790e3b62",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": false,
+      "note": "App ID and key service visible"
+    },
+    {
+      "path": "Docs/evidence/apple-siwa-key-registered-20261121.jpg",
+      "sha256": "6803b24f4c4067593a81100bb8ee88c4fb3552bf454e6eda550f17fcc6a99460",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": false,
+      "note": "App ID and key service visible"
+    },
+    {
+      "path": "Docs/evidence/community-deployment-token-scope-20261121.jpg",
+      "sha256": "b42ba1e7958780837fc6789fcf57c7fd9f87785da546aaaa0e811612515d4063",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": true,
+      "note": "Screenshots supplement authoritative API/AX metadata; some narrow columns/switches are clipped"
+    },
+    {
+      "path": "Docs/evidence/community-deployment-token-removed-20261121.jpg",
+      "sha256": "13015dee459d0ac9977e387ccb1e92a5fe91b1f6e75cfe534b944f6ef1de1bf3",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": true,
+      "note": "Screenshots supplement authoritative API/AX metadata; some narrow columns/switches are clipped"
+    },
+    {
+      "path": "Docs/evidence/community-development-routes-disabled-20261121.jpg",
+      "sha256": "badfe787e7bc18c3991600536510c8918316dd6c33991afd96c36c22ce3a7e61",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": true,
+      "note": "Screenshots supplement authoritative API/AX metadata; some narrow columns/switches are clipped"
+    },
+    {
+      "path": "Docs/evidence/community-development-settings-disabled-20261121.jpg",
+      "sha256": "2ee6be5c31a90d7807260dc676306adb77133820ce2dea280a6f132c68040cbb",
+      "visuallyReviewed": true,
+      "narrowCloudflareViewport": true,
+      "note": "Screenshots supplement authoritative API/AX metadata; some narrow columns/switches are clipped"
+    }
+  ],
+  "controlPlaneIssuesResolvedWithoutSecondBackendUpload": [
+    "First UI Deploy was rejected by automatic review; checked explicitly approved scope paragraph permitting temporary fixed Hello World at the exact endpoint and current fixed no-data code, then the same action was approved. Temporary workers.dev route and default logs were disabled before upload. No new user scope or broader token was used.",
+    "Two read-only preflights initially assumed an observability object would be present when disabled; actual settings omit that optional object. UI verified Logs/Traces/Issues off; logpush false and tail_consumers empty.",
+    "One backend PUT succeeded. Initial post-upload assertion expected migration_tag on settings; it is reported on the deployed version instead. Continued with read-only verification; no second PUT.",
+    "GET /content returned 405. Consulted official Download Worker Script endpoint and used GET on exact script URL.",
+    "Response.formData interpreted unnamed Wasm fields as UTF-8 strings; downloaded raw multipart bytes once and parsed binary MIME locally. All four original files then matched bytes/SHA. No code change or re-upload."
+  ],
+  "notPerformed": [
+    "Private SIWA or CloudKit key transfer to Cloudflare",
+    "Native sign-in, real code exchange/refresh/renew/revoke or user token processing",
+    "New provisioning/device installation or GPS/Music access",
+    "CloudKit record queries/writes/assets or Production schema changes",
+    "Hosted SQLite rows/alarms/retention/erasure/load/PITR acceptance",
+    "Ordinary A-B or ordinary AppServices cutover/Firebase data removal",
+    "Paid plans, application publication or TestFlight upload",
+    "Rerun of unchanged full backend/native/UI test suites"
+  ]
+}

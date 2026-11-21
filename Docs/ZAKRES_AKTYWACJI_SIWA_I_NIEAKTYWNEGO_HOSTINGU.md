@@ -25,3 +25,7 @@ Jeśli do uploadu wielomodułowego i migracji konieczny jest token API: utworzy�
 Sprawdzić zapisane primary/capability, dokładną usługę klucza i jego lokalne prawa pliku bez wypisywania zawartości. Sprawdzić aktywną wersję Workera, binding/migrację, brak sekretów, wyłączone flagi i brak publicznej trasy; utrwalić odczyt metadanych, zrzut i publiczne identyfikatory. Usunąć token wdrożeniowy po użyciu. Nie wykonywać testowego zapisu rekordów, usuwania danych, provisioning/instalacji, testów konta ani zmian CloudKit Production.
 
 Kolejny zakres będzie zawierał ograniczoną próbę SIWA właściciela, konkretny recipient sekretów, czas/budżet/cleanup tokenów oraz profil i telefon. Próba auth-only ma zachować `PUBLIC_RECORDS_ENABLED=0`, bez przekazania klucza CloudKit. To ogranicza pierwszy odbiór do autoryzacji, nie zastępuje query/ASSET, dwóch zwykłych kont A/B i pozostałego [planu odbioru](ODBIOR_MIGRACJI_STAN_I_KOLEJNOSC.md).
+
+## Wykonanie po zgodzie
+
+Właściciel zatwierdził konkretny zakres15ff4ac. R-04b wykonano21listopada2026: primary/capability, jeden klucz SIWA lokalnie, jeden nowy nieaktywny Worker/SQLite, jedno PUT właściwego pakietu i tymczasowy token ograniczony do usługi, następnie unieważniony z potwierdzoną odmową401. [Pełny wynik](APPLE_I_HOSTING_WYNIK_DEVELOPMENT.md). Zgoda nie została użyta do transferu kluczy aplikacji, natywnej autoryzacji lub instalacji; te kroki pozostają odrębne.
