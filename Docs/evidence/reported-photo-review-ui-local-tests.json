@@ -1,0 +1,325 @@
+{
+  "stage": "CK-05d.2d.3a",
+  "observedAtUTC": "2026-11-21T12:48:22.370993+00:00",
+  "baselineCommit": "da83b6e24ec9a432dd3440abe13004a41e4b31b8",
+  "sources": {
+    "Docs/DZIENNIK_ZMIAN.md": "0c155264826f9cd2c87d444100aaf85fdf14d5b8fc64f573363e0cbc1c7a4f59",
+    "Docs/NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md": "cd16ea0aa3484e96b27bfc871cdc508c0a764529b9ee602d56c5bf8f55bfa57b",
+    "Docs/PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md": "531451e13d0d3c1a011984b7bb0aaa47026184c8835e814c0580fb85569a44bc",
+    "Docs/PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md": "ebae8fea71ec02d66d70e6c1bec9db7874ba46407bb35054e2d1ccdc638d0a90",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "91de5c450b1f808d5881f6e7777c48dc598eaecde925ac1a3fbb727aaf995b11",
+    "Docs/PODLACZENIE_OPERATORA_ZDJEC_RUNTIME_PLAN.md": "cf2329ea4f9d2c1ab830f324fb86463f88ae9afdba00bb3a3d620574154647b9",
+    "Echo/EchoApp.swift": "2b8cd41a5fc85c453232bd0c2c70b82f5bf62778f22b09f4f5311e2182ddc914",
+    "Echo/Services/AvatarReportReviewPreviewFixture.swift": "a7823e851bcca2592502cba9050a8dc891cd7319d64fdd5bfb5b634297db01c5",
+    "Echo/Views/AvatarReportReviewConfirmationView.swift": "fbaf68dc8743b09afc76ebb9bc51f12d098b542b6e501dce9c36bca9fd3dadbd",
+    "Echo/Views/AvatarReportReviewMaterialView.swift": "6bd3062bb08480d74c0c946cf982f0af74a5e0452acf49944026fbe4f6a2f605",
+    "Echo/Views/AvatarReportReviewPreviewView.swift": "d6d0aa49f92ff33f18b87b7f38cc3e7167ef3ad5b3c716bd197c30ef861fbc46",
+    "Echo/Views/AvatarReportReviewView.swift": "37390b6cf1b3ad55d59d6bd919f50b9c043b34dd0afe24bee7dfde08b99a8888",
+    "EchoesUITests/GatewayAvatarReportReviewUITests.swift": "da52fb7b4c95c37f37afe03662158d64764e9d0141e42f76353aa1c25d4afa7b"
+  },
+  "checks": {
+    "newUIFunctions": 15,
+    "fullInitial": {
+      "passed": 16,
+      "failed": 1,
+      "newPassed": 14,
+      "newFailed": 1,
+      "oldRegressionPassed": 2
+    },
+    "final3AX": {
+      "passed": 2,
+      "failed": 0
+    },
+    "final4Focus": {
+      "passed": 4,
+      "failed": 0
+    },
+    "all15NewAnd2RegressionHavePassingExecutions": true,
+    "finalSingleFullSuite17of17Claimed": false,
+    "strictSwiftFiles": 7,
+    "simulator": "iPhone17Pro/iOS26.1",
+    "runtimeWarningsInitialFull": [],
+    "runtimeWarningsFinalFocus": []
+  },
+  "release": {
+    "binary": "/private/tmp/echoes-private-profile-sdk-release/Build/Products/Release-iphoneos/Echoes.app/Echoes",
+    "sha256": "a47c6c4f1faa3ef9aeb4156c1c31d0f5ba2883fd6e781dd28f9d72ff6197744a",
+    "markers": {
+      "ECHOES_AVATAR_REPORT_REVIEW_UI_PREVIEW": false,
+      "ECHOES_AVATAR_REPORT_REVIEW_UI_RUN": false,
+      "EchoesAvatarReportReviewUIPreview": false,
+      "AvatarReportReviewPreviewFixture": false
+    }
+  },
+  "screenshots": [
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/confirmation-before-decision.png",
+      "sha256": "5cb4ea1b79ab064715b0d6877c913126e9551cab69b13361c5fb5d908722e186",
+      "source": "/private/tmp/echoes-reported-photo-ui-full-attachments2/1665C362-5C3F-437F-9A9B-A871CAC2C7D4.png",
+      "testScreenshot": "avatar-report-confirmation-before-decision_0_98695D46-42B2-4123-A206-30F9A9E7C7B1.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/hidden-confirmed.png",
+      "sha256": "ac99c81c5d1a1b7c57856fc0f6fa3f3c785d1f1c1b44500be1072ab491866097",
+      "source": "/private/tmp/echoes-reported-photo-ui-full-attachments2/FFAC675F-7F66-4677-983E-C23ACB81AF50.png",
+      "testScreenshot": "avatar-report-hidden-confirmed_0_6C64F78C-CADF-4E21-8FBC-4DD519475098.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/recovered-after-process-restart.png",
+      "sha256": "8d6d86d59aa2cea430c5f461ded4ed10ec282c922ee305bdec4a1ae9bc6adf4b",
+      "source": "/private/tmp/echoes-reported-photo-ui-full-attachments2/FA4BCDD8-DD3A-48AB-878E-352CFCE6785F.png",
+      "testScreenshot": "avatar-report-recovered-after-process-restart_0_4D92C144-ABBE-45C6-9B8E-A6F2E4A671B4.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/missing-photo-dismissed.png",
+      "sha256": "1b135946afed1220ce82527977590be75edaee8b83def17ea758d8658092f4b5",
+      "source": "/private/tmp/echoes-reported-photo-ui-full-attachments2/C52E2B8A-1974-4910-AD99-1E7342D6059B.png",
+      "testScreenshot": "avatar-report-missing-photo-dismissed_0_81585029-E952-4A3B-A9EA-7C10D5D650A2.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/damaged-frame-closed.png",
+      "sha256": "c1bf08dd887ae736f4f7d4c325828697611fe5b3f034311258c24d9471286bc4",
+      "source": "/private/tmp/echoes-reported-photo-ui-final4-attachments/3897DA33-46D7-40B3-959E-AFB1C777222D.png",
+      "testScreenshot": "avatar-report-damaged-frame-closed_0_D7BE4307-71E2-48FA-9189-9D96CA8F4E99.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/largest-text-confirmation-end.png",
+      "sha256": "9129b516806d6a6cfbe27334a0e21f91c05b9790169cda8537a32543b5a136f3",
+      "source": "/private/tmp/echoes-reported-photo-ui-final4-attachments/FA26C802-B6FA-4BDC-B3F6-FB90E56B2544.png",
+      "testScreenshot": "avatar-report-largest-text-confirmation-end_0_65E28DB0-D868-4173-9DD1-6999B85A6800.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/retirement-accessibility-size.png",
+      "sha256": "d66626de593569ea182adeed6c040f0f67e744dc069179620aaa7470e2e871e3",
+      "source": "/private/tmp/echoes-reported-photo-ui-final4-attachments/1AC0B797-E71D-45EA-8594-D4E52B605F5B.png",
+      "testScreenshot": "avatar-report-retirement-accessibility-size_0_E55F41AB-56D7-4E46-8D41-CA551851B2C9.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-ui/retirement-background-closed-large.png",
+      "sha256": "c69a6d96013edd59498734d24d820780c593b80df4d62cfbfd09044935ee1e71",
+      "source": "/private/tmp/echoes-reported-photo-ui-final4-attachments/C2810559-A232-4495-9752-CE3547BE21D8.png",
+      "testScreenshot": "avatar-report-retirement-background-closed-large_0_2677C746-18C7-4904-A5B9-C6E74BA372AD.png",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    }
+  ],
+  "logs": {
+    "skeleton-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-skeleton-build.log",
+      "sha256": "7160cf7aa65883b5c836445d9f2fc516d757857f3a3fe300e0ea7382478d372d",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "preview-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-preview-build.log",
+      "sha256": "476e284623529800d5631dc9004b9fddd21e3174e34d497f15588946c3778c78",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "debug-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-debug-build.log",
+      "sha256": "c60eb8c40886d8038121c01b0fa7bd4f45462f372d57ebd105dae32d935d5c01",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "debug-final": {
+      "path": "/private/tmp/echoes-reported-photo-ui-debug-final.log",
+      "sha256": "6f21402d30e10bc8e825c13d92ebb98d6bff2e1f537d81e7255fff9f3386470d",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "focus": {
+      "path": "/private/tmp/echoes-reported-photo-ui-focus.log",
+      "sha256": "d49059e62e65857873357447392028f7d46cb824a5151dd01192ae7fef4981be",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": true,
+      "executions": [
+        "Executed 2 tests, with 0 failures (0 unexpected) in 40.875 (40.877) seconds",
+        "Executed 2 tests, with 0 failures (0 unexpected) in 40.875 (40.878) seconds",
+        "Executed 2 tests, with 0 failures (0 unexpected) in 40.875 (40.879) seconds"
+      ]
+    },
+    "full": {
+      "path": "/private/tmp/echoes-reported-photo-ui-full.log",
+      "sha256": "567f098496a2f8d3be0cd797c6e4a742e6ca7525237bc96e04daa58a999adb55",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": [
+        "Executed 1 test, with 0 failures (0 unexpected) in 20.182 (20.184) seconds",
+        "Executed 17 tests, with 1 failure (0 unexpected) in 432.185 (432.204) seconds",
+        "Executed 17 tests, with 1 failure (0 unexpected) in 432.185 (432.205) seconds"
+      ]
+    },
+    "release": {
+      "path": "/private/tmp/echoes-reported-photo-ui-release.log",
+      "sha256": "dbd9bc286167d09ff0aba9d4096be7214bbe9fc1d7c21ef42d948aa1539e3ce2",
+      "testBuildSucceeded": false,
+      "buildSucceeded": true,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "swift-lint": {
+      "path": "/private/tmp/echoes-reported-photo-ui-swift-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final-test-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final-test-build.log",
+      "sha256": "faee8d869fb20a678fc6ca271b90f34c610589f05758085b2bfcff8f4c394e9c",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final-ax": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final-ax.log",
+      "sha256": "2f630f07f66b5955374ea9fd9127c82c5629f9424052005a8e914658f99062d0",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": [
+        "Executed 2 tests, with 1 failure (0 unexpected) in 145.051 (145.053) seconds",
+        "Executed 2 tests, with 1 failure (0 unexpected) in 145.051 (145.054) seconds",
+        "Executed 2 tests, with 1 failure (0 unexpected) in 145.051 (145.057) seconds"
+      ]
+    },
+    "final2-test-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final2-test-build.log",
+      "sha256": "3e7544cd750672cdd21a98fa3ac6bc55e573a9942b4b947b954a11bfcd7927f3",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final2-ax": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final2-ax.log",
+      "sha256": "14fb87818ba40010faa04b1d8f3fbcd5bd7de5a2d08bce5b0af37abf5a8ca80e",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": [
+        "Executed 2 tests, with 2 failures (0 unexpected) in 164.210 (164.212) seconds",
+        "Executed 2 tests, with 2 failures (0 unexpected) in 164.210 (164.213) seconds",
+        "Executed 2 tests, with 2 failures (0 unexpected) in 164.210 (164.214) seconds"
+      ]
+    },
+    "final3-test-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final3-test-build.log",
+      "sha256": "e54d5c783da4a1b791bd277c65ec8dbae1773655bc408f833eb5569fd4515bb5",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final3-ax": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final3-ax.log",
+      "sha256": "d1c5452331773b1681231651e3227efd196faedb7e31137d0ea3619fdf9862a2",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": true,
+      "executions": [
+        "Executed 2 tests, with 0 failures (0 unexpected) in 153.225 (153.227) seconds",
+        "Executed 2 tests, with 0 failures (0 unexpected) in 153.225 (153.230) seconds",
+        "Executed 2 tests, with 0 failures (0 unexpected) in 153.225 (153.231) seconds"
+      ]
+    },
+    "final4-build": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final4-build.log",
+      "sha256": "e0c208b4e7b06a202d4c89a38c0a59d39ac111bbea755f22cbfae1099286af5a",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final4-focus": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final4-focus.log",
+      "sha256": "f85bc0163234dd6cccf3fef5c75f684814d490929163c483d3b5224e8bf18dbc",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": true,
+      "executions": [
+        "Executed 4 tests, with 0 failures (0 unexpected) in 156.661 (156.666) seconds",
+        "Executed 4 tests, with 0 failures (0 unexpected) in 156.661 (156.668) seconds",
+        "Executed 4 tests, with 0 failures (0 unexpected) in 156.661 (156.669) seconds"
+      ]
+    },
+    "final4-release": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final4-release.log",
+      "sha256": "4d85ef909569b049c97e5153d5fcd2a60eabc741912fa4d035ae551d9a5c55b0",
+      "testBuildSucceeded": false,
+      "buildSucceeded": true,
+      "testExecuteSucceeded": false,
+      "executions": []
+    },
+    "final4-swift-lint": {
+      "path": "/private/tmp/echoes-reported-photo-ui-final4-swift-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testExecuteSucceeded": false,
+      "executions": []
+    }
+  },
+  "resultBundles": [
+    "/private/tmp/echoes-reported-photo-ui-full.xcresult",
+    "/private/tmp/echoes-reported-photo-ui-final3-ax.xcresult",
+    "/private/tmp/echoes-reported-photo-ui-final4-focus.xcresult"
+  ],
+  "actualComponents": [
+    "SwiftUI/navigation/scene and real Simulator gestures/accessibility/actual visible image/end/action frames",
+    "native closed frame parser/ImageIO decoder/host/journal",
+    "terminate/relaunch of real app process with synthetic scoped disk journal/provider"
+  ],
+  "modeledComponents": [
+    "all identities/roles/tokens/server queue/decisions/recovery",
+    "synthetic JPEG/reason and isolated metadata files; no Security CRUD or network acceptance",
+    "visibility geometry is not proof of human understanding"
+  ],
+  "history": [
+    "full16/17: main end marker virtualized after overshoot at AX; no product decision sent without host display acknowledgement",
+    "final-ax1/2: next dismiss anchor also above viewport",
+    "final2-ax1/2 with2issues in long case:160pt/20 insufficient for3411pt reason; later expiry",
+    "final3-ax2/2 but long96s near90s receipt after inspection; final gestures1000pt/s+0.2s hold and lazy anchor queries",
+    "final4 includes2AX/error-state/damaged material on final sources; no weakened visibility/TTL",
+    "damaged-material screenshot exposed misleading no-pending error; final text distinguishes read from pending decision"
+  ],
+  "preserved": {
+    "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  },
+  "limits": [
+    "No Runtime/root wiring or actual app-hosted Keychain for this namespace yet",
+    "No new package/backend/schema/Core/deps/CI; native836/834pass+2skip and backend958 are previous",
+    "No Apple/Cloudflare/phone SDK/new roles/keys/secrets/services/activation/cost",
+    "No Production/Firebase/TestFlight change",
+    "Real SIWA/query/ASSET/CDN/two ordinary A-B/Free/alarms/devices/full migration/cutover remain"
+  ],
+  "next": "2d.3b Runtime/Root/lifecycle/bootstrap both journals/erasure/app Keychain according to saved plan"
+}

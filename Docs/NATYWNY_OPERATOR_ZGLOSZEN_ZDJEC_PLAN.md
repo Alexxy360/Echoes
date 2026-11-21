@@ -20,3 +20,7 @@ Stan2d.1: lokalnie zaimplementowany i odebrany transport, [kontrakt i wyniki](NA
 Stan2d.2a: lokalnie odebrany [journal i provider Keychain](DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md),31 nowych funkcji,794pass+2 sprzętowe skipy obu platform. Jeszcze bez rzeczywistego app-hosted Security roundtrip i bez hosta/barier/Runtime. Następny2d.2b zgodnie z powyższą kolejnością.
 
 Szczegółowy plan2d.2b zapisano przed implementacją w [STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md](STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md). Lokalny odbiór2d.2b zakończony, [kontrakt i wyniki](STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md).40 nowych funkcji, końcowe834pass+2 sprzętowe skipy obu platform, Debug/Release/strict7; brak podłączenia UI/Runtime lub rzeczywistego app-hosted Keychain. Następny2d.3.
+
+Plan2d.3 zapisano przed kodem w [PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md): najpierw ekran/izolowany podgląd3a, potem Runtime/bootstrap/realny app-hosted Keychain3b.
+
+Stan 2d.3a: lokalnie odebrany [panel SwiftUI i izolowany DEBUG podgląd](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md), 15 nowych scenariuszy i 2 regresje pokryte zaliczonymi przebiegami (pierwszy pełny16/17, końcowy focus4/4). Dalej 2d.3b Runtime/bootstrap dwóch journali/erasure i rzeczywisty aplikacyjny Keychain według zapisanego planu, potem cały rzeczywisty odbiór migracji.
