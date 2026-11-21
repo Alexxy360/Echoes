@@ -1,0 +1,72 @@
+{
+  "observedAtUTC": "2026-11-21T16:39:02.759Z",
+  "inputSHA256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025",
+  "installedSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543",
+  "bytes": 9572,
+  "types": 14,
+  "roles": 2,
+  "old13TypesSemanticallyEqual": true,
+  "old13TypeBlocksByteIdentical": true,
+  "roleDefinitionsUnchanged": true,
+  "addedType": "EchoesAvatarReportV1",
+  "customFields": 15,
+  "systemFields": 6,
+  "newCustomIndexes": 0,
+  "grants": [
+    {
+      "role": "EchoesCommunityService",
+      "rights": [
+        "READ",
+        "CREATE",
+        "WRITE"
+      ]
+    }
+  ],
+  "ordinaryGrants": [],
+  "recordOperations": 0,
+  "remoteValidation": "Validation Passed",
+  "remoteImport": "The schema was successfully imported.",
+  "stage": "R-01 actual CloudKit Development schema import",
+  "baselineCommit": "fff57caea52de2af63241fa3552b7f83cf14ea0a",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "Development"
+  },
+  "approval": {
+    "explicitReply": "Tak, zatwierdzam ten import Development",
+    "scopeDocument": "Docs/ZAKRES_SCHEMATU_ZGLOSZEN_ZDJEC_DEVELOPMENT.md",
+    "scopeCommit": "fff57ca",
+    "approvedSHA256": "af48193c7d43a4473f219d643fbf24bb344acbd6b1b848eb8086c45cbed0534c",
+    "validationAttempts": 1,
+    "importAttempts": 1
+  },
+  "installedFile": "gateway/schema/development-installed-20261121.ckdb",
+  "sourceDownload": "/Users/alex/Downloads/cloudkit-development (6).ckdb",
+  "screenshots": [
+    {
+      "path": "Docs/evidence/avatar-report-schema-validation-20261121.jpg",
+      "sha256": "8039cc3d494d5ad91d89b61c19a023af821e95e0d75ea6f93b3769a5026b5abc",
+      "narrowViewport": true,
+      "visuallyReviewed": false
+    },
+    {
+      "path": "Docs/evidence/avatar-report-schema-import-success-20261121.jpg",
+      "sha256": "70559ed255f22bd8e39bd6c91ab22fed69696b6aadd695fbddb05bc5eebb17af",
+      "narrowViewport": true,
+      "visuallyReviewed": true
+    }
+  ],
+  "notes": [
+    "Apple adds six standard system fields and normalizes order/whitespace of the new type; the installed hash therefore differs from the approved input",
+    "All thirteen pre-existing type blocks compared byte-for-byte; roles and new type fields/grants also compared structurally",
+    "The first export view briefly contained previous cached text while download was disabled; waited for the new ready export, then downloaded once"
+  ],
+  "notPerformed": [
+    "record queries/writes/cleanup",
+    "new role assignments or credentials",
+    "Cloudflare deployment or secret transfer",
+    "Production/Firebase/TestFlight/cost changes",
+    "ordinary A-B, SIWA, ASSET/CDN, regional queries or live Runtime acceptance"
+  ]
+}

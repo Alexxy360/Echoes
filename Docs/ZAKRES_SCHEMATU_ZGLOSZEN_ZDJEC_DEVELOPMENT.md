@@ -1,6 +1,6 @@
 # Zakres importu schematu zgłoszeń zdjęć — R-01 / Development
 
-Przygotowano21listopada2026 po odczycie świeżego eksportu Apple. Zakres jest gotowy do przeglądu, ale **walidacja/import w Apple jeszcze niewykonane i wymagają konkretnej zgody**.
+Przygotowano21listopada2026 po odczycie świeżego eksportu Apple. Właściciel następnie odpowiedział „Tak, zatwierdzam ten import Development”. **Jedna walidacja i jeden import przeszły; kontrolny eksport potwierdził dokładny wynik.** [Dowód wykonania](evidence/avatar-report-schema-installed-acceptance.json). Poniżej zachowano zatwierdzony zakres.
 
 ## Dokładny plik i środowisko
 
@@ -33,3 +33,5 @@ Istniejąca rola jest już przypisana właścicielowi. Dodanie nowego typu rozsz
 ## Kontrole przygotowania
 
 Generator/validator porównał świeży eksport i proponowany plik bez zmiany ich bajtów. Trzy odpowiednie istniejące testy schematu i serializerów przeszły osobno na Node22.23.5 i24.22.1. [Dowód przygotowania](evidence/avatar-report-schema-fresh-preparation.json). Nie ponawiano niezmienionego pełnego backendu lub iOS. Nie ma nowych kluczy/sekretów/usług/opłat, rekordów/profilów/GPS/zdjęć lub operacji Firebase/Production/TestFlight.
+
+Wynik21listopada: eksport9572B, SHA256 `495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543`,14typów/2role. Wszystkie13wcześniejszych bloków są bajtowo identyczne, role bez zmian. Nowy typ ma15uzgodnionych pól i6standardowych pól systemowych dodanych przez Apple; dokładnie jeden uzgodniony grant, bez nowych indeksów. Nie wykonano operacji na rekordach lub dodatkowego importu.
