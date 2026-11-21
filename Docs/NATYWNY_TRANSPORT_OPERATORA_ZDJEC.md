@@ -1,5 +1,7 @@
 # Natywny transport operatora zgłoszonych zdjęć — CK-05d.2d.1
 
+Późniejszy CK-05d.2d.2a dodaje [osobny journal](DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md); host/wyświetlanie/bariera/Runtime pozostają do podłączenia. Poniższy odbiór2d.1 jest historyczny.
+
 Stan: 21 listopada2026, lokalnie zaimplementowany i odebrany moduł biblioteki. Domyślnie wyłączony i jeszcze bez podłączenia hosta, journala, panelu lub Runtime aplikacji. [Dalszy plan2d](NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md), [serwerowy kontrakt](HTTP_OPERATORA_ZGLOSZEN_ZDJEC.md), [wyniki/SHA](evidence/avatar-report-review-native-local-tests.json).
 
 ## Granice API

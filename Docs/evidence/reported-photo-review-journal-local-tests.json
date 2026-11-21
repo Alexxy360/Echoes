@@ -1,0 +1,170 @@
+{
+  "stage": "CK-05d.2d.2a",
+  "date": "2026-11-21",
+  "baselineCommit": "d47f9309851351b60ff4e0279908a3d7d9f66365",
+  "scope": "Separate minimal SavedIntent and journal/Keychain provider for reported-photo moderator. No host/UI/Runtime or publication events yet.",
+  "sources": {
+    "Docs/DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md": "12da2973433a55e66febc252a66865b4bb02106df1ce42ec0182e8ac844275b9",
+    "Docs/DZIENNIK_ZMIAN.md": "13500eb170f39fb22ca388d591cf182614c04b5dffdf92fd764166d63b6bb274",
+    "Docs/HTTP_OPERATORA_ZGLOSZEN_ZDJEC.md": "177406737ae3f02085e384217508cac4d7d1c194a6a06ff51e1e83fd6568d769",
+    "Docs/NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md": "953b5d1b0ef2ade1684fa98ad5bc15d23467b0302b5d1335ed31d4cb19d2ce77",
+    "Docs/NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md": "ec4f6332d3373e6a83b16137bd196228bd5af4f1587c443b30cf495aa4d4bff2",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "84ebb9800d60264b48f45e883260410ecf4d7ca09d25375a09fdb1664705e0d2",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewJournal.swift": "b91b8618c659f3cda6b97cb1bd7e6b3cf4334de949091be5405fe9dd31067c61",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewKeychain.swift": "1f8bfbb8eba6980f7e6bf96c902705951c1ce202f81656895481ffb8f5acf8df",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewSavedIntent.swift": "38f2915667c3f0eb6c9eb2e789182336ffc2dfad3bf41373dcb8bc5384888287",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportReviewJournalTests.swift": "d332756a36ef8ee97749af60698e76a69d0bc80f2321f2d7f4edc73942c73621"
+  },
+  "native": {
+    "newFunctions": 31,
+    "focusedFinal": {
+      "tests": 31,
+      "passed": 31
+    },
+    "fullRuns": [
+      {
+        "platform": "macOS",
+        "defined": 796,
+        "passed": 794,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      },
+      {
+        "platform": "iOS26.1 iPhone17Pro Simulator",
+        "defined": 796,
+        "passed": 794,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      }
+    ],
+    "debugBuildForTesting": "passed",
+    "unsignedRelease": "passed",
+    "strictNewSwift": 4
+  },
+  "negativeControl": {
+    "mutation": "Omit only requirement for a photo target when persisting hide_photo",
+    "selected": 1,
+    "failedTests": 1,
+    "issues": 1,
+    "sourceSHA256": "38f2915667c3f0eb6c9eb2e789182336ffc2dfad3bf41373dcb8bc5384888287",
+    "originalUnchanged": true
+  },
+  "storageContract": {
+    "oneEntryPerScope": true,
+    "maximumBytes": 4096,
+    "metadata": [
+      "reportID",
+      "decisionID",
+      "verdict",
+      "contentHash",
+      "optional target ownerID/versionID/publicationGeneration",
+      "phase/revision/outcome",
+      "opaque scope/owner/lease"
+    ],
+    "neverStored": [
+      "reason",
+      "pixels",
+      "manifest",
+      "receipt/inspectionID/expiry",
+      "bearer/fingerprint",
+      "native Apple/iCloud ID",
+      "GPS"
+    ],
+    "hideRequiresTarget": true,
+    "notAppliedNeverACK": true,
+    "retiringPersists": true,
+    "falseTerminalRejectedWithoutMigration": true,
+    "scopeNamespace": "echoes/avatar-report-review-journal/v1",
+    "service": "mpvEcho.Echo.gateway.avatar-report-review.v1",
+    "keychainAttributes": [
+      "WhenUnlockedThisDeviceOnly",
+      "DataProtectionKeychain",
+      "synchronizable=false"
+    ],
+    "erasure": "exact owner/service all origins; saturated admission does not disable cleanup"
+  },
+  "modeled": [
+    "synchronous memory storage; real journal/GCD/leases/state machine",
+    "prior concrete Runtime/SQLite wire with modeled Apple/accounts/provider parsed by native HTTP"
+  ],
+  "notPerformed": [
+    "real app-hosted Security roundtrip for this namespace",
+    "physical-device encryption",
+    "UI changes/tests",
+    "backend958 repeat"
+  ],
+  "failedAttempts": [
+    "initial adapted test compile used raw recovery where SavedIntent required and message fixture/client in one case; corrected before final focus/full runs"
+  ],
+  "logs": {
+    "build": {
+      "path": "/private/tmp/echoes-reported-photo-journal-build.log",
+      "sha256": "39d266af02d519fbf413f7d49240a2e44f51612cb5267b8bb1fa60929e19390b",
+      "bytes": 137
+    },
+    "focus": {
+      "path": "/private/tmp/echoes-reported-photo-journal-focus.log",
+      "sha256": "58613bc5b5114afd8109dea5f1ed489aae69001beaa6cb28b642dfa5098a9bed",
+      "bytes": 22718
+    },
+    "focus2": {
+      "path": "/private/tmp/echoes-reported-photo-journal-focus2.log",
+      "sha256": "305e2f0a30ac3e5aa369a2027fa12bd197e1c6c41a0cac59909d116bc5a4bfe3",
+      "bytes": 16218
+    },
+    "focus3": {
+      "path": "/private/tmp/echoes-reported-photo-journal-focus3.log",
+      "sha256": "949a39b6569262ee29f311d38e9c8f876c33d9d75c4154951933440031a35054",
+      "bytes": 7586
+    },
+    "lint": {
+      "path": "/private/tmp/echoes-reported-photo-journal-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "swift-full": {
+      "path": "/private/tmp/echoes-reported-photo-journal-swift-full.log",
+      "sha256": "46c252c7f4f0c3ad1a3c3e71a765e4a4db6659529ade4db096356aa83cfc4793",
+      "bytes": 164118
+    },
+    "package-sim": {
+      "path": "/private/tmp/echoes-reported-photo-journal-package-sim.log",
+      "sha256": "62d447eb8c42be5cabdf6f6c21fb4273962e6b2e9e1927ab9209e433c88471d6",
+      "bytes": 272175
+    },
+    "release": {
+      "path": "/private/tmp/echoes-reported-photo-journal-release.log",
+      "sha256": "0fab5e22e8149754997eef74e6143eaf481e2bb30a9c8fa3159c9b7a1cccc0f2",
+      "bytes": 168299
+    },
+    "debug": {
+      "path": "/private/tmp/echoes-reported-photo-journal-debug.log",
+      "sha256": "02a82930f911046a7faa8b6845c035322502e681fe448d2d1254bb576ee11584",
+      "bytes": 141098
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-reported-photo-journal-negative.log",
+      "sha256": "c2e5e51a55613871affba235746adbd8a008ecb97f9bab5a07fd86e843c5c3b2",
+      "bytes": 11884
+    },
+    "negativePreparation": {
+      "path": "/private/tmp/echoes-reported-photo-journal-negative-preparation.json",
+      "sha256": "08fd6a74a339ffe58cb19ddc533c997c22a7e45ec91e7402e0b9f6c6e37c941c",
+      "result": {
+        "copy": "/private/tmp/echoes-reported-photo-journal-negative",
+        "sourceSHA256": "38f2915667c3f0eb6c9eb2e789182336ffc2dfad3bf41373dcb8bc5384888287",
+        "mutation": "Omit only requirement for a photo target when persisting hide_photo",
+        "test": "avatarReportReviewJournalStoredHideRequiresClosedValidTargetAndRejectsLegacyFalseTerminalWithoutRepair"
+      }
+    }
+  },
+  "xcresult": "/private/tmp/echoes-reported-photo-journal-package-sim.xcresult",
+  "preservedProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+  "limits": [
+    "No host or publication fence emission/integration yet",
+    "No Apple/Cloudflare/phone SDK/new schema/roles/keys/secrets/service activation/cost",
+    "No Production/Firebase/TestFlight change",
+    "Real SIWA/query/ASSET/CDN/ordinary A-B/hosted Free/alarms/devices and full migration/cutover remain"
+  ],
+  "next": "2d.2b host/display/lifecycle and separate report vs upload presentation barriers, then2d.3 UI/Runtime/app Keychain"
+}

@@ -10,3 +10,11 @@ Plan zapisany 21 listopada2026 po lokalnym odbiorze2c.2, commit82df0cd. Obejmuje
 Każdy spójny odebrany podetap aktualizuje ten dokument, plan migracji, DZIENNIK_ZMIAN i dowody oraz otrzymuje commit/push bez force. Zastana zmiana project.pbxproj zostaje zachowana. Kontakt wsparcia zgodnie z decyzją użytkownika później. Przy przerwie zachowujemy dokładny etap i wynik; nie ponawiamy wysłanej mutacji lub uruchomionego testu tylko dlatego, że brak natychmiastowego output.
 
 Stan2d.1: lokalnie zaimplementowany i odebrany transport, [kontrakt i wyniki](NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md). Następny2d.2 journal/host oraz2d.3 panel/Runtime; wszystkie rzeczywiste bramki pozostają niewykonane.
+
+## Kolejność2d.2 — zapis przed hostem
+
+2d.2a najpierw odrębny journal/Keychain provider i testy trwałości/scope/retiring/erasure. SavedIntent ma czteropolowe recovery oraz opcjonalny zweryfikowany photoTarget; hide_photo wymaga target. Publiczne przygotowanie wynika z receipt konkretnej inspekcji, a stored decode zachowuje ścisły własny format. To nowy namespace bez migracji dawnych resolved/not-applied; takie nieprawidłowe połączenie phase/outcome ma być odrzucone. Target nie trafia do HTTP lub do zgody publikacji. Wstępny etap nie emituje jeszcze barier i nie podłącza Runtime.
+
+2d.2b następnie host z prawdziwym lifetime pojedynczej operacji, opaque display handle/ACK i lifecycle/odcięciem native/private/konta/rodzica. Wraz z nim integracja domenowo odrębnej bariery zdjęć (report vs upload), bootstrap z tego samego SavedIntent po restarcie, brak zwolnienia przy notApplied/retiring i terminalny wynik pozwalający tylko na nowy chroniony odczyt. Dopiero potem2d.3 UI/Runtime oraz aplikacyjny rzeczywisty Keychain.
+
+Stan2d.2a: lokalnie odebrany [journal i provider Keychain](DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md),31 nowych funkcji,794pass+2 sprzętowe skipy obu platform. Jeszcze bez rzeczywistego app-hosted Security roundtrip i bez hosta/barier/Runtime. Następny2d.2b zgodnie z powyższą kolejnością.

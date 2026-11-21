@@ -2,7 +2,7 @@
 
 CK-05d.2c.1 rozszerza kontrakt o [zamykanie niepewnych prób](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Wcześniejsze liczby i dowody2c poniżej są historyczne; kolejny panel iOS zdjęć2d ma używać terminalnego retire od początku.
 
-Aktualizacja CK-05d.2d.1: [natywny transport i walidacja ramki](NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md) odebrane lokalnie; journal/host/panel jeszcze niepodłączone. Poniższy odbiór2c jest historyczny.
+Aktualizacja CK-05d.2d.1: [natywny transport i walidacja ramki](NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md) odebrane lokalnie; późniejszy2d.2a dodaje [osobny journal](DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md). Host/panel/Runtime pozostają niepodłączone. Poniższy odbiór2c jest historyczny.
 
 Stan: lokalnie zaimplementowane i odebrane edge/Authority/Runtime. AVATAR_REPORT_REVIEW_ENABLED=0 i AVATAR_REPORT_REVIEWER_IDS_JSON=[] w konfiguracji; brak wdrożenia lub nadania roli. [Koordynator i cały proces](OPERATOR_ZGLOSZEN_ZDJEC.md).
 
