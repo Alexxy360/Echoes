@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EchoesGatewayAuthenticationTrial</key>
+	<true/>
+	<key>EchoesGatewayDevelopment</key>
+	<dict>
+		<key>container</key>
+		<string>iCloud.mpvEcho.Echo</string>
+		<key>enabled</key>
+		<false/>
+		<key>expiresAt</key>
+		<string>2000-01-01T00:00:00Z</string>
+		<key>origin</key>
+		<string>https://echoes-community-development.2rnd2bt6rd.workers.dev</string>
+	</dict>
+	<key>FIREBASE_ANALYTICS_COLLECTION_DEACTIVATED</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
+</dict>
+</plist>

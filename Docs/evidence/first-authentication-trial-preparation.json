@@ -1,0 +1,123 @@
+{
+  "stage": "R-04c.1a: prepared first actual authentication trial, not activated",
+  "baselineCommit": "91cd4683bd647d3fa74f9902b01d270a4206e3c7",
+  "date": "2026-11-21",
+  "changes": {
+    "debugView": "trusted bundled trial flag hides community/account actions and programmatic destinations; confirmed test account UUID shown and prefixed locally only",
+    "inactiveTemplate": "Docs/fixtures/auth-trial-debug-inactive.plist",
+    "cleanupPlan": "gateway/scripts/authentication-trial-cleanup-plan.mjs",
+    "cleanupMutationsExecuted": 0,
+    "productionBackendCodeChanged": false
+  },
+  "localAcceptance": {
+    "debugSimulatorBuild": "passed",
+    "unsignedRelease": "passed",
+    "strictSwiftFormat": "passed",
+    "existingUnconfiguredUITest": {
+      "passed": 1,
+      "failed": 0,
+      "resultBundle": "/private/tmp/echoes-auth-trial-inactive-ui.xcresult"
+    },
+    "targetedCleanupTests": {
+      "nodes": [
+        "22.23.5",
+        "24.22.1"
+      ],
+      "passedPerNode": 6,
+      "failed": 0,
+      "realSQLiteAndProductionAuthSchema": true,
+      "AppleAndAccountsSynthetic": true,
+      "ordinaryABAccepted": false,
+      "cases": [
+        "exact own rows and partial replay",
+        "second synthetic account prevents all mutations",
+        "identity/credential mismatch and pending provider reservation",
+        "missing logout-all generation and public checkpoint refuse cleanup",
+        "injection/extra properties refused",
+        "partial cleanup cannot authorize unrelated challenge deletion"
+      ]
+    },
+    "packagedConfiguration": {
+      "debugInfoSHA256": "ba8b16b4c466932ca8f79d22426795c3c9fdb57aea69c7e434beac142140563d",
+      "trialMode": true,
+      "gatewayEnabled": false,
+      "origin": "https://echoes-community-development.2rnd2bt6rd.workers.dev",
+      "bundleID": "mpvEcho.Echo",
+      "releaseHasTrialConfiguration": false,
+      "releaseHasTrialLogMarker": false,
+      "originalStagingProjectPreserved": true
+    }
+  },
+  "preflight": {
+    "dataStudio": {
+      "target": "echoes-community-development",
+      "namespaceID": "c56ebf43cfc246edb56e6615987b4c57",
+      "objectName": "echoes-auth-authority-development-v1",
+      "sql": "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name LIMIT 100;",
+      "queryCount": 1,
+      "tableNamesReturned": 0,
+      "rowsReadReported": 2,
+      "dataMutationSQL": 0,
+      "runtimeAuthenticationActivated": false
+    },
+    "device": {
+      "marketingName": "iPhone 15 Pro",
+      "paired": true,
+      "tunnelState": "disconnected",
+      "developerModeEnabled": true,
+      "connectedOrUnlockedProven": false
+    },
+    "simulator": {
+      "name": "iPhone 17 Pro",
+      "id": "B3AA0604-82FF-470B-946A-A79E2D2C75F6",
+      "booted": true
+    }
+  },
+  "initialIssues": [
+    "CoreDevice IPC timed out in sandbox; bounded read-only device/simulator discovery outside sandbox succeeded. Old failed/incomplete output was not interpreted as an empty device list.",
+    "First Debug build globally overrode INFOPLIST_FILE and failed on the Promises resource bundle. Prepared an isolated project copy with only app Debug plist overridden; final build passed. Actual and original staging project files preserved.",
+    "Review added an explicit owned-credential witness to the challenge DELETE, preventing a substituted challenge UUID after partial credential removal. Sixth regression test passed."
+  ],
+  "screenshots": [
+    {
+      "path": "Docs/evidence/auth-trial-inactive-ui-20261121.png",
+      "sha256": "0cf60689e47e05201f91fdd937e98ed00b5dc87d0404274cd96c30b1ee651b56",
+      "visuallyReviewed": true
+    },
+    {
+      "path": "Docs/evidence/auth-trial-datastudio-preflight-20261121.jpg",
+      "sha256": "fac43a82eb6f673c176170d4eb10a10054d368e3631e3673a761332b71ff8fdc",
+      "visuallyReviewed": true
+    }
+  ],
+  "logs": {
+    "/private/tmp/echoes-auth-trial-preparation-debug-final.log": {
+      "sha256": "804a4e3d0447f9a209c2cd0d721391a4b60d3a169649a343a45c05895cb09648",
+      "passed": true
+    },
+    "/private/tmp/echoes-auth-trial-preparation-release.log": {
+      "sha256": "128aba8811f3e6d649928dfb46ad6cc9aa4e908dd26278b5aa710ec785fe4e22",
+      "passed": true
+    },
+    "/private/tmp/echoes-auth-trial-inactive-ui.log": {
+      "sha256": "d245ec6bc721dd74ff4951f3bb161ad21a022d56e787ac19aa809819bf90ded7",
+      "passed": true
+    },
+    "/private/tmp/echoes-auth-trial-cleanup-node22-final.log": {
+      "sha256": "2bf37202c2b16c818340c37fd68242afbda04d5c774e56daec4dca7a440f2dac",
+      "passed": true
+    },
+    "/private/tmp/echoes-auth-trial-cleanup-node24-final.log": {
+      "sha256": "c0afcfecf9c73776e223aaf4eda18e6d55cf3b3c2424182c7e539dd43c98c6f0",
+      "passed": true
+    }
+  },
+  "notPerformed": [
+    "phone provisioning/install/Apple sheet or account login",
+    "SIWA/CloudKit/vault key transfer or new deployment token",
+    "gateway HTTP activation or secret changes",
+    "remote SQL cleanup/deletion or CloudKit record operations",
+    "ordinary A-B, server Apple refresh/revoke, Production/Firebase/TestFlight/cost changes",
+    "repeat of unchanged full backend/native/UI suites"
+  ]
+}

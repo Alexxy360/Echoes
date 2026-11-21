@@ -25,3 +25,7 @@ Stan: przygotowanie lokalne i odczyt kont zakończone. Nowe uprawnienia, klucze,
 ## Wykonanie R-04b
 
 Po konkretnej zgodzie dla15ff4ac zapisano primary SIWA i kluczQPBMSAY553, przechowany wyłącznie lokalnie. Utworzono i wgrano rzeczywisty nieaktywny backend Free/SQLite; wszystkie cztery pliki porównano binarnie z przygotowanymi SHA. Aktywna wersja3a7ada53… ma tagcommunity-v1, wszystkie flagi0, brak sekretów/publicznych tras/logów. Tymczasowy token wdrożenia ograniczony do jednej usługi został usunięty; kontrola401 i usunięcie kopii lokalnej potwierdzone. [Wynik i ograniczenia](APPLE_I_HOSTING_WYNIK_DEVELOPMENT.md). Teraz przygotowanie właściwej próby auth-only, w tym wymaganych sekretów, telefonu i sprzątania refresh tokenu Apple; logowania/kluczyCloudKit nie aktywowano.
+
+## Przygotowanie R-04c.1a
+
+[Plan pierwszej próby](PIERWSZA_PROBA_LOGOWANIA_PLAN.md) zapisano przed zmianą ekranu. Wariant Debug ukrywa społeczne/konto ścieżki i wyświetla testowy UUID do selektywnego sprzątania; nieaktywny template, końcowy Debug/Release,1UI i6SQLtestów na obu Node zaliczone. Jedno rzeczywiste metadata SELECT Data Studio zwróciło0tabel; zapisów/usuwania danych nie wykonywano. Telefon sparowany, tunnel disconnected. [Dowody](evidence/first-authentication-trial-preparation.json). [Świeży konkretny zakres](ZAKRES_PIERWSZEJ_PROBY_LOGOWANIA.md) obejmuje przyszłe sekrety/aktywację/telefon/cleanup i końcowe unieważnienie dedykowanego SIWA, jeszcze niewykonane. Krótki renewal nie zastępuje24h refresh/revoke Apple.

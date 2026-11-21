@@ -14,6 +14,10 @@
         @State private var confirmation: SessionConfirmation?
         @State private var presentationError: String?
 
+        private var isAuthenticationTrial: Bool {
+            Bundle.main.object(forInfoDictionaryKey: "EchoesGatewayAuthenticationTrial") as? Bool == true
+        }
+
         var body: some View {
             NavigationStack(path: $path) {
                 Group {
@@ -24,12 +28,18 @@
                         Form {
                             Section("Logowanie Apple") {
                                 Text(
-                                    "Kontrolowany test Development. Mapa i czat używają nowego adaptera; zwykła wersja aplikacji nie jest jeszcze przełączona."
+                                    isAuthenticationTrial
+                                        ? "Kontrolowana próba logowania i sesji. Potwierdź logowanie w arkuszu Apple."
+                                        : "Kontrolowany test Development. Mapa i czat używają nowego adaptera; zwykła wersja aplikacji nie jest jeszcze przełączona."
                                 )
                                 .font(.caption).foregroundStyle(.secondary)
                                 if host.phase == .ready {
                                     Label("Zalogowano", systemImage: "checkmark.circle")
                                         .accessibilityIdentifier("gateway.auth.ready")
+                                    if isAuthenticationTrial, let accountID = host.accountID {
+                                        LabeledContent("Identyfikator testu", value: accountID)
+                                            .accessibilityIdentifier("gateway.auth.trialAccount")
+                                    }
                                     Button("Wyloguj to urządzenie") { Task { await host.signOut() } }
                                     Button("Wyloguj wszystkie urządzenia", role: .destructive) {
                                         if let accountID = host.accountID {
@@ -58,38 +68,41 @@
                                     }
                                 }
                             }
-                            Section("Okolica — Development") {
-                                Button("Otwórz mapę i czat") {
-                                    Task {
-                                        do {
-                                            let id = try await runtime.openCommunity(isCurrent: {
-                                                scenePhase == .active && path.isEmpty
-                                            })
-                                            guard scenePhase == .active, path.isEmpty else {
-                                                runtime.discardCommunity(id)
-                                                return
+                            if !isAuthenticationTrial {
+                                Section("Okolica — Development") {
+                                    Button("Otwórz mapę i czat") {
+                                        Task {
+                                            do {
+                                                let id = try await runtime.openCommunity(isCurrent: {
+                                                    scenePhase == .active && path.isEmpty
+                                                })
+                                                guard scenePhase == .active, path.isEmpty else {
+                                                    runtime.discardCommunity(id)
+                                                    return
+                                                }
+                                                path = [.community(id)]
+                                            } catch {
+                                                presentationError = error.localizedDescription
                                             }
-                                            path = [.community(id)]
-                                        } catch {
-                                            presentationError = error.localizedDescription
                                         }
-                                    }
-                                }.disabled(host.phase != .ready || runtime.openingCommunity)
-                                    .accessibilityIdentifier(
-                                        "gateway.auth.community")
-                            }
-                            Section("Konto") {
-                                NavigationLink("Zgłoszenia", value: Destination.reports)
-                                    .disabled(host.phase != .ready || runtime.openingCommunity)
-                                    .accessibilityIdentifier("gateway.auth.reports")
-                                NavigationLink("Zgłoszenia zdjęć", value: Destination.photoReports)
-                                    .disabled(host.phase != .ready || runtime.openingCommunity)
-                                    .accessibilityIdentifier("gateway.auth.photoReports")
-                                NavigationLink("Ocena zdjęć", value: Destination.moderation)
-                                    .disabled(host.phase != .ready || runtime.openingCommunity)
-                                    .accessibilityIdentifier("gateway.auth.moderation")
-                                NavigationLink("Usuwanie konta", value: Destination.deletion)
-                                    .disabled(host.isBusy).accessibilityIdentifier("gateway.auth.deletion")
+                                    }.disabled(host.phase != .ready || runtime.openingCommunity)
+                                        .accessibilityIdentifier(
+                                            "gateway.auth.community")
+                                }
+                                Section("Konto") {
+                                    NavigationLink("Zgłoszenia", value: Destination.reports)
+                                        .disabled(host.phase != .ready || runtime.openingCommunity)
+                                        .accessibilityIdentifier("gateway.auth.reports")
+                                    NavigationLink("Zgłoszenia zdjęć", value: Destination.photoReports)
+                                        .disabled(host.phase != .ready || runtime.openingCommunity)
+                                        .accessibilityIdentifier("gateway.auth.photoReports")
+                                    NavigationLink("Ocena zdjęć", value: Destination.moderation)
+                                        .disabled(host.phase != .ready || runtime.openingCommunity)
+                                        .accessibilityIdentifier("gateway.auth.moderation")
+                                    NavigationLink("Usuwanie konta", value: Destination.deletion)
+                                        .disabled(host.isBusy).accessibilityIdentifier(
+                                            "gateway.auth.deletion")
+                                }
                             }
                             if let error = presentationError ?? host.errorMessage {
                                 Section { Text(error).accessibilityIdentifier("gateway.auth.error") }
@@ -137,7 +150,7 @@
                 }
                 .navigationTitle("Logowanie — Development")
                 .navigationDestination(for: Destination.self) { destination in
-                    if let runtime {
+                    if let runtime, !isAuthenticationTrial {
                         switch destination {
                         case .reports:
                             ReportReviewView(
@@ -189,6 +202,15 @@
                 runtime?.invalidateCommunityOpening()
                 runtime?.avatarReportReviews.invalidate()
                 runtime?.deletion.authenticationChanged()
+            }
+            .onChange(of: runtime?.authentication.accountID) { _, accountID in
+                guard isAuthenticationTrial, let accountID, UUID(uuidString: accountID) != nil else {
+                    return
+                }
+                // This non-secret test identifier binds operator cleanup to the phone's actual login.
+                // Capture only this prefixed line locally; never write Apple credentials or tokens.
+                FileHandle.standardOutput.write(
+                    Data("ECHOES_GATEWAY_AUTH_TRIAL accountID=\(accountID)\n".utf8))
             }
             .onChange(of: runtime?.community.presentation?.id) { _, id in
                 if id == nil, path.contains(where: { $0.communityID != nil }) { path = [] }
