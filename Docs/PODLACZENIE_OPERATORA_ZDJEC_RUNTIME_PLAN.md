@@ -12,4 +12,4 @@ Plan przed implementacją po ekranie3a. Usługi i normalny adapter pozostają wy
 
 Po tym nadal rzeczywiste SIWA, CloudKit Development query/ASSET/CDN i nowy schemat po konkretnym przygotowaniu/zgodzie, dwa zwykłe konta A/B, Free/hosting/alarmy/limity i urządzenia oraz dopiero przełączenie adaptera/przygotowanie TestFlight. Brak nowych usług, uprawnień, sekretów lub opłat w tej lokalnej integracji. Nie ponawiamy wygasłych prób SDK lub zdalnych operacji.
 
-Stan: plan, implementacja jeszcze nie rozpoczęta.
+Stan: lokalnie zaimplementowany i odebrany; [kontrakt i granice](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME.md). 7 nowych funkcji/11 przypadków bootstrapu, pełne843 defined/841pass+2 sprzętowe skipy na Macu i iOS,5/5 wybranych UI (2nowe), rzeczywisty app-hosted Keychain, Debug/Release/strict8. Rzeczywisty aktywny Runtime/SIWA i zwykłe A-B nie były uruchamiane.

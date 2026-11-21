@@ -1,5 +1,7 @@
 # Panel operatora zgłoszonych zdjęć — CK-05d.2d.3a
 
+Aktualizacja po3b: panel jest podłączony do izolowanego Runtime Development, z bootstrapem obu journali/erasure i rzeczywistym lokalnym Keychain; [odrębny kontrakt i granice](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME.md). Poniżej zachowano zakres odbioru3a.
+
 Lokalny ekran SwiftUI dla osobnego hosta zgłoszeń zdjęć. Plan zapisano przed kodem w [planie panelu](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md). Podłączenie do Runtime, bootstrap obu journali, account deletion i rzeczywisty app-hosted Keychain należą do następnego [etapu 3b](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME_PLAN.md).
 
 ## Zachowanie

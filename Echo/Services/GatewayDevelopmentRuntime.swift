@@ -14,7 +14,11 @@
         weak var avatarReviews: GatewayAvatarReviewHost?
         weak var reportReviews: GatewayReportReviewHost?
         weak var avatarReports: GatewayAvatarReportPresenter?
+        weak var avatarReportReviews: GatewayAvatarReportReviewHost?
+        weak var bootstrap: GatewayCommunityBootstrap?
         func clearServices() {
+            bootstrap?.invalidate()
+            avatarReportReviews?.invalidate()
             avatarEditor?.invalidate()
             avatarReviews?.invalidate()
             reportReviews?.invalidate()
@@ -38,9 +42,12 @@
         let reportReviews: GatewayReportReviewHost
         let avatarReportJournal: GatewayAvatarReportJournal
         let avatarReports: GatewayAvatarReportPresenter
+        let avatarReportReviewJournal: GatewayAvatarReportReviewJournal
+        let avatarReportReviews: GatewayAvatarReportReviewHost
+        private let communityBootstrap: GatewayCommunityBootstrap
         private(set) var communityServices: AppServices?
         private(set) var communityPresentationID: UUID?
-        private(set) var openingCommunity = false
+        var openingCommunity: Bool { communityBootstrap.isOpening }
         private let relay: GatewayCommunityInvalidationRelay
         private let profileConfiguration: CloudKitConfiguration
         private let gatewayConfiguration: GatewayConfiguration
@@ -54,24 +61,34 @@
             avatarReports.invalidate()
         }
 
-        @discardableResult func openCommunity() async throws -> UUID {
+        func invalidateCommunityOpening() { communityBootstrap.invalidate() }
+
+        @discardableResult func openCommunity(
+            isCurrent isCurrentScreen: @escaping @MainActor () -> Bool = { true }
+        ) async throws -> UUID {
             guard !openingCommunity else { throw GatewayAvatarReviewFailure.busy }
+            // Close every old presentation before the first journal await, even if a peek fails.
+            community.invalidate()
+            communityServices = nil
+            communityPresentationID = nil
             avatarReports.invalidate()
-            openingCommunity = true
-            defer { openingCommunity = false }
             avatarReviews.setForeground(false)
             reportReviews.setForeground(false)
+            avatarReportReviews.setForeground(false)
             let auth = authentication
             let configuration = profileConfiguration
             guard let native = auth.communityAuthorization,
                 let scope = auth.privateDataScope(configuration: configuration)
             else { throw GatewayFailure.signInRequired }
-            let reviewScope = try GatewayAvatarReviewScope(
-                configuration: gatewayConfiguration,
-                owner: scope, binding: native.identity.binding)
-            let pendingModeration = try await avatarReviewJournal.peek(scope: reviewScope)
-            guard auth.communityAuthorization == native,
-                auth.privateDataScope(configuration: configuration) == scope
+            let bootstrap = communityBootstrap
+            let pending = try await bootstrap.load(
+                configuration: gatewayConfiguration, owner: scope, binding: native.identity.binding,
+                isCurrent: {
+                    isCurrentScreen() && auth.communityAuthorization == native
+                        && auth.privateDataScope(configuration: configuration) == scope
+                })
+            guard isCurrentScreen(), auth.communityAuthorization == native,
+                auth.privateDataScope(configuration: configuration) == scope, bootstrap.isCurrent(pending)
             else { throw GatewayFailure.signInRequired }
             try Task.checkCancellation()
             let presentation = try community.open()
@@ -93,9 +110,14 @@
                 scope: { current() ? scope : nil }, database: database, authorizeRead: authorize)
             let avatarBinding: GatewayCommunityAvatarBinding
             do {
+                // The new domain owns presentation lifetime after this synchronous handoff.
+                guard bootstrap.isCurrent(pending), isCurrentScreen() else {
+                    throw GatewayCommunityFailure.superseded
+                }
                 avatarBinding = try avatars.bind(
                     session: presentation.domain.session,
-                    pendingModeration: pendingModeration?.intent, isCurrent: current)
+                    pendingModeration: pending.upload, pendingReportedPhotoModeration: pending.reportedPhoto,
+                    isCurrent: current)
             } catch {
                 community.invalidate()
                 throw error
@@ -109,6 +131,13 @@
             communityServices = services
             communityPresentationID = id
             return id
+        }
+        /// The parent may disappear between async return and its navigation handoff.
+        func discardCommunity(_ id: UUID) {
+            guard communityPresentationID == id else { return }
+            community.invalidate()
+            communityServices = nil
+            communityPresentationID = nil
         }
         func closeCommunity(_ id: UUID) async {
             await community.close(id)
@@ -195,6 +224,21 @@
                 authorization: auth, journal: reportJournal, isEnabled: { activation.isActive() })
             reportReviews = reports
             relay.reportReviews = reports
+            let photoReviewJournal = GatewayAvatarReportReviewJournal(
+                storage: KeychainGatewayAvatarReportReviewJournalStorage())
+            avatarReportReviewJournal = photoReviewJournal
+            let photoReviews = try GatewayAvatarReportReviewHost(
+                api: GatewayAvatarReportReviewHTTPClient(
+                    configuration: activation.configuration, isEnabled: { activation.isActive() }),
+                configuration: activation.configuration, cloudKit: activation.cloudKit,
+                authorization: auth, journal: photoReviewJournal, isEnabled: { activation.isActive() },
+                publicationChanged: { [weak avatars = self.avatars] in avatars?.observeModeration($0) })
+            avatarReportReviews = photoReviews
+            relay.avatarReportReviews = photoReviews
+            let bootstrap = GatewayCommunityBootstrap(
+                upload: reviewJournal, reportedPhoto: photoReviewJournal)
+            communityBootstrap = bootstrap
+            relay.bootstrap = bootstrap
             let photoJournal = GatewayAvatarReportJournal(
                 storage: KeychainGatewayAvatarReportJournalStorage())
             avatarReportJournal = photoJournal
@@ -239,6 +283,10 @@
                             reviews.invalidate()
                             reports.invalidate()
                             photoReports.invalidate()
+                            photoReviews.invalidate()
+                            bootstrap.invalidate()
+                            try photoReviewJournal.fenceForAccountDeletion(
+                                binding: binding, accountID: accountID)
                             try reviewJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             try reportJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
                             try photoJournal.fenceForAccountDeletion(binding: binding, accountID: accountID)
@@ -264,6 +312,7 @@
                             try await reviewJournal.erase(owner: scope)
                             try await reportJournal.erase(owner: scope)
                             try await photoJournal.erase(owner: scope)
+                            try await photoReviewJournal.erase(owner: scope)
                             let journalScope = try GatewayCommunityScope(
                                 configuration: activation.configuration, privateScope: scope, binding: binding
                             )

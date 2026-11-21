@@ -24,3 +24,5 @@ Szczegółowy plan2d.2b zapisano przed implementacją w [STEROWNIK_OPERATORA_ZGL
 Plan2d.3 zapisano przed kodem w [PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md): najpierw ekran/izolowany podgląd3a, potem Runtime/bootstrap/realny app-hosted Keychain3b.
 
 Stan 2d.3a: lokalnie odebrany [panel SwiftUI i izolowany DEBUG podgląd](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md), 15 nowych scenariuszy i 2 regresje pokryte zaliczonymi przebiegami (pierwszy pełny16/17, końcowy focus4/4). Dalej 2d.3b Runtime/bootstrap dwóch journali/erasure i rzeczywisty aplikacyjny Keychain według zapisanego planu, potem cały rzeczywisty odbiór migracji.
+
+Stan bieżący po2d.3b: lokalnie odebrany [Runtime/Root/bootstrap/erasure i rzeczywisty aplikacyjny Keychain](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME.md),7 nowych funkcji/11 przypadków bootstrapu, pełne841pass+2 sprzętowe skipy obu platform,5/5 UI (2nowe), Debug/Release/strict8. Cały aktywny Runtime/SIWA, schemat/query/ASSET/CDN/zwykłe A-B/hosted Free/alarmy/urządzenia i przełączenie adaptera niezaliczone; dalej przegląd pełnych bramek odbioru, nie rozbudowa modeli zamiast usług.

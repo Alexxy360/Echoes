@@ -1,0 +1,205 @@
+{
+  "stage": "CK-05d.2d.3b",
+  "observedAtUTC": "2026-11-21T13:06:26.526626+00:00",
+  "baselineCommit": "a6d6f1696e6941aa0e95a0d8e5c0192b5d8bb2d9",
+  "sources": {
+    "Docs/DZIENNIK_ZMIAN.md": "98376dd4a00827fe21c571bbb073652884492834c84b71f9da91bc7d167ae5b5",
+    "Docs/NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md": "ba2d97a8df228ff59780d7446552270781903940c656b91a8bfbdee17295f591",
+    "Docs/PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md": "84aabc0b7e420626b171c6d0e9350fa60cd7c8c3f0c3e606fd7ca816b03ae899",
+    "Docs/PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md": "536a67dd8b9370a9f8f7bd508e498bbaf884a112faf3cfda60b66e107215647b",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "44955a184b058020d7586f56d6e09fc77f69680b151aec73501657aa483bf6c6",
+    "Docs/PODLACZENIE_OPERATORA_ZDJEC_RUNTIME.md": "f2e1a2cb03780d3a905df06d8959965121c83675fd112a44a5f72238bfd41a7d",
+    "Docs/PODLACZENIE_OPERATORA_ZDJEC_RUNTIME_PLAN.md": "b774cbacdf17dec2feae6ec5d2412ebdcdcaae0465f92e451c2974f126e0ffe6",
+    "Echo/Services/AvatarReportReviewJournalStorageCheck.swift": "bf37f27ab4aa2f0d298be2b175f77f42ec854f7a9664e65e63fc74c80a9e3d9e",
+    "Echo/Services/GatewayDevelopmentRuntime.swift": "033cdb50333cb53e5ccedadf7a8a4f8fafdcf0455e963e3df24b284988d15c50",
+    "Echo/Services/GatewayStorageCheck.swift": "a5c477b7d3b6013c91701be62ec1d32d429f24f81b957cbc57a90da63ec02ef8",
+    "Echo/Views/AvatarReviewView.swift": "d41c073e2d4d0cecddcc23aaa2c396d5f3cfafacf488609c8b4ed205fcb795e4",
+    "Echo/Views/GatewayAuthCheckView.swift": "b0a75da64be698599ea8a5a81b4e26ade403ecf5ee4438827d9541e1635fce44",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityBootstrap.swift": "e05d50ba991c46b8467689a8ec8428d9a2b4594fdad20caf4210e9dd90ae3433",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityBootstrapTests.swift": "f5dc69fb93f394aa20a4c59e6c50ca226c8aba5e7ec6e3828c3a2646be905f6a",
+    "EchoesUITests/GatewayAvatarReportReviewJournalStorageUITests.swift": "8ac1b92863f31b03e9b05aadb213723b762e9354599f9bc2e6cbfc667d5a1f1e"
+  },
+  "checks": {
+    "newPackageFunctions": 7,
+    "newPackageConcreteCases": 11,
+    "defined": 843,
+    "macOS": {
+      "passed": 841,
+      "skipped": 2,
+      "failed": 0
+    },
+    "iOSSimulator": {
+      "passed": 841,
+      "skipped": 2,
+      "failed": 0
+    },
+    "selectedUI": {
+      "passed": 5,
+      "failed": 0,
+      "new": 2,
+      "regression": 3
+    },
+    "strictSwiftFiles": 8,
+    "actualAppKeychain": true,
+    "aggregateNewFailurePropagated": true,
+    "UIRuntimeWarnings": [],
+    "packageRuntimeWarnings": [],
+    "simulator": "iPhone17Pro/iOS26.1"
+  },
+  "release": {
+    "binary": "/private/tmp/echoes-private-profile-sdk-release/Build/Products/Release-iphoneos/Echoes.app/Echoes",
+    "sha256": "a6d2d75c738554fda3f834fd98e14bf66feebeab3420194e410017d9a7b43e85",
+    "markers": {
+      "ECHOES_GATEWAY_REPORTED_PHOTO_STORAGE_CHECK": false,
+      "ECHOES_GATEWAY_REPORTED_PHOTO_STORAGE_FAULT": false,
+      "ECHOES_REPORTED_PHOTO_REVIEW_JOURNAL_CHECK": false,
+      "ReportedPhotoJournalCheckAPI": false,
+      "ECHOES_AVATAR_REPORT_REVIEW_UI_PREVIEW": false,
+      "AvatarReportReviewPreviewFixture": false
+    }
+  },
+  "logs": {
+    "focus": {
+      "path": "/private/tmp/echoes-community-bootstrap-focus.log",
+      "sha256": "b0b6a57a9eafee5f41acd136382e403a2d283cb0b081624dfb043188981d9885",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [
+        "Test run with 7 tests in 0 suites passed after 0.014 seconds."
+      ],
+      "executed": []
+    },
+    "skeleton-build": {
+      "path": "/private/tmp/echoes-photo-runtime-skeleton-build.log",
+      "sha256": "e287d8a9099faba65e63b6793a0ab41d30b3a2da275e5fcacb0957fe54140320",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [],
+      "executed": []
+    },
+    "debug-build": {
+      "path": "/private/tmp/echoes-photo-runtime-debug-build.log",
+      "sha256": "03fe78b3e9c366210971070bd503830c226986791762640f657f92ffe054a6c7",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [],
+      "executed": []
+    },
+    "debug-final": {
+      "path": "/private/tmp/echoes-photo-runtime-debug-final.log",
+      "sha256": "af9e36290fc6e199fbcc52ea1143bdc9e065489bd296fc341ba11010037b40a4",
+      "testBuildSucceeded": true,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [],
+      "executed": []
+    },
+    "lint-final": {
+      "path": "/private/tmp/echoes-photo-runtime-lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [],
+      "executed": []
+    },
+    "package-mac": {
+      "path": "/private/tmp/echoes-photo-runtime-package-mac.log",
+      "sha256": "39f3308f31f947f06e95066e9a6cf41dc812c4275a5fed7056df1ace646d5c2d",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testSucceeded": false,
+      "swiftTestCount": [
+        "Test run with 843 tests in 0 suites passed after 33.232 seconds."
+      ],
+      "executed": [
+        "Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.002) seconds"
+      ]
+    },
+    "package-sim": {
+      "path": "/private/tmp/echoes-photo-runtime-package-sim.log",
+      "sha256": "23ec7f4ef4e98186d72409ca5cc7f74f331e7818aae8622a49e517c4bf42abaf",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testSucceeded": true,
+      "swiftTestCount": [
+        "Test run with 843 tests in 0 suites passed after 81.588 seconds."
+      ],
+      "executed": [
+        "Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.003) seconds"
+      ]
+    },
+    "ui": {
+      "path": "/private/tmp/echoes-photo-runtime-ui.log",
+      "sha256": "e4c1283612ed945e80d8c8c81dae4fd00813c56fc27d7f0ecdaf5efb0b8e711c",
+      "testBuildSucceeded": false,
+      "buildSucceeded": false,
+      "testSucceeded": true,
+      "swiftTestCount": [],
+      "executed": [
+        "Executed 5 tests, with 0 failures (0 unexpected) in 49.069 (49.081) seconds"
+      ]
+    },
+    "release": {
+      "path": "/private/tmp/echoes-photo-runtime-release.log",
+      "sha256": "f47d306d59c73c793f70253e4094764edbefa8b40f43aa4808956b60b6744671",
+      "testBuildSucceeded": false,
+      "buildSucceeded": true,
+      "testSucceeded": false,
+      "swiftTestCount": [],
+      "executed": []
+    }
+  },
+  "screenshots": [
+    {
+      "path": "Docs/evidence/reported-photo-review-runtime/keychain-passed.png",
+      "source": "/private/tmp/echoes-photo-runtime-ui-attachments/47CBAC18-75AF-48BE-861A-50E681589E2C.png",
+      "sha256": "7cc8b1c4e77b438f9d73db674ef2783afab87c1a85d5fdb3d9f4e2420ee205e8",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-runtime/root-unconfigured.png",
+      "source": "/private/tmp/echoes-photo-runtime-ui-attachments/F4E22841-B0CC-4F7C-B9E5-28FC48C68FA5.png",
+      "sha256": "0d26b59e43f2bd72aff0eeba8d23eb29780e3638ad802f47288a0ec954f7d726",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    },
+    {
+      "path": "Docs/evidence/reported-photo-review-runtime/upload-regression.png",
+      "source": "/private/tmp/echoes-photo-runtime-ui-attachments/48A1B6A7-46BC-477A-9597-01369D3AE4CA.png",
+      "sha256": "684dbf5117966c8da7db2f523db858257ff722a940de8719949571b8a57a2d6f",
+      "visuallyReviewed": true,
+      "unchangedFromExport": true
+    }
+  ],
+  "xcresult": [
+    "/private/tmp/echoes-photo-runtime-ui.xcresult",
+    "/private/tmp/echoes-photo-runtime-package-sim.xcresult"
+  ],
+  "actualComponents": [
+    "new namespace app-hosted Security CRUD/attributes/4096B/owner erasure on random synthetic scopes",
+    "native frame/decoder to hide_photo SavedIntent; real serial journal with canned recovery/retirement",
+    "actual SwiftUI tests and fail-closed unconfigured Root; Debug/Release",
+    "two-read bootstrap with actual journals/memory storage and controlled await seams"
+  ],
+  "modeledComponents": [
+    "all identities/native private scopes/provider roles/HTTP responses",
+    "ready authenticated Root and complete live Runtime not exercised",
+    "no physical encryption proof or real CloudKit acceptance"
+  ],
+  "preserved": {
+    "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  },
+  "limits": [
+    "No backend/schema/Core/deps/CI change; backend958 not repeated",
+    "No new Apple/Cloudflare/phone SDK/roles/keys/secrets/services/activation/cost",
+    "No Production/Firebase/TestFlight changes",
+    "Real SIWA/query/ASSET/CDN/two ordinary A-B/Free/alarms/devices/full migration/cutover remain"
+  ],
+  "next": "Audit full real acceptance gates against current evidence; prepare exact Development scope before any new remote authorization"
+}

@@ -61,7 +61,16 @@
                             Section("Okolica — Development") {
                                 Button("Otwórz mapę i czat") {
                                     Task {
-                                        do { path = [.community(try await runtime.openCommunity())] } catch {
+                                        do {
+                                            let id = try await runtime.openCommunity(isCurrent: {
+                                                scenePhase == .active && path.isEmpty
+                                            })
+                                            guard scenePhase == .active, path.isEmpty else {
+                                                runtime.discardCommunity(id)
+                                                return
+                                            }
+                                            path = [.community(id)]
+                                        } catch {
                                             presentationError = error.localizedDescription
                                         }
                                     }
@@ -73,6 +82,9 @@
                                 NavigationLink("Zgłoszenia", value: Destination.reports)
                                     .disabled(host.phase != .ready || runtime.openingCommunity)
                                     .accessibilityIdentifier("gateway.auth.reports")
+                                NavigationLink("Zgłoszenia zdjęć", value: Destination.photoReports)
+                                    .disabled(host.phase != .ready || runtime.openingCommunity)
+                                    .accessibilityIdentifier("gateway.auth.photoReports")
                                 NavigationLink("Ocena zdjęć", value: Destination.moderation)
                                     .disabled(host.phase != .ready || runtime.openingCommunity)
                                     .accessibilityIdentifier("gateway.auth.moderation")
@@ -131,8 +143,14 @@
                             ReportReviewView(
                                 host: runtime.reportReviews, isCurrent: { path.last == .reports },
                                 beforeOpening: { runtime.prepareReportReview() })
+                        case .photoReports:
+                            AvatarReportReviewView(
+                                host: runtime.avatarReportReviews, isCurrent: { path.last == .photoReports },
+                                beforeOpening: { runtime.prepareReportReview() })
                         case .moderation:
-                            AvatarReviewView(host: runtime.avatarReviews)
+                            AvatarReviewView(
+                                host: runtime.avatarReviews, isCurrent: { path.last == .moderation },
+                                beforeOpening: { runtime.prepareReportReview() })
                         case .deletion: GatewayAccountDeletionView(host: runtime.deletion)
                         case .community(let id):
                             if runtime.community.isCurrent(id), runtime.communityPresentationID == id,
@@ -168,12 +186,18 @@
             .onChange(of: runtime?.authentication.authenticatedIdentity) { _, _ in
                 confirmation = nil
                 presentationError = nil
+                runtime?.invalidateCommunityOpening()
+                runtime?.avatarReportReviews.invalidate()
                 runtime?.deletion.authenticationChanged()
             }
             .onChange(of: runtime?.community.presentation?.id) { _, id in
                 if id == nil, path.contains(where: { $0.communityID != nil }) { path = [] }
             }
             .onChange(of: scenePhase) { _, phase in
+                if phase != .active {
+                    runtime?.invalidateCommunityOpening()
+                    runtime?.avatarReportReviews.setForeground(false)
+                }
                 if phase == .background {
                     runtime?.authentication.suspend()
                     runtime?.deletion.suspend()
@@ -184,6 +208,8 @@
                 }
             }
             .onChange(of: path) { previous, current in
+                runtime?.invalidateCommunityOpening()
+                if current.last != .photoReports { runtime?.avatarReportReviews.setForeground(false) }
                 let closing = previous.compactMap(\.communityID).first
                 Task {
                     if let closing, !current.contains(.community(closing)) {
@@ -193,6 +219,8 @@
                 }
             }
             .onDisappear {
+                runtime?.invalidateCommunityOpening()
+                runtime?.avatarReportReviews.setForeground(false)
                 runtime?.authentication.stop()
                 runtime?.deletion.stop()
             }
@@ -214,6 +242,7 @@
 
         private enum Destination: Hashable {
             case reports
+            case photoReports
             case deletion
             case moderation
             case community(UUID)

@@ -16,6 +16,9 @@
                 let cloudKit = try? CloudKitConfiguration(
                     containerIdentifier: "iCloud.mpvEcho.Echo", environment: .development)
             else { return "configuration-failed" }
+            if ProcessInfo.processInfo.environment["ECHOES_GATEWAY_REPORTED_PHOTO_STORAGE_CHECK"] == "1" {
+                return await checkAvatarReportReview(configuration: config, cloudKit: cloudKit)
+            }
             let storage = KeychainGatewaySessionStorage(configuration: config)
             let deletionStorage = KeychainGatewayDeletionStorage(configuration: config, cloudKit: cloudKit)
             let sessionQuery = query(
@@ -65,6 +68,7 @@
             let reportReview = await checkReportReview(configuration: config, cloudKit: cloudKit)
             let avatarReview = await checkAvatarReview(configuration: config, cloudKit: cloudKit)
             let avatarReport = await checkAvatarReport(configuration: config, cloudKit: cloudKit)
+            let avatarReportReview = await checkAvatarReportReview(configuration: config, cloudKit: cloudKit)
             print("ECHOES_GATEWAY_STORAGE_BEFORE_CLEANUP session=" + report + " deletion=" + deletionReport)
             for (index, item) in [sessionQuery, deletionQuery].enumerated() {
                 let cleanup = SecItemDelete(item as CFDictionary)
@@ -96,6 +100,7 @@
             if reportReview != "passed" { report = reportReview }
             if avatarReview != "passed" { report = avatarReview }
             if avatarReport != "passed" { report = avatarReport }
+            if avatarReportReview != "passed" { report = avatarReportReview }
             // Fixed outcomes only; no synthetic token, encoded payload, attributes or native IDs.
             print("ECHOES_GATEWAY_DELETION_STORAGE_CHECK result=" + deletionReport)
             print("ECHOES_GATEWAY_COMMUNITY_STORAGE_CHECK result=" + communityReport)

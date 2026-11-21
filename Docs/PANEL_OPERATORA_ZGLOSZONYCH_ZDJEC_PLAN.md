@@ -20,6 +20,6 @@ Plan zapisany21 listopada2026 przed implementacją po push da83b6e. Kod hosta/tr
 
 Rzeczywisty SIWA/CloudKit query/ASSET/CDN, nowy schemat EchoesAvatarReportV1, dwa zwykłe konta A/B, Free/hosting/alarmy/limity i urządzenia oraz przełączenie normalnego adaptera i kontrolowane TestFlight. Nie zmieniamy usług, praw/kluczy/sekretów/schematu/Production/danychFirebase lub planu0zł bez konkretnego przygotowanego zakresu. Zastany projekt zachowany, kontakt wsparcia pozostaje później.
 
-Stan: 2d.3a lokalnie odebrany; [kontrakt i wyniki](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md). 15 nowych scenariuszy UI i 2 regresje pokryte zaliczonymi przebiegami; pełny pierwszy przebieg 16/17, końcowy focus 4/4 po poprawce pomocnika AX i komunikatu błędu. Debug/Release/strict7 poprawne. 2d.3b i rzeczywiste bramki niewykonane.
+Stan: 2d.3a lokalnie odebrany; [kontrakt i wyniki](PANEL_OPERATORA_ZGLOSZONYCH_ZDJEC.md). 15 nowych scenariuszy UI i 2 regresje pokryte zaliczonymi przebiegami; pełny pierwszy przebieg 16/17, końcowy focus 4/4 po poprawce pomocnika AX i komunikatu błędu. Debug/Release/strict7 poprawne. 2d.3b następnie odebrany lokalnie, [kontrakt Runtime](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME.md); rzeczywiste bramki nadal niewykonane.
 
 Szczegółowy następny plan3b: [PODLACZENIE_OPERATORA_ZDJEC_RUNTIME_PLAN.md](PODLACZENIE_OPERATORA_ZDJEC_RUNTIME_PLAN.md).

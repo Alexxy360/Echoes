@@ -7,6 +7,7 @@ struct AvatarReviewView: View {
     @Environment(\.scenePhase) private var scenePhase
     let host: GatewayAvatarReviewHost
     var isCurrent: @MainActor @Sendable () -> Bool = { true }
+    var beforeOpening: @MainActor () -> Void = {}
     var preview = false
     @State private var appearance: UUID?
     @State private var attemptedInitialOpen = false
@@ -217,6 +218,7 @@ struct AvatarReviewView: View {
         attemptedInitialOpen = true
         selected = nil
         confirmation = nil
+        beforeOpening()
         host.setForeground(true)
         await run {
             try await host.connect { isCurrent() }
