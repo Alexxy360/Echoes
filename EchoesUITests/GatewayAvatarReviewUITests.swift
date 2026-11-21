@@ -16,6 +16,7 @@ import XCTest
         }
         app.launch()
         XCTAssertTrue(element(app, "avatar.review.previewNotice").waitForExistence(timeout: 15))
+        XCTAssertTrue(element(app, "avatar.review").exists)
         attach(app, "moderator-" + mode + "-initial")
         return app
     }
@@ -25,6 +26,28 @@ import XCTest
         XCTAssertTrue(button.isHittable, String(app.debugDescription.suffix(5000)))
         wait(button, "enabled == true")
         button.tap()
+    }
+    private func reveal(_ app: XCUIApplication, _ id: String, fully: Bool = false) -> XCUIElement {
+        let target = element(app, id)
+        for _ in 0..<16 {
+            let title = app.navigationBars["Potwierdzenie"].exists ? "Potwierdzenie" : "Ocena zdjęć"
+            let top = app.navigationBars[title].frame.maxY + 8
+            let bottom = element(app, "avatar.review.fixture.count").frame.minY - 8
+            if target.exists, target.isHittable,
+                !fully || target.frame.minY >= top && target.frame.maxY <= bottom
+            {
+                return target
+            }
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let up = !target.exists || target.frame.maxY > bottom
+            origin.withOffset(.init(dx: app.frame.width / 2, dy: up ? bottom - 20 : top + 20)).press(
+                forDuration: 0.03,
+                thenDragTo: origin.withOffset(
+                    .init(dx: app.frame.width / 2, dy: up ? top + 20 : bottom - 20)),
+                withVelocity: XCUIGestureVelocity(rawValue: 1500), thenHoldForDuration: 0)
+        }
+        XCTFail("Element is not reachable: " + id)
+        return target
     }
     private func wait(_ value: XCUIElement, _ predicate: String, timeout: TimeInterval = 12) {
         let expected = XCTNSPredicateExpectation(predicate: NSPredicate(format: predicate), object: value)
@@ -105,19 +128,74 @@ import XCTest
         count(app, 1)
         attach(app, "moderator-recovered-after-process-restart")
     }
-    func testNotAppliedRequiresAcknowledgementAndFreshInspection() {
+    func testNotAppliedNeedsExplicitCancelableClosureBeforeAcknowledgementAndFreshInspection() {
         let app = application("not-applied")
         image(app)
         decide(app)
         XCTAssertTrue(element(app, "avatar.review.unknown").waitForExistence(timeout: 10))
         tap(app, "avatar.review.recover")
-        outcome(app, contains: "nie została zastosowana")
+        outcome(app, contains: "nie jest potwierdzona")
+        XCTAssertFalse(app.buttons["avatar.review.acknowledge"].exists)
+        tap(app, "avatar.review.retire")
+        XCTAssertTrue(element(app, "avatar.review.retireConfirmation").waitForExistence(timeout: 5))
+        attach(app, "upload-review-retirement-confirmation")
+        reveal(app, "avatar.review.retireCancel").tap()
+        wait(element(app, "avatar.review.fixture.count"), "value CONTAINS 'Zamknięcia: 0'")
+        tap(app, "avatar.review.retire")
+        reveal(app, "avatar.review.retireConfirm", fully: true).tap()
+        outcome(app, contains: "próba została zamknięta")
+        wait(element(app, "avatar.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        attach(app, "upload-review-retired-no-undo-or-publication")
         XCTAssertFalse(app.buttons["avatar.review.item.0"].exists)
         count(app, 1)
         attach(app, "moderator-not-applied")
         tap(app, "avatar.review.acknowledge")
         tap(app, "avatar.review.refresh")
         image(app)
+        count(app, 1)
+    }
+    func testLostClosureReplySurvivesProcessRestartAndRecoveryNeverResends() {
+        let app = application("retire-lost")
+        image(app)
+        decide(app)
+        XCTAssertTrue(element(app, "avatar.review.unknown").waitForExistence(timeout: 10))
+        tap(app, "avatar.review.retire")
+        reveal(app, "avatar.review.retireConfirm", fully: true).tap()
+        wait(element(app, "avatar.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        wait(element(app, "avatar.review.unknown"), "label CONTAINS 'potwierdzenie zamknięcia'")
+        XCTAssertFalse(app.buttons["avatar.review.acknowledge"].exists)
+        app.terminate()
+        app.launch()
+        XCTAssertTrue(element(app, "avatar.review.unknown").waitForExistence(timeout: 15))
+        count(app, 1)
+        attach(app, "upload-review-retiring-after-process-restart")
+        tap(app, "avatar.review.recover")
+        outcome(app, contains: "próba została zamknięta")
+        wait(element(app, "avatar.review.fixture.count"), "value CONTAINS 'Zamknięcia: 1'")
+        app.terminate()
+        app.launch()
+        outcome(app, contains: "próba została zamknięta")
+        tap(app, "avatar.review.acknowledge")
+        count(app, 1)
+    }
+    func testClosureConfirmationLargestTextAndBackgroundCannotDispatch() {
+        let app = application("not-applied", large: true)
+        image(app)
+        decide(app)
+        XCTAssertTrue(reveal(app, "avatar.review.unknown").exists)
+        tap(app, "avatar.review.retire")
+        XCTAssertTrue(element(app, "avatar.review.retireConfirmation").waitForExistence(timeout: 5))
+        let confirm = reveal(app, "avatar.review.retireConfirm", fully: true)
+        XCTAssertTrue(confirm.isEnabled)
+        attach(app, "upload-review-retirement-largest-text")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(reveal(app, "avatar.review.closed").exists)
+        XCTAssertFalse(app.buttons["avatar.review.retireConfirm"].exists)
+        attach(app, "upload-review-background-closed-largest-text")
+        tap(app, "avatar.review.reconnect")
+        XCTAssertTrue(reveal(app, "avatar.review.unknown").exists)
+        wait(element(app, "avatar.review.fixture.count"), "value CONTAINS 'Zamknięcia: 0'")
         count(app, 1)
     }
     func testSupersededDoesNotClaimHistoricalSuccessOrFailure() {

@@ -27,6 +27,13 @@ public enum GatewayAvatarReviewOutcome: Equatable, Sendable, CustomStringConvert
     case confirmed(revision: String)
     case notApplied
     case superseded
+    case retired
+    public var isTerminal: Bool {
+        switch self {
+        case .notApplied: false
+        case .confirmed, .superseded, .retired: true
+        }
+    }
     public var description: String { "GatewayAvatarReviewOutcome(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }

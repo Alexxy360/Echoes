@@ -67,12 +67,16 @@
             }
         }
     }
-    @MainActor @Observable final class AvatarReviewPreviewStats { var decisions = 0 }
+    @MainActor @Observable final class AvatarReviewPreviewStats {
+        var decisions = 0
+        var retirements = 0
+    }
     actor AvatarReviewPreviewTransport: GatewayAvatarReviewTransport {
         nonisolated let origin = "https://avatar-review-preview.example.invalid"
         private let bytes: Data, root: URL, mode: String
         private let stats: AvatarReviewPreviewStats
-        private var decisions = 0
+        private var decisions = 0, retirements = 0
+        private var retired: [String: String] = [:]
         private var appliedID: String?, appliedRevision: String?, appliedVerdict: String?
         private var loaded = false, released = false
         private var waiting: [CheckedContinuation<Void, Never>] = []
@@ -98,12 +102,19 @@
                 appliedID = object["id"] as? String
                 appliedRevision = object["revision"] as? String
                 appliedVerdict = object["verdict"] as? String
+                retired = object["retired"] as? [String: String] ?? [:]
+                retirements = object["retirements"] as? Int ?? 0
+                guard decisions >= 0, decisions <= 100, retirements >= 0, retirements <= 100,
+                    retired.count <= 32
+                else { throw GatewayAvatarReviewFailure.invalidResponse }
             }
             loaded = true
             await publishStats()
         }
         private func save() throws {
-            var object: [String: Any] = ["decisions": decisions]
+            var object: [String: Any] = [
+                "decisions": decisions, "retired": retired, "retirements": retirements,
+            ]
             object["id"] = appliedID
             object["revision"] = appliedRevision
             object["verdict"] = appliedVerdict
@@ -113,7 +124,11 @@
         }
         private func publishStats() async {
             let count = decisions
-            await MainActor.run { stats.decisions = count }
+            let closed = retirements
+            await MainActor.run {
+                stats.decisions = count
+                stats.retirements = closed
+            }
         }
         func release() {
             released = true
@@ -171,15 +186,18 @@
                 if mode == "delayed", !released { await withCheckedContinuation { waiting.append($0) } }
                 return reply
             case .decide(let intent):
+                if retired[intent.decisionID] != nil {
+                    return try json(["protocolVersion": 1, "error": "AVATAR_REVIEW_STALE"], status: 409)
+                }
                 decisions += 1
-                if mode != "not-applied" && mode != "superseded" {
+                if !["not-applied", "superseded", "retire-lost"].contains(mode) {
                     appliedID = intent.decisionID
                     appliedRevision = UUID().uuidString.lowercased()
                     appliedVerdict = intent.verdict.rawValue
                 }
                 try save()
                 await publishStats()
-                if ["lost", "not-applied", "superseded"].contains(mode) {
+                if ["lost", "not-applied", "superseded", "retire-lost"].contains(mode) {
                     throw GatewayAvatarReviewFailure.unavailable
                 }
                 return try json([
@@ -188,14 +206,35 @@
                     "decisionID": intent.decisionID, "revision": appliedRevision!,
                     "verdict": intent.verdict.rawValue,
                 ])
-            case .recover(let intent):
+            case .recover(let intent), .retire(let intent):
                 let confirmed = appliedID == intent.decisionID && appliedVerdict == intent.verdict.rawValue
+                let closing: Bool
+                if case .retire = operation { closing = true } else { closing = false }
+                let intentHash = SHA256.hash(data: request.httpBody ?? Data()).map {
+                    String(format: "%02x", $0)
+                }.joined()
+                let fresh = retired[intent.decisionID] == nil
+                if let old = retired[intent.decisionID], old != intentHash {
+                    return try json(["protocolVersion": 1, "error": "AVATAR_REVIEW_STALE"], status: 409)
+                }
+                if closing {
+                    retirements += 1
+                    if !confirmed && mode != "superseded" {
+                        retired[intent.decisionID] = intentHash
+                    }
+                    try save()
+                    await publishStats()
+                    if mode == "retire-lost" && fresh { throw GatewayAvatarReviewFailure.unavailable }
+                }
+                let sealed = retired[intent.decisionID] == intentHash
                 return try json([
                     "protocolVersion": 1, "schemaVersion": 1, "accountID": intent.item.accountID,
                     "requestID": intent.item.requestID, "versionID": intent.item.versionID,
                     "generation": intent.item.generation, "reviewRevision": intent.item.reviewRevision,
                     "decisionID": intent.decisionID, "verdict": intent.verdict.rawValue,
-                    "outcome": confirmed ? "confirmed" : mode == "superseded" ? "superseded" : "not-applied",
+                    "outcome": confirmed
+                        ? "confirmed"
+                        : sealed ? "retired" : mode == "superseded" ? "superseded" : "not-applied",
                     "revision": confirmed ? appliedRevision! : NSNull(),
                 ])
             }
@@ -221,8 +260,11 @@
         }
         static func make(mode: String, runID: String) async throws -> AvatarReviewPreviewFixture {
             guard UUID(uuidString: runID)?.uuidString.lowercased() == runID,
-                ["normal", "lost", "not-applied", "superseded", "expiry", "delayed", "denied", "empty"]
-                    .contains(mode)
+                [
+                    "normal", "lost", "not-applied", "superseded", "expiry", "delayed", "denied", "empty",
+                    "retire-lost",
+                ]
+                .contains(mode)
             else { throw GatewayFailure.invalidInput }
             let api = CommunityAvatarPreviewAPI.make(mode: "normal")
             let query = try GatewayAvatarQuery(

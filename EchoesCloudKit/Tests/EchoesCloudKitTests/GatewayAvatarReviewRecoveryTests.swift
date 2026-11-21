@@ -6,6 +6,7 @@ import Testing
 struct ReviewRecoveryWireFixture: Sendable {
     struct Row: Sendable {
         let label: String
+        let action: String
         let intent: GatewayAvatarReviewRecoveryIntent
         let response: GatewayAvatarHTTPResponse
         let expected: GatewayAvatarReviewOutcome
@@ -37,10 +38,12 @@ struct ReviewRecoveryWireFixture: Sendable {
             case "confirmed": expected = .confirmed(revision: try #require(body["revision"] as? String))
             case "not-applied": expected = .notApplied
             case "superseded": expected = .superseded
+            case "retired": expected = .retired
             default: throw GatewayAvatarReviewFailure.invalidResponse
             }
             return Row(
-                label: try #require(row["label"] as? String), intent: intent,
+                label: try #require(row["label"] as? String), action: row["action"] as? String ?? "recover",
+                intent: intent,
                 response: .init(
                     status: try #require(row["status"] as? Int),
                     headers: try #require(row["headers"] as? [String: String]),
@@ -49,13 +52,17 @@ struct ReviewRecoveryWireFixture: Sendable {
     }
 }
 
-@Test func avatarReviewRecoveryDecodesAllFiveActualServerOutcomesWithoutInspection() async throws {
+@Test func avatarReviewOutcomesDecodeEightConcreteServerRepliesWithExplicitRetirement() async throws {
     let f = try ReviewRecoveryWireFixture()
-    #expect(f.rows.count == 5)
+    #expect(f.rows.count == 8)
     for row in f.rows {
         let stub = ReviewHTTPStub(row.response)
-        let result = try await reviewClient(stub, clock: ReviewClock(1_800_000_000_000)).recover(
-            row.intent, token: reviewBearer)
+        let client = try reviewClient(stub, clock: ReviewClock(1_800_000_000_000))
+        let result =
+            try await
+            (row.action == "retire"
+            ? client.retire(row.intent, token: reviewBearer)
+            : client.recover(row.intent, token: reviewBearer))
         #expect(result.intent == row.intent && result.outcome == row.expected)
         #expect(await stub.requests.count == 1)
     }

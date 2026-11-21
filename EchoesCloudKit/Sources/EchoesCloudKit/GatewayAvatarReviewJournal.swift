@@ -37,7 +37,9 @@ public struct GatewayAvatarReviewJournalLease: Sendable, CustomStringConvertible
     public var description: String { "GatewayAvatarReviewJournalLease(<redacted>)" }
     public var customMirror: Mirror { Mirror(self, children: [:]) }
 }
-public enum GatewayAvatarReviewJournalPhase: String, Codable, Sendable { case prepared, dispatched, resolved }
+public enum GatewayAvatarReviewJournalPhase: String, Codable, Sendable {
+    case prepared, dispatched, retiring, resolved
+}
 public struct GatewayAvatarReviewJournalEntry: Equatable, Sendable, CustomStringConvertible, CustomReflectable
 {
     public let intent: GatewayAvatarReviewRecoveryIntent
@@ -56,7 +58,7 @@ public protocol GatewayAvatarReviewJournalStorage: Sendable {
     func erase(owner: PrivateAccountScope) throws
 }
 
-/// One metadata intent per native/private/origin scope. No receipt, image, bearer or automatic retry.
+/// One metadata intent per native/private/origin scope. No inspection receipt, image bytes, bearer or automatic retry.
 /// A single Runtime owns the store; leases also fence overlapping host instances on MainActor.
 private final class AvatarReviewJournalBackend: @unchecked Sendable {
     // All backend fields and synchronous Security calls are confined to this serial GCD queue.
@@ -80,6 +82,7 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
             return .entry(try load(scope)?.entry?.value())
         case .prepare(let intent, let lease): return .entry(try prepare(intent, lease: lease))
         case .dispatch(let entry, let lease): return .entry(try dispatched(entry, lease: lease))
+        case .retire(let entry, let lease): return .entry(try retiring(entry, lease: lease))
         case .resolve(let entry, let result, let lease):
             return .entry(try resolve(entry, result: result, lease: lease))
         case .acknowledge(let entry, let lease):
@@ -139,6 +142,7 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
             let intent = try intent.value()
             guard gatewayUUID(revision) else { throw GatewayAvatarReviewJournalFailure.unavailable }
             let result: GatewayAvatarReviewOutcome?
+            var returnedPhase = phase
             switch outcome {
             case nil:
                 guard phase != .resolved, resultRevision == nil else {
@@ -150,14 +154,21 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
                     resultRevision != intent.item.reviewRevision
                 else { throw GatewayAvatarReviewJournalFailure.unavailable }
                 result = .confirmed(revision: resultRevision)
-            case "not-applied", "superseded":
+            case "not-applied":
+                guard phase != .prepared, resultRevision == nil else {
+                    throw GatewayAvatarReviewJournalFailure.unavailable
+                }
+                // V1 formerly stored this point-in-time observation as resolved. Preserve its ID but withhold ACK.
+                if phase == .resolved { returnedPhase = .dispatched }
+                result = .notApplied
+            case "superseded", "retired":
                 guard phase == .resolved, resultRevision == nil else {
                     throw GatewayAvatarReviewJournalFailure.unavailable
                 }
-                result = outcome == "not-applied" ? .notApplied : .superseded
+                result = outcome == "retired" ? .retired : .superseded
             default: throw GatewayAvatarReviewJournalFailure.unavailable
             }
-            return .init(intent: intent, phase: phase, revision: revision, outcome: result)
+            return .init(intent: intent, phase: returnedPhase, revision: revision, outcome: result)
         }
     }
     private struct Record: Codable {
@@ -264,13 +275,28 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
         try save(value, scope: lease.scope)
         return try value.entry!.value()
     }
+    private func retiring(_ entry: GatewayAvatarReviewJournalEntry, lease: GatewayAvatarReviewJournalLease)
+        throws -> GatewayAvatarReviewJournalEntry
+    {
+        var value = try exact(entry, lease)
+        guard entry.phase != .resolved else { throw GatewayAvatarReviewJournalFailure.invalidTransition }
+        if entry.phase == .retiring { return entry }
+        value.entry!.phase = .retiring
+        value.entry!.revision = UUID().uuidString.lowercased()
+        try save(value, scope: lease.scope)
+        return try value.entry!.value()
+    }
     private func resolve(
         _ entry: GatewayAvatarReviewJournalEntry, result: GatewayAvatarReviewRecoveryResult,
         lease: GatewayAvatarReviewJournalLease
     ) throws -> GatewayAvatarReviewJournalEntry {
         var value = try exact(entry, lease)
         guard result.intent == entry.intent else { throw GatewayAvatarReviewJournalFailure.invalidTransition }
-        value.entry!.phase = .resolved
+        guard entry.phase != .resolved || entry.outcome == result.outcome && result.outcome.isTerminal else {
+            throw GatewayAvatarReviewJournalFailure.invalidTransition
+        }
+        value.entry!.phase =
+            result.outcome.isTerminal ? .resolved : entry.phase == .retiring ? .retiring : .dispatched
         value.entry!.revision = UUID().uuidString.lowercased()
         switch result.outcome {
         case .confirmed(let revision):
@@ -281,6 +307,9 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
             value.entry!.resultRevision = nil
         case .superseded:
             value.entry!.outcome = "superseded"
+            value.entry!.resultRevision = nil
+        case .retired:
+            value.entry!.outcome = "retired"
             value.entry!.resultRevision = nil
         }
         let result = try value.entry!.value()
@@ -298,7 +327,9 @@ private final class AvatarReviewJournalBackend: @unchecked Sendable {
         throws
     {
         var value = try exact(entry, lease)
-        guard entry.phase == .resolved else { throw GatewayAvatarReviewJournalFailure.invalidTransition }
+        guard entry.phase == .resolved, entry.outcome?.isTerminal == true else {
+            throw GatewayAvatarReviewJournalFailure.invalidTransition
+        }
         value.entry = nil
         try save(value, scope: lease.scope)
     }
@@ -320,6 +351,7 @@ private enum AvatarReviewJournalCommand: Sendable {
     case pending(GatewayAvatarReviewJournalLease)
     case prepare(GatewayAvatarReviewRecoveryIntent, GatewayAvatarReviewJournalLease)
     case dispatch(GatewayAvatarReviewJournalEntry, GatewayAvatarReviewJournalLease)
+    case retire(GatewayAvatarReviewJournalEntry, GatewayAvatarReviewJournalLease)
     case resolve(
         GatewayAvatarReviewJournalEntry, GatewayAvatarReviewRecoveryResult, GatewayAvatarReviewJournalLease)
     case acknowledge(GatewayAvatarReviewJournalEntry, GatewayAvatarReviewJournalLease)
@@ -358,8 +390,9 @@ private enum AvatarReviewJournalReply: Sendable {
     public func isActive(_ lease: GatewayAvatarReviewJournalLease) -> Bool {
         allowed(lease.scope) && active?.id == lease.id && active?.scope == lease.scope
     }
-    /// Read-only bootstrap before binding community photos. No record creation or lease rotation.
+    /// Read-only bootstrap before binding the report panel. No record creation or lease rotation.
     public func peek(scope: GatewayAvatarReviewScope) async throws -> GatewayAvatarReviewJournalEntry? {
+        if Task.isCancelled { throw GatewayFailure.cancelled }
         guard allowed(scope) else { throw GatewayAvatarReviewJournalFailure.inactive }
         let start = epoch
         guard case .entry(let entry) = try await backend.execute(.peek(scope)) else {
@@ -370,6 +403,7 @@ private enum AvatarReviewJournalReply: Sendable {
         return entry
     }
     public func open(scope: GatewayAvatarReviewScope) async throws -> GatewayAvatarReviewJournalLease {
+        if Task.isCancelled { throw GatewayFailure.cancelled }
         guard allowed(scope) else { throw GatewayAvatarReviewJournalFailure.inactive }
         active = nil
         epoch = UUID()
@@ -420,6 +454,7 @@ private enum AvatarReviewJournalReply: Sendable {
     private func entry(_ command: AvatarReviewJournalCommand, lease: GatewayAvatarReviewJournalLease)
         async throws -> GatewayAvatarReviewJournalEntry?
     {
+        if Task.isCancelled { throw GatewayFailure.cancelled }
         guard isActive(lease) else { throw GatewayAvatarReviewJournalFailure.inactive }
         guard case .entry(let value) = try await backend.execute(command) else {
             throw GatewayAvatarReviewJournalFailure.unavailable
@@ -447,6 +482,14 @@ private enum AvatarReviewJournalReply: Sendable {
         }
         return result
     }
+    public func retiring(_ value: GatewayAvatarReviewJournalEntry, lease: GatewayAvatarReviewJournalLease)
+        async throws -> GatewayAvatarReviewJournalEntry
+    {
+        guard let result = try await entry(.retire(value, lease), lease: lease) else {
+            throw GatewayAvatarReviewJournalFailure.unavailable
+        }
+        return result
+    }
     public func resolve(
         _ value: GatewayAvatarReviewJournalEntry, result: GatewayAvatarReviewRecoveryResult,
         lease: GatewayAvatarReviewJournalLease
@@ -459,6 +502,7 @@ private enum AvatarReviewJournalReply: Sendable {
     public func acknowledge(_ value: GatewayAvatarReviewJournalEntry, lease: GatewayAvatarReviewJournalLease)
         async throws
     {
+        if Task.isCancelled { throw GatewayFailure.cancelled }
         guard isActive(lease) else { throw GatewayAvatarReviewJournalFailure.inactive }
         _ = try await backend.execute(.acknowledge(value, lease))
         guard isActive(lease) else { throw GatewayAvatarReviewJournalFailure.inactive }

@@ -1,3 +1,4 @@
+import { AvatarReviewRetirementError, avatarReviewRetirementSchema, readAvatarReviewRetirement, createAvatarReviewRetirement, eraseAvatarReviewRetirements } from "./avatar-review-decision-retirements.mjs";
 import { randomUUID } from "node:crypto";
 import { plain, publicUUID, digest, inputHash, validTag, recordIdentity } from "./public-record-schema.mjs";
 import { avatarDescriptor, avatarDescriptorHash } from "./avatar-record-schema.mjs";
@@ -12,6 +13,7 @@ export class AvatarPolicyError extends Error {
 const uuid = value => { if (typeof value !== "string" || !publicUUID.test(value)) throw new AvatarPolicyError("AVATAR_INPUT"); return value; };
 export const avatarPolicySchema = Object.freeze([
   ...avatarReviewSchema,
+  ...avatarReviewRetirementSchema,
   `CREATE TABLE IF NOT EXISTS avatar_profiles_v1(account_id TEXT PRIMARY KEY,generation INTEGER NOT NULL DEFAULT 0,
     request_id TEXT,version_id TEXT,ready INTEGER NOT NULL DEFAULT 0,pointer_tag TEXT,
     upload_window INTEGER,upload_count INTEGER NOT NULL DEFAULT 0,updated_at INTEGER NOT NULL DEFAULT 0)`,
@@ -24,6 +26,7 @@ export const avatarPolicySchema = Object.freeze([
 ]);
 /** Called inside the same disabled-owner transaction as the other community policy tables. */
 export function eraseAvatarPolicy(storage, accountID) {
+  eraseAvatarReviewRetirements(storage, accountID);
   storage.sql.exec("DELETE FROM avatar_review_receipts_v1 WHERE account_id=? OR reviewer_key=?", accountID, avatarReviewerKey(accountID));
   storage.sql.exec("DELETE FROM avatar_jobs_v1 WHERE account_id=?", accountID);
   storage.sql.exec("DELETE FROM avatar_profiles_v1 WHERE account_id=?", accountID);
@@ -41,7 +44,7 @@ export class AvatarPolicyState {
       migrateAvatarSelectionExpiry(storage);
     });
   }
-  #tx(action) { try { return this.#storage.transactionSync(action); } catch (e) { throw e instanceof AvatarPolicyError ? e : new AvatarPolicyError(); } }
+  #tx(action) { try { return this.#storage.transactionSync(action); } catch (e) { if (e instanceof AvatarReviewRetirementError) throw new AvatarPolicyError(e.code === "CONFLICT" ? "AVATAR_STALE" : e.code === "CAPACITY" ? "AVATAR_CAPACITY" : undefined); throw e instanceof AvatarPolicyError ? e : new AvatarPolicyError(); } }
   #rows(sql, ...args) { return this.#storage.sql.exec(sql, ...args).toArray(); }
   async #durable() { try { await this.#storage.sync(); } catch { throw new AvatarPolicyError(); } }
   #now() { const now = this.#clock(); if (!Number.isSafeInteger(now) || now < 0) throw new AvatarPolicyError(); return now; }
@@ -199,6 +202,8 @@ export class AvatarPolicyState {
       this.#active(accountID); const intent = this.#lease(accountID); if (intent.requestID !== requestID || intent.kind !== "select") throw new AvatarPolicyError("AVATAR_STALE");
       const job = this.#job(accountID, requestID); this.#descriptor(intent);
       if (!validTag(job.staged_tag)) throw new AvatarPolicyError("AVATAR_PENDING");
+      if (readAvatarReviewRetirement(this.#storage, { accountID, requestID, versionID: job.version_id, generation: job.generation,
+        reviewRevision: expectedRevision, decisionID, verdict, reviewerID }, this.#now())) throw new AvatarPolicyError("AVATAR_STALE");
       if (job.decision_id === decisionID) {
         if (job.decision_expected_revision !== expectedRevision || job.moderation_state !== verdict || job.reviewer_key !== digest(reviewerID)) throw new AvatarPolicyError("AVATAR_STALE");
       } else {
@@ -216,11 +221,14 @@ export class AvatarPolicyState {
     if (profile.requestID !== value.requestID || job?.decision_id !== value.decisionID || job.moderation_revision !== value.revision || job.moderation_state !== value.verdict) throw new AvatarPolicyError("AVATAR_STALE"); }); }
   /** Read-only recovery of an exact durable decision, never a renewed inspection or mutation.
    * A missing/replaced/deleted current selection cannot prove the historical outcome. */
-  reviewOutcome({ accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID } = {}) {
+  reviewOutcome(query) { return this.#tx(() => this.#reviewOutcome(query)); }
+  #reviewOutcome({ accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID } = {}) {
     for (const value of [accountID, requestID, versionID, reviewRevision, decisionID, reviewerID]) uuid(value);
     if (!Number.isSafeInteger(generation) || generation < 1 || generation >= Number.MAX_SAFE_INTEGER ||
         !["approved", "rejected"].includes(verdict)) throw new AvatarPolicyError("AVATAR_INPUT");
-    return this.#tx(() => {
+    if (readAvatarReviewRetirement(this.#storage, { accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID }, this.#now()))
+      return Object.freeze({ outcome: "retired", revision: null });
+    {
       const unknown = Object.freeze({ outcome: "superseded", revision: null });
       let current;
       try { this.#active(accountID); current = this.#lease(accountID); }
@@ -236,7 +244,29 @@ export class AvatarPolicyState {
       }
       return job.moderation_revision === reviewRevision
         ? Object.freeze({ outcome: "not-applied", revision: null }) : unknown;
+    }
+  }
+  /** Explicit own-nonce closure. Never publishes, rejects a whole job, or undoes a known decision. */
+  async retireReview({ accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID, authorize } = {}) {
+    if (typeof authorize !== "function") throw new AvatarPolicyError("AVATAR_INPUT");
+    let permitted; try { permitted = authorize(); } catch { throw new AvatarPolicyError("AVATAR_SCOPE"); }
+    if (permitted && typeof permitted.then === "function") { void Promise.resolve(permitted).catch(() => {}); throw new AvatarPolicyError("AVATAR_SCOPE"); }
+    if (permitted !== true) throw new AvatarPolicyError("AVATAR_SCOPE");
+    const query = { accountID, requestID, versionID, generation, reviewRevision, decisionID, verdict, reviewerID };
+    const result = this.#tx(() => {
+      // This endpoint uses a verified ordinary moderator session; legacy internal review grants remain separate.
+      this.#active(reviewerID);
+      const known = this.#reviewOutcome(query);
+      if (["confirmed", "retired"].includes(known.outcome)) return known;
+      const job = this.#job(accountID, requestID);
+      if (known.outcome === "superseded" && job?.decision_id && job.version_id === versionID && job.generation === generation && job.decision_expected_revision === reviewRevision) return known;
+      createAvatarReviewRetirement(this.#storage, query, this.#now());
+      return Object.freeze({ outcome: "retired", revision: null });
     });
+    await this.#durable();
+    const latest = this.reviewOutcome(query);
+    if (latest.outcome !== result.outcome || latest.revision !== result.revision) throw new AvatarPolicyError("AVATAR_STALE");
+    return latest;
   }
   #publishLease(intent) {
     this.#current(intent); if (intent.kind !== "select") throw new AvatarPolicyError("AVATAR_STALE");

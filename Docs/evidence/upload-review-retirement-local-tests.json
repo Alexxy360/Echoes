@@ -1,0 +1,395 @@
+{
+  "stage": "CK-05d.2c.2",
+  "date": "2026-11-21",
+  "baselineCommit": "eb2d2f425acca8a112b0b84b458d6cac0c6827af",
+  "scope": "Local upload moderation retirement: separate transaction barrier, HTTP, native journal/host/publication fence and explicit UI. No hosted activation.",
+  "sources": {
+    "Docs/DZIENNIK_ZMIAN.md": "317541a750ec3651f4351bade99607e35ee19e795a1ffaee0f1a7b65ca40cacc",
+    "Docs/HTTP_MODERACJI_ZDJEC.md": "ba657c65179f07dee4c71c1f002de3180a4e55eac06b9c200fa9d9533478d6d4",
+    "Docs/MAGAZYN_I_HOST_MODERACJI_IOS.md": "ea6d558839a55290b823c8a47e286a00d5646bc75b6a153270f73070f165738c",
+    "Docs/NATYWNA_MODERACJA_HTTP.md": "419b322dc777dc7fa017bb20628660220a3c8fb57c88ab110c6c7a265ddef680",
+    "Docs/ODZYSKIWANIE_DECYZJI_MODERACJI.md": "72dd670d097be704c38e8bd411eebc0350e45306a9ac93fbd4ea68dfb78bf265",
+    "Docs/PANEL_MODERACJI_ZDJEC_IOS.md": "410795c1bf0c710c0b79a003f91de7a84ab1bf9e05371d29b2384785d5564d01",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "1e8d50c7ee6c94f7ca746f8043e843567a90bb91e82513e8b5c5f1bfa100dd51",
+    "Docs/ZAMYKANIE_DECYZJI_UPLOADU_PLAN.md": "707773f0439881c0f841b8c573ed6d365e0ec564e81cd5b0448fcdce6cf14675",
+    "Docs/ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md": "c27779652fa2a2c5ea03d225f7ef0d749e7e06e444755cd9d878945f9ef2d552",
+    "Echo/Services/AvatarReviewJournalStorageCheck.swift": "ed1454bb4b8a645d1e88ba4df0b761169a5ae58e443feff498b7b308af1bcc04",
+    "Echo/Services/AvatarReviewPreviewFixture.swift": "39f5a7dcd6f77f2c73c6623d240befbb2b183e9633f974036bb93f6b61793fbd",
+    "Echo/Services/GatewayStorageCheck.swift": "3b0f6d41d3a3d547fc9ec712163d839c0cd600e5e99dc113ec0ed8b91539ccf4",
+    "Echo/Views/AvatarReviewPreviewView.swift": "9e8f76daded215ca14a3a886156955710ae77be34098a958e1ff5c38ae040bd8",
+    "Echo/Views/AvatarReviewView.swift": "4a3e593c89d28b5d64b93a65de5c9eade30cedf91c669a57541ff35ed7e21897",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewHTTPClient.swift": "af5baccf9951d97ce07680fcc70bda60082cb39c7017a8a8bb0059233a91d3d8",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewHost.swift": "632b259c89dd9f3db2c0526f27d6b2d94b70b0b1017675437bd46882f66abae3",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewJournal.swift": "aa6cb901c5898007c28f998ed6ffe539d36386297b08497913826ce5609665fd",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewModels.swift": "d1e26a333a3779813b74c55411ed41f430cb326aa88bb22b23473f813889ce22",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReviewRecovery.swift": "a4633616d3f037b0667efbc80ca492d5951cd31daef89cb6e22fba72af1f1cc0",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "765abc3f3fd5f61e4ffe931b154ae25e33b7ab52ff25099b4670f57212e5c78b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-review-recovery/responses.json": "665b22a0fc7debe04ae0669302cce202fbe867fe0371ea5e5c2aa2edc525516f",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewHostTests.swift": "1e8ddde5817a118ef7779383fb9f2e426f4b99262517b9a264e39a73ca8d0319",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewJournalTests.swift": "70f0c29f524e86aae44c9b3d770b7ee004f1b9c629bccda3e93a1d60620c64b9",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewRecoveryTests.swift": "7208627b880943539aa943cc37684095376e524722e62ce13c2d8ffec49ffc13",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewRetirementTests.swift": "3f4159e7f8a42ec17e134a65233f4bb835b38844d6c0d70120fd4b93167476b0",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewTests.swift": "a317439a1f6025cbfd36d4420cd39b642f960e75ede4e4566413ceff6040e61f",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReviewTransportTests.swift": "a6be077983b8e4fe6a4404bfcdae46f5b3530a0d8c06c548f6d7f90350cb592b",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "a1a0699bfd1876f2eb8433b0df2a33a252e6b3ce7dec970d224d90fe1a9680bf",
+    "EchoesUITests/GatewayAvatarReviewUITests.swift": "cd10f9bd9b3a9cab16454122e520bcc318aaf27baecd87b470c572c2ba385572",
+    "gateway/scripts/export-avatar-review-recovery-native-fixture.mjs": "105901f35b272ad03face19bfd052fd8e3c728f941467e378913d87792736b04",
+    "gateway/src/avatar-policy-state.mjs": "53d6177bbacf42a135915796f17c955d86eccc0f3ecac0c3d170f507cf632a74",
+    "gateway/src/avatar-review-coordinator.mjs": "f3539b20e1cfff83a4c93d64cd1ff8189754c0e8681456780779e950394ef865",
+    "gateway/src/avatar-review-decision-retirements.mjs": "8b1f51f728f8f3dbee5fd9b9af05cb62177a983c0395e0d3769817eff9ceb10e",
+    "gateway/src/avatar-review-http.mjs": "b0ca3e26abce76bc06be056a562193f57387687ffa995513664339d16c33a8e4",
+    "gateway/src/gateway-avatar-review.mjs": "2d2234dd81c65d675a8bfa5b83077d44876deab682b163ffb79dc2ee6df25262",
+    "gateway/src/gateway-maintenance.mjs": "e97929dc3bc5238dadd6bc270e64909832184222d5b06e1e0455b5db94f4f68b",
+    "gateway/test/avatar-review-retirement-workerd.test.mjs": "52706c85478bc914420770bfa5d19fc5f9717dc7592f9d5aebaa560246eb50d5",
+    "gateway/test/avatar-review-retirement.test.mjs": "950a16e281ae0d650613007a5d4b824ac4bcfcec82aa4c777287130da6655a24",
+    "gateway/test/avatar-review-workerd.test.mjs": "1a9b108081de1a32ef2c3b77076298b137f799de736d99764ba6bface224a902",
+    "gateway/test/support/avatar-review-http-fixture.mjs": "b29c7ae22e453c76a86e497fc0f463c93d16927d82928f1a4064b59a7f2fdfaf",
+    "gateway/test/support/avatar-upload-workerd-proof.mjs": "0c91e5d03ca8425c4d18e10270797dd57222015a3621910487d0daf429d88dab"
+  },
+  "backend": {
+    "newFunctions": 17,
+    "fullRuns": [
+      {
+        "node": "22.23.5",
+        "tests": 958,
+        "passed": 958,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "node": "24.22.1",
+        "tests": 958,
+        "passed": 958,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "syntaxMJSPerRuntime": 206,
+    "focusFinal": {
+      "tests": 66,
+      "passed": 66
+    },
+    "workerd": {
+      "tests": 1,
+      "passed": 1,
+      "real": [
+        "local DO SQLite",
+        "edge/Authority/Runtime HTTP",
+        "P256/crypto/Wasm",
+        "runtime recreation"
+      ],
+      "modeled": [
+        "Apple",
+        "CDN",
+        "SIWA",
+        "accounts",
+        "IP"
+      ],
+      "outbound": "denied",
+      "notProven": [
+        "hosted Free",
+        "eviction",
+        "power loss",
+        "PITR",
+        "ordinary A/B"
+      ]
+    },
+    "wireFixtures": {
+      "responses": 8,
+      "generatorBothRuntimes": true,
+      "recoveryAssetDownloads": 0
+    }
+  },
+  "native": {
+    "newFunctions": 10,
+    "fullRuns": [
+      {
+        "platform": "macOS",
+        "defined": 741,
+        "passed": 739,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      },
+      {
+        "platform": "iOS 26.1 iPhone 17 Pro Simulator",
+        "defined": 741,
+        "passed": 739,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      }
+    ],
+    "strictChangedSwiftFiles": 19,
+    "debugBuildForTesting": "passed after correcting new diagnostic response type",
+    "releaseUnsignedFinal": "passed; debug fixture strings excluded"
+  },
+  "ui": {
+    "distinctPassedScenarios": 13,
+    "avatarReviewCases": 12,
+    "aggregateRealAppKeychainCases": 1,
+    "fullRun": {
+      "tests": 13,
+      "passed": 11,
+      "failed": 2,
+      "cause": "outer avatar.review identifier shadowed retire confirmation Form identifier"
+    },
+    "finalFocusedRun": {
+      "tests": 3,
+      "passed": 3,
+      "failed": 0,
+      "cases": [
+        "closure confirmation AX XXXL/background",
+        "not-applied cancel/explicit close/ACK/fresh inspection",
+        "lost retirement ACK with actual process restart"
+      ]
+    },
+    "notASingleFinalFull13of13": true,
+    "other10NotRepeated": "Only accessibility identifier scope changed; core/API/host unchanged. Focused cases also assert normal root and material/decision path.",
+    "keychain": "Real app Keychain retiring/reopen/retired, WhenUnlockedThisDeviceOnly, noSync, bounded and exact erasure of 3 synthetic scopes; canned API, not device lock/encryption proof.",
+    "restart": "Actual app process restart with separate synthetic disk journal/provider, not Keychain restart or remote service"
+  },
+  "negativeControls": [
+    {
+      "mutation": "omit transaction retirement guard immediately before effect",
+      "selected": 1,
+      "failedTests": 1,
+      "assertions": 1,
+      "sourceUnchanged": true
+    },
+    {
+      "mutation": "omit terminal result validation in native retire",
+      "selected": 1,
+      "failedTests": 1,
+      "issues": 2,
+      "sourceUnchanged": true
+    }
+  ],
+  "failedAttempts": [
+    "first focus 65/66: new test attempted erasure of active synthetic owner; fixture disabled owner, preserved guard",
+    "first local workerd sandbox loopback bind denied; authorized same local retry passed",
+    "first Debug: wrong new diagnostic GatewayAvatarReviewHTTPResponse name corrected to GatewayAvatarHTTPResponse",
+    "full UI 11/13: confirmation AX identifier shadowed, corrected Form identifier placement and focused 3/3 passed"
+  ],
+  "logs": {
+    "focus": {
+      "path": "/private/tmp/echoes-upload-review-retirement-focus.log",
+      "sha256": "7744b07dd0026ad16a85ad5db53f7377c76fc7fe3840739ee5471c0f0f4db3f8",
+      "bytes": 18058
+    },
+    "focus2": {
+      "path": "/private/tmp/echoes-upload-review-retirement-focus2.log",
+      "sha256": "8eaf21a6e6dda3268f4ad31a8685859e3ae0d1a2cb179b744301ec1f087576f1",
+      "bytes": 17007
+    },
+    "workerd": {
+      "path": "/private/tmp/echoes-upload-review-retirement-workerd.log",
+      "sha256": "b54076d14e003e7e5432626c12c9ec32ebf8204489bab24df267f1f14f383a3e",
+      "bytes": 1593
+    },
+    "workerd2": {
+      "path": "/private/tmp/echoes-upload-review-retirement-workerd2.log",
+      "sha256": "8149cda3271cef031ca1f17fc55ccc3f6baefae8732774b071aab93e54419fc2",
+      "bytes": 611
+    },
+    "wire22": {
+      "path": "/private/tmp/echoes-upload-review-retirement-wire22.log",
+      "sha256": "b0da55a6fa129fcc9086b55baee41472d685795ef58b55dce66e732ad0c1c7ca",
+      "bytes": 259
+    },
+    "wire24": {
+      "path": "/private/tmp/echoes-upload-review-retirement-wire24.log",
+      "sha256": "b3775b0b91c42e0bd4425385ac24c88adcc476ffee30ad4f24edc9d117011dc2",
+      "bytes": 90
+    },
+    "full22": {
+      "path": "/private/tmp/echoes-upload-review-retirement-full22.log",
+      "sha256": "94e346f7979b915ea87e3f5d5fdb020158ee63cf58c4e7568a58452fae9bc4ad",
+      "bytes": 254977
+    },
+    "full24": {
+      "path": "/private/tmp/echoes-upload-review-retirement-full24.log",
+      "sha256": "760854da8ee910c511fb4ba74b1027770334d73fb095de410992afdf08366218",
+      "bytes": 104955
+    },
+    "swift-full": {
+      "path": "/private/tmp/echoes-upload-review-retirement-swift-full.log",
+      "sha256": "738471ee5638747e2bb385debad452b75154965ca441b05249bb9dbe0e6b94e6",
+      "bytes": 152063
+    },
+    "native-focus": {
+      "path": "/private/tmp/echoes-upload-review-retirement-native-focus.log",
+      "sha256": "d9cc35320fb0b07d00f63b1260ca44598d841eb66db92acb17b69ef4e36ebe47",
+      "bytes": 28578
+    },
+    "package-sim": {
+      "path": "/private/tmp/echoes-upload-review-retirement-package-sim.log",
+      "sha256": "e8dc3e55152d4f0f565082df6c930d6f11ad6b476cb1293e29929d24119fbf7e",
+      "bytes": 310889
+    },
+    "ui": {
+      "path": "/private/tmp/echoes-upload-review-retirement-ui.log",
+      "sha256": "3f2be3e13205f149cae3d0a7382d8b0c50183ed0168ec9d1da7025795c496163",
+      "bytes": 172273
+    },
+    "ui-focused": {
+      "path": "/private/tmp/echoes-upload-review-retirement-ui-focused.log",
+      "sha256": "279991ed62f445e906b3d9346671577cdf3901f3c99aff07f1880ceb26cd9a88",
+      "bytes": 182870
+    },
+    "negative": {
+      "path": "/private/tmp/echoes-upload-review-retirement-negative.log",
+      "sha256": "4927246b9c3970d0e21f8cefc1b0bbdcad9e30262ac4924fc6db4ce82fdd800e",
+      "bytes": 1068
+    },
+    "native-negative": {
+      "path": "/private/tmp/echoes-upload-review-retirement-native-negative.log",
+      "sha256": "30aa6f13ea61f45dd31ee6e1f00f6b630510df9361830a69cb1ac13536d2431c",
+      "bytes": 11963
+    },
+    "debug-build": {
+      "path": "/private/tmp/echoes-upload-review-retirement-debug-build.log",
+      "sha256": "8c0aebb845db0539b61863aaa1c3e7ad81523486eb5f5f9dfd0c7006bff95f86",
+      "bytes": 992377
+    },
+    "debug-final": {
+      "path": "/private/tmp/echoes-upload-review-retirement-debug-final.log",
+      "sha256": "41af3aa416d24b8ce219d4cffb93dd0b70d853db085c92716a243c04cce8bb0b",
+      "bytes": 164799
+    },
+    "release": {
+      "path": "/private/tmp/echoes-upload-review-retirement-release.log",
+      "sha256": "84d820968a3ae241bcfc388648d0bcae4db8d683597df9f1239ebed7d2382154",
+      "bytes": 1070074
+    },
+    "release-final": {
+      "path": "/private/tmp/echoes-upload-review-retirement-release-final.log",
+      "sha256": "ca7d893e0a95399908c4724f359ae5db3d9c9d9bc3c46ff95fe4700b9c81bc3b",
+      "bytes": 124145
+    },
+    "native-build": {
+      "path": "/private/tmp/echoes-upload-review-retirement-native-build.log",
+      "sha256": "7e73586d2105ecc502bd75f3664bebce8cd7d163c59594d97318ec6725d4edae",
+      "bytes": 165
+    },
+    "swift-lint": {
+      "path": "/private/tmp/echoes-upload-review-retirement-swift-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "keychain-lint-final": {
+      "path": "/private/tmp/echoes-upload-review-retirement-keychain-lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "ui-lint-final": {
+      "path": "/private/tmp/echoes-upload-review-retirement-ui-lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "syntax": {
+      "path": "/private/tmp/echoes-upload-review-retirement-syntax.json",
+      "sha256": "c5cfe7ad3558960b118c04112e708f39807f59ca00e28fe08c644f39d66c0c03",
+      "result": [
+        {
+          "runtime": "v22.23.5",
+          "syntaxMJS": 206,
+          "failed": 0
+        },
+        {
+          "runtime": "v24.22.1",
+          "syntaxMJS": 206,
+          "failed": 0
+        }
+      ]
+    },
+    "negative-preparation": {
+      "path": "/private/tmp/echoes-upload-review-retirement-negative-preparation.json",
+      "sha256": "7ef67c55349c64a60f27c10fd97589c4f80afdb63ee9aa7a2f525027610cf728",
+      "result": {
+        "copy": "/private/tmp/echoes-upload-review-retirement-negative",
+        "sourceSHA256": "53d6177bbacf42a135915796f17c955d86eccc0f3ecac0c3d170f507cf632a74",
+        "mutation": "Omit only the retirement check immediately before the upload policy effect",
+        "test": "upload retirement after receipt claim stops the old coordinator before its policy effect"
+      }
+    },
+    "native-negative-preparation": {
+      "path": "/private/tmp/echoes-upload-review-retirement-native-negative-preparation.json",
+      "sha256": "5f948a489c04c044d4659597560f881049d12af9f241b6b72f6dbc96abb27904",
+      "result": {
+        "copy": "/private/tmp/echoes-upload-review-retirement-native-negative",
+        "sourceSHA256": "632b259c89dd9f3db2c0526f27d6b2d94b70b0b1017675437bd46882f66abae3",
+        "mutation": "Omit only terminal-result validation after explicit retire response",
+        "test": "avatarReviewRetirementRejectsNonterminalReplyAndWrongCapturedIntent"
+      }
+    },
+    "release-exclusion": {
+      "path": "/private/tmp/echoes-upload-review-retirement-release-exclusion.json",
+      "sha256": "b48e51ae591052deecf391431eee9b605bd1da25c3432b1cd4478c6da6832d62",
+      "result": {
+        "releaseDebugFixtureExcluded": true,
+        "absentStrings": [
+          "retire-lost",
+          "EchoesAvatarReviewUIPreview",
+          "ECHOES_AVATAR_REVIEW_UI_PREVIEW",
+          "ECHOES_AVATAR_REVIEW_JOURNAL_CHECK"
+        ],
+        "binarySHA256": "4aab90dc3ea50a11ed0d465fe3ab77caa570d6ff6235f729f065a63363f300b7"
+      }
+    }
+  },
+  "screenshots": [
+    {
+      "path": "Docs/evidence/upload-review-retirement/upload-review-background-closed-largest-text.png",
+      "sha256": "74652d2dbb812e47f5ef31102f5417335b2293bc99b9ae1c792c36b8bd275b62",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-focused-attachments/3A23C265-4AA2-4C81-AC65-075B0B6FFBC1.png",
+      "syntheticOnly": true
+    },
+    {
+      "path": "Docs/evidence/upload-review-retirement/upload-review-retirement-largest-text.png",
+      "sha256": "1be36a6a5441540768ee493efa7d245da8846b5665f85ff03f7be97ca8652a80",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-focused-attachments/604ED12E-CAE9-4FCE-A1BD-4BF3339D1D8A.png",
+      "syntheticOnly": true
+    },
+    {
+      "path": "Docs/evidence/upload-review-retirement/upload-review-retiring-after-process-restart.png",
+      "sha256": "89175bf4ccc3cb259588cc111cd40f00ce5d6c4935d34bbfbaf7fd975f3e4fc5",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-focused-attachments/33F1D430-0734-4A89-8554-0D85AFECE4BB.png",
+      "syntheticOnly": true
+    },
+    {
+      "path": "Docs/evidence/upload-review-retirement/upload-review-retired-no-undo-or-publication.png",
+      "sha256": "8d2dd1f88e1536f2fcb865ea6c8b03f9db86c06378d79b108323eecc6478dc18",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-focused-attachments/C6DBF55B-698F-4268-B623-A3534930D931.png",
+      "syntheticOnly": true
+    },
+    {
+      "path": "Docs/evidence/upload-review-retirement/upload-review-retirement-confirmation.png",
+      "sha256": "a8d82223eb0e2d0e6d832e3445fe2f77d06a020ea401884561975800d2eae2cd",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-focused-attachments/90E68BEF-2F21-4F88-A30D-A70A2F72DB4E.png",
+      "syntheticOnly": true
+    },
+    {
+      "path": "Docs/evidence/upload-review-retirement/app-keychain-aggregate-passed.png",
+      "sha256": "a6c56242eef7dbe6f6d56c15da9f35ee046467fb20f19f2a483f3eb65427fd04",
+      "visuallyReviewed": true,
+      "source": "/private/tmp/echoes-upload-review-retirement-ui-all-attachments/DDDBA47A-E554-44B0-9C9E-DFBF05534BB6.png",
+      "syntheticOnly": true
+    }
+  ],
+  "preserved": {
+    "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  },
+  "limits": [
+    "no Apple/Cloudflare/device SDK operation",
+    "no new schema/roles/keys/secrets/service activation/cost",
+    "no Production/Firebase/TestFlight changes",
+    "ordinary A/B not done; owner-admin model only accepted",
+    "real SIWA/query/ASSET/CDN/Free/alarms/devices and complete migration/cutover remain",
+    "native photo-report moderator next; EchoesAvatarReportV1 schema still local proposal"
+  ]
+}

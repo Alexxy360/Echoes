@@ -1,16 +1,20 @@
 # CK-04e.3j.3b — zamknięte HTTP i Runtime moderacji zdjęć
 
+Aktualizacja CK-05d.2c.2: piąta operacja `retire` zamyka własną niepewną próbę, a `recover` dodatkowo odczytuje retired. [Aktualny kontrakt i odbiór](ZAMYKANIE_DECYZJI_UPLOADU_PLAN.md). Liczby starszych etapów poniżej pozostają historyczne.
+
 Wewnętrzny [podgląd i trwała decyzja 3a](OPERATOR_MODERACJI_ZDJEC.md) są połączone z rzeczywistymi funkcjami edge, prywatnej Authority i Runtime. To lokalnie sprawdzona implementacja, nie aktywacja usługi lub nadanie roli na prawdziwym koncie. Domyślna konfiguracja nadal ma GATEWAY_ENABLED=0, AVATAR_REVIEW_ENABLED=0 i AVATAR_REVIEWER_IDS_JSON=[]; nie zmieniono zdalnych bindings, sekretów, planu lub danych.
 
 ## Kontrakt
 
-Wszystkie trasy wymagają HTTPS, POST, natywnego żądania bez Origin i zweryfikowanego gateway bearer80. Nie przyjmują cookies, operatorID, roli, downloadURL, CloudKit receipt lub rewizji decyzji z klienta.
+Wszystkie trasy wymagają HTTPS, POST, natywnego żądania bez Origin i zweryfikowanego gateway bearer80. Nie przyjmują cookies, operatorID, roli, downloadURL, CloudKit receipt lub wynikowej rewizji decyzji z klienta. Recover/retire przyjmują wcześniej zaobserwowaną reviewRevision dokładnego uploadu jako część intencji; nie jest ona rewizją wyniku nadawaną przez serwer.
 
 | Trasa | Zamknięte JSON body | Sukces |
 | --- | --- | --- |
 | /v1/moderation/avatar/queue | {} | protocolVersion=1, schemaVersion=1, items do20 |
 | /v1/moderation/avatar/inspect | accountID, requestID | JPEG200, dokładny manifest i X-Echoes-Avatar-Review |
 | /v1/moderation/avatar/decide | inspectionID, decisionID, verdict=approved/rejected | protocolVersion/schemaVersion, inspectionID, accountID, requestID, decisionID, revision, verdict |
+| /v1/moderation/avatar/recover | accountID,requestID,versionID,generation,reviewRevision,decisionID,verdict | dokładne metadane i confirmed/not-applied/superseded/retired; wyłącznie odczyt |
+| /v1/moderation/avatar/retire | te same siedem pól co recover | retired/confirmed/superseded; jawne zamknięcie własnej próby, bez publikowania/cofania |
 
 Queue item zawiera tylko accountID/requestID/versionID/generation/reviewRevision. Jedno konto ma najwyżej jedną pozycję. Decyzja jest skorelowana z inspectionID/decisionID/verdict wejścia, a właściciel/wersja/oczekiwana rewizja wynikają z trwałego potwierdzenia. Niższy prepareReview nie dostał publicznej trasy. /v1/community/avatar/review nadal nie istnieje.
 
@@ -22,7 +26,7 @@ Błędy mają wyłącznie protocolVersion/error. AVATAR_REVIEW_INPUT400, SCOPE40
 
 ## Rola, konfiguracja i limity
 
-Rola moderatora jest ustawieniem bramki, nie rolą Apple Developer lub tożsamością serwisową CloudKit. Wymagana osobna tożsamość serwisowa CloudKit nadal pozostaje do przygotowania i rzeczywistego odbioru.
+Rola moderatora jest ustawieniem bramki, nie rolą Apple Developer lub tożsamością serwisową CloudKit. Właściciel przyjął później [model Individual](MODEL_UPRAWNIEN_INDIVIDUAL.md): jego konto jest również administratorem danych CloudKit, z dostępem administracyjnym poza ograniczeniem3km. Nie jest to dowód odcięcia zwykłych kont; rzeczywiste A/B pozostaje wymagane. Lista moderatorów gateway nadal pochodzi z osobnej konfiguracji serwera, nie z samego faktu bycia administratorem Apple.
 
 AVATAR_REVIEWER_IDS_JSON jest serwerową listą najwyżej16 unikalnych UUID kont gateway, do2048 znaków; nie e-mailami lub Apple subject. Lista jest kanonicznie sortowana. Włączenie przeglądu wymaga niepustej listy, COMMUNITY/PUBLIC_RECORDS/ACCOUNT_DELETION oraz dokładnych hostów pobierania. Nie wymaga włączenia uploadu, peer read lub fabryki kodeka, bo moderator musi móc obsłużyć istniejące treści po zatrzymaniu intake. Błędna konfiguracja nie przechodzi walidacji aktywacji.
 

@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.1 — natywny kontrakt moderacji zdjęć
 
+Aktualizacja CK-05d.2c.2: `GatewayAvatarReviewHTTPClient.retire` używa siedmiu pól recovery i dopuszcza tylko terminalne retired/confirmed/superseded. Wspólny transport przypina także nową ścieżkę. Parser recover dodatkowo odczytuje retired, bez mutacji. Generator daje osiem konkretnych odpowiedzi; native URLSession sprawdza również retire. [Kontrakt i dowody](ZAMYKANIE_DECYZJI_UPLOADU_PLAN.md).
+
 GatewayAvatarReviewHTTPClient obsługuje zamknięte queue/inspect/decide z [kontraktu serwera](HTTP_MODERACJI_ZDJEC.md). Jest domyślnie wyłączony. Nie został jeszcze podłączony do Runtime ani UI i nie nadaje roli moderatora. Nie aktywowano usług zdalnych, sekretów lub opłat.
 
 Kolejka zawiera najwyżej20 unikalnych kont i wyłącznie ID żądania/wersji/rewizji oraz bezpieczną dodatnią generację. Podgląd wymaga pełnego JPEG200, dokładnego manifestu oraz potwierdzenia zgodnego z całym wyborem z kolejki: konto, request, version, generation i reviewRevision. Długość, SHA256 i marker JPEG są sprawdzane niezależnie od dekodera; rzeczywisty ImageIO dekoduje poza aktorem UI. Nie ma wariantu204, cache moderatora, offline, URL dostawcy, GPS lub roli z klienta.

@@ -234,6 +234,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
             owner = intent.item.accountID
             addModerationFence(intent)
         case .resolved(let result):
+            guard result.outcome.isTerminal else { return }
             owner = result.intent.item.accountID
             guard moderationFences[owner]?.remove(result.intent.decisionID) != nil else { return }
             if moderationFences[owner]?.isEmpty == true { moderationFences.removeValue(forKey: owner) }

@@ -2,24 +2,25 @@
   "schemaVersion": 1,
   "source": "Concrete local edge/Authority/Runtime/SQLite/policy; modeled Apple/accounts/files/platform only",
   "intent": {
-    "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-    "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-    "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+    "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+    "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+    "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
     "generation": 1,
-    "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-    "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+    "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+    "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
     "verdict": "approved"
   },
   "cases": [
     {
       "label": "not-applied",
+      "action": "recover",
       "input": {
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "approved"
       },
       "status": 200,
@@ -32,26 +33,27 @@
       "body": {
         "protocolVersion": 1,
         "schemaVersion": 1,
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "approved",
         "outcome": "not-applied",
         "revision": null
       }
     },
     {
-      "label": "confirmed-after-expiry",
+      "label": "retire-pending",
+      "action": "retire",
       "input": {
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "857c0d85-de90-49de-8996-0589da8cf854",
         "verdict": "approved"
       },
       "status": 200,
@@ -64,26 +66,126 @@
       "body": {
         "protocolVersion": 1,
         "schemaVersion": 1,
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "857c0d85-de90-49de-8996-0589da8cf854",
+        "verdict": "approved",
+        "outcome": "retired",
+        "revision": null
+      }
+    },
+    {
+      "label": "retired-recovery",
+      "action": "recover",
+      "input": {
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "857c0d85-de90-49de-8996-0589da8cf854",
+        "verdict": "approved"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "857c0d85-de90-49de-8996-0589da8cf854",
+        "verdict": "approved",
+        "outcome": "retired",
+        "revision": null
+      }
+    },
+    {
+      "label": "confirmed-after-expiry",
+      "action": "recover",
+      "input": {
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
+        "verdict": "approved"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "approved",
         "outcome": "confirmed",
-        "revision": "aee20fde-c318-4cb8-bdd2-1266a750c21d"
+        "revision": "3ba28890-9da0-43fe-86bd-7ae13b53a50d"
+      }
+    },
+    {
+      "label": "retire-already-confirmed",
+      "action": "retire",
+      "input": {
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
+        "verdict": "approved"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
+        "generation": 1,
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
+        "verdict": "approved",
+        "outcome": "confirmed",
+        "revision": "3ba28890-9da0-43fe-86bd-7ae13b53a50d"
       }
     },
     {
       "label": "different-decision",
+      "action": "recover",
       "input": {
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "b5354d12-be63-4a3b-bfc4-ba413b0dcf93",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "4eac206e-30fe-4ecb-ade8-450ad0f5685f",
         "verdict": "approved"
       },
       "status": 200,
@@ -96,12 +198,12 @@
       "body": {
         "protocolVersion": 1,
         "schemaVersion": 1,
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "b5354d12-be63-4a3b-bfc4-ba413b0dcf93",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "4eac206e-30fe-4ecb-ade8-450ad0f5685f",
         "verdict": "approved",
         "outcome": "superseded",
         "revision": null
@@ -109,13 +211,14 @@
     },
     {
       "label": "different-verdict",
+      "action": "recover",
       "input": {
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "rejected"
       },
       "status": 200,
@@ -128,12 +231,12 @@
       "body": {
         "protocolVersion": 1,
         "schemaVersion": 1,
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "rejected",
         "outcome": "superseded",
         "revision": null
@@ -141,13 +244,14 @@
     },
     {
       "label": "withdrawn",
+      "action": "recover",
       "input": {
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "approved"
       },
       "status": 200,
@@ -160,12 +264,12 @@
       "body": {
         "protocolVersion": 1,
         "schemaVersion": 1,
-        "accountID": "3ac8ddb5-f920-4059-a069-b835deae3c1d",
-        "requestID": "e13c6418-06d5-47fd-aa91-ea2252f969b6",
-        "versionID": "de6f4ac0-9ade-4476-b076-571ed55c01f8",
+        "accountID": "7d1bbeb6-94e6-4781-b41e-b5329ebf5944",
+        "requestID": "0cbd86f9-2c1d-4e77-8979-95f6680471c2",
+        "versionID": "b6717e64-69cf-48b0-955c-22cdeba18f58",
         "generation": 1,
-        "reviewRevision": "73d05c08-12be-4b50-883a-2cf3c6f17e98",
-        "decisionID": "77dc5417-f5eb-457d-bc36-47ed53aac649",
+        "reviewRevision": "5267574e-6a53-4c4b-96c4-0f606bc2935a",
+        "decisionID": "532d3711-66c4-45ba-8605-9747d7f0c877",
         "verdict": "approved",
         "outcome": "superseded",
         "revision": null

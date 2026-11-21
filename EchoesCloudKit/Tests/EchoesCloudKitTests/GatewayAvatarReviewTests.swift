@@ -173,6 +173,7 @@ func reviewInspection(_ f: ReviewWireFixture, clock: ReviewClock? = nil) async t
         case .inspect: _ = try await client.inspect(f.item, token: reviewBearer)
         case .decide: _ = try await client.decide(intent, token: reviewBearer)
         case .recover(let recovery): _ = try await client.recover(recovery, token: reviewBearer)
+        case .retire(let recovery): _ = try await client.retire(recovery, token: reviewBearer)
         }
         let request = try #require(await stub.requests.first)
         #expect(

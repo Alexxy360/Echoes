@@ -15,7 +15,7 @@ export class AvatarReviewCoordinator {
     isEnabled = () => false, isOperator = () => false, clock = Date.now, fetchImplementation = fetch,
     verifiedDownloadHosts = [], timeoutMilliseconds = 8000 } = {}) {
     if (typeof authentication?.authorize !== "function" || typeof communityState?.assertActive !== "function" ||
-        ["reviewContent", "assertReviewContent", "reviewQueue", "review", "assertReviewCurrent", "reviewOutcome"].some(k => typeof avatarPolicy?.[k] !== "function") ||
+        ["reviewContent", "assertReviewContent", "reviewQueue", "review", "assertReviewCurrent", "reviewOutcome", "retireReview"].some(k => typeof avatarPolicy?.[k] !== "function") ||
         ["get", "reserve", "confirm", "claim", "finish"].some(k => typeof receipts?.[k] !== "function") ||
         typeof registry?.readAvatarAssetCommitments !== "function" || typeof client?.lookup !== "function" || typeof client.waitForPendingOperations !== "function" ||
         typeof checkpoint?.verify !== "function" || typeof checkpoint.advance !== "function" ||
@@ -47,6 +47,8 @@ export class AvatarReviewCoordinator {
     if (e instanceof AvatarReviewError) return e;
     if (e instanceof AvatarDownloadError || ["PUBLIC_RESPONSE", "PUBLIC_INPUT", "PUBLIC_SCOPE", "PUBLIC_CONFLICT"].includes(e?.code)) return new AvatarReviewError("AVATAR_REVIEW_RESPONSE");
     if (["AVATAR_STALE", "PUBLIC_ERASED"].includes(e?.code)) return new AvatarReviewError("AVATAR_REVIEW_STALE");
+    if (e?.code === "AVATAR_SCOPE") return new AvatarReviewError("AVATAR_REVIEW_SCOPE");
+    if (e?.code === "AVATAR_CAPACITY") return new AvatarReviewError("AVATAR_REVIEW_CAPACITY");
     if (e?.code === "AVATAR_PENDING") return new AvatarReviewError("AVATAR_REVIEW_PENDING");
     if (["PUBLIC_LIMIT", "PUBLIC_THROTTLED"].includes(e?.code)) return new AvatarReviewError("AVATAR_REVIEW_RATE");
     if (e?.code === "INVALID_SESSION" || e?.code === "COMMUNITY_STALE") return new AvatarReviewError("AVATAR_REVIEW_SCOPE");
@@ -175,6 +177,25 @@ export class AvatarReviewCoordinator {
         const current = permit(); this.#policy.assertReviewCurrent(result);
         if (current.result_revision !== result.revision) throw new AvatarReviewError("AVATAR_REVIEW_STALE");
         return Object.freeze({ schemaVersion: 1, inspectionID: o.inspectionID, ...result });
+      };
+    });
+  }
+  async prepareRetirement(value = {}) {
+    const keys = ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"];
+    const o = this.#options(value, keys);
+    if (typeof o.reviewRevision !== "string" || !publicUUID.test(o.reviewRevision) || !Number.isSafeInteger(o.generation) ||
+        o.generation < 1 || o.generation >= Number.MAX_SAFE_INTEGER || !["approved", "rejected"].includes(o.verdict)) throw new AvatarReviewError("AVATAR_REVIEW_INPUT");
+    return this.#prepare(o, async ({ identity, check, signal }) => {
+      await this.#checkpoint.verify({ signal }); check();
+      const query = { ...Object.fromEntries(keys.map(k => [k, o[k]])), reviewerID: identity.operatorID };
+      let outcome;
+      try { outcome = await this.#policy.retireReview({ ...query, authorize: () => { check(); return true; } }); }
+      catch (error) { check(); await this.#checkpoint.advance({ signal }); throw error; }
+      check(); await this.#checkpoint.advance({ signal }); check();
+      return () => {
+        const current = this.#policy.reviewOutcome(query);
+        if (!["retired", "confirmed", "superseded"].includes(current.outcome) || current.outcome !== outcome.outcome || current.revision !== outcome.revision) throw new AvatarReviewError("AVATAR_REVIEW_STALE");
+        return Object.freeze({ schemaVersion: 1, ...Object.fromEntries(keys.map(k => [k, o[k]])), ...current });
       };
     });
   }

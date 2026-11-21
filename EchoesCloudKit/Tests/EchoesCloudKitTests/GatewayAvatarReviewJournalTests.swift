@@ -157,7 +157,7 @@ func reviewStoreIntent() throws -> GatewayAvatarReviewRecoveryIntent {
     async throws
 {
     for outcome in [
-        GatewayAvatarReviewOutcome.confirmed(revision: UUID().uuidString.lowercased()), .notApplied,
+        GatewayAvatarReviewOutcome.confirmed(revision: UUID().uuidString.lowercased()), .retired,
         .superseded,
     ] {
         let storage = ReviewMemoryStorage()

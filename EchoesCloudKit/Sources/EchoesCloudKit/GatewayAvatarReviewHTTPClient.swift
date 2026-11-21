@@ -9,6 +9,14 @@ public protocol GatewayAvatarReviewAPI: Sendable {
         -> GatewayAvatarReviewDecisionResult
     func recover(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
         -> GatewayAvatarReviewRecoveryResult
+    func retire(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
+}
+extension GatewayAvatarReviewAPI {
+    /// Unsupported legacy adapters remain closed; a read-only absence never seals a decision.
+    public func retire(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
+    { throw GatewayAvatarReviewFailure.unavailable }
 }
 public protocol GatewayAvatarReviewTransport: Sendable {
     func send(_ request: URLRequest, operation: GatewayAvatarReviewOperation) async throws
@@ -129,7 +137,18 @@ public struct GatewayAvatarReviewHTTPClient: GatewayAvatarReviewAPI {
     public func recover(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
         -> GatewayAvatarReviewRecoveryResult
     {
-        let (response, _, _) = try await perform(.recover(intent), token: token)
+        try await outcome(intent, operation: .recover(intent), token: token)
+    }
+    public func retire(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
+    {
+        try await outcome(intent, operation: .retire(intent), token: token)
+    }
+    private func outcome(
+        _ intent: GatewayAvatarReviewRecoveryIntent, operation: GatewayAvatarReviewOperation,
+        token: GatewaySecret
+    ) async throws -> GatewayAvatarReviewRecoveryResult {
+        let (response, _, _) = try await perform(operation, token: token)
         _ = try avatarReviewObject(
             response.body,
             keys: [
@@ -157,12 +176,15 @@ public struct GatewayAvatarReviewHTTPClient: GatewayAvatarReviewAPI {
                 throw GatewayAvatarReviewFailure.invalidResponse
             }
             outcome = .confirmed(revision: revision)
-        case "not-applied", "superseded":
+        case "not-applied", "superseded", "retired":
             guard value.revision == nil else { throw GatewayAvatarReviewFailure.invalidResponse }
-            outcome = value.outcome == "not-applied" ? .notApplied : .superseded
+            outcome =
+                value.outcome == "not-applied"
+                ? .notApplied : value.outcome == "retired" ? .retired : .superseded
         default: throw GatewayAvatarReviewFailure.invalidResponse
         }
         try checkActivation()
+        if case .retire = operation, !outcome.isTerminal { throw GatewayAvatarReviewFailure.invalidResponse }
         return .init(intent: intent, outcome: outcome)
     }
     private func perform(_ operation: GatewayAvatarReviewOperation, token: GatewaySecret) async throws

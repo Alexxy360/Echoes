@@ -28,6 +28,7 @@
                                 )
                                 .font(.caption).frame(maxWidth: .infinity).padding(8)
                                 .background(.bar).accessibilityIdentifier("avatar.review.fixture.count")
+                                .accessibilityValue("Zamknięcia: \(fixture.stats.retirements)")
                             }
                     } else if failed {
                         ContentUnavailableView("Podgląd niedostępny", systemImage: "exclamationmark.triangle")
@@ -48,6 +49,8 @@
         }
     }
     #Preview("Kolejka moderatora") { AvatarReviewPreviewView(mode: "normal") }
+    #Preview("Niepewna decyzja") { AvatarReviewPreviewView(mode: "not-applied") }
+    #Preview("Utrata potwierdzenia zamknięcia") { AvatarReviewPreviewView(mode: "retire-lost") }
     #Preview("Brak uprawnień") { AvatarReviewPreviewView(mode: "denied") }
     #Preview("Pusta kolejka") { AvatarReviewPreviewView(mode: "empty") }
 #endif

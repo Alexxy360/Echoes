@@ -12,7 +12,7 @@ public enum GatewayAvatarReviewFailure: Error, Equatable, Sendable, LocalizedErr
         case .busy: "Poczekaj na zakończenie bieżącej operacji moderacji."
         case .denied: "To konto nie ma teraz dostępu do moderacji."
         case .stale: "Podgląd wygasł lub zdjęcie się zmieniło. Otwórz świeży podgląd."
-        case .pending: "Wynik decyzji jest niepewny. Ponów wyłącznie tę samą zapisaną decyzję."
+        case .pending: "Wynik decyzji jest niepewny. Sprawdź wynik lub zamknij zapisaną próbę."
         case .limited: "Odczekaj chwilę przed kolejną operacją moderacji."
         }
     }
@@ -120,12 +120,14 @@ public enum GatewayAvatarReviewOperation: Equatable, Sendable, CustomStringConve
     case inspect(GatewayAvatarReviewItem)
     case decide(GatewayAvatarReviewDecisionIntent)
     case recover(GatewayAvatarReviewRecoveryIntent)
+    case retire(GatewayAvatarReviewRecoveryIntent)
     var action: String {
         switch self {
         case .queue: "queue"
         case .inspect: "inspect"
         case .decide: "decide"
         case .recover: "recover"
+        case .retire: "retire"
         }
     }
     func wire() throws -> Data {
@@ -138,7 +140,7 @@ public enum GatewayAvatarReviewOperation: Equatable, Sendable, CustomStringConve
                 "inspectionID": intent.receipt.inspectionID, "decisionID": intent.decisionID,
                 "verdict": intent.verdict.rawValue,
             ]
-        case .recover(let intent):
+        case .recover(let intent), .retire(let intent):
             fields = [
                 "accountID": intent.item.accountID, "requestID": intent.item.requestID,
                 "versionID": intent.item.versionID, "generation": intent.item.generation,

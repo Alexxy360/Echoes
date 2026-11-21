@@ -63,6 +63,7 @@
             } catch { deletionReport = "storage-failed" }
             let communityReport = await checkCommunity(configuration: config, cloudKit: cloudKit)
             let reportReview = await checkReportReview(configuration: config, cloudKit: cloudKit)
+            let avatarReview = await checkAvatarReview(configuration: config, cloudKit: cloudKit)
             let avatarReport = await checkAvatarReport(configuration: config, cloudKit: cloudKit)
             print("ECHOES_GATEWAY_STORAGE_BEFORE_CLEANUP session=" + report + " deletion=" + deletionReport)
             for (index, item) in [sessionQuery, deletionQuery].enumerated() {
@@ -93,6 +94,7 @@
             if deletionReport != "passed" { report = deletionReport }
             if communityReport != "passed" { report = communityReport }
             if reportReview != "passed" { report = reportReview }
+            if avatarReview != "passed" { report = avatarReview }
             if avatarReport != "passed" { report = avatarReport }
             // Fixed outcomes only; no synthetic token, encoded payload, attributes or native IDs.
             print("ECHOES_GATEWAY_DELETION_STORAGE_CHECK result=" + deletionReport)

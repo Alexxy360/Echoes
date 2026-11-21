@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.2a — wynik decyzji po utracie ACK
 
+Aktualizacja CK-05d.2c.2: not-applied pozostaje nieostateczne i nie daje ACK. Osobne retire utrwala własną barierę; nie dowodzi historycznego niewykonania i nie cofa efektu. [Aktualny kontrakt](ZAMYKANIE_DECYZJI_UPLOADU_PLAN.md), poprzednie wyniki poniżej są historyczne.
+
 Podczas przygotowania trwałego hosta wykryto brak w kontrakcie: decide wymaga90-sekundowego potwierdzenia i dokładnego bearer. Po restarcie, odnowieniu sesji lub usunięciu wygasłego potwierdzenia sam zapis decisionID nie pozwalał sprawdzić wyniku. Ponowny inspect unieważniłby dawny receipt; nowa decyzja nie jest odzyskaniem starej. Dlatego przed magazynem/ekranem dodano ograniczony odczyt wyniku. To uzupełnienie planowanego odzyskiwania, bez zmiany celu migracji.
 
 ## Kontrakt i znaczenie wyniku
@@ -9,16 +11,17 @@ POST /v1/moderation/avatar/recover przyjmuje wyłącznie accountID, requestID, v
 | outcome | Znaczenie | revision |
 | --- | --- | --- |
 | confirmed | Aktualne żądanie/wersja/generacja mają dokładnie ten decisionID, oczekiwaną rewizję, verdict i autora decyzji odpowiadającego obecnemu moderatorowi | UUID wyniku różny od oglądanej rewizji |
-| not-applied | Bieżąca ta sama selekcja nadal ma oglądaną rewizję; ten decisionID nie jest zapisanym wynikiem | null |
+| not-applied | Bieżąca ta sama selekcja nadal ma oglądaną rewizję; ten decisionID nie jest zapisanym wynikiem. Stan chwilowy, brak ACK | null |
+| retired | Własna próba została zamknięta trwałą barierą; nie może później zmienić polityki. Nie jest to dowód braku dawnego skutku | null |
 | superseded | Nie można potwierdzić tej decyzji na bieżącej selekcji: np. inne ID/rewizja/operator, zastąpienie, wycofanie, zawieszenie lub usunięcie właściciela | null |
 
-superseded nie dowodzi, że dawna decyzja nigdy nie nastąpiła. To odczyt ostatniego aktualnego job, nie bezterminowe archiwum historii. Dane bieżącego job istnieją do jego retencji/usunięcia; inna decyzja może zastąpić te metadane. not-applied jest obserwacją bieżącego stanu, nie prawem wykonania mutacji. Po nim nowa decyzja wymaga świeżego podglądu i świadomej akcji; odczyt nie przedłuża receipt ani nie przywraca możliwości użycia wygasłego decide.
+superseded nie dowodzi, że dawna decyzja nigdy nie nastąpiła. To odczyt ostatniego aktualnego job, nie bezterminowe archiwum historii. Dane bieżącego job istnieją do jego retencji/usunięcia; inna decyzja może zastąpić te metadane. not-applied jest obserwacją bieżącego stanu, nie prawem wykonania mutacji. Po nim zachowujemy ID i blokadę, dopóki ręczny recover lub jawny retire nie potwierdzi terminalnego wyniku. Retire ma te same siedem pól, rolę i limity; nie akceptuje not-applied jako sukcesu. Dopiero lokalne ACK terminalnego wyniku zwalnia journal, a nowa decyzja wymaga świeżego podglądu i świadomej akcji. Odczyt nie przedłuża receipt ani nie przywraca możliwości użycia wygasłego decide.
 
 ## Bariery i iOS
 
 Trasa korzysta z tej samej domyślnie wyłączonej flagi, serwerowej listy moderatorów, HTTPS/POST/native origin, global/IP heavy i30/min moderatora, deadline oraz retained admission. Rola i tożsamość są sprawdzane przed body i po await. Wewnętrzny koordynator weryfikuje checkpoint i ponownie oblicza wynik w finalizerze; zmiana stanu/roli po przygotowaniu odcina wynik. Czyta wyłącznie lokalną politykę decyzji, nie pobiera zdjęcia, nie tworzy/odnawia receipt, nie zapisuje decyzji ani ready/publikacji. Checkpoint i quota zachowują swoje istniejące IO.
 
-Nowa sesja tego samego uprawnionego konta może odzyskać metadane. Inne konto nie dostaje confirmed dla decyzji poprzedniego moderatora. Cudze/usunięte lub zmienione selekcje zwracają wyłącznie superseded i pola już dostarczone przez klienta, bez starej rewizji, obrazu lub danych profilu. Zmiana roli nadal odmawia dostępu całej trasie.
+Nowa sesja tego samego uprawnionego konta może odzyskać metadane. Inne konto nie dostaje confirmed dla decyzji poprzedniego moderatora. Zmienione/usunięte selekcje bez własnego markera zwracają superseded i pola już dostarczone przez klienta, bez starej rewizji, obrazu lub danych profilu. Własny dokładny marker jest odczytywany jako retired przed próbą pobrania starej selekcji. Zmiana przypisanego do tego samego nonce zamiaru jest odrzucana. Ten odczyt nie ujawnia treści nieznanego źródła. Zmiana roli nadal odmawia dostępu całej trasie.
 
 GatewayAvatarReviewRecoveryIntent jest oddzielną, redagowaną metadanych intencją. Może powstać z decyzji bez zmiany jej ID, nie zawiera bearer, fingerprint, receipt, pikseli lub URL. GatewayAvatarReviewHTTPClient.recover i osobny istniejący URLSession weryfikują wszystkie zwrócone ID/wersję/generację/rewizję/verdict oraz zamknięte outcome/revision, limit2048B przed buforowaniem i po transporcie, activation/cancel po await. Expired decide pozostaje zablokowane. Brak automatycznego ponawiania i jakiejkolwiek publikacji.
 

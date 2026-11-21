@@ -1,4 +1,4 @@
-// Read-only recovery wire from concrete local edge/Authority/Runtime/SQLite/policy.
+// Recovery and explicit retirement wire from concrete local edge/Authority/Runtime/SQLite/policy.
 // Apple, provider files, identities and platform bindings remain synthetic models.
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -10,19 +10,23 @@ const f = await avatarReviewHTTPFixture({ runtime: true });
 try {
   const cases = [], queued = await (await f.edge("queue")).json(); assert.equal(queued.items.length, 1);
   const intent = { ...queued.items[0], decisionID: randomUUID(), verdict: "approved" };
-  async function run(label, input = intent, outcome) {
-    const response = await f.edge("recover", input), body = await response.json();
+  async function run(label, input = intent, outcome, action = "recover") {
+    const response = await f.edge(action, input), body = await response.json();
     assert.equal(response.status, 200, JSON.stringify(body)); assert.equal(body.outcome, outcome);
-    cases.push({ label, input, status: response.status, headers: Object.fromEntries(response.headers), body });
+    cases.push({ label, action, input, status: response.status, headers: Object.fromEntries(response.headers), body });
     return body;
   }
   await run("not-applied", intent, "not-applied");
+  const abandoned = { ...intent, decisionID: randomUUID() };
+  await run("retire-pending", abandoned, "retired", "retire");
+  await run("retired-recovery", abandoned, "retired");
   const image = await f.edge("inspect", { accountID: intent.accountID, requestID: intent.requestID }); assert.equal(image.status, 200);
   const proof = f.reviewMetadata(image); await image.arrayBuffer();
   const decision = await f.edge("decide", { inspectionID: proof.inspectionID, decisionID: intent.decisionID, verdict: intent.verdict });
   assert.equal(decision.status, 200); const result = await decision.json();
   f.advance(90_000); await purgeAvatarReviewReceipts(f.storage, f.clock);
   assert.equal((await run("confirmed-after-expiry", intent, "confirmed")).revision, result.revision);
+  assert.equal((await run("retire-already-confirmed", intent, "confirmed", "retire")).revision, result.revision);
   await run("different-decision", { ...intent, decisionID: randomUUID() }, "superseded");
   const other = { ...intent, verdict: "rejected" };
   await run("different-verdict", other, "superseded");

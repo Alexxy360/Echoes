@@ -84,7 +84,7 @@ export async function avatarUploadWorkerdProof(request, storage) {
     CLOUDKIT_CONTAINER: "iCloud.mpvEcho.Echo", CLOUDKIT_ENVIRONMENT: "development", CLOUDKIT_KEY_ID: "synthetic-public-v1", CLOUDKIT_PRIVATE_KEY: p.privateKeyPEM,
     APPLE_SIGNIN_KEY_ID: "TESTKEY123", APPLE_SIGNIN_PRIVATE_KEY: p.signInPrivateKeyPEM,
     REFRESH_ACTIVE_KEY_ID: "v1", RENEWAL_ACTIVE_KEY_ID: "v1", REFRESH_KEYS_JSON: JSON.stringify({ v1: secret() }), RENEWAL_KEYS_JSON: JSON.stringify({ v1: secret() }), REQUEST_BUDGET_KEY: secret() };
-  const runtime = createGatewayRuntime(storage, env, { clock, fetchImplementation: provider, avatarNormalizerFactory: createWorkerAvatarNormalizer });
+  let runtime = createGatewayRuntime(storage, env, { clock, fetchImplementation: provider, avatarNormalizerFactory: createWorkerAvatarNormalizer });
   const id = { toString: () => "synthetic-upload-http-authority" };
   env.COMMUNITY_AUTHORITY = { idFromName(name) { if (name !== authorityName) throw new Error("Wrong authority"); return id; }, get(object) {
     if (object !== id) throw new Error("Wrong object"); return { fetch: req => handleAuthorityRequest(req, { runtime, env, objectID: id, clock }) };
@@ -101,7 +101,7 @@ export async function avatarUploadWorkerdProof(request, storage) {
   const uploaded = await invoke("upload", p.intent), firstUploadCount = uploads;
   const recovered = await invoke("recover", { requestID: p.intent.requestID });
   if (uploads !== firstUploadCount) throw new Error("Recovery repeated a synthetic upload");
-  let review, ownerPreview;
+  let review, ownerPreview, retirementProof;
   if (p.review === true) {
     const operatorCall = async (action, value, expectedStatus = 200) => {
       const req = new Request("https://synthetic-upload.invalid/v1/moderation/avatar/" + action, { method: "POST", signal: request.signal,
@@ -120,7 +120,20 @@ export async function avatarUploadWorkerdProof(request, storage) {
     const image = await operatorCall("inspect", { accountID: reviewOperatorID, requestID: uploaded.requestID });
     const header = JSON.parse(image.headers.get(avatarReviewHeader));
     const shown = new Uint8Array(await image.arrayBuffer()), manifest = JSON.parse(image.headers.get("x-echoes-avatar-manifest"));
-    const body = { inspectionID: header.inspectionID, decisionID: recovery.decisionID, verdict: "approved" };
+    let currentInspectionID = header.inspectionID;
+    if (p.retirement === true) {
+      const abandoned = { ...recovery, decisionID: randomUUID() };
+      const closed = await (await operatorCall("retire", abandoned)).json();
+      runtime = createGatewayRuntime(storage, env, { clock, fetchImplementation: provider, avatarNormalizerFactory: createWorkerAvatarNormalizer });
+      const restored = await (await operatorCall("recover", abandoned)).json();
+      const late = await operatorCall("decide", { inspectionID: header.inspectionID, decisionID: abandoned.decisionID, verdict: abandoned.verdict }, 409);
+      const noEffect = storage.sql.exec("SELECT moderation_state FROM avatar_jobs_v1 WHERE account_id=? AND request_id=?", reviewOperatorID, uploaded.requestID).toArray()[0].moderation_state === "pending";
+      const fresh = await operatorCall("inspect", { accountID: reviewOperatorID, requestID: uploaded.requestID });
+      currentInspectionID = JSON.parse(fresh.headers.get(avatarReviewHeader)).inspectionID; await fresh.arrayBuffer();
+      retirementProof = { sealed: closed.outcome === "retired", recoveredAfterRuntimeRecreation: restored.outcome === "retired",
+        lateRejected: (await late.json()).error === "AVATAR_REVIEW_STALE", oldEffectAbsent: noEffect, sameDecisionID: closed.decisionID === abandoned.decisionID && restored.decisionID === abandoned.decisionID };
+    }
+    const body = { inspectionID: currentInspectionID, decisionID: recovery.decisionID, verdict: "approved" };
     const approved = await (await operatorCall("decide", body)).json();
     const replayed = await (await operatorCall("decide", body)).json();
     p.now += 90_000; await purgeAvatarReviewReceipts(storage, clock);
@@ -153,7 +166,7 @@ export async function avatarUploadWorkerdProof(request, storage) {
   }
   const cleared = await invoke("clear", { requestID: randomUUID(), expectedGeneration: uploaded.generation });
   const status = await invoke("status");
-  return Response.json({ ...(review ? { review, downloads } : {}), ...(ownerPreview ? { ownerPreview } : {}), uploaded, recovered, cleared, status, uploads, grants: grants.size, signatures,
+  return Response.json({ ...(retirementProof ? { retirementProof } : {}), ...(review ? { review, downloads } : {}), ...(ownerPreview ? { ownerPreview } : {}), uploaded, recovered, cleared, status, uploads, grants: grants.size, signatures,
     assetRecords: [...records.values()].filter(r => r.recordType === "EchoesAvatarV1").length,
     actualSQL: storage.sql.exec("SELECT COUNT(*) AS n FROM avatar_jobs_v1").toArray()[0].n === 1 });
 }

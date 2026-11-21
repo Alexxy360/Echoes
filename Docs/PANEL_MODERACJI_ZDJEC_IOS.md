@@ -1,5 +1,7 @@
 # CK-04e.3j.3c.3 — ekran moderatora i lokalna blokada zdjęcia
 
+Aktualizacja CK-05d.2c.2: [bezpieczne zamykanie niepewnej próby](ZAMYKANIE_DECYZJI_UPLOADU_PLAN.md), bez zwalniania lokalnej ochrony zdjęcia dla not-applied. Dowody pierwotnego panelu poniżej są historyczne.
+
 Ekran w kontrolowanym Debug Runtime korzysta z rzeczywistego [hosta i magazynu decyzji](MAGAZYN_I_HOST_MODERACJI_IOS.md). Pokazuje kolejkę, aktualny obraz, osobne zatwierdzenie lub odrzucenie, jawne potwierdzenie oraz wynik. Nie publikuje zdjęcia za autora. Sam widok nie przyznaje roli: uprawnienia nadal sprawdza [gateway](HTTP_MODERACJI_ZDJEC.md). Zwykłe wejście aplikacji pozostaje Firebase, flagi usług pozostają wyłączone.
 
 ## Obraz i świadoma decyzja
@@ -12,11 +14,11 @@ Form obsługuje przewijanie i systemowy rozmiar tekstu. Widok rozróżnia brak r
 
 ## Wynik po utracie odpowiedzi
 
-Niepewna decyzja zachowuje identyfikatory i blokuje kolejny wybór. „Sprawdź wynik” wykonuje wyłącznie exact recovery zapisanej intencji. Potwierdzony wynik, brak zastosowania i zastąpiony stan mają różne komunikaty. Zastąpiony stan nie oznacza historycznej porażki lub sukcesu. Dopiero „Rozumiem” na bieżącym wyniku usuwa rozliczony wpis. Nie ma automatycznego ponawiania decide, nowego ID ani odświeżania receipt.
+Niepewna decyzja zachowuje identyfikatory i blokuje kolejny wybór. „Sprawdź wynik” wykonuje wyłącznie exact recovery zapisanej intencji. Potwierdzony wynik, nieostateczny brak zapisu, zastąpiony stan i zamknięta próba mają różne komunikaty. Not-applied wyjaśnia, że decyzja może jeszcze zostać zapisana i nie ma ACK. Jawne „Zamknij tę próbę” otwiera anulowalny Form w tym samym NavigationStack; decyzja i zamknięcie są rozłączne w jednym enum. Formularz nie przechowuje obrazu i wyjaśnia brak cofania oraz publikowania. Tło lub zmiana intencji odcina stary formularz. Zastąpiony stan nie oznacza historycznej porażki lub sukcesu. Dopiero „Rozumiem” na terminalnym bieżącym handle usuwa rozliczony wpis. Odtworzony terminalny wpis może dostać nowy handle po sprawdzeniu natywnego scope bez ponownego HTTP; nie odtwarza receipt lub obrazu. Nie ma automatycznego ponawiania decide, nowego ID ani odświeżania receipt.
 
 ## Pozostałe lokalne powierzchnie
 
-Host emituje typowane pending przed wywołaniem API decyzji oraz resolved dopiero po trwałym zapisie wyniku. GatewayCommunityAvatarHost na pending odcina wszystkie lokalne zdjęcia danego właściciela: mapę, profil, wiadomości i własny edytor. Unieważnia cache i trwające odczyty. Spóźniona odpowiedź nie przywraca starych pikseli; inne osoby zachowują własne podglądy.
+Host emituje typowane pending przed wywołaniem API decyzji oraz resolved dopiero po trwałym zapisie terminalnego wyniku. Not-applied zachowuje pending, również po restarcie/retiring. GatewayCommunityAvatarHost dodatkowo ignoruje nieterminalny event resolved nawet od własnego adaptera. Dopiero dokładny terminalny wynik zwalnia barierę, z unieważnieniem dawnych pikseli i wymogiem nowego chronionego odczytu. GatewayCommunityAvatarHost na pending odcina wszystkie lokalne zdjęcia danego właściciela: mapę, profil, wiadomości i własny edytor. Unieważnia cache i trwające odczyty. Spóźniona odpowiedź nie przywraca starych pikseli; inne osoby zachowują własne podglądy.
 
 Blokady są związane z ID decyzji. Starszy wynik nie usuwa nowszej blokady. Zdjęcie może wrócić dopiero po nowym chronionym odczycie. Własny edytor wymaga także świeżego snapshotu właściciela. Limit 32 nierozliczonych blokad zamyka dostęp zamiast odrzucenia ochrony; reset następuje z nowym wiązaniem.
 

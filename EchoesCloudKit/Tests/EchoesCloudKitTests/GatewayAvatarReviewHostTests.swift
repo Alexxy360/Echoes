@@ -5,12 +5,17 @@ import Testing
 
 actor ReviewHostAPI: GatewayAvatarReviewAPI {
     nonisolated let origin = "https://review-host.example.invalid"
-    enum Mode: Sendable { case normal, denied, signIn, unknown, lostACK, beforeAccept, superseded }
+    enum Mode: Sendable {
+        case normal, denied, signIn, unknown, lostACK, beforeAccept, superseded, lostRetirementACK,
+            unsafeRetirement
+    }
     var mode: Mode = .normal
     var calls: [String] = []
     var decisions: [GatewayAvatarReviewDecisionIntent] = []
     var recoveries: [GatewayAvatarReviewRecoveryIntent] = []
     var applied: [String: String] = [:]
+    var retired: [String: GatewayAvatarReviewRecoveryIntent] = [:]
+    var retirements: [GatewayAvatarReviewRecoveryIntent] = []
     let fixture: ReviewWireFixture
     let clock: ReviewClock
     let gate = PhotoGate()
@@ -69,6 +74,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         let callback = beforeDecision
         beforeDecision = nil
         try await callback?(intent)
+        if retired[intent.decisionID] != nil { throw GatewayAvatarReviewFailure.stale }
         if mode == .beforeAccept { throw GatewayAvatarReviewFailure.unavailable }
         let revision = UUID().uuidString.lowercased()
         applied[intent.decisionID] = revision
@@ -84,8 +90,28 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         let outcome: GatewayAvatarReviewOutcome =
             mode == .superseded
             ? .superseded
-            : applied[intent.decisionID].map { .confirmed(revision: $0) } ?? .notApplied
+            : retired[intent.decisionID] == intent
+                ? .retired : applied[intent.decisionID].map { .confirmed(revision: $0) } ?? .notApplied
         await hold("recover")
+        return .init(intent: intent, outcome: outcome)
+    }
+    func retire(_ intent: GatewayAvatarReviewRecoveryIntent, token: GatewaySecret) async throws
+        -> GatewayAvatarReviewRecoveryResult
+    {
+        try begin("retire")
+        retirements.append(intent)
+        if mode == .unsafeRetirement { return .init(intent: intent, outcome: .notApplied) }
+        let outcome: GatewayAvatarReviewOutcome
+        if let revision = applied[intent.decisionID] {
+            outcome = .confirmed(revision: revision)
+        } else if mode == .superseded {
+            outcome = .superseded
+        } else {
+            retired[intent.decisionID] = intent
+            outcome = .retired
+        }
+        await hold("retire")
+        if mode == .lostRetirementACK { throw GatewayAvatarReviewFailure.unavailable }
         return .init(intent: intent, outcome: outcome)
     }
 }
@@ -260,8 +286,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     #expect(await f.api.decisions.count == 1)
 }
 
-@Test @MainActor func avatarReviewHostNotAppliedAndSupersededNeedExplicitResultAcknowledgement() async throws
-{
+@Test @MainActor func avatarReviewHostOnlyTerminalOutcomeCanBeAcknowledged() async throws {
     for mode in [ReviewHostAPI.Mode.beforeAccept, .superseded] {
         let f = try ReviewHostFixture()
         let shown = try await f.show()
@@ -273,8 +298,15 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         try await f.host.recover()
         #expect(f.host.outcome == (mode == .superseded ? .superseded : .notApplied))
         #expect(f.host.pendingOperation != nil && !f.host.canDecide && f.host.presentation == nil)
-        try await f.host.acknowledgeResult(#require(f.host.resolution))
-        #expect(f.host.pendingOperation == nil)
+        if mode == .superseded {
+            try await f.host.acknowledgeResult(#require(f.host.resolution))
+            #expect(f.host.pendingOperation == nil)
+        } else {
+            #expect(
+                f.host.resolution == nil && f.host.canRetirePending
+                    && f.host.pendingOperation?.phase == .dispatched)
+            #expect(await f.api.retirements.isEmpty)
+        }
     }
 }
 
@@ -420,7 +452,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         #expect(await f.api.decisions.count == (phase == "resolve" ? 1 : 0))
         f.storage.failAt = nil
         try await f.connect()
-        #expect(f.host.pendingOperation != nil && f.host.outcome == nil)
+        #expect(f.host.pendingOperation != nil && (f.host.outcome != nil) == (phase == "resolve"))
         try await f.host.recover()
         if phase == "resolve" {
             guard case .confirmed = f.host.outcome else {
@@ -448,7 +480,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     await #expect(throws: GatewayAvatarReviewJournalFailure.inactive) { try await f.connect() }
 }
 
-@Test @MainActor func avatarReviewHostRestoredResolvedRecordNeedsFreshOutcomeAndRejectsOldAcknowledgement()
+@Test @MainActor func avatarReviewHostRestoredTerminalRecordCreatesFreshHandleAndRejectsOldAcknowledgement()
     async throws
 {
     let f = try ReviewHostFixture()
@@ -457,7 +489,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
     let old = try #require(f.host.resolution)
     f.host.invalidate()
     try await f.connect()
-    #expect(f.host.pendingOperation?.phase == .resolved && f.host.resolution == nil && f.host.outcome == nil)
+    #expect(f.host.pendingOperation?.phase == .resolved && f.host.resolution != nil && f.host.outcome != nil)
     await #expect(throws: GatewayAvatarReviewJournalFailure.invalidTransition) {
         try await f.host.acknowledgeResult(old)
     }
@@ -485,11 +517,16 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         host.setForeground(true)
         try await host.connect()
         try await host.recover()
-        #expect(
-            host.pendingOperation?.phase == .resolved && host.outcome == row.expected
-                && host.presentation == nil)
-        try await host.acknowledgeResult(#require(host.resolution))
-        #expect(host.pendingOperation == nil)
+        #expect(host.outcome == row.expected && host.presentation == nil)
+        if row.expected.isTerminal {
+            #expect(host.pendingOperation?.phase == .resolved)
+            try await host.acknowledgeResult(#require(host.resolution))
+            #expect(host.pendingOperation == nil)
+        } else {
+            #expect(
+                host.pendingOperation?.phase == .dispatched && host.resolution == nil && host.canRetirePending
+            )
+        }
         host.invalidate()
     }
 }
@@ -531,7 +568,7 @@ actor ReviewHostAPI: GatewayAvatarReviewAPI {
         f.storage.failAt = nil
         try await f.connect()
         #expect((f.host.pendingOperation == nil) == afterWrite)
-        #expect(f.host.outcome == nil && f.host.resolution == nil)
+        #expect((f.host.outcome == nil) == afterWrite && (f.host.resolution == nil) == afterWrite)
         #expect(await f.api.decisions.count == 1)
     }
 }

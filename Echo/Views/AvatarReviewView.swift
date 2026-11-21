@@ -11,10 +11,84 @@ struct AvatarReviewView: View {
     @State private var appearance: UUID?
     @State private var attemptedInitialOpen = false
     @State private var selected: GatewayAvatarReviewItem?
-    @State private var confirmation: DecisionConfirmation?
+    private enum Confirmation {
+        case decision(DecisionConfirmation)
+        case retirement(GatewayAvatarReviewRecoveryIntent)
+    }
+    @State private var confirmation: Confirmation?
     @State private var error: String?
 
+    private var decisionConfirmation: DecisionConfirmation? {
+        if case .decision(let value) = confirmation { value } else { nil }
+    }
+    private var retirementIntent: GatewayAvatarReviewRecoveryIntent? {
+        if case .retirement(let value) = confirmation { value } else { nil }
+    }
     var body: some View {
+        Group {
+            if scenePhase != .active {
+                Text("Echoes").font(.title.bold())
+            } else if let intent = retirementIntent {
+                AvatarReviewRetirementConfirmationView(
+                    host: host, intent: intent, confirm: retire, cancel: { confirmation = nil })
+            } else {
+                mainContent
+            }
+        }
+        .navigationTitle(retirementIntent == nil ? "Ocena zdjęć" : "Potwierdzenie")
+        .navigationBarBackButtonHidden(retirementIntent != nil)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Gotowe", action: close) } }
+        .alert(
+            decisionConfirmation?.title ?? "Decyzja",
+            isPresented: Binding(
+                get: { decisionConfirmation != nil },
+                set: { if !$0, case .decision = confirmation { confirmation = nil } }),
+            presenting: decisionConfirmation
+        ) { decision in
+            Button(decision.button, role: decision.verdict == .rejected ? .destructive : nil) {
+                confirmation = nil
+                Task {
+                    await run { try await host.decide(decision.verdict, presentation: decision.presentation) }
+                }
+            }.accessibilityIdentifier("avatar.review.confirmDecision")
+            Button("Anuluj", role: .cancel) { confirmation = nil }
+        } message: { decision in
+            Text(
+                decision.verdict == .approved
+                    ? "Czy aktualnie widoczne zdjęcie nadaje się do publikacji? Autor zdecyduje osobno o jego pokazaniu."
+                    : "To zdjęcie nie będzie dostępne do publikacji. Autor będzie mógł wybrać inne.")
+        }
+        .task {
+            appearance = UUID()
+            await open(initial: true)
+        }
+        .onChange(of: host.presentation) { _, current in
+            if let decisionConfirmation, decisionConfirmation.presentation != current { confirmation = nil }
+        }
+        .onChange(of: host.pendingOperation?.intent) { _, current in
+            if let retirementIntent, retirementIntent != current { confirmation = nil }
+        }
+        .onChange(of: host.isConnected) { _, connected in
+            if !connected {
+                selected = nil
+                confirmation = nil
+            }
+        }
+        .onChange(of: scenePhase) { _, phase in
+            confirmation = nil
+            selected = nil
+            error = nil
+            host.setForeground(phase == .active)
+            if phase == .active { Task { await open(initial: true) } }
+        }
+        .onDisappear {
+            appearance = nil
+            confirmation = nil
+            host.setForeground(false)
+        }
+    }
+    private var mainContent: some View {
         Form {
             if preview {
                 Section { Text("Podgląd testowy • dane syntetyczne").font(.caption) }
@@ -43,11 +117,13 @@ struct AvatarReviewView: View {
                         AvatarReviewImageSection(host: host, presentation: presentation)
                         Section("Decyzja") {
                             Button("Zatwierdź zdjęcie") {
-                                confirmation = .init(presentation: presentation, verdict: .approved)
+                                confirmation = .decision(
+                                    .init(presentation: presentation, verdict: .approved))
                             }
                             .disabled(!host.canDecide).accessibilityIdentifier("avatar.review.approve")
                             Button("Odrzuć zdjęcie", role: .destructive) {
-                                confirmation = .init(presentation: presentation, verdict: .rejected)
+                                confirmation = .decision(
+                                    .init(presentation: presentation, verdict: .rejected))
                             }
                             .disabled(!host.canDecide).accessibilityIdentifier("avatar.review.reject")
                         }
@@ -87,77 +163,38 @@ struct AvatarReviewView: View {
                         .accessibilityIdentifier("avatar.review.reconnect")
                 }
             }
-        }
-        .navigationTitle("Ocena zdjęć")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Gotowe", action: close) } }
-        .alert(
-            confirmation?.title ?? "Decyzja",
-            isPresented: Binding(
-                get: { confirmation != nil }, set: { if !$0 { confirmation = nil } }),
-            presenting: confirmation
-        ) { decision in
-            Button(decision.button, role: decision.verdict == .rejected ? .destructive : nil) {
-                confirmation = nil
-                Task {
-                    await run { try await host.decide(decision.verdict, presentation: decision.presentation) }
-                }
-            }.accessibilityIdentifier("avatar.review.confirmDecision")
-            Button("Anuluj", role: .cancel) { confirmation = nil }
-        } message: { decision in
-            Text(
-                decision.verdict == .approved
-                    ? "Czy aktualnie widoczne zdjęcie nadaje się do publikacji? Autor zdecyduje osobno o jego pokazaniu."
-                    : "To zdjęcie nie będzie dostępne do publikacji. Autor będzie mógł wybrać inne.")
-        }
-        .task {
-            appearance = UUID()
-            await open(initial: true)
-        }
-        .onChange(of: host.presentation) { _, current in
-            if let confirmation, confirmation.presentation != current { self.confirmation = nil }
-        }
-        .onChange(of: host.isConnected) { _, connected in
-            if !connected {
-                selected = nil
-                confirmation = nil
-            }
-        }
-        .onChange(of: scenePhase) { _, phase in
-            confirmation = nil
-            selected = nil
-            error = nil
-            host.setForeground(phase == .active)
-            if phase == .active { Task { await open(initial: true) } }
-        }
-        .onDisappear {
-            appearance = nil
-            confirmation = nil
-            host.setForeground(false)
-        }
-        .accessibilityIdentifier("avatar.review")
+        }.accessibilityIdentifier("avatar.review")
     }
     @ViewBuilder private func pending(_ entry: GatewayAvatarReviewJournalEntry) -> some View {
         Section("Zapisana decyzja") {
             if let outcome = host.outcome {
                 Text(outcomeText(outcome, verdict: entry.intent.verdict)).accessibilityIdentifier(
                     "avatar.review.outcome")
-                if let resolution = host.resolution {
-                    Button("Rozumiem") {
-                        Task {
-                            await run {
-                                try await host.acknowledgeResult(resolution)
-                                selected = nil
-                            }
+            }
+            if let resolution = host.resolution {
+                Button("Rozumiem") {
+                    Task {
+                        await run {
+                            try await host.acknowledgeResult(resolution)
+                            selected = nil
                         }
                     }
-                    .disabled(host.isBusy).accessibilityIdentifier("avatar.review.acknowledge")
                 }
+                .disabled(host.isBusy).accessibilityIdentifier("avatar.review.acknowledge")
             } else {
-                Text("Zachowana decyzja czeka na sprawdzenie wyniku.").accessibilityIdentifier(
-                    "avatar.review.unknown")
+                if host.outcome == nil {
+                    Text(
+                        entry.phase == .retiring
+                            ? "Czekamy na potwierdzenie zamknięcia próby."
+                            : "Zachowana decyzja czeka na sprawdzenie wyniku."
+                    )
+                    .accessibilityIdentifier("avatar.review.unknown")
+                }
                 Button("Sprawdź wynik") { Task { await run { try await host.recover() } } }
                     .disabled(host.isBusy).accessibilityIdentifier("avatar.review.recover")
+                Button(entry.phase == .retiring ? "Ponów zamknięcie próby" : "Zamknij tę próbę") {
+                    confirmation = .retirement(entry.intent)
+                }.disabled(!host.canRetirePending).accessibilityIdentifier("avatar.review.retire")
             }
         }
     }
@@ -169,9 +206,9 @@ struct AvatarReviewView: View {
             return verdict == .approved
                 ? "Zatwierdzenie zdjęcia zostało zapisane." : "Odrzucenie zdjęcia zostało zapisane."
         case .notApplied:
-            return
-                "Decyzja nie została zastosowana w bieżącym stanie zdjęcia. Kolejna ocena wymaga świeżego podglądu."
+            return "Decyzja nie jest potwierdzona. Może jeszcze zostać zapisana."
         case .superseded: return "Stan zdjęcia się zmienił. Nie możemy potwierdzić poprzedniej decyzji."
+        case .retired: return "Ta próba została zamknięta. Nie cofa to wcześniej zapisanych zmian."
         }
     }
     private func open(initial: Bool = false) async {
@@ -196,6 +233,10 @@ struct AvatarReviewView: View {
             else { return }
             self.error = error.localizedDescription
         }
+    }
+    private func retire(_ intent: GatewayAvatarReviewRecoveryIntent) {
+        confirmation = nil
+        Task { await run { try await host.retirePending(intent) } }
     }
     private func close() {
         appearance = nil
@@ -231,5 +272,34 @@ private struct AvatarReviewImageSection: View {
                     .font(.caption).foregroundStyle(.secondary)
             }
         }
+    }
+}
+
+/// The same captured metadata is rechecked before the host persists retiring or obtains a token.
+private struct AvatarReviewRetirementConfirmationView: View {
+    let host: GatewayAvatarReviewHost
+    let intent: GatewayAvatarReviewRecoveryIntent
+    let confirm: @MainActor (GatewayAvatarReviewRecoveryIntent) -> Void
+    let cancel: @MainActor () -> Void
+    var body: some View {
+        Form {
+            Section("Zamknąć tę próbę?") {
+                Text(
+                    "Serwer zablokuje późniejsze wykonanie tej próby decyzji. Jeśli decyzja została już zapisana, pokażemy jej wynik."
+                )
+                Text(
+                    "Zamknięcie próby nie cofa wcześniejszych zmian ani nie publikuje zdjęcia. Po potwierdzeniu wyniku można otworzyć świeży podgląd, jeśli zdjęcie pozostaje do oceny."
+                )
+            }
+            Section {
+                Button("Potwierdź zamknięcie próby") {
+                    guard host.canRetirePending, host.pendingOperation?.intent == intent else { return }
+                    confirm(intent)
+                }.disabled(!host.canRetirePending || host.pendingOperation?.intent != intent)
+                    .accessibilityIdentifier("avatar.review.retireConfirm")
+                Button("Wróć", role: .cancel, action: cancel).accessibilityIdentifier(
+                    "avatar.review.retireCancel")
+            }
+        }.accessibilityIdentifier("avatar.review.retireConfirmation")
     }
 }

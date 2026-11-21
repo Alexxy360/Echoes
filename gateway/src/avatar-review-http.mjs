@@ -5,7 +5,7 @@ import { AvatarIntakeError, avatarMutationHeaders, avatarMutationBody, avatarMut
 import { AvatarReadError, avatarManifestHeader } from "./cloudkit-avatar-reader.mjs";
 import { avatarEdgeResponse, avatarHTTPManifest } from "./gateway-avatar-http.mjs";
 
-export const avatarReviewPaths = new Map(["queue", "inspect", "decide", "recover"].map(action => ["/v1/moderation/avatar/" + action, action]));
+export const avatarReviewPaths = new Map(["queue", "inspect", "decide", "recover", "retire"].map(action => ["/v1/moderation/avatar/" + action, action]));
 const exact = (value, keys) => plain(value) && Object.keys(value).sort().join() === [...keys].sort().join();
 const id = value => typeof value === "string" && publicUUID.test(value);
 export function avatarReviewers(json = "[]") {
@@ -18,10 +18,11 @@ export function avatarReviewers(json = "[]") {
 }
 export function avatarReviewInput(action, value) {
   const keys = { queue: [], inspect: ["accountID", "requestID"], decide: ["inspectionID", "decisionID", "verdict"],
-    recover: ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"] }[action];
+    recover: ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"],
+    retire: ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"] }[action];
   if (!keys || !exact(value, keys) || keys.some(k => k.endsWith("ID") && !id(value[k])) ||
-      ["decide", "recover"].includes(action) && !["approved", "rejected"].includes(value.verdict) ||
-      action === "recover" && (!id(value.reviewRevision) || !Number.isSafeInteger(value.generation) || value.generation < 1 || value.generation >= Number.MAX_SAFE_INTEGER)) throw new AvatarReviewError("AVATAR_REVIEW_INPUT");
+      ["decide", "recover", "retire"].includes(action) && !["approved", "rejected"].includes(value.verdict) ||
+      ["recover", "retire"].includes(action) && (!id(value.reviewRevision) || !Number.isSafeInteger(value.generation) || value.generation < 1 || value.generation >= Number.MAX_SAFE_INTEGER)) throw new AvatarReviewError("AVATAR_REVIEW_INPUT");
   return Object.freeze({ ...value });
 }
 export function avatarReviewHeaders(request) {
@@ -59,10 +60,10 @@ export function avatarReviewAdmission() {
   };
 }
 export function avatarReviewResult(action, value, input) {
-  if (action === "recover") {
+  if (["recover", "retire"].includes(action)) {
     const keys = ["accountID", "requestID", "versionID", "generation", "reviewRevision", "decisionID", "verdict"];
     if (!exact(value, ["schemaVersion", ...keys, "outcome", "revision"]) || value.schemaVersion !== 1 ||
-        !["confirmed", "not-applied", "superseded"].includes(value.outcome) ||
+        !["confirmed", "not-applied", "superseded", "retired"].includes(value.outcome) || action === "retire" && value.outcome === "not-applied" ||
         (value.outcome === "confirmed" ? !id(value.revision) || value.revision === value.reviewRevision : value.revision !== null) ||
         input && keys.some(k => value[k] !== input[k])) throw new AvatarReviewError("AVATAR_REVIEW_RESPONSE");
     try { avatarReviewInput("recover", Object.fromEntries(keys.map(k => [k, value[k]]))); }

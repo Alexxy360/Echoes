@@ -116,13 +116,17 @@ private func reviewNetworkEventually(_ predicate: @Sendable () -> Bool) async th
     ReviewURLProtocol.plan.replace(origin, reply: .init(response: f.decision))
     let first = try await client.decide(intent, token: reviewBearer)
     #expect(try await client.decide(intent, token: reviewBearer) == first)
+    let retired = try #require(ReviewRecoveryWireFixture().rows.first { $0.label == "retire-pending" })
+    ReviewURLProtocol.plan.replace(origin, reply: .init(response: retired.response))
+    #expect(try await client.retire(retired.intent, token: reviewBearer).outcome == .retired)
     let bodies = ReviewURLProtocol.plan.capturedBodies(origin)
-    #expect(bodies.count == 4 && bodies[2] == bodies[3])
+    #expect(bodies.count == 5 && bodies[2] == bodies[3])
+    #expect(try bodies[4] == GatewayAvatarReviewOperation.retire(retired.intent).wire())
     #expect(try bodies[0] == GatewayAvatarReviewOperation.queue.wire())
     #expect(try bodies[1] == GatewayAvatarReviewOperation.inspect(f.item).wire())
     #expect(try bodies[2] == GatewayAvatarReviewOperation.decide(intent).wire())
     let requests = ReviewURLProtocol.plan.finish(origin)
-    #expect(requests.count == 4)
+    #expect(requests.count == 5 && requests.last?.url?.path == "/v1/moderation/avatar/retire")
     #expect(
         requests.allSatisfy {
             $0.value(forHTTPHeaderField: "Authorization") == "Bearer " + reviewBearer.value

@@ -1,3 +1,4 @@
+import { purgeAvatarReviewRetirements, avatarReviewRetirementWakeAt } from "./avatar-review-decision-retirements.mjs";
 import { purgeModerationRetirements, moderationRetirementWakeAt } from "./moderation-decision-retirements.mjs";
 import { purgeAvatarReportReviews, avatarReportReviewWakeAt } from "./avatar-report-review-state.mjs";
 import { purgeAuthenticationStorage } from "./authentication-state.mjs";
@@ -47,6 +48,7 @@ export class GatewayMaintenance {
     await purgeAuthenticationStorage(this.#storage, this.#clock);
     await purgeAvatarReviewReceipts(this.#storage, this.#clock);
     await purgeModerationRetirements(this.#storage, this.#clock);
+    await purgeAvatarReviewRetirements(this.#storage, this.#clock);
     await purgeCommunityReportReviews(this.#storage, this.#clock);
     await purgeAvatarReportReviews(this.#storage, this.#clock);
     this.#storage.transactionSync(() => expireAvatarTransferReceipts(this.#storage, this.#now()));
@@ -85,6 +87,8 @@ export class GatewayMaintenance {
     const timedRows = timedTables.some(table => this.#storage.sql.exec(`SELECT 1 FROM ${table} LIMIT 1`).toArray().length > 0);
     const receipts = this.#storage.sql.exec("SELECT 1 FROM auth_account_deletions_v1 WHERE completed_at IS NOT NULL LIMIT 1").toArray().length > 0;
     const now = this.#now(), candidates = [];
+    const uploadReviewWakeAt = avatarReviewRetirementWakeAt(this.#storage, this.#clock);
+    if (uploadReviewWakeAt !== null) candidates.push(Math.max(now + 60000, uploadReviewWakeAt));
     const retirementWakeAt = moderationRetirementWakeAt(this.#storage, this.#clock);
     if (retirementWakeAt !== null) candidates.push(Math.max(now + 60000, retirementWakeAt));
     const reviewWakeAt = communityReportReviewWakeAt(this.#storage, this.#clock);

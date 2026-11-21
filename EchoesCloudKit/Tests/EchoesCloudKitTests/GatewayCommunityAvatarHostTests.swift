@@ -554,8 +554,12 @@ private func hostModerationIntent(
     let before = await f.photo.api.captured().count
     let intent = try hostModerationIntent(f.photo.reference)
     f.host.observeModeration(.pending(intent))
-    await f.photo.api.gate.arm()
     f.host.observeModeration(.resolved(.init(intent: intent, outcome: .notApplied)))
+    #expect(f.binding.image(for: lease) == nil)
+    #expect(await f.photo.api.captured().count == before)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
+    await f.photo.api.gate.arm()
+    f.host.observeModeration(.resolved(.init(intent: intent, outcome: .retired)))
     try await f.photo.api.gate.wait()
     #expect(f.binding.image(for: lease) == nil)
     await f.photo.api.gate.release()

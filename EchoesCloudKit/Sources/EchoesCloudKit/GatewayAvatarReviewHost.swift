@@ -85,11 +85,14 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
     }
     public var outcome: GatewayAvatarReviewOutcome? {
         _ = presentationRevision
-        return isConnected && !isBusy ? storedResolution?.result.outcome : nil
+        guard isConnected && !isBusy else { return nil }
+        return storedResolution?.result.outcome ?? (storedPending?.outcome == .notApplied ? .notApplied : nil)
     }
     public var resolution: GatewayAvatarReviewResolution? {
         _ = presentationRevision
-        guard isConnected, !isBusy, let value = storedResolution else { return nil }
+        guard isConnected, !isBusy, storedPending?.phase == .resolved, let value = storedResolution,
+            value.result.outcome.isTerminal
+        else { return nil }
         return .init(id: value.id)
     }
     public var presentation: GatewayAvatarReviewPresentation? {
@@ -101,6 +104,10 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
         _ = presentationRevision
         guard let value = liveInspection() else { return false }
         return displayID == value.id && storedPending == nil && !denied
+    }
+    public var canRetirePending: Bool {
+        _ = presentationRevision
+        return isConnected && !isBusy && !denied && storedPending.map { $0.phase != .resolved } == true
     }
     public init(
         api: any GatewayAvatarReviewAPI, configuration: GatewayConfiguration, cloudKit: CloudKitConfiguration,
@@ -297,6 +304,14 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
                     isCurrent: isCurrent)
                 self.storedPending = pending
                 if let pending { self.publicationChanged(.pending(pending.intent)) }
+                if let pending, pending.phase == .resolved, let outcome = pending.outcome, outcome.isTerminal
+                {
+                    let result = GatewayAvatarReviewRecoveryResult(intent: pending.intent, outcome: outcome)
+                    self.storedResolution = .init(id: UUID(), result: result)
+                    self.publicationChanged(.resolved(result))
+                } else {
+                    self.storedResolution = nil
+                }
                 try self.check(self.bound())
             } catch {
                 self.journal.fence(lease)
@@ -408,18 +423,54 @@ public struct GatewayAvatarReviewResolution: Equatable, Sendable, CustomStringCo
             let resolved = try await self.journal.resolve(entry, result: result, lease: context.lease)
             try self.check(context)
             self.storedPending = resolved
-            self.storedResolution = .init(id: UUID(), result: result)
-            self.publicationChanged(.resolved(result))
+            self.storedResolution = result.outcome.isTerminal ? .init(id: UUID(), result: result) : nil
+            if result.outcome.isTerminal {
+                self.publicationChanged(.resolved(result))
+            } else {
+                self.publicationChanged(.pending(entry.intent))
+            }
             try self.check(context)
             self.storedQueue = []
             self.denied = false
+        }
+    }
+    /// Explicitly closes only the captured pending attempt; never re-sends or undoes a decision.
+    public func retirePending(_ expected: GatewayAvatarReviewRecoveryIntent) async throws {
+        guard canRetirePending, storedPending?.intent == expected else {
+            throw GatewayAvatarReviewJournalFailure.invalidTransition
+        }
+        try await exclusive {
+            let context = try self.bound()
+            guard let entry = self.storedPending, entry.intent == expected else {
+                throw GatewayAvatarReviewJournalFailure.invalidTransition
+            }
+            self.storedResolution = nil
+            let retiring = try await self.journal.retiring(entry, lease: context.lease)
+            try self.check(context)
+            self.storedPending = retiring
+            self.publicationChanged(.pending(retiring.intent))
+            try await self.match(retiring, context)
+            let token = try await self.token(context, expected: retiring)
+            let result = try await self.api.retire(retiring.intent, token: token)
+            try await self.match(retiring, context)
+            guard result.intent == retiring.intent, result.outcome.isTerminal else {
+                throw GatewayAvatarReviewFailure.invalidResponse
+            }
+            let resolved = try await self.journal.resolve(retiring, result: result, lease: context.lease)
+            try self.check(context)
+            self.storedPending = resolved
+            self.storedResolution = .init(id: UUID(), result: result)
+            self.publicationChanged(.resolved(result))
+            self.storedQueue = []
+            try self.check(context)
         }
     }
     public func acknowledgeResult(_ handle: GatewayAvatarReviewResolution) async throws {
         guard !isBusy else { throw GatewayAvatarReviewFailure.busy }
         let context = try bound()
         guard let resolution = storedResolution, resolution.id == handle.id, let entry = storedPending,
-            entry.intent == resolution.result.intent
+            entry.intent == resolution.result.intent, entry.phase == .resolved,
+            resolution.result.outcome.isTerminal
         else { throw GatewayAvatarReviewJournalFailure.invalidTransition }
         try await exclusive {
             try await self.match(entry, context)

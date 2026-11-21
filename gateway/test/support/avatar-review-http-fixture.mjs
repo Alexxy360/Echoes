@@ -17,7 +17,7 @@ export async function avatarReviewHTTPFixture({ runtime = false, ...settings } =
       async consumeAvatarReview(...args) { counts.accountLimits++; return limits.consumeAvatarReview(...args); } },
     checkpoint: { async verify(...args) { counts.verifies++; return f.checkpoint.verify(...args); },
       async advance(...args) { await f.checkpoint.advance(...args); if (prepared) await afterAdvance?.(); } },
-    avatarReview: Object.fromEntries(["prepareQueue", "prepareInspection", "prepareDecision", "prepareRecovery"].map(method => [method, async value => {
+    avatarReview: Object.fromEntries(["prepareQueue", "prepareInspection", "prepareDecision", "prepareRecovery", "prepareRetirement"].map(method => [method, async value => {
       const final = await f.coordinator[method](value); prepared = true; return final;
     }])), isEnabled: () => enabled, isAvatarReviewEnabled: () => feature, isAvatarReviewer: isReviewer,
     scheduleMaintenance: async () => { counts.scheduled++; }, clock: f.clock, ...settings };
