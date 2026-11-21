@@ -2,6 +2,8 @@
 
 CK-05d.2c.1 rozszerza kontrakt o [zamykanie niepewnych prób](ZAMYKANIE_NIEPEWNYCH_DECYZJI_MODERATORA.md). Wcześniejsze liczby i dowody2c poniżej są historyczne; kolejny panel iOS zdjęć2d ma używać terminalnego retire od początku.
 
+Aktualizacja CK-05d.2d.1: [natywny transport i walidacja ramki](NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md) odebrane lokalnie; journal/host/panel jeszcze niepodłączone. Poniższy odbiór2c jest historyczny.
+
 Stan: lokalnie zaimplementowane i odebrane edge/Authority/Runtime. AVATAR_REPORT_REVIEW_ENABLED=0 i AVATAR_REPORT_REVIEWER_IDS_JSON=[] w konfiguracji; brak wdrożenia lub nadania roli. [Koordynator i cały proces](OPERATOR_ZGLOSZEN_ZDJEC.md).
 
 ## Zakres i uprawnienia
@@ -44,4 +46,4 @@ Admission pozostaje zajęte aż do rzeczywistego zakończenia metody/bufora i pi
 
 Rzeczywisty lokalny workerd wykonuje edge → prywatny Authority → konkretny Runtime → DO SQLite/podpisany klient → ramkę/JPEG → decyzję/replay oraz readonly recovery po odtworzeniu Runtime i expiry. Zegar fixture dopasowano do realnych alarmów i wydano świeże syntetyczne sesje. Apple/CDN/SIWA/konta oraz platformowe IP są modelowane; outbound poza loopback jest zablokowany. To ta sama baza/proces, nie restart/power-loss/PITR lub hosted Free/CPU/capacity albo zwykłe A/B. [Dokładne wyniki i SHA](evidence/avatar-report-review-http-local-tests.json).
 
-Nie ma jeszcze natywnego transportu/journala/hosta/panelu moderatora tego procesu — następny2d. iOS/Core/deps/CI niezmienione i niepowtarzane. Bez nowych uprawnień/kluczy/sekretów/usług/opłat/SDK telefonu/Apple/Cloudflare/Production/Firebase/TestFlight. Konfiguracja domyślnie wyłączona, zastany project.pbxproj zachowany; pełna migracja trwa.
+W chwili historycznego odbioru2c nie było jeszcze natywnego transportu/journala/hosta/panelu tego procesu. Późniejszy2d.1 dodaje transport; journal/host/panel pozostają2d.2/3. W historycznym2c iOS/Core/deps/CI były niezmienione i niepowtarzane. Bez nowych uprawnień/kluczy/sekretów/usług/opłat/SDK telefonu/Apple/Cloudflare/Production/Firebase/TestFlight. Konfiguracja domyślnie wyłączona, zastany project.pbxproj zachowany; pełna migracja trwa.

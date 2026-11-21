@@ -1,0 +1,229 @@
+{
+  "stage": "CK-05d.2d.1",
+  "date": "2026-11-21",
+  "baselineCommit": "82df0cdc768ebe059f1679ba5b7bb4de7af8917b",
+  "scope": "Separate native API/model/closed metadata+JPEG frame and pinned URLSession for five avatar-report moderation operations. Disabled by default; no app host/journal/UI/Runtime connection yet.",
+  "sources": {
+    "Docs/DZIENNIK_ZMIAN.md": "2c8ae9f82e1d3dc04f208ff4f1f959964968ac5f917a4ca1c7a502191a0e4e9d",
+    "Docs/HTTP_OPERATORA_ZGLOSZEN_ZDJEC.md": "9d9b86df0309de18b1e5c9d516c2871a85effed76a031cb9791bcfdd99d04764",
+    "Docs/NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md": "9a2b82abd6612bf971e3ca0fb9a311049bbea437fb8e9c46ed150c5d7825ef86",
+    "Docs/NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md": "1e4dbda7fe7965ad52cfe1f22561ab2ccba244f8c93b8012d942d97410ceb95f",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "6258d9e36e55fdd73bb2ded53b00f1578315b649c6f0ca6a4b8c9fb482134bdf",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewFrame.swift": "6a584d948c8597a7b230d2ecea1c9a1c8ea01293544cfac7aebd6644f3120bed",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewHTTPClient.swift": "fdf3ba8828c01db0c170fbddd42dff9be0f613ed4bd0c1429b52ac67394e7efc",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewModels.swift": "3276c76fb09610724ae1a3a845a91bc7fb7b9961df8dd5a7b14a27ed0cd1684a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewTransport.swift": "3f4dd6dbc3eb8717599fb37ed32ffd2d0f4879030d38d6da68110cd93a308d41",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report-review/inspect-missing.bin": "fdfd030b95caf1d37cac92dbfde684c63f2688079dc16c5eaddeaf518683b1a6",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report-review/inspect-photo.bin": "7c8cf27620ef632a2866be30015e86f5f40dc96d4becd6c8fcba5c1eae3e4465",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/Fixtures/avatar-report-review/responses.json": "5783fa2c67ad7a6b7446ea58922a03fe2d8853e764a6c5cd52dabc38dfcf023f",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportReviewTests.swift": "73901eedec13b4eeeb0108dbbe274cc2ae8b7539d083f49e25316de01fec4ae5",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportReviewTransportTests.swift": "f336df576ef3ad0b489a60e6192b72cbc55d7e4f46e2daf05d5f2d26fba40504",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewTransportTests.swift": "55fb01c1dbfc5202228ec4043fd6bef3ce846b912dd7941934008b9020afe405",
+    "gateway/scripts/export-avatar-report-review-native-fixture.mjs": "a734cda67d36c2ec650eae04642f04c1314b5fde0bd6d11f28ca3ead46f60114"
+  },
+  "native": {
+    "newFunctions": 24,
+    "focusedFinal": {
+      "tests": 25,
+      "passed": 25,
+      "includesExistingMessageDeadline": 1
+    },
+    "fullRuns": [
+      {
+        "platform": "macOS",
+        "defined": 765,
+        "passed": 763,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      },
+      {
+        "platform": "iOS26.1 iPhone17Pro Simulator",
+        "defined": 765,
+        "passed": 763,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      }
+    ],
+    "skips": [
+      "avatarUploadJournalPhysicalFileProtectionIsComplete",
+      "avatarDiskCachePhysicalFileProtectionIsComplete"
+    ],
+    "debugBuildForTesting": "passed",
+    "unsignedRelease": "passed",
+    "strictChangedSwift": 7
+  },
+  "wire": {
+    "generatorNode": [
+      "22.23.5",
+      "24.22.1"
+    ],
+    "cases": 15,
+    "byteExactFrames": 2,
+    "source": "Concrete local edge/Authority/Runtime/SQLite",
+    "real": [
+      "native URLSession with URLProtocol",
+      "native ImageIO/RGB decoder",
+      "local SQLite/Runtime wire"
+    ],
+    "modeled": [
+      "Apple",
+      "CDN",
+      "SIWA",
+      "accounts",
+      "IP"
+    ],
+    "externalNetwork": false,
+    "newGeneratorSyntaxBothNodes": true,
+    "priorBackend958NotRepeated": "No backend src edits; only new fixture exporter."
+  },
+  "negativeControl": {
+    "mutation": "Omit only complete-frame digest validation before RGB decoder",
+    "selected": 1,
+    "failedTests": 1,
+    "issues": 1,
+    "sourceSHA256": "6a584d948c8597a7b230d2ecea1c9a1c8ea01293544cfac7aebd6644f3120bed",
+    "originalUnchanged": true,
+    "observed": "A damaged frame reaches decoder when only the predecode SHA guard is removed; test requires zero decoder calls."
+  },
+  "failedAttempts": [
+    "initial swift build blocked by sandbox compiler cache; authorized local build passed",
+    "preparation assertion caught double name substitution; corrected before transport compilation",
+    "initial test compile: new fixture helpers collided with existing intake names; assigned separate ReportedPhoto names",
+    "initial focus20/21 and isolated deadline failed uptime-only lower bound; existing message deadline failed in same control too",
+    "control measured wall1013.2280969619751 seconds versus uptime0.6412822499987669 seconds; transport correctly refused on wall expiry",
+    "test now accepts either clock reaching deadline, preserves uptime upper19 seconds and no retry; one duplicate wallStart declaration corrected before final focus/full runs"
+  ],
+  "clockContract": {
+    "transport": "wall and uptime floors after callbacks, absolute15s, retained task until exact system completion",
+    "client": "activation/cancellation/time before/after network and decoder; received clock floor and total15s",
+    "tests": "deterministic partial wall rollback, partial uptime rollback and15s advancement plus actual native deadline under both clocks"
+  },
+  "privacy": [
+    "closed request metadata512B",
+    "frame268292B metadata12288B JPEG256000B",
+    "digest and target checked before off-main RGB decode",
+    "null photo has no tail and cannot hide/substitute newer image",
+    "public descriptions/mirrors redact material",
+    "recovery HTTP retains only4 fields; future local journal must also bind validated photoTarget without reason/pixels/receipt/token"
+  ],
+  "logs": {
+    "wire22": {
+      "path": "/private/tmp/echoes-avatar-report-review-wire22.log",
+      "sha256": "9dbcf71adde3ea0cbb2cc7d6848170a1ae211bbb9b130965f9cd33c67e644583",
+      "bytes": 279
+    },
+    "wire24": {
+      "path": "/private/tmp/echoes-avatar-report-review-wire24.log",
+      "sha256": "aec896075cbd937bda4057430e81762f80c171b4f2e8ff654ffb9d8b388c8ae4",
+      "bytes": 110
+    },
+    "native-build": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-build.log",
+      "sha256": "4139a875667914a0387f8624db0834a8eeb22ead6c9f853f311d2a4791c9c7a7",
+      "bytes": 2268
+    },
+    "native-build2": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-build2.log",
+      "sha256": "3277fe1c671ada8734139b27b2edc44581603c634110fce12f09a97e2b7b32cc",
+      "bytes": 150
+    },
+    "native-focus": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-focus.log",
+      "sha256": "12a0cd907bf7b3b170284aa5b64a3491364a9439a516f5c95db2ff0b819d01ff",
+      "bytes": 21768
+    },
+    "native-focus2": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-focus2.log",
+      "sha256": "44c12693e90bbb9e86275229a540168430c2e5106ea9d6cac0da9819321f1914",
+      "bytes": 15514
+    },
+    "deadline-isolated": {
+      "path": "/private/tmp/echoes-avatar-report-review-deadline-isolated.log",
+      "sha256": "a7daaed52757e95c240a7b83a1324c9495745a3921fb4341bd86ae3a328faaa3",
+      "bytes": 941
+    },
+    "deadline-control": {
+      "path": "/private/tmp/echoes-avatar-report-review-deadline-control.log",
+      "sha256": "0a20d0c864b140bb300d1491e651dd7e023dc322ce276c6a07e5bc8db10fb09c",
+      "bytes": 1712
+    },
+    "native-focus3": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-focus3.log",
+      "sha256": "355d59d9272050f55d76bd3c5b90e9f1486f5f962dad07fb280656fd2802be4e",
+      "bytes": 17283
+    },
+    "native-focus4": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-focus4.log",
+      "sha256": "30ac46bc621f193fb55ed3504d059229ac1def03ef0156169a9850ce46fee30e",
+      "bytes": 5762
+    },
+    "swift-full": {
+      "path": "/private/tmp/echoes-avatar-report-review-swift-full.log",
+      "sha256": "1bcd7b60d50a9d919c4ae09fcee48b9da418cc2e33f73c6f061d02a84ed84e02",
+      "bytes": 156953
+    },
+    "package-sim": {
+      "path": "/private/tmp/echoes-avatar-report-review-package-sim.log",
+      "sha256": "3c86ac6cdf7bf86bbe09783f8012ac1f96ac3d68ebc53407d4846f8108173c1b",
+      "bytes": 266719
+    },
+    "native-negative": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-negative.log",
+      "sha256": "7a1830f529a7a2f3dd9d492e962dd6628a38a0fba165cc28b56bcad78b69f576",
+      "bytes": 11740
+    },
+    "release": {
+      "path": "/private/tmp/echoes-avatar-report-review-release.log",
+      "sha256": "af1889915e9e1af82475392a5400a4a730be7f43e71b2d6072825a721677cac0",
+      "bytes": 167630
+    },
+    "debug": {
+      "path": "/private/tmp/echoes-avatar-report-review-debug.log",
+      "sha256": "d43204df8572aacb2f816b5767f50914f602c17111e500c8105fedc66402da5d",
+      "bytes": 141880
+    },
+    "swift-lint": {
+      "path": "/private/tmp/echoes-avatar-report-review-swift-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "native-negative-preparation": {
+      "path": "/private/tmp/echoes-avatar-report-review-native-negative-preparation.json",
+      "sha256": "de2112293744532cfda9f1b1d7341396a2e656dca6f920f0576082b9858a3b42",
+      "result": {
+        "copy": "/private/tmp/echoes-avatar-report-review-native-negative",
+        "sourceSHA256": "6a584d948c8597a7b230d2ecea1c9a1c8ea01293544cfac7aebd6644f3120bed",
+        "mutation": "Omit only complete-frame digest validation before RGB decoder",
+        "test": "avatarReportReviewNativeRejectsEntireMalformedFrameBeforeDecoder"
+      }
+    },
+    "syntax": {
+      "path": "/private/tmp/echoes-avatar-report-review-syntax.json",
+      "sha256": "4083439debace112034b6a0c5235add1cf2d7c8c704d4c161432ba83321dd0c0",
+      "result": [
+        {
+          "runtime": "v22.23.5",
+          "newGeneratorSyntaxPassed": true
+        },
+        {
+          "runtime": "v24.22.1",
+          "newGeneratorSyntaxPassed": true
+        }
+      ]
+    }
+  },
+  "xcresult": "/private/tmp/echoes-avatar-report-review-package-sim.xcresult",
+  "uiKeychain": "No UI or Keychain change/acceptance in this substage; prior results remain historical.",
+  "preserved": {
+    "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingProjectSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6"
+  },
+  "limits": [
+    "No real SIWA/CloudKit query/ASSET/CDN/ordinary A-B/hosted Free/alarms/device acceptance",
+    "No new schema/roles/keys/secrets/services/activation/cost",
+    "No Apple/Cloudflare/phone SDK or Production/Firebase/TestFlight changes",
+    "EchoesAvatarReportV1 schema remains local proposal",
+    "Network gate covers task only; future host must retain its operation through decoder and journal",
+    "No proof of actual human display; journal/host then UI/Runtime and full migration gates remain"
+  ]
+}

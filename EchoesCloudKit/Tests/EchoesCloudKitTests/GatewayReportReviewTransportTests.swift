@@ -333,10 +333,14 @@ private func reportRequest(_ origin: URL) throws -> URLRequest {
     let origin = ReportURLProtocol.plan.install(.init(response: f.queue, finish: false))
     defer { ReportURLProtocol.plan.remove(origin) }
     let start = ProcessInfo.processInfo.systemUptime
+    let wallStart = Date()
     await #expect(throws: GatewayReportReviewFailure.unavailable) {
         try await reportNative(origin, fixture: f).queue(after: nil, token: reviewBearer)
     }
     let elapsed = ProcessInfo.processInfo.systemUptime - start
-    #expect(elapsed >= 14 && elapsed < 19)
+    // Either clock reaching the deadline must close the request. A machine sleep or wall
+    // adjustment can legitimately end it before 14 seconds of process uptime.
+    let wallElapsed = Date().timeIntervalSince(wallStart)
+    #expect(max(elapsed, wallElapsed) >= 14 && elapsed >= 0 && elapsed < 19)
     #expect(ReportURLProtocol.plan.count(origin) == 1)
 }

@@ -1,0 +1,355 @@
+{
+  "schemaVersion": 1,
+  "source": "Concrete local edge/Authority/Runtime/SQLite; modeled Apple/accounts/files/IP",
+  "nowMilliseconds": 1794603600000,
+  "cases": [
+    {
+      "label": "queue-open",
+      "action": "queue",
+      "input": {
+        "after": null
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "items": [
+          {
+            "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+            "createdAt": 1794603600000,
+            "expiresAt": 1797195600000
+          }
+        ],
+        "after": null
+      }
+    },
+    {
+      "label": "inspect-photo",
+      "action": "inspect",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "3261",
+        "content-type": "application/vnd.echoes.avatar-report-inspection.v1",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "frame": "inspect-photo.bin"
+    },
+    {
+      "label": "retire-pending",
+      "action": "retire",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "1727fe16-bfeb-4b96-97c0-aef478a3d69f",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "1727fe16-bfeb-4b96-97c0-aef478a3d69f",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "retired",
+        "revision": null
+      }
+    },
+    {
+      "label": "recover-retired",
+      "action": "recover",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "1727fe16-bfeb-4b96-97c0-aef478a3d69f",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "1727fe16-bfeb-4b96-97c0-aef478a3d69f",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "retired",
+        "revision": null
+      }
+    },
+    {
+      "label": "late-retired-decision",
+      "action": "decide",
+      "input": {
+        "inspectionID": "ef045a33-d0ff-4741-8c72-eaf88c5bb618",
+        "decisionID": "1727fe16-bfeb-4b96-97c0-aef478a3d69f",
+        "verdict": "hide_photo"
+      },
+      "status": 409,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_REPORT_REVIEW_STALE"
+      }
+    },
+    {
+      "label": "recover-not-applied",
+      "action": "recover",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "not-applied",
+        "revision": null
+      }
+    },
+    {
+      "label": "decide-hidden",
+      "action": "decide",
+      "input": {
+        "inspectionID": "ef045a33-d0ff-4741-8c72-eaf88c5bb618",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "inspectionID": "ef045a33-d0ff-4741-8c72-eaf88c5bb618",
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "revision": "364ad66c-81b7-4343-8d29-8b0400c40bea"
+      }
+    },
+    {
+      "label": "decide-replay",
+      "action": "decide",
+      "input": {
+        "inspectionID": "ef045a33-d0ff-4741-8c72-eaf88c5bb618",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "inspectionID": "ef045a33-d0ff-4741-8c72-eaf88c5bb618",
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "revision": "364ad66c-81b7-4343-8d29-8b0400c40bea"
+      }
+    },
+    {
+      "label": "recover-confirmed",
+      "action": "recover",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "confirmed",
+        "revision": "364ad66c-81b7-4343-8d29-8b0400c40bea"
+      }
+    },
+    {
+      "label": "retire-already-confirmed",
+      "action": "retire",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "949b171e-238e-44d5-a7e5-78efc0caf97a",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "confirmed",
+        "revision": "364ad66c-81b7-4343-8d29-8b0400c40bea"
+      }
+    },
+    {
+      "label": "recover-superseded",
+      "action": "recover",
+      "input": {
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "021688b5-8fcb-4fb2-ac4a-55fad0afa628",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "reportID": "community-v1-avatarreport-e3454d52fc438021719f3aa911b142e58f2fdefeb1becf64b206151e683e6af9",
+        "decisionID": "021688b5-8fcb-4fb2-ac4a-55fad0afa628",
+        "verdict": "hide_photo",
+        "contentHash": "ee5929923fa6448bf4f59a72b4e1b48af15792a5e3280635b7cb0de0e6dc3f0d",
+        "outcome": "superseded",
+        "revision": null
+      }
+    },
+    {
+      "label": "queue-closed",
+      "action": "queue",
+      "input": {
+        "after": null
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "schemaVersion": 1,
+        "items": [],
+        "after": null
+      }
+    },
+    {
+      "label": "queue-ordinary-denied",
+      "action": "queue",
+      "input": {
+        "after": null
+      },
+      "status": 403,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "AVATAR_REPORT_REVIEW_SCOPE"
+      }
+    },
+    {
+      "label": "queue-disabled",
+      "action": "queue",
+      "input": {
+        "after": null
+      },
+      "status": 503,
+      "headers": {
+        "cache-control": "no-store",
+        "content-type": "application/json",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "body": {
+        "protocolVersion": 1,
+        "error": "FEATURE_DISABLED"
+      }
+    },
+    {
+      "label": "inspect-missing",
+      "action": "inspect",
+      "input": {
+        "reportID": "community-v1-avatarreport-3e0712a5ad00eb4669586f025433d0055cdb55112d02e536891a83828d3af2f2"
+      },
+      "status": 200,
+      "headers": {
+        "cache-control": "private, no-store",
+        "content-length": "425",
+        "content-type": "application/vnd.echoes.avatar-report-inspection.v1",
+        "pragma": "no-cache",
+        "x-content-type-options": "nosniff"
+      },
+      "frame": "inspect-missing.bin"
+    }
+  ]
+}
