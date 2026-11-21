@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "stage": "R-03a-local-grant-discovery-preparation",
+  "date": "2026-11-21",
+  "baseCommit": "6c231eac76370d38d632c4a1021b1205e7ba4fd4",
+  "sources": {
+    "gateway/scripts/avatar-grant-discovery.mjs": "c4b622649beba60cc55230bea0efd656a32f3120902b222913986a1516013091",
+    "gateway/test/avatar-grant-discovery.test.mjs": "49421650861c812852bad1f119e996cf32cebf0cfbd0053416c7fc71b522db78"
+  },
+  "results": {
+    "node22": {
+      "version": "22.23.5",
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "logSHA256": "f6b3471066e911618866817c58944453f951c6f7ff449ff0c5c51a4e57b43a8f",
+      "provider": "explicitly synthetic; no Apple network",
+      "watchdogMainWithHungChild": "not executed"
+    },
+    "node24": {
+      "version": "24.22.1",
+      "tests": 8,
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "logSHA256": "ec2873312d63954982e9c2a74c792f356d14988c658eecb6d641123ec710283d",
+      "provider": "explicitly synthetic; no Apple network",
+      "watchdogMainWithHungChild": "not executed"
+    }
+  },
+  "actualPrivateCLI": {
+    "prepare": "passed",
+    "inspect": "passed",
+    "planSHA256": "60c77e9be76c699432f3c328163cae96aac81580ece6020d89000cae704882e2",
+    "inventoryBytes": 1204,
+    "requestTokens": 2,
+    "maximumRequests": 1,
+    "recordType": "EchoesAvatarV1",
+    "fields": [
+      "image",
+      "thumbnail"
+    ],
+    "directoryMode": "0700",
+    "fileMode": "0600",
+    "permitIssued": false,
+    "attemptReserved": false,
+    "reportCreated": false,
+    "cloudKitRequests": 0,
+    "returnedURLRequests": 0,
+    "recordWrites": 0,
+    "uploadedBytes": 0,
+    "privateKeyReadByCLI": false
+  },
+  "installedSchema": {
+    "sha256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543",
+    "bothAssetFieldsPresent": true,
+    "newSchemaOrRights": false
+  },
+  "limitations": [
+    "no live grant/host discovered",
+    "domain parsing is not permission to upload",
+    "no images, normalizer/CDN/CAS/retention or full R-03 acceptance",
+    "no ordinary-account A/B",
+    "no fresh full backend or iOS build; product code unchanged",
+    "live run requires a new exact approval and permit"
+  ],
+  "unchanged": [
+    "production asset pipeline and exact-host requirement",
+    "Cloudflare deployments, routes, configuration and secrets",
+    "native app and protected project",
+    "CloudKit schema, records, identities and keys",
+    "Production, Firebase, TestFlight and paid plans"
+  ]
+}
