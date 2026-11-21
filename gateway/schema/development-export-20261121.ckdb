@@ -1,0 +1,262 @@
+DEFINE SCHEMA
+
+    CREATE ROLE EchoesGatewayProbeService;
+    CREATE ROLE EchoesCommunityService;
+
+    RECORD TYPE EchoesAccessProbeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        nonce           STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE EchoesAvatarProfileV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        accountID       STRING,
+        createdAt       INT64,
+        deletionKey     STRING,
+        erased          INT64,
+        generation      INT64,
+        mutationKey     STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        schemaVersion   INT64,
+        updatedAt       INT64,
+        versionID       STRING,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesAvatarV1 (
+        "___createTime"      TIMESTAMP,
+        "___createdBy"       REFERENCE,
+        "___etag"            STRING,
+        "___modTime"         TIMESTAMP,
+        "___modifiedBy"      REFERENCE,
+        "___recordID"        REFERENCE,
+        accountID            STRING,
+        createdAt            INT64,
+        deletionKey          STRING,
+        erased               INT64,
+        image                ASSET,
+        imageByteCount       INT64,
+        imageHeight          INT64,
+        imageSha256          STRING,
+        imageWidth           INT64,
+        moderationState      STRING,
+        mutationKey          STRING,
+        normalizationVersion INT64,
+        ownerKey             STRING,
+        payloadHash          STRING,
+        retentionKey         STRING,
+        schemaVersion        INT64,
+        thumbnail            ASSET,
+        thumbnailByteCount   INT64,
+        thumbnailHeight      INT64,
+        thumbnailSha256      STRING,
+        thumbnailWidth       INT64,
+        updatedAt            INT64,
+        versionID            STRING,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesBlockV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        accountID       STRING,
+        blocked         INT64,
+        createdAt       INT64,
+        deletionKey     STRING,
+        erased          INT64,
+        mutationKey     STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        schemaVersion   INT64,
+        targetID        STRING,
+        updatedAt       INT64,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesGatewayProbeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        nonce           STRING,
+        schemaVersion   INT64,
+        GRANT READ, CREATE, WRITE TO EchoesGatewayProbeService
+    );
+
+    RECORD TYPE EchoesLocalMessageV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        accountID       STRING,
+        createdAt       INT64 QUERYABLE SORTABLE,
+        deletionKey     STRING,
+        erased          INT64 QUERYABLE,
+        expiresAt       INT64 QUERYABLE SORTABLE,
+        latitude        DOUBLE,
+        location        LOCATION QUERYABLE SORTABLE,
+        longitude       DOUBLE,
+        mutationKey     STRING,
+        name            STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        recordSortKey   STRING SORTABLE,
+        retentionKey    STRING,
+        schemaVersion   INT64,
+        text            STRING,
+        updatedAt       INT64,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesPresenceV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE QUERYABLE,
+        accountID       STRING,
+        active          INT64 QUERYABLE,
+        createdAt       INT64,
+        deletionKey     STRING,
+        erased          INT64 QUERYABLE,
+        expiresAt       INT64 QUERYABLE SORTABLE,
+        generation      INT64,
+        latitude        DOUBLE,
+        location        LOCATION QUERYABLE SORTABLE,
+        longitude       DOUBLE,
+        mutationKey     STRING,
+        name            STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        recordSortKey   STRING SORTABLE,
+        retentionKey    STRING,
+        schemaVersion   INT64,
+        song            STRING,
+        songID          STRING,
+        updatedAt       INT64 SORTABLE,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesPrivateProfileV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        displayName     STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE EchoesPrivateScopeV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        deleted         INT64 QUERYABLE SORTABLE,
+        deletionID      STRING QUERYABLE SEARCHABLE SORTABLE,
+        mutation        STRING QUERYABLE SEARCHABLE SORTABLE,
+        schemaVersion   INT64 QUERYABLE SORTABLE,
+        scopeDigest     STRING QUERYABLE SEARCHABLE SORTABLE,
+        GRANT WRITE TO "_creator",
+        GRANT CREATE TO "_icloud",
+        GRANT READ TO "_world"
+    );
+
+    RECORD TYPE EchoesPublicProfileV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        accountID       STRING,
+        createdAt       INT64,
+        deletionKey     STRING,
+        erased          INT64,
+        mutationKey     STRING,
+        name            STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        schemaVersion   INT64,
+        updatedAt       INT64,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesRegistryCheckpointV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        anchorID        STRING,
+        parentAnchorID  STRING,
+        registeredCount INT64,
+        registryID      STRING,
+        schemaVersion   INT64,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE EchoesReportV1 (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        accountID       STRING,
+        createdAt       INT64,
+        deletionKey     STRING,
+        erased          INT64,
+        messageID       STRING,
+        mutationKey     STRING,
+        ownerKey        STRING,
+        payloadHash     STRING,
+        reason          STRING,
+        retentionKey    STRING,
+        schemaVersion   INT64,
+        updatedAt       INT64,
+        GRANT READ, CREATE, WRITE TO EchoesCommunityService
+    );
+
+    RECORD TYPE Users (
+        "___createTime" TIMESTAMP,
+        "___createdBy"  REFERENCE,
+        "___etag"       STRING,
+        "___modTime"    TIMESTAMP,
+        "___modifiedBy" REFERENCE,
+        "___recordID"   REFERENCE,
+        roles           LIST<INT64>,
+        GRANT WRITE TO "_creator",
+        GRANT READ TO "_world"
+    );

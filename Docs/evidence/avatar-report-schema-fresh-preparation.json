@@ -1,0 +1,147 @@
+{
+  "observedAtUTC": "2026-11-21T16:31:09.259935+00:00",
+  "freshInput": "gateway/schema/development-export-20261121.ckdb",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development"
+  },
+  "inputSHA256": "6ee9f8e03394b502839774280090718f8ead5ea7090e19063c8c7d4d8c111025",
+  "proposedSHA256": "af48193c7d43a4473f219d643fbf24bb344acbd6b1b848eb8086c45cbed0534c",
+  "preservedTypes": [
+    "EchoesAccessProbeV1",
+    "EchoesAvatarProfileV1",
+    "EchoesAvatarV1",
+    "EchoesBlockV1",
+    "EchoesGatewayProbeV1",
+    "EchoesLocalMessageV1",
+    "EchoesPresenceV1",
+    "EchoesPrivateProfileV1",
+    "EchoesPrivateScopeV1",
+    "EchoesPublicProfileV1",
+    "EchoesRegistryCheckpointV1",
+    "EchoesReportV1",
+    "Users"
+  ],
+  "preservedRoles": [
+    "EchoesGatewayProbeService",
+    "EchoesCommunityService"
+  ],
+  "addedRole": null,
+  "addedTypes": [
+    {
+      "name": "EchoesAvatarReportV1",
+      "fields": {
+        "schemaVersion": {
+          "type": "INT64",
+          "options": []
+        },
+        "ownerKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "erased": {
+          "type": "INT64",
+          "options": []
+        },
+        "accountID": {
+          "type": "STRING",
+          "options": []
+        },
+        "mutationKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "payloadHash": {
+          "type": "STRING",
+          "options": []
+        },
+        "createdAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "updatedAt": {
+          "type": "INT64",
+          "options": []
+        },
+        "deletionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "retentionKey": {
+          "type": "STRING",
+          "options": []
+        },
+        "avatarID": {
+          "type": "STRING",
+          "options": []
+        },
+        "versionID": {
+          "type": "STRING",
+          "options": []
+        },
+        "publicationGeneration": {
+          "type": "INT64",
+          "options": []
+        },
+        "imageSHA256": {
+          "type": "STRING",
+          "options": []
+        },
+        "reason": {
+          "type": "STRING",
+          "options": []
+        }
+      },
+      "grants": [
+        {
+          "role": "EchoesCommunityService",
+          "rights": [
+            "READ",
+            "CREATE",
+            "WRITE"
+          ]
+        }
+      ]
+    }
+  ],
+  "roleAssignments": [],
+  "remoteValidation": "not performed",
+  "remoteImport": false,
+  "dataOperations": [],
+  "stage": "R-00 / R-01 preparation",
+  "baselineCommit": "1cf6b10f4ff424c4a9f387859e9dcccaa22cd33f",
+  "sourceDownload": "/Users/alex/Downloads/cloudkit-development (5).ckdb",
+  "freshExportBytes": 8657,
+  "freshIdenticalToInstalled20261119": true,
+  "currentTypeCount": 13,
+  "currentRoleCount": 2,
+  "missingType": "EchoesAvatarReportV1",
+  "localTests": {
+    "node22": {
+      "passed": 3,
+      "failed": 0
+    },
+    "node24": {
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "testLogs": {
+    "node22": {
+      "path": "/private/tmp/echoes-avatar-report-schema-fresh-node22.log",
+      "sha256": "b1a684ca6abfa8e14a8d0c8a38a0833cf9427fb61a4ab43d6ada9a005155a9f4"
+    },
+    "node24": {
+      "path": "/private/tmp/echoes-avatar-report-schema-fresh-node24.log",
+      "sha256": "c6c7b58ede7ca0e9b6cd66f3a653d325c1e3c951385e7780b062fc70b26716f3"
+    }
+  },
+  "screenshot": {
+    "path": "Docs/evidence/cloudkit-schema-export-review-20261121.jpg",
+    "sha256": "4c1a88f167cd5bfa623ef990bf9ed93e5b8d928780e78742168e39cf4cf0ad9d",
+    "narrowViewport": true,
+    "scope": "Read-only existing schema export; complete authoritative contents are in fresh CKDB file"
+  },
+  "approvalStatus": "pending; no remote validation/import, record or role assignment operations"
+}
