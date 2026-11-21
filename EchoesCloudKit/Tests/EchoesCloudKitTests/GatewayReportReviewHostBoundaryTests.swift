@@ -272,20 +272,6 @@ func reportReviewHostRejectsAccountChangeDuringTheLastJournalReadBeforeInspectOr
     }
 }
 
-private final class ReportHostAdvancingClock: @unchecked Sendable {
-    let base: Int
-    private let lock = NSLock()
-    private var start: TimeInterval?
-    init(_ base: Int) { self.base = base }
-    // Setup can be slow under a full parallel suite. Start real passage only once the
-    // material and observation are installed; the tested one-second deadline is unchanged.
-    func resume() { lock.withLock { start = ProcessInfo.processInfo.systemUptime } }
-    private func elapsed() -> TimeInterval {
-        lock.withLock { start.map { ProcessInfo.processInfo.systemUptime - $0 } ?? 0 }
-    }
-    func date() -> Date { .init(timeIntervalSince1970: Double(base) / 1000 + elapsed()) }
-    func uptime() -> TimeInterval { 100 + elapsed() }
-}
 private final class ReportHostNotification: @unchecked Sendable {
     let lock = NSLock()
     private var value = false
@@ -294,7 +280,9 @@ private final class ReportHostNotification: @unchecked Sendable {
 }
 @Test @MainActor func reportReviewHostLocalDeadlineNotifiesAndClosesTextWithoutNetworkPolling() async throws {
     let f = try ReportHostFixture()
-    let clock = ReportHostAdvancingClock(f.wire.now)
+    let clock = f.clock
+    let timer = PhotoGate()
+    await timer.arm()
     let reply = try reportBody(f.wire.inspection, ["inspectionExpiresAt": f.wire.now + 1000])
     let token = try await f.authorization.communityAccessToken(
         for: #require(f.authorization.communityAuthorization))
@@ -306,7 +294,11 @@ private final class ReportHostNotification: @unchecked Sendable {
         api: f.api, configuration: .init(origin: URL(string: f.api.origin)!),
         cloudKit: f.scope.owner.configuration,
         authorization: f.authorization, journal: f.journal, isEnabled: { true }, date: { clock.date() },
-        uptime: { clock.uptime() })
+        uptime: { clock.up() })
+    host.inspectionDeadlineWait = { milliseconds in
+        #expect(milliseconds == 1000)
+        await timer.enter()
+    }
     host.setForeground(true)
     try await host.connect()
     try await host.refreshQueue()
@@ -318,7 +310,9 @@ private final class ReportHostNotification: @unchecked Sendable {
     } onChange: {
         notification.mark()
     }
-    clock.resume()
+    try await timer.wait()
+    clock.move(wall: 1000, monotonic: 1)
+    await timer.release()
     try await reportHostWait { notification.read() }
     #expect(host.presentation == nil && host.material(for: shown) == nil)
     #expect(await f.api.calls == ["queue", "inspect"])

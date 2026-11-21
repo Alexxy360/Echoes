@@ -139,7 +139,15 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     @ObservationIgnored private var ownerObserved = false
     @ObservationIgnored private var ownerVersion: String?
     @ObservationIgnored private var ownerGeneration: Int?
-    @ObservationIgnored private var moderationFences: [String: Set<String>] = [:]
+    private enum ModerationFenceKey: Hashable {
+        case upload(String)
+        case reportedPhoto(String)
+    }
+    private enum ModerationFence: Equatable {
+        case upload(GatewayAvatarReviewRecoveryIntent)
+        case reportedPhoto(GatewayAvatarReportReviewSavedIntent)
+    }
+    @ObservationIgnored private var moderationFences: [String: [ModerationFenceKey: ModerationFence]] = [:]
     @ObservationIgnored private var moderationSaturated = false
     public private(set) var presentationRevision = UUID()
 
@@ -165,6 +173,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
     }
     public func bind(
         session: CommunitySession, pendingModeration: GatewayAvatarReviewRecoveryIntent? = nil,
+        pendingReportedPhotoModeration: GatewayAvatarReportReviewSavedIntent? = nil,
         isCurrent: @escaping @MainActor () -> Bool
     ) throws
         -> GatewayCommunityAvatarBinding
@@ -181,6 +190,7 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         current = isCurrent
         self.session = session
         if let pendingModeration { addModerationFence(pendingModeration) }
+        if let pendingReportedPhotoModeration { addReportedPhotoFence(pendingReportedPhotoModeration) }
         do { try session.bindPresentationObserver(self) } catch {
             invalidate(binding: id)
             throw GatewayFailure.configuration
@@ -222,12 +232,14 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         presentationRevision = UUID()
         reconcile()
     }
-    /// A trusted local pending decision hides all surfaces until an exact known outcome. Removing
-    /// this fence only permits a NEW protected read; it never authorizes cached pixels/publication.
+    /// Trusted local pending decisions hide all surfaces until an exact terminal outcome.
+    /// Removing a fence permits a NEW protected read, never old pixels or publication.
+    private var mayObserveModeration: Bool {
+        context != nil && current() && enabled() && source.communityAuthorization == authorization
+            && privateScope != nil && source.privateDataScope(configuration: cloudKit) == privateScope
+    }
     public func observeModeration(_ event: GatewayAvatarReviewPublicationEvent) {
-        guard context != nil, current(), enabled(), source.communityAuthorization == authorization,
-            privateScope != nil, source.privateDataScope(configuration: cloudKit) == privateScope
-        else { return }
+        guard mayObserveModeration else { return }
         let owner: String
         switch event {
         case .pending(let intent):
@@ -236,9 +248,37 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         case .resolved(let result):
             guard result.outcome.isTerminal else { return }
             owner = result.intent.item.accountID
-            guard moderationFences[owner]?.remove(result.intent.decisionID) != nil else { return }
-            if moderationFences[owner]?.isEmpty == true { moderationFences.removeValue(forKey: owner) }
+            let key = ModerationFenceKey.upload(result.intent.decisionID)
+            guard moderationFences[owner]?[key] == .upload(result.intent) else { return }
+            removeModerationFence(owner: owner, key: key)
         }
+        moderationDidChange(owner: owner)
+    }
+    public func observeModeration(_ event: GatewayAvatarReportReviewPublicationEvent) {
+        guard mayObserveModeration else { return }
+        let intent: GatewayAvatarReportReviewSavedIntent
+        switch event {
+        case .pending(let value): intent = value
+        case .resolved(let value, let outcome):
+            guard outcome.isTerminal else { return }
+            intent = value
+        }
+        guard intent.recovery.verdict == .hidePhoto, let target = intent.photoTarget else { return }
+        let owner = target.ownerID
+        switch event {
+        case .pending: addReportedPhotoFence(intent)
+        case .resolved:
+            let key = ModerationFenceKey.reportedPhoto(intent.recovery.decisionID)
+            guard moderationFences[owner]?[key] == .reportedPhoto(intent) else { return }
+            removeModerationFence(owner: owner, key: key)
+        }
+        moderationDidChange(owner: owner)
+    }
+    private func removeModerationFence(owner: String, key: ModerationFenceKey) {
+        moderationFences[owner]?.removeValue(forKey: key)
+        if moderationFences[owner]?.isEmpty == true { moderationFences.removeValue(forKey: owner) }
+    }
+    private func moderationDidChange(owner: String) {
         client.invalidate(ownerID: owner)
         for (key, group) in groups where key.owner == owner {
             discard(key, group)
@@ -248,12 +288,24 @@ public struct GatewayCommunityAvatarLease: Equatable, Sendable {
         reconcile()
     }
     private func addModerationFence(_ intent: GatewayAvatarReviewRecoveryIntent) {
-        let owner = intent.item.accountID
-        if moderationFences[owner]?.contains(intent.decisionID) == true { return }
+        addModerationFence(
+            owner: intent.item.accountID, key: .upload(intent.decisionID), value: .upload(intent))
+    }
+    private func addReportedPhotoFence(_ intent: GatewayAvatarReportReviewSavedIntent) {
+        guard intent.recovery.verdict == .hidePhoto, let target = intent.photoTarget else { return }
+        addModerationFence(
+            owner: target.ownerID, key: .reportedPhoto(intent.recovery.decisionID),
+            value: .reportedPhoto(intent))
+    }
+    private func addModerationFence(owner: String, key: ModerationFenceKey, value: ModerationFence) {
+        if let existing = moderationFences.values.compactMap({ $0[key] }).first {
+            if existing != value { moderationSaturated = true }
+            return
+        }
         if moderationFences.values.reduce(0, { $0 + $1.count }) >= 32 {
             moderationSaturated = true
         } else {
-            moderationFences[owner, default: []].insert(intent.decisionID)
+            moderationFences[owner, default: [:]][key] = value
         }
         if owner == authorization?.identity.accountID {
             ownerObserved = true

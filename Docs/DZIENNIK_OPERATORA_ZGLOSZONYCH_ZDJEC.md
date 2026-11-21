@@ -1,5 +1,7 @@
 # Dziennik operatora zgłoszonych zdjęć — CK-05d.2d.2a
 
+Późniejszy2d.2b dodaje lokalnie odebrany [host i rozłączne bariery](STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md); panel/Runtime/realny app-hosted Security pozostają2d.3. Poniższy opis i liczby dotyczą historycznego2d.2a.
+
 Podetap zapisów lokalnych z [planu2d](NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md). Nowy namespace publicznego API biblioteki, nadal bez hosta, emisji barier, panelu i Runtime aplikacji. Odbiór końcowy i hashe: [dowody](evidence/reported-photo-review-journal-local-tests.json).
 
 ## Minimalna intencja

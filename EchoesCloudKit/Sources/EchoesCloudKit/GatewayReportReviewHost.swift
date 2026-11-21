@@ -64,6 +64,11 @@ public struct GatewayReportReviewResolution: Equatable, Sendable, CustomStringCo
     private let isEnabled: @MainActor () -> Bool
     private let date: @MainActor () -> Date
     private let uptime: @MainActor () -> TimeInterval
+    // Internal timer seam keeps deterministic expiry tests aligned with their controlled clock.
+    // Production continues to wait the exact receipt-derived duration using Task.sleep.
+    @ObservationIgnored var inspectionDeadlineWait: @Sendable (Int) async throws -> Void = { milliseconds in
+        try await Task.sleep(for: .milliseconds(milliseconds))
+    }
     @ObservationIgnored private var context: Context?
     @ObservationIgnored private var retiredContextID: UUID?
     @ObservationIgnored private var retiredInspectionID: UUID?
@@ -238,8 +243,9 @@ public struct GatewayReportReviewResolution: Equatable, Sendable, CustomStringCo
         let milliseconds = Int(remaining.rounded(.up))
         let id = value.id
         deadlineTask?.cancel()
+        let wait = inspectionDeadlineWait
         deadlineTask = Task { [weak self] in
-            do { try await Task.sleep(for: .milliseconds(milliseconds)) } catch { return }
+            do { try await wait(milliseconds) } catch { return }
             guard self?.storedInspection?.id == id else { return }
             self?.expirePresentation()
         }

@@ -625,3 +625,240 @@ private func hostModerationIntent(
     f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 2))
     try await communityAvatarEventually { f.binding.image(for: lease) != nil }
 }
+
+private func hostReportedPhotoIntent(
+    _ reference: AvatarReference, decision: String = UUID().uuidString.lowercased(),
+    verdict: GatewayAvatarReportReviewVerdict = .hidePhoto
+) throws -> GatewayAvatarReportReviewSavedIntent {
+    try .init(
+        recovery: .init(
+            reportID: "community-v1-avatarreport-" + String(repeating: "a", count: 64), decisionID: decision,
+            verdict: verdict, contentHash: String(repeating: "b", count: 64)),
+        photoTarget: .init(
+            ownerID: reference.ownerID, versionID: reference.versionID, publicationGeneration: 1))
+}
+@Test @MainActor func avatarHostReportedPhotoPendingFencesMapProfileMessageAndPreservesOtherOwner()
+    async throws
+{
+    let f = try await CommunityAvatarHostFixture()
+    defer { f.close() }
+    let peer = f.photo.reference
+    let other = try AvatarReference(
+        ownerID: "67000000-0000-4000-8000-000000000003", versionID: peer.versionID)
+    f.data.people.append(f.person(other))
+    await f.session.refreshUsers()
+    f.data.page = .init(messages: [f.message(peer)], nextCursor: nil)
+    f.session.isChatOpen = true
+    await f.session.refreshMessages()
+    let map = try f.acquire(peer)
+    let profile = try f.acquire(peer, surface: .profile)
+    let message = try f.acquire(peer, surface: .message("message-1"))
+    let unrelated = try f.acquire(other)
+    try await communityAvatarEventually {
+        f.binding.image(for: map) != nil && f.binding.image(for: profile) != nil
+            && f.binding.image(for: message) != nil && f.binding.image(for: unrelated) != nil
+    }
+    let intent = try hostReportedPhotoIntent(peer)
+    f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(intent))
+    #expect(
+        f.binding.image(for: map) == nil && f.binding.image(for: profile) == nil
+            && f.binding.image(for: message) == nil)
+    #expect(f.binding.image(for: unrelated) != nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(peer) }
+}
+@Test @MainActor func avatarHostReportedPhotoAndUploadSameUUIDCannotReleaseEachOthersFence() async throws {
+    for reportFirst in [false, true] {
+        let f = try await CommunityAvatarHostFixture()
+        defer { f.close() }
+        let lease = try f.acquire()
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+        let nonce = UUID().uuidString.lowercased()
+        let upload = try hostModerationIntent(f.photo.reference, decision: nonce)
+        let report = try hostReportedPhotoIntent(f.photo.reference, decision: nonce)
+        let before = await f.photo.api.captured().count
+        f.host.observeModeration(GatewayAvatarReviewPublicationEvent.pending(upload))
+        f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(report))
+        if reportFirst {
+            f.host.observeModeration(
+                GatewayAvatarReportReviewPublicationEvent.resolved(intent: report, outcome: .retired))
+        } else {
+            f.host.observeModeration(
+                GatewayAvatarReviewPublicationEvent.resolved(.init(intent: upload, outcome: .retired)))
+        }
+        #expect(f.binding.image(for: lease) == nil)
+        #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
+        f.host.observeModeration(
+            GatewayAvatarReportReviewPublicationEvent.resolved(intent: report, outcome: .notApplied))
+        #expect(f.binding.image(for: lease) == nil)
+        #expect(await f.photo.api.captured().count == before)
+        await f.photo.api.gate.arm()
+        if reportFirst {
+            f.host.observeModeration(
+                GatewayAvatarReviewPublicationEvent.resolved(.init(intent: upload, outcome: .superseded)))
+        } else {
+            f.host.observeModeration(
+                GatewayAvatarReportReviewPublicationEvent.resolved(intent: report, outcome: .superseded))
+        }
+        try await f.photo.api.gate.wait()
+        #expect(f.binding.image(for: lease) == nil)
+        await f.photo.api.gate.release()
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+        #expect(await f.photo.api.captured().count == before + 1)
+    }
+}
+@Test @MainActor func avatarHostReportedPhotoAndUploadResolutionRequireFullSavedMetadata() async throws {
+    // Isolate each domain: a second legitimate fence must not mask an incorrect release.
+    for isReport in [false, true] {
+        let f = try await CommunityAvatarHostFixture()
+        defer { f.close() }
+        let lease = try f.acquire()
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+        let upload = try hostModerationIntent(f.photo.reference)
+        let report = try hostReportedPhotoIntent(f.photo.reference)
+        let reboundUpload = try GatewayAvatarReviewRecoveryIntent(
+            item: .init(
+                accountID: upload.item.accountID, requestID: UUID().uuidString.lowercased(),
+                versionID: upload.item.versionID, generation: upload.item.generation,
+                reviewRevision: upload.item.reviewRevision),
+            decisionID: upload.decisionID, verdict: upload.verdict)
+        let reboundReport = try GatewayAvatarReportReviewSavedIntent(
+            recovery: report.recovery,
+            photoTarget: .init(
+                ownerID: f.photo.reference.ownerID,
+                versionID: UUID().uuidString.lowercased(), publicationGeneration: 2))
+        if isReport {
+            f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(report))
+            f.host.observeModeration(
+                GatewayAvatarReportReviewPublicationEvent.resolved(intent: reboundReport, outcome: .retired))
+        } else {
+            f.host.observeModeration(GatewayAvatarReviewPublicationEvent.pending(upload))
+            f.host.observeModeration(
+                GatewayAvatarReviewPublicationEvent.resolved(.init(intent: reboundUpload, outcome: .retired)))
+        }
+        #expect(f.binding.image(for: lease) == nil)
+        #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire() }
+        if isReport {
+            f.host.observeModeration(
+                GatewayAvatarReportReviewPublicationEvent.resolved(intent: report, outcome: .retired))
+        } else {
+            f.host.observeModeration(
+                GatewayAvatarReviewPublicationEvent.resolved(.init(intent: upload, outcome: .retired)))
+        }
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+    }
+}
+@Test @MainActor func avatarHostReportedPhotoDismissDoesNotInvalidateAnUnchangedProtectedImage() async throws
+{
+    let f = try await CommunityAvatarHostFixture()
+    defer { f.close() }
+    let lease = try f.acquire()
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+    let before = await f.photo.api.captured().count
+    let dismiss = try hostReportedPhotoIntent(f.photo.reference, verdict: .dismiss)
+    f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(dismiss))
+    f.host.observeModeration(
+        GatewayAvatarReportReviewPublicationEvent.resolved(
+            intent: dismiss, outcome: .confirmed(revision: UUID().uuidString.lowercased())))
+    #expect(f.binding.image(for: lease) != nil)
+    #expect(await f.photo.api.captured().count == before)
+}
+@Test @MainActor func avatarHostReportedPhotoBootstrapAppliesBothDomainsBeforeAnyRead() async throws {
+    let f = try await CommunityAvatarHostFixture()
+    defer { f.close() }
+    let nonce = UUID().uuidString.lowercased()
+    let upload = try hostModerationIntent(f.photo.reference, decision: nonce)
+    let report = try hostReportedPhotoIntent(f.photo.reference, decision: nonce)
+    let before = await f.photo.api.captured().count
+    let bound = try f.host.bind(
+        session: f.session, pendingModeration: upload, pendingReportedPhotoModeration: report,
+        isCurrent: { true })
+    defer { bound.invalidate() }
+    #expect(throws: GatewayAvatarFailure.notFound) {
+        try bound.acquire(reference: f.photo.reference, surface: .map)
+    }
+    f.host.observeModeration(
+        GatewayAvatarReviewPublicationEvent.resolved(.init(intent: upload, outcome: .retired)))
+    #expect(throws: GatewayAvatarFailure.notFound) {
+        try bound.acquire(reference: f.photo.reference, surface: .map)
+    }
+    #expect(await f.photo.api.captured().count == before)
+    f.host.observeModeration(
+        GatewayAvatarReportReviewPublicationEvent.resolved(intent: report, outcome: .retired))
+    let lease = try bound.acquire(reference: f.photo.reference, surface: .map)
+    try await communityAvatarEventually { bound.image(for: lease) != nil }
+    #expect(await f.photo.api.captured().count == before + 1)
+}
+@Test @MainActor func avatarHostReportedPhotoOwnerEditorRequiresFreshOwnerObservationAfterTerminalOutcome()
+    async throws
+{
+    let f = try await CommunityAvatarHostFixture()
+    defer { f.close() }
+    let own = try hostOwnReference(f)
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own))
+    let lease = try f.acquire(own, surface: .ownerEditor)
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+    let intent = try hostReportedPhotoIntent(own)
+    f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(intent))
+    f.host.observeModeration(
+        GatewayAvatarReportReviewPublicationEvent.resolved(intent: intent, outcome: .retired))
+    #expect(f.binding.image(for: lease) == nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(own, surface: .ownerEditor) }
+    f.host.observeOwner(own.ownerID, snapshot: try hostOwnerSnapshot(own, generation: 2))
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+}
+@Test @MainActor func avatarHostReportedPhotoConflictingSameNonceClosesAdmissionForAllOwners() async throws {
+    for changesOwner in [false, true] {
+        let f = try await CommunityAvatarHostFixture()
+        defer { f.close() }
+        let peer = f.photo.reference
+        let other = try AvatarReference(
+            ownerID: "67000000-0000-4000-8000-000000000003", versionID: peer.versionID)
+        let untouched = try AvatarReference(
+            ownerID: "67000000-0000-4000-8000-000000000004", versionID: peer.versionID)
+        f.data.people.append(f.person(other))
+        f.data.people.append(f.person(untouched))
+        await f.session.refreshUsers()
+        let lease = try f.acquire(untouched)
+        try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+        let original = try hostReportedPhotoIntent(peer)
+        let rebound = try GatewayAvatarReportReviewSavedIntent(
+            recovery: original.recovery,
+            photoTarget: .init(
+                ownerID: changesOwner ? other.ownerID : peer.ownerID,
+                versionID: UUID().uuidString.lowercased(), publicationGeneration: 2))
+        f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(original))
+        #expect(f.binding.image(for: lease) != nil)
+        f.host.observeModeration(GatewayAvatarReportReviewPublicationEvent.pending(rebound))
+        #expect(f.binding.image(for: lease) == nil)
+        #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(untouched) }
+        f.host.observeModeration(
+            GatewayAvatarReportReviewPublicationEvent.resolved(intent: original, outcome: .retired))
+        #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(untouched) }
+    }
+}
+@Test @MainActor func avatarHostReportedPhotoAndUploadShareThirtyTwoSlotLimitEvenWithEqualNonces()
+    async throws
+{
+    let f = try await CommunityAvatarHostFixture()
+    defer { f.close() }
+    let peer = f.photo.reference
+    let other = try AvatarReference(
+        ownerID: "67000000-0000-4000-8000-000000000003", versionID: peer.versionID)
+    f.data.people.append(f.person(other))
+    await f.session.refreshUsers()
+    let lease = try f.acquire(other)
+    try await communityAvatarEventually { f.binding.image(for: lease) != nil }
+    for _ in 0..<16 {
+        let nonce = UUID().uuidString.lowercased()
+        f.host.observeModeration(
+            GatewayAvatarReviewPublicationEvent.pending(try hostModerationIntent(peer, decision: nonce)))
+        f.host.observeModeration(
+            GatewayAvatarReportReviewPublicationEvent.pending(
+                try hostReportedPhotoIntent(peer, decision: nonce)))
+    }
+    #expect(f.binding.image(for: lease) != nil)
+    f.host.observeModeration(
+        GatewayAvatarReportReviewPublicationEvent.pending(try hostReportedPhotoIntent(peer)))
+    #expect(f.binding.image(for: lease) == nil)
+    #expect(throws: GatewayAvatarFailure.notFound) { try f.acquire(other) }
+}

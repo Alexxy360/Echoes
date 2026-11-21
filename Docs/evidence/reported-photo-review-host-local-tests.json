@@ -1,0 +1,310 @@
+{
+  "stage": "CK-05d.2d.2b",
+  "date": "2026-11-21",
+  "baselineCommit": "23295e8c08affe2368f937be548f037b0b1302ac",
+  "scope": "Local reported-photo moderator host and separate upload/report presentation fences; UI/Runtime/app-hosted Keychain remain2d.3.",
+  "sources": {
+    "Docs/DZIENNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md": "c2acd805525b69ec2eb48de5e983d52467b1049474f46af3e3b9c9b7659f6a2e",
+    "Docs/DZIENNIK_ZMIAN.md": "6cc282ac3939542c97c40003a70c8403f1d38b8a7d069962eae18fdd09c8f686",
+    "Docs/HTTP_OPERATORA_ZGLOSZEN_ZDJEC.md": "9530c064f764ff97db6d6efe0dfe46d0ed9b86a2d36ac5758e5a622066e5f3c3",
+    "Docs/NATYWNY_OPERATOR_ZGLOSZEN_ZDJEC_PLAN.md": "95ca95825efd9270fd37471ad30e6e412a1fea737fe7770c89a79d4b0b2ea921",
+    "Docs/NATYWNY_TRANSPORT_OPERATORA_ZDJEC.md": "37f0495a0ae76215b6748da54e66f2aaa36ecab7946c2975076bfb7028287236",
+    "Docs/PLAN_MIGRACJI_CLOUDKIT.md": "b640f2c4d060ded0d0929ec7d63bd4075eae59c716fc7df6bd0adfd35498d973",
+    "Docs/STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC.md": "7ebe9f068a63e6e1bb02f7677396bcccf6715d7af993496c6fcea7bdc9662f22",
+    "Docs/STEROWNIK_OPERATORA_ZGLOSZONYCH_ZDJEC_PLAN.md": "4434d514938c2916e502fe59b8820effd453ff6ed601368bd48373ad505245b8",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewHost.swift": "d706b39b70b6fd29235fd0346d5ec2c45d64633ba954316a0d9602f115aa2524",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayAvatarReportReviewPublicationEvent.swift": "a1ae905d6bfa135c21c3cac54227273782feb03316c38065e2434489f7b1035c",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift": "89c9a833c3a14843e9442868eada8552b0bcdc5890390dadec0c8fcd6d7f2f8a",
+    "EchoesCloudKit/Sources/EchoesCloudKit/GatewayReportReviewHost.swift": "24bea1584d0640ddde5a974f894a6d4041ae3c683642ad6a12f25fb604696a4e",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayAvatarReportReviewHostTests.swift": "942766fe24782bb27924065e0f11c7093fe9458d7ef7d6cd90591ccdf2abc755",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayCommunityAvatarHostTests.swift": "d180f69f4386db9ce7bc3e5873953cd59f38cfc769bf468fb365a8714e9ffe67",
+    "EchoesCloudKit/Tests/EchoesCloudKitTests/GatewayReportReviewHostBoundaryTests.swift": "f4f8cdee848a19d8fe48de9f15cc50809f0cac92eb78206749542f0ff7354e57"
+  },
+  "native": {
+    "newFunctions": 40,
+    "newHostFunctions": 32,
+    "newPresentationFenceFunctions": 8,
+    "focused": {
+      "tests": 47,
+      "passed": 47,
+      "existingUploadRegressions": 6,
+      "existingMessageTimer": 1
+    },
+    "finalFullRuns": [
+      {
+        "platform": "macOS",
+        "defined": 836,
+        "passed": 834,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      },
+      {
+        "platform": "iOS26.1 iPhone17Pro Simulator",
+        "defined": 836,
+        "passed": 834,
+        "physicalDeviceOnlySkipped": 2,
+        "failed": 0
+      }
+    ],
+    "debugBuildForTesting": "passed final",
+    "unsignedRelease": "passed final; unchanged product sources after test-only weak capture",
+    "strictChangedSwift": 7
+  },
+  "negativeControls": [
+    {
+      "mutation": "Omit only scope check after the last awaited journal.pending before API",
+      "selected": 1,
+      "failedTests": 1,
+      "issues": 2,
+      "sourceSHA256": "d706b39b70b6fd29235fd0346d5ec2c45d64633ba954316a0d9602f115aa2524",
+      "refreshedFromFinalSources": true,
+      "originalUnchanged": true
+    },
+    {
+      "mutation": "Omit only exact reported-photo saved intent match before releasing fence",
+      "selected": 1,
+      "failedTests": 1,
+      "issues": 1,
+      "sourceSHA256": "89c9a833c3a14843e9442868eada8552b0bcdc5890390dadec0c8fcd6d7f2f8a",
+      "refreshedFromFinalSources": true,
+      "originalUnchanged": true
+    }
+  ],
+  "contracts": [
+    "opaque actual material getter precedes technical display ACK; not proof of human viewing",
+    "native/private/account/parent/foreground/lease/epoch and clock floors, including post-last-await before API",
+    "durable exact SavedIntent prepared/dispatched before decision, pending after prepare, resolved only after durable terminal outcome/current scope",
+    "not-applied/retiring never release or allow ACK/new nonce; explicit retire no resubmit",
+    "reconnect pending/retiring or terminal uses same target and fresh local resolution handle",
+    "separate upload/report keys, full-intent match, global domain-nonce conflict detection across owners and shared32 capacity",
+    "terminal release permits only fresh protected read and fresh owner observation, never old pixels or publication",
+    "bind accepts both pending metadata but app Runtime wiring still pending"
+  ],
+  "real": [
+    "journal/GCD/leases/storage logic",
+    "native HTTP parser of previous concrete local Runtime wire",
+    "CGImage/validated image pipeline/cache",
+    "local caller scene/account/parent model transitions"
+  ],
+  "modeled": [
+    "API/accounts/Apple/iCloud identity/provider for new host/fences",
+    "synchronous journal memory storage",
+    "timer dependency for deterministic expiry tests"
+  ],
+  "timer": {
+    "production": "unchanged Task.sleep for exact receipt-derived duration; getters independently enforce expiry",
+    "internalTestSeam": "inspectionDeadlineWait; controlled1,000ms expectation and manual clock/gate",
+    "notProven": "precision/scheduling of physical-device timers"
+  },
+  "failedAttempts": [
+    "initial new helper missed event fields; added",
+    "new actor properties/await inside boolean test autoclosures separated before focus",
+    "full835 Mac passed; first iOS835 had832pass+2skip+1 old-message expiry notification failure",
+    "paused fake clock could resume after real one-shot expiry had run; replaced inconsistent test clock/wait pairing, retained exact1s and production Task.sleep",
+    "test clock adapter name fixed before final focus",
+    "full metadata check strengthened so each domain tested alone; global owner conflict check added",
+    "weak test callback capture removes fixture cycle; both full836 rerun on final files; negatives refreshed"
+  ],
+  "logs": {
+    "host-build": {
+      "path": "/private/tmp/echoes-reported-photo-host-build.log",
+      "sha256": "aa64baf043c44b7ab76550c82910781a716b2644b43ee24e745eff6a2c405339",
+      "bytes": 136
+    },
+    "fence-build": {
+      "path": "/private/tmp/echoes-reported-photo-fence-build.log",
+      "sha256": "7a1a252ae26cfef2e715966db5d6dad6bfb06f95d81103564a105d67ac3e7be4",
+      "bytes": 108
+    },
+    "host-focus": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus.log",
+      "sha256": "8321a90c7d32f63022e96105dc7e843f8418ed8f318545bad025e13222a3d0c0",
+      "bytes": 18378
+    },
+    "host-focus2": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus2.log",
+      "sha256": "440b6b7b69901c2183634db6b80ae66a471f1a8db29bdd2bbe16cdbf7129696b",
+      "bytes": 23132
+    },
+    "host-focus3": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus3.log",
+      "sha256": "4a08486cc078c071e0ebb623611b6b4d2c27e7b034e647c81c15f4d05ca12f92",
+      "bytes": 30067
+    },
+    "host-focus4": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus4.log",
+      "sha256": "ee10d7a78837a648e8697da1c2d0575cc6e538c807fa8ffe3508ac5d70460007",
+      "bytes": 19121
+    },
+    "host-focus5": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus5.log",
+      "sha256": "c428545c0d0b1bff24f20b1e4805787a6eb772bd7ec399fe6121c9d0ca6360a8",
+      "bytes": 9992
+    },
+    "host-focus6": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus6.log",
+      "sha256": "ca0ea38b24522072a55297289f121c20886c694358eb394e41c5274512d35b5d",
+      "bytes": 10022
+    },
+    "host-focus7": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus7.log",
+      "sha256": "acfa098a33dd01d62abeb3e0e57125b2dba5d99ab5744dd0943157c0263c31ab",
+      "bytes": 19227
+    },
+    "host-focus8": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus8.log",
+      "sha256": "27ec087fbe768bf4f52f56c0c88d6db6db903823a7b1dd9428884a14f79da0ad",
+      "bytes": 10397
+    },
+    "host-focus9": {
+      "path": "/private/tmp/echoes-reported-photo-host-focus9.log",
+      "sha256": "824f56ca66626e2f39421c670c6eca2d4ff59fde592a679c28eaba2d537bcb69",
+      "bytes": 10468
+    },
+    "host-lint": {
+      "path": "/private/tmp/echoes-reported-photo-host-lint.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "host-lint-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-lint-final.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "host-lint-final2": {
+      "path": "/private/tmp/echoes-reported-photo-host-lint-final2.log",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "host-swift-full": {
+      "path": "/private/tmp/echoes-reported-photo-host-swift-full.log",
+      "sha256": "d0ddd2fa199898a656967467e014336f5a93264b3335708e4f9ca5d9c57c10c3",
+      "bytes": 172597
+    },
+    "host-package-sim": {
+      "path": "/private/tmp/echoes-reported-photo-host-package-sim.log",
+      "sha256": "8ca0a4c0f6f5fe791bb13adb244b7cd1facc1002f4d8e42d84df6f7497aac782",
+      "bytes": 280646
+    },
+    "host-release": {
+      "path": "/private/tmp/echoes-reported-photo-host-release.log",
+      "sha256": "649c57f73886ac0bcfba8133c8838a0e552a9ab63d46fb8640e5341724b11bd6",
+      "bytes": 168753
+    },
+    "host-debug": {
+      "path": "/private/tmp/echoes-reported-photo-host-debug.log",
+      "sha256": "50041eaf0a8db2f578e60d5b92dccb1c2bc54eb11a0f9226cf5fe89dcace71e0",
+      "bytes": 141073
+    },
+    "host-swift-full-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-swift-full-final.log",
+      "sha256": "4dad3d9d6d518d7d706b0cca3840c323b5820452b51e6054505dd73dd18c5835",
+      "bytes": 172806
+    },
+    "host-package-sim-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-package-sim-final.log",
+      "sha256": "e25f0b1847497354cf1d018d31550b0984174fd9124edc7301951119a8b0e3bb",
+      "bytes": 233951
+    },
+    "host-release-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-release-final.log",
+      "sha256": "cb2ee2ce21b3c37db29f44e3290947e31802fac8b68e2986d35503f8444bc116",
+      "bytes": 166129
+    },
+    "host-swift-full-final2": {
+      "path": "/private/tmp/echoes-reported-photo-host-swift-full-final2.log",
+      "sha256": "c3bc6a9c7ff40d0dd4235bf344dacd744be0a000204ecd777a52222bfaad1683",
+      "bytes": 172969
+    },
+    "host-package-sim-final2": {
+      "path": "/private/tmp/echoes-reported-photo-host-package-sim-final2.log",
+      "sha256": "373a78ce6318ba4279bdc418d1d5791b70e5c223637c8ae24e98d7bc12554a39",
+      "bytes": 204785
+    },
+    "host-debug-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-debug-final.log",
+      "sha256": "b5827dca253fd25eaebc3b910e45ffd17fed2e876625f454f425e2f284e65893",
+      "bytes": 118680
+    },
+    "host-negative": {
+      "path": "/private/tmp/echoes-reported-photo-host-negative.log",
+      "sha256": "410894dbdeec9f2233df8bf1335b49b877d51ea90c5b708aa9e193958c674019",
+      "bytes": 11799
+    },
+    "fence-negative": {
+      "path": "/private/tmp/echoes-reported-photo-fence-negative.log",
+      "sha256": "0a78e1bf4ca5ce5906469bdfeca0872276c4dc83cee77672c1213e85eb0ee030",
+      "bytes": 11685
+    },
+    "host-negative-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-negative-final.log",
+      "sha256": "3ff42600bd7654f45de15ec2cdf954d08fc4868331d4e87bb8ab6e04ba1112a4",
+      "bytes": 1429
+    },
+    "fence-negative-final": {
+      "path": "/private/tmp/echoes-reported-photo-fence-negative-final.log",
+      "sha256": "670eeac48bf6fea1e035758e05ed5f205aea8a0dbf33cb0a1c1f7324851d090e",
+      "bytes": 1307
+    },
+    "hostNegativePreparation": {
+      "path": "/private/tmp/echoes-reported-photo-host-negative-preparation.json",
+      "sha256": "71c408a198cbb2e995fc0e396f7705db294f7c43d849209183cdb04172d5bb6d",
+      "result": {
+        "copy": "/private/tmp/echoes-reported-photo-host-negative",
+        "source": "Sources/EchoesCloudKit/GatewayAvatarReportReviewHost.swift",
+        "sourceSHA256": "d2accdab1728c1e8b90f4b0edf8e2fea7f36ee0ee59780c1cfec5c79ae3ee8cb",
+        "mutation": "Omit only scope check after the last awaited journal.pending before API",
+        "test": "avatarReportReviewHostScopeChangeDuringLastJournalReadStopsBeforeAPI"
+      }
+    },
+    "hostNegativePreparation-final": {
+      "path": "/private/tmp/echoes-reported-photo-host-negative-preparation-final.json",
+      "sha256": "17721b5f02d0a0958e981a1e49b51d0c1c5a9aad4e5df08648b4d05e1f6c3294",
+      "result": {
+        "copy": "/private/tmp/echoes-reported-photo-host-negative",
+        "source": "Sources/EchoesCloudKit/GatewayAvatarReportReviewHost.swift",
+        "sourceSHA256": "d706b39b70b6fd29235fd0346d5ec2c45d64633ba954316a0d9602f115aa2524",
+        "mutation": "Omit only scope check after the last awaited journal.pending before API",
+        "test": "avatarReportReviewHostScopeChangeDuringLastJournalReadStopsBeforeAPI",
+        "refreshedFromFinalSources": true
+      }
+    },
+    "fenceNegativePreparation": {
+      "path": "/private/tmp/echoes-reported-photo-fence-negative-preparation.json",
+      "sha256": "1e0bed571d004aada02d83c067309016b452de8b44992f224fc351ff42bc5ec1",
+      "result": {
+        "copy": "/private/tmp/echoes-reported-photo-fence-negative",
+        "source": "Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift",
+        "sourceSHA256": "46e80004e3b7e5967c1d3b1345c277f653ffeda3e3cc2ed41559b40574e3850c",
+        "mutation": "Omit only exact reported-photo saved intent match before releasing fence",
+        "test": "avatarHostReportedPhotoAndUploadResolutionRequireFullSavedMetadata"
+      }
+    },
+    "fenceNegativePreparation-final": {
+      "path": "/private/tmp/echoes-reported-photo-fence-negative-preparation-final.json",
+      "sha256": "e2b0af98ea1865766c1477272e608c8312f2be8e579f8725d4530a603556027a",
+      "result": {
+        "copy": "/private/tmp/echoes-reported-photo-fence-negative",
+        "source": "Sources/EchoesCloudKit/GatewayCommunityAvatarHost.swift",
+        "sourceSHA256": "89c9a833c3a14843e9442868eada8552b0bcdc5890390dadec0c8fcd6d7f2f8a",
+        "mutation": "Omit only exact reported-photo saved intent match before releasing fence",
+        "test": "avatarHostReportedPhotoAndUploadResolutionRequireFullSavedMetadata",
+        "refreshedFromFinalSources": true
+      }
+    }
+  },
+  "xcresult": "/private/tmp/echoes-reported-photo-host-package-sim-final2.xcresult",
+  "preserved": {
+    "actualProjectSHA256": "740d486097d43f074f0e44b40d51eab2268224fabc95969536e9bed7c6248e66",
+    "stagingProjectOverrideSHA256": "5154b268e9f19a6ddda17496df154c0d9637a2f3995434a81fb128c633539ef6",
+    "buildsFromStagingOverride": true
+  },
+  "limits": [
+    "No UI/Runtime integration or actual app-hosted Security roundtrip for this namespace",
+    "No new backend/schema/Core/deps/CI or backend958 repeat",
+    "No Apple/Cloudflare/phone SDK/new roles/keys/secrets/services/activation/cost",
+    "No Production/Firebase/TestFlight changes",
+    "real SIWA/query/ASSET/CDN/two ordinary A-B/Free/alarms/devices and full migration/cutover remain"
+  ],
+  "next": "2d.3 UI/confirmation/Root/lifecycle/Runtime/erasure/bootstrap both journals, real app Keychain and UI/AX/process restart"
+}
