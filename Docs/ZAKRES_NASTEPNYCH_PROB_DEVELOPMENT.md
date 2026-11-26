@@ -18,3 +18,7 @@ Mechanika i dalsze ograniczenia pozostają zgodne z [R-02](ZAKRES_PROBY_ZAPYTAN_
 Bez prawdziwych kont/profili, lokalizacji/Muzyki, obrazów/ASSET bytes/CDN, telefonu, hostingu lub sekretów w Cloudflare, zmian schematu/uprawnień, Production, Firebase, TestFlight i opłat. Jedynym odbiorcą jest dotychczasowe Apple CloudKit Development. Bez sekretów i surowych URL grantów w Git. Cloudflare po poprzedniej próbie pozostaje wyłączony i bez aktywnych sekretów.
 
 Nie zmieniano kodu narzędzi ani nie ponawiano niezmienionych testów/kompilacji. Ich wcześniejsze14i8testów na obu Node są opisane w poprzednich raportach; bieżące prepare/inspect wykonano na Node24.22.3. Te ograniczone próby nie zastępują pełnego R-02/R-03, zwykłego A/B, rzeczywistego uploadu obrazów ani gotowości TestFlight.
+
+## Kontrola zgody po wznowieniu celu
+
+Automatyczna kontrola zatwierdzania odrzuciła uruchomienie R-02 przed wykonaniem polecenia: wznowienie celu nie potwierdziło tego konkretnego zakresu użycia klucza oraz zapisu/usunięcia rekordów. Ponowny odczyt katalogów potwierdził brak permitów, attempt i logu wykonania obu prób. Nie wykonano zdalnego testu ani obejścia odrzucenia. Wysłano jedno pytanie z obiema operacjami i przyciskami odpowiedzi. Wymagana jest konkretna odpowiedź właściciela; do jej otrzymania nie tworzyć permitu ani nie uruchamiać run. Bieżące inwentarze i limity pozostają niezmienione.

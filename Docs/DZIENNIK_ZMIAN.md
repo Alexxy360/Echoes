@@ -1538,3 +1538,7 @@ R-04c.1b: pierwsza rzeczywista próba na iPhonie15Pro zaliczona po konkretnej zg
 ## R-02 / R-03a — świeże przygotowanie po rzeczywistym logowaniu
 
 Po push `eee34f7` sprawdzono stare katalogi: brak inventory.json, bez ponownego używania dawnych SHA. Niezmienione narzędzia prepare/inspect utworzyły nowe prywatne inwentarze: query SHA54a7a6eb…/revision0/state null oraz granty SHA68595368…, bez permitów/attempt/sieci. Lokalnie potwierdzono istniejący klucz Development i jego SPKI/metadata/0600. Kod, limity, usługi i schemat bez zmian; nie ponawiano testów lub kompilacji. Przygotowano [jeden wspólny zakres do zgody](ZAKRES_NASTEPNYCH_PROB_DEVELOPMENT.md), zachowujący oddzielne okna30min,32i1request oraz dokładne sprzątanie. [Dowody](evidence/next-development-trials-preparation.json). Nie uruchomiono zdalnych prób.
+
+## R-02 / R-03a — odrzucone uruchomienie po wznowieniu celu
+
+Próba uruchomienia przygotowanego R-02 przez lokalny CLI została odrzucona przez automatyczną kontrolę zatwierdzania przed wykonaniem polecenia. Powód: wznowienie celu nie stanowiło konkretnej zgody na ten zakres prywatnego klucza oraz tworzenia/usuwania rekordów. Odczyt obu prywatnych katalogów potwierdził brak permitów, attempt i logu wykonania; nie wykonano zdalnego testu ani obejścia. Uzupełniono istniejący [zakres](ZAKRES_NASTEPNYCH_PROB_DEVELOPMENT.md) i [dowody](evidence/next-development-trials-preparation.json), wysłano jedno pytanie o obie próby. Kod, schemat, klucze i usługi bez zmian; nie ponawiano testów. Dalsze uruchomienie wymaga konkretnej odpowiedzi właściciela.
