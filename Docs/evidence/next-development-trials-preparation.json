@@ -1,0 +1,47 @@
+{
+  "schemaVersion": 1,
+  "status": "prepared_not_approved_not_executed",
+  "observedAt": "2026-11-26T19:38:29.220Z",
+  "previousAuthenticationCheckpoint": "eee34f7",
+  "query": {
+    "planSHA256": "54a7a6eba5d08808695897c7a8aea6464d78bc2a02b6658ebd0ba83777317b05",
+    "scope": {
+      "team": "22YC9RAP4P",
+      "container": "iCloud.mpvEcho.Echo",
+      "environment": "development",
+      "database": "public",
+      "reviewedSchemaSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543"
+    },
+    "revision": 0,
+    "state": null,
+    "networkRequests": 0,
+    "windowActivated": false
+  },
+  "assetGrants": {
+    "planSHA256": "68595368b901c87add1cf25631a55d991b8651dcaf072698d4803f5bae3dcb7f",
+    "scope": {
+      "team": "22YC9RAP4P",
+      "container": "iCloud.mpvEcho.Echo",
+      "environment": "development",
+      "database": "public",
+      "reviewedSchemaSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543"
+    },
+    "tokens": 2,
+    "networkRequests": 0,
+    "uploads": false,
+    "recordWrites": false
+  },
+  "queryRecordCount": 12,
+  "queryMaximumCalls": 32,
+  "assetMaximumCalls": 1,
+  "perTrialMaximumMinutes": 30,
+  "existingLocalKeyPublicFingerprintAndMetadataVerified": true,
+  "privateKeyPermissionsVerified": true,
+  "newKeysOrRoles": false,
+  "permitsOrAttemptsIssued": false,
+  "oldTemporaryInventoryFilesMissing": true,
+  "codeChanged": false,
+  "testsRepeated": false,
+  "networkRequests": 0,
+  "preparationRuntime": "Node 24.22.3"
+}
