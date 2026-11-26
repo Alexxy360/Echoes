@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "stage": "R-04c.1b",
+  "status": "passed_with_stated_limits",
+  "environment": "Development",
+  "window": {
+    "issuedAtMS": 1795720058000,
+    "expiresAtMS": 1795722758000,
+    "cleanupByMS": 1795727258000,
+    "startedAt": "2026-11-26T19:07:38Z",
+    "expiresAt": "2026-11-26T19:52:38Z"
+  },
+  "accountIDSHA256": "2337c80ea38a21f71a1ea7bef9df558ee83c86c1fa5c4f4c2e916bce06a5d8be",
+  "interactiveLogins": 1,
+  "native": {
+    "realAppleAuthorization": true,
+    "successfulGatewayAccountMarker": true,
+    "launchWithoutSelectorEnvironment": true,
+    "coldRestartBeforeExpirationSameAccount": true,
+    "coldRestartAfterExpirationSameAccount": true,
+    "realElapsedBeforeRenewalObservationSeconds": 673,
+    "logoutAllOwnerConfirmed": true,
+    "clientStopped": true,
+    "manualAppleConsentRevocationOwnerConfirmed": true
+  },
+  "server": {
+    "realCodeExchangeSucceeded": true,
+    "singleAccountObserved": true,
+    "proofSequenceBefore": 0,
+    "proofSequenceAfter": 1,
+    "initialAccessExpiresAtMS": 1795720896330,
+    "renewedAccessExpiresAtMS": 1795721651636,
+    "generationBeforeLogout": 0,
+    "generationAfterLogout": 1,
+    "renewalGrantAbsentAfterLogout": true,
+    "logoutDoesNotClaimPhysicalSessionRowDeletion": true
+  },
+  "hosting": {
+    "plan": "Workers Free",
+    "additionalFeesEnabled": false,
+    "allCommunityAndDeletionFeaturesStayedDisabled": true,
+    "cloudKitPrivateKeyTransferred": false,
+    "activeSecretBindingsRemoved": true,
+    "httpRoutesDisabled": true,
+    "configurationMatchesInactiveSource": true,
+    "namespaceUnchanged": true,
+    "temporaryDeploymentTokenRevoked": true,
+    "tokenVerifyHTTPStatus": 401,
+    "localDeploymentTokenValueRemoved": true,
+    "siwaKeyRemainsRegistered": true,
+    "historicalSecretCopiesMayRemain": true
+  },
+  "cleanup": {
+    "status": "verified_complete_for_exact_trial_account",
+    "deleteStatementsExecuted": 7,
+    "zeroCounts": {
+      "verify-accounts-zero": 0,
+      "verify-sessions-zero": 0,
+      "verify-grants-zero": 0,
+      "verify-appleState-zero": 0,
+      "verify-credentials-zero": 0,
+      "verify-reservations-zero": 0,
+      "verify-challenge-zero": 0,
+      "verify-resetFence-zero": 0
+    },
+    "remoteSQLStatements": 23,
+    "limitRemoteSQLStatements": 40,
+    "completedAt": "2026-11-26T19:34:17.856Z",
+    "namespaceDropped": false,
+    "unknownChallengesAndCountersPreserved": true
+  },
+  "validation": {
+    "physicalUnsignedDebugBuild": "passed",
+    "manualSignatureAndEntitlements": "verified",
+    "ordinaryUnsignedReleaseBuild": "passed",
+    "releaseTrialFlagAndLogMarker": "absent",
+    "simulatorBuildForTesting": "passed",
+    "existingInactiveScreenUITest": {
+      "passed": 1,
+      "failed": 0
+    },
+    "strictSwiftFormat": "passed",
+    "fullUnchangedSuitesRepeated": false
+  },
+  "change": {
+    "path": "Echo/EchoApp.swift",
+    "sha256": "3ed882c97909ebe7652eb3d4eb93abb2c2ebd9bf84e945c79f0433a255eb1cac",
+    "purpose": "Select the isolated Debug authentication trial from the signed bundle before legacy AppServices, including ordinary icon launches."
+  },
+  "notProven": [
+    "Apple OAuth server refresh after policy 24h",
+    "Apple OAuth server revoke endpoint",
+    "two ordinary accounts A/B",
+    "community query/indexes",
+    "real assets/CDN",
+    "retention/PITR",
+    "full migrated AppServices",
+    "TestFlight readiness"
+  ],
+  "privateEvidenceSHA256": {
+    "login-evidence-private.json": "392bdd3929666e956e6065532b792512a3aa7266caff5649838e616bd71407a8",
+    "cold-before-evidence-private.json": "5bba7c3379fb52c2d946c6dd4e84faa51084a86ab2e241ae5dc289fd26399ffc",
+    "cold-after-evidence-private.json": "6faaa7c27ed76d0356995d7b36758534dfa000e5eb44c37649b2e92bd95f2412",
+    "renewal-server-evidence-private.json": "0b0efd4803c1381da595530633e383f849e0e28966571cd0d75417436339fe6c",
+    "session-after-logout-visible.json": "2170e6947fbe2ecffc198d521c3e417d0e923d53fbe764db1f1181ea15e2fd7c",
+    "disabled-receipt.json": "53026a71c547ccd15ec76145eb98f6b39fab3e05f8389dc28b8c73bc807e968a",
+    "deployment-token-revocation.json": "417c30b3daf28c5201e6b40b676d8d01329674a55b3a8d0f3e7f8d527083bd98",
+    "cleanup-plan-private.json": "d67a3d068f4eb96e38310340698580aa55a40bcd84bd038cf7f62a38008fd2cd",
+    "cleanup-ledger-private.json": "87d1b9aea362624595e3241bee6c2674499a978c21405578e636d7383478dff6",
+    "cleanup-complete-receipt.json": "a075e961ce1ba4d294a0ef86d9624d3aa177ac205c58f77af2d08ab00e5645a4",
+    "apple-consent-revocation-owner-confirmed.json": "0620a91d38d5cc96665cdc6015d98a03e521da45f9b76d57132486fa32c58929"
+  },
+  "screenshots": [
+    "first-authentication-trial-disabled-domains.jpg"
+  ]
+}

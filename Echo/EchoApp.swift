@@ -8,9 +8,16 @@ import SwiftUI
 struct EchoApp: App {
     @State private var services: AppServices
 
+    #if DEBUG
+        private static var isAuthenticationTrial: Bool {
+            Bundle.main.object(forInfoDictionaryKey: "EchoesGatewayAuthenticationTrial") as? Bool == true
+        }
+    #endif
+
     init() {
         #if DEBUG
-            if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1"
+            if Self.isAuthenticationTrial
+                || ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1"
                 || ProcessInfo.processInfo.environment["ECHOES_AVATAR_REPORT_REVIEW_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_REPORT_REVIEW_UI_PREVIEW"] != nil
                 || ProcessInfo.processInfo.environment["ECHOES_AVATAR_REVIEW_UI_PREVIEW"] != nil
@@ -35,7 +42,9 @@ struct EchoApp: App {
     var body: some Scene {
         WindowGroup {
             #if DEBUG
-                if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1" {
+                if Self.isAuthenticationTrial {
+                    GatewayAuthCheckView()
+                } else if ProcessInfo.processInfo.environment["ECHOES_PRIVATE_PROFILE_SDK_TEST"] == "1" {
                     PrivateProfileSDKProbeView()
                 } else if let mode = ProcessInfo.processInfo.environment[
                     "ECHOES_AVATAR_REPORT_REVIEW_UI_PREVIEW"]
