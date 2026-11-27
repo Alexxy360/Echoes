@@ -12,7 +12,16 @@ const codes = new Set(["GRANT_CONFIGURATION", "GRANT_DISABLED", "GRANT_INVENTORY
 export class AvatarGrantDiscoveryError extends Error {
   constructor(code = "GRANT_CONFIGURATION") { super("Development asset grant discovery refused or incomplete."); this.code = codes.has(code) ? code : "GRANT_CONFIGURATION"; }
 }
-const fail = code => { throw new AvatarGrantDiscoveryError(code); };
+const responseReasons = new Set(["response_type", "http_status", "content_type", "empty_body", "content_length",
+  "content_encoding", "body_limit", "length_mismatch", "json", "grant_shape", "token_shape", "token_scope",
+  "url_shape", "url_origin", "url_canonical", "url_provider"]);
+const fail = (code, reason) => {
+  const error = new AvatarGrantDiscoveryError(code);
+  if (responseReasons.has(reason)) error.responseReason = reason;
+  throw error;
+};
+const responseEncoding = response => (response.headers.get("Content-Encoding") ?? "identity").trim().toLowerCase();
+const supportedEncodings = new Set(["identity", "gzip", "x-gzip", "deflate", "br"]);
 // Permanently retired diagnostic identity, not an activation/deployment credential.
 const retiredDiagnosticKey = Object.freeze({
   keyID: "0663e7ddc1124c0522589f5db7d0786c19f80c35ac158199db561f6e79a80919",
@@ -50,43 +59,60 @@ export function verifyAvatarGrantDiscovery(prepared) {
 /** A sanitized result only. Provider URLs are never returned, persisted, opened or logged. */
 export function discoveredAvatarUploadHosts(prepared, body) {
   const { plan } = verifyAvatarGrantDiscovery(prepared);
-  if (!keys(body, ["tokens"]) || !Array.isArray(body.tokens) || body.tokens.length !== 2) fail("GRANT_RESPONSE");
+  if (!keys(body, ["tokens"]) || !Array.isArray(body.tokens) || body.tokens.length !== 2) fail("GRANT_RESPONSE", "grant_shape");
   const found = new Map();
   for (const token of body.tokens) {
-    if (!keys(token, ["recordName", "fieldName", "url"]) || token.recordName !== plan.request.tokens[0].recordName ||
-        !["image", "thumbnail"].includes(token.fieldName) || found.has(token.fieldName) || typeof token.url !== "string" ||
-        token.url.length > 8192 || /[^\x21-\x7e]/.test(token.url)) fail("GRANT_RESPONSE");
-    let url; try { url = new URL(token.url); } catch { fail("GRANT_RESPONSE"); }
-    if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash || url.href !== token.url ||
-        url.hostname.length > 253 || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(url.hostname) ||
-        !["icloud-content.com", "icloud.com", "apple-cloudkit.com"].some(domain => url.hostname.endsWith("." + domain))) fail("GRANT_RESPONSE");
+    if (!keys(token, ["recordName", "fieldName", "url"])) fail("GRANT_RESPONSE", "token_shape");
+    if (token.recordName !== plan.request.tokens[0].recordName || !["image", "thumbnail"].includes(token.fieldName) || found.has(token.fieldName)) fail("GRANT_RESPONSE", "token_scope");
+    if (typeof token.url !== "string" || token.url.length > 8192 || /[^\x21-\x7e]/.test(token.url)) fail("GRANT_RESPONSE", "url_shape");
+    let url; try { url = new URL(token.url); } catch { fail("GRANT_RESPONSE", "url_shape"); }
+    if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash) fail("GRANT_RESPONSE", "url_origin");
+    if (url.href !== token.url) fail("GRANT_RESPONSE", "url_canonical");
+    if (url.hostname.length > 253 || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(url.hostname) ||
+        !["icloud-content.com", "icloud.com", "apple-cloudkit.com"].some(domain => url.hostname.endsWith("." + domain))) fail("GRANT_RESPONSE", "url_provider");
     found.set(token.fieldName, url.hostname);
   }
   return { fields: Object.fromEntries(["image", "thumbnail"].map(field => [field, found.get(field)])),
     exactHosts: [...new Set(found.values())].sort(), uploadRequests: 0, recordWrites: 0 };
 }
 
-async function boundedGrantJSON(response, signal, check) {
+async function boundedGrantJSON(response, signal, check, diagnostics) {
   let reader, cancellation, abort;
   try {
     check();
-    if (!(response instanceof Response) || response.status !== 200 || response.redirected ||
-        !/^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") || !response.body) fail("GRANT_RESPONSE");
+    diagnostics.phase = "headers";
+    if (!(response instanceof Response)) fail("GRANT_RESPONSE", "response_type");
+    diagnostics.httpStatus = response.status;
+    diagnostics.jsonContentType = /^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "");
+    const encoding = responseEncoding(response);
+    diagnostics.contentEncoding = supportedEncodings.has(encoding) ? encoding : "other";
     const length = response.headers.get("Content-Length");
-    if (length !== null && (!/^\d+$/.test(length) || Number(length) > 16384)) fail("GRANT_RESPONSE");
+    diagnostics.contentLength = length !== null && /^\d+$/.test(length) && Number.isSafeInteger(Number(length)) ? Number(length) : null;
+    if (response.status !== 200 || response.redirected) fail("GRANT_RESPONSE", "http_status");
+    if (!diagnostics.jsonContentType) fail("GRANT_RESPONSE", "content_type");
+    if (!response.body) fail("GRANT_RESPONSE", "empty_body");
+    if (!supportedEncodings.has(encoding)) fail("GRANT_RESPONSE", "content_encoding");
+    if (length !== null && (!/^\d+$/.test(length) || Number(length) > 16384)) fail("GRANT_RESPONSE", "content_length");
     reader = response.body.getReader();
     const cancel = () => cancellation ??= reader.cancel();
     abort = () => { void cancel().catch(() => {}); }; signal.addEventListener("abort", abort, { once: true });
+    diagnostics.phase = "body";
     const parts = []; let size = 0;
     while (true) {
       check(); const { value, done } = await reader.read(); if (done) break;
-      if (!(value instanceof Uint8Array) || parts.length >= 64 || (size += value.byteLength) > 16384) fail("GRANT_RESPONSE");
+      if (!(value instanceof Uint8Array)) fail("GRANT_RESPONSE", "body_limit");
+      size += value.byteLength;
+      diagnostics.decodedBytes = Math.min(size, 16385);
+      if (parts.length >= 64 || size > 16384) fail("GRANT_RESPONSE", "body_limit");
       parts.push(value);
     }
-    check(); if (length !== null && Number(length) !== size) fail("GRANT_RESPONSE");
+    // Fetch decodes gzip/br/deflate but may retain the compressed entity's Content-Length.
+    // The streamed, decoded byte limit above remains authoritative for every encoding.
+    check(); if (encoding === "identity" && length !== null && Number(length) !== size) fail("GRANT_RESPONSE", "length_mismatch");
     const bytes = new Uint8Array(size); let offset = 0;
     for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
-    try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } catch { fail("GRANT_RESPONSE"); }
+    diagnostics.phase = "json";
+    try { return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)); } catch { fail("GRANT_RESPONSE", "json"); }
   } finally {
     if (reader) { signal.removeEventListener("abort", abort); try { await (cancellation ?? reader.cancel()); } finally { reader.releaseLock(); } }
     else if (response?.body) await response.body.cancel();
@@ -97,6 +123,8 @@ async function boundedGrantJSON(response, signal, check) {
 export async function avatarGrantDiscoveryCommand(args, { env = process.env, clock = Date.now, monotonic = () => performance.now(),
   fetchImplementation = fetch, signal, onActivation = () => {} } = {}) {
   let mayHaveStarted = false, watcher, timer, removeAbort;
+  const diagnostics = { phase: "configuration", httpStatus: null, jsonContentType: null,
+    contentEncoding: null, contentLength: null, decodedBytes: 0, tokenCount: null, providerError: null };
   try {
     if (!Array.isArray(args) || args.some(value => typeof value !== "string")) fail();
     const [command, directory, sha256, permitPath, keyPath] = args;
@@ -154,15 +182,24 @@ export async function avatarGrantDiscoveryCommand(args, { env = process.env, clo
     if (request.url !== "https://api.apple-cloudkit.com/database/1/iCloud.mpvEcho.Echo/development/public/assets/upload" ||
         request.method !== "POST" || request.redirect !== "manual") fail();
     transportCheck();
+    diagnostics.phase = "request";
     const response = await fetchImplementation(request, { signal: controller.signal });
-    const body = await boundedGrantJSON(response, controller.signal, transportCheck); transportCheck();
+    const body = await boundedGrantJSON(response, controller.signal, transportCheck, diagnostics); transportCheck();
+    diagnostics.phase = "grants";
+    diagnostics.tokenCount = Array.isArray(body?.tokens) ? body.tokens.length : null;
+    if (body?.serverErrorCode !== undefined) diagnostics.providerError =
+      ["BAD_REQUEST", "ACCESS_DENIED", "AUTHENTICATION_FAILED", "AUTHENTICATION_REQUIRED", "NOT_FOUND", "THROTTLED", "QUOTA_EXCEEDED", "INTERNAL_ERROR", "TRY_AGAIN_LATER"].includes(body.serverErrorCode) ? body.serverErrorCode : "OTHER";
     const result = { status: "hosts_discovered", exitCode: 0, planSHA256: sha256, scope: prepared.plan.scope, window: permit.window,
       networkRequests: 1, ...discoveredAvatarUploadHosts(prepared, body) };
     await publishProtocolPrivateJSON(join(directory, "report.json"), result);
     return result;
   } catch (error) {
     const safe = error instanceof AvatarGrantDiscoveryError ? error : new AvatarGrantDiscoveryError(mayHaveStarted ? "GRANT_IO" : "GRANT_PRIVATE_FILE");
-    safe.requestMayHaveStarted = mayHaveStarted; throw safe;
+    safe.requestMayHaveStarted = mayHaveStarted;
+    // Closed metadata only: never serialize provider reason, headers, URLs, bodies or key paths.
+    safe.diagnostics = Object.freeze({ ...diagnostics,
+      responseReason: responseReasons.has(safe.responseReason) ? safe.responseReason : null });
+    throw safe;
   } finally { clearInterval(watcher); clearTimeout(timer); removeAbort?.(); }
 }
 
@@ -176,7 +213,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     } });
     process.stdout.write(JSON.stringify(result) + "\n"); process.exit(result.exitCode);
   } catch (error) {
-    process.stderr.write(JSON.stringify({ status: error.requestMayHaveStarted ? "incomplete" : "refused", errorCode: error.code }) + "\n");
+    process.stderr.write(JSON.stringify({ status: error.requestMayHaveStarted ? "incomplete" : "refused", errorCode: error.code, diagnostics: error.diagnostics }) + "\n");
     process.exit(error.requestMayHaveStarted ? 3 : 2);
   } finally { clearTimeout(watchdog); process.off("SIGINT", abort); process.off("SIGTERM", abort); }
 }

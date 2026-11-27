@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "status": "prepared_not_approved_not_executed",
+  "status": "preparation_followed_by_executed_trials",
   "observedAt": "2026-11-26T19:38:29.220Z",
   "previousAuthenticationCheckpoint": "eee34f7",
   "query": {
@@ -44,7 +44,7 @@
   "testsRepeated": false,
   "networkRequests": 0,
   "preparationRuntime": "Node 24.22.3",
-  "authorizationGate": {
+  "previousAutomaticApprovalRejection": {
     "status": "awaiting_explicit_scope_confirmation",
     "automaticApprovalReview": "rejected_before_execution",
     "reason": "Resuming the active goal did not explicitly approve the prepared CloudKit trial that uses the existing private key and creates/deletes synthetic records.",
@@ -53,5 +53,14 @@
     "executionLogCreated": false,
     "externalTrialExecuted": false,
     "retryWithoutConfirmationAllowed": false
-  }
+  },
+  "authorizationGate": {
+    "status": "explicitly_approved_and_executed",
+    "userReply": "Tak, zatwierdzam obie próby",
+    "scopeOperationsAndLimitsUnchanged": true,
+    "queryExecuted": true,
+    "assetGrantExecuted": true
+  },
+  "preparationSnapshotOnly": true,
+  "actualResults": "community-query-and-grants-development-results.json"
 }

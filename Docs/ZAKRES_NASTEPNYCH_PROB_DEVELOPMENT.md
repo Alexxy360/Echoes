@@ -1,6 +1,6 @@
 # Następne próby CloudKit Development — R-02 / R-03a
 
-**Przygotowane lokalnie, niezatwierdzone i niewykonane.** Logowanie i sprzątanie R-04c.1b zaliczone w `eee34f7` ([wynik](PIERWSZA_PROBA_LOGOWANIA_WYNIK.md)). Jeden zakres obejmuje dwa odrębne wykonania istniejących narzędzi:
+**Wykonane po odpowiedzi „Tak, zatwierdzam obie próby”.** Wyniki: zapytania zaliczone i posprzątane; granty niezaliczone. Obie jednorazowe próby zużyte. [Raport](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md). Logowanie i sprzątanie R-04c.1b zaliczone w `eee34f7` ([wynik](PIERWSZA_PROBA_LOGOWANIA_WYNIK.md)). Jeden zakres obejmuje dwa odrębne wykonania istniejących narzędzi:
 
 | Próba | Nowy dokładny inwentarz SHA-256 | Limit i operacje |
 | --- | --- | --- |
@@ -22,3 +22,8 @@ Nie zmieniano kodu narzędzi ani nie ponawiano niezmienionych testów/kompilacji
 ## Kontrola zgody po wznowieniu celu
 
 Automatyczna kontrola zatwierdzania odrzuciła uruchomienie R-02 przed wykonaniem polecenia: wznowienie celu nie potwierdziło tego konkretnego zakresu użycia klucza oraz zapisu/usunięcia rekordów. Ponowny odczyt katalogów potwierdził brak permitów, attempt i logu wykonania obu prób. Nie wykonano zdalnego testu ani obejścia odrzucenia. Wysłano jedno pytanie z obiema operacjami i przyciskami odpowiedzi. Wymagana jest konkretna odpowiedź właściciela; do jej otrzymania nie tworzyć permitu ani nie uruchamiać run. Bieżące inwentarze i limity pozostają niezmienione.
+
+
+## Wykonanie po konkretnej zgodzie
+
+Późniejsza jednoznaczna odpowiedź właściciela usunęła opisaną wyżej blokadę zgody. R-02 wykonał10/32wywołań,12/12rekordów usuniętych i nieobecnych, brak pending/IO. R-03a wykonał1request i zakończył się GRANT_RESPONSE, bez hostów/uploadu/rekordu/retry. Oba permit usunięto po zakończeniu, attempt zachowane. [Wynik, lokalna poprawka gzip i granice](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md). Ponowny request wymaga [nowego zakresu](ZAKRES_PONOWNEJ_PROBY_GRANTOW_DEVELOPMENT.md); zgoda na oba poprzednie requesty nie jest odnawiana.

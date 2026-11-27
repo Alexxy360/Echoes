@@ -54,3 +54,7 @@ Wyjście `hosts_discovered` oznacza tylko zakończenie rozpoznania hostów. Kod 
 ## Dalszy odbiór
 
 Apple opisuje prośbę o URL, wysłanie danych i przypięcie assetu jako osobne operacje w [Uploading Assets](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/UploadAssets.html). Przyszła próba plików musi objąć obie wersje JPEG, manifest/SHA, faktyczny upload i odczyt, CAS, chronioną publikację, stare prawa i sprzątanie. Sam grant ani lokalny model tych wymagań nie spełniają. Usunięcie rekordu nie dowodzi natychmiastowego fizycznego usunięcia assetu lub unieważnienia starego URL CDN.
+
+## Rzeczywiste wykonanie i aktualny wynik
+
+Po późniejszej konkretnej zgodzie wykonano1request z nowego inwentarza SHA68595368…; GRANT_RESPONSE, bez zachowanego statusu/body i bez zaakceptowanych hostów, uploadu, rekordów lub retry. Rzeczywista przyczyna nieznana. Lokalnie odtworzono i naprawiono błąd gzip/Content-Length w CLI i uploaderze oraz dodano zamkniętą diagnostykę bez sekretów.992/992obuNode,42/42focus, bez wdrożenia. [Wynik i granice](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md). Przygotowana [jedna nowa próba](ZAKRES_PONOWNEJ_PROBY_GRANTOW_DEVELOPMENT.md) wymaga osobnej zgody; nie jest ponowieniem starego attempt.

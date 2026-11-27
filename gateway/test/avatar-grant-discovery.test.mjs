@@ -7,6 +7,7 @@ import { join } from "node:path";
 import { makeAvatarGrantDiscovery, verifyAvatarGrantDiscovery, discoveredAvatarUploadHosts, avatarGrantDiscoveryCommand } from "../scripts/avatar-grant-discovery.mjs";
 import { publishProtocolPrivateJSON } from "../scripts/community-protocol-files.mjs";
 import { barrier } from "./support/community-protocol-fixture.mjs";
+import { gzipJSONServer } from "./support/gzip-json-server.mjs";
 
 const code = expected => error => error.code === expected;
 const pair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
@@ -142,4 +143,52 @@ test("an aborted uncooperative fetch retains the actual run and prevents a secon
   await entered.promise; controller.abort(); await new Promise(resolve => setImmediate(resolve)); assert.equal(settled, false);
   await assert.rejects(f.run(), code("GRANT_PRIVATE_FILE"));
   release.release(); await checked; assert.equal(calls, 1);
+});
+
+
+test("real fetch decodes gzip grants without confusing compressed length with JSON bytes", async t => {
+  const f = await fixture(t), server = await gzipJSONServer(t, () => grant(f.prepared));
+  const result = await f.run({ fetchImplementation: (_request, { signal }) => server.fetch(signal) });
+  assert.equal(result.status, "hosts_discovered");
+  assert.equal(result.networkRequests, 1); assert.equal(server.calls, 1);
+  assert.deepEqual(result.exactHosts, ["synthetic-image.icloud-content.com", "synthetic-thumbnail.icloud-content.com"]);
+});
+
+
+test("gzip decoded bodies remain limited even when compressed Content-Length is small", async t => {
+  const f = await fixture(t), server = await gzipJSONServer(t, () => ({ padding: "p".repeat(20000) }));
+  await assert.rejects(f.run({ fetchImplementation: (_request, { signal }) => server.fetch(signal) }), error => {
+    assert.equal(error.code, "GRANT_RESPONSE"); assert.equal(error.diagnostics.contentEncoding, "gzip");
+    assert.ok(error.diagnostics.contentLength < 16384);
+    assert.equal(error.diagnostics.decodedBytes, 16385); assert.equal(error.diagnostics.responseReason, "body_limit");
+    return true;
+  });
+  assert.equal(server.calls, 1);
+  await assert.rejects(f.run(), code("GRANT_PRIVATE_FILE"));
+});
+
+test("failure diagnostics identify the rejection without provider text, URL, token or key data", async t => {
+  const cases = [
+    { reason: "http_status", response: () => new Response("SECRET-BODY", { status: 503, headers: { "Content-Type": "application/json; SECRET-HEADER" } }) },
+    { reason: "grant_shape", provider: "BAD_REQUEST", response: () => Response.json({ serverErrorCode: "BAD_REQUEST", reason: "SECRET-REASON", uuid: "SECRET-UUID", redirectURL: "https://secret.invalid/SECRET-PATH" }) },
+    { reason: "grant_shape", provider: "OTHER", response: () => Response.json({ serverErrorCode: "SECRET-ERROR", reason: "SECRET-REASON" }) },
+    { reason: "token_scope", response: f => { const body = grant(f.prepared); body.tokens[0].recordName = "SECRET-RECORD"; return Response.json(body); } },
+    { reason: "url_provider", response: f => { const body = grant(f.prepared); body.tokens[0].url = "https://secret.invalid/SECRET-PATH?token=SECRET-UPLOAD-TOKEN"; return Response.json(body); } },
+    { reason: "length_mismatch", response: f => Response.json(grant(f.prepared), { headers: { "Content-Length": "1" } }) },
+    { reason: "content_encoding", response: f => Response.json(grant(f.prepared), { headers: { "Content-Encoding": "SECRET-ENCODING" } }) },
+  ];
+  for (const item of cases) {
+    const f = await fixture(t); let calls = 0;
+    await assert.rejects(f.run({ fetchImplementation: async () => { calls++; return item.response(f); } }), error => {
+      assert.equal(error.code, "GRANT_RESPONSE"); assert.equal(error.requestMayHaveStarted, true);
+      assert.equal(error.diagnostics.responseReason, item.reason);
+      if (item.provider) assert.equal(error.diagnostics.providerError, item.provider);
+      const serialized = JSON.stringify({ errorCode: error.code, diagnostics: error.diagnostics });
+      for (const secret of ["SECRET", "secret.invalid", f.keyPath, "PRIVATE KEY"]) assert.equal(serialized.includes(secret), false);
+      return true;
+    });
+    assert.equal(calls, 1);
+    await assert.rejects(readFile(join(f.info.directory, "report.json")), error => error.code === "ENOENT");
+    await assert.rejects(f.run(), code("GRANT_PRIVATE_FILE"));
+  }
 });

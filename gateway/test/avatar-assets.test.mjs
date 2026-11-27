@@ -5,6 +5,7 @@ import { CloudKitAvatarAssets } from "../src/cloudkit-avatar-assets.mjs";
 import { PublicRecordRegistry } from "../src/public-record-registry.mjs";
 import { normalizePublicInput, recordIdentity } from "../src/public-record-schema.mjs";
 import { publicFixture, publicCode, syntheticAvatarReceiptVault } from "./support/public-record-fixture.mjs";
+import { gzipJSONServer } from "./support/gzip-json-server.mjs";
 
 const pair = generateKeyPairSync("ec", { namedCurve: "prime256v1" });
 const pem = pair.privateKey.export({ type: "pkcs8", format: "pem" });
@@ -424,4 +425,37 @@ test("clock deadline is enforced during body processing even before the timer ca
     }), { headers: { "Content-Type": "application/json" } }));
     await assert.rejects(() => f.client().upload(f.input()), publicCode("PUBLIC_UNAVAILABLE")); assert.equal(f.calls.length, 1);
   } finally { f.close(); }
+});
+
+
+test("real fetch accepts bounded gzip grant and receipt bodies using decoded bytes", async t => {
+  const f = await fixture();
+  try {
+    const server = await gzipJSONServer(t, () => f.calls.length === 1
+      ? { tokens: [{ recordName: f.context.recordName, fieldName: "image", url }] }
+      : { singleFile: file(bytes.length) });
+    f.hook(({ signal }) => server.fetch(signal));
+    const client = f.client(), handle = await client.upload(f.input());
+    assert.equal(server.calls, 2); assert.equal(f.calls.length, 2);
+    assert.deepEqual(client.recordField(handle, f.fieldOptions()), { type: "ASSET", value: file(bytes.length) });
+  } finally { f.close(); }
+});
+
+
+test("encoded responses retain decoded bounds and identity length mismatches still block upload", async t => {
+  for (const kind of ["gzip-limit", "identity-length", "unsupported-encoding"]) {
+    const f = await fixture();
+    try {
+      if (kind === "gzip-limit") {
+        const server = await gzipJSONServer(t, () => ({ padding: "p".repeat(20000) }));
+        f.hook(({ signal }) => server.fetch(signal));
+      } else {
+        f.hook(() => Response.json({ tokens: [{ recordName: f.context.recordName, fieldName: "image", url }] },
+          { headers: kind === "identity-length" ? { "Content-Length": "1" } : { "Content-Encoding": "unknown" } }));
+      }
+      await assert.rejects(() => f.client().upload(f.input()), publicCode("PUBLIC_RESPONSE"));
+      assert.equal(f.calls.length, 1);
+      assert.equal(f.db.prepare("SELECT phase FROM avatar_asset_transfers_v1").get().phase, "claimed");
+    } finally { f.close(); }
+  }
 });

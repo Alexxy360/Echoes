@@ -1,0 +1,177 @@
+{
+  "schemaVersion": 1,
+  "stage": "R-02b / R-03a.1",
+  "status": "query_passed_grants_failed_local_fix_verified",
+  "authorization": {
+    "userReply": "Tak, zatwierdzam obie próby",
+    "scopeCommit": "02f099f251bc0bb76bea8dbdd1b08eefa8b9b9f0",
+    "inventorySHAs": [
+      "54a7a6eba5d08808695897c7a8aea6464d78bc2a02b6658ebd0ba83777317b05",
+      "68595368b901c87add1cf25631a55d991b8651dcaf072698d4803f5bae3dcb7f"
+    ],
+    "newPrivilegesOrKeys": false,
+    "privateKeyTransferred": false
+  },
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development",
+    "database": "public",
+    "reviewedSchemaSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543"
+  },
+  "query": {
+    "status": "limited_query_protocol_verified",
+    "window": {
+      "id": "e51a98d8-2073-41b3-bffc-ad8af2213a82",
+      "issuedAt": 1795726553729,
+      "expiresAt": 1795728353729,
+      "mode": "full"
+    },
+    "calls": 10,
+    "limitCalls": 32,
+    "createdRecordCount": 12,
+    "presence": {
+      "expectedResults": 3,
+      "pages": 2,
+      "complete": true
+    },
+    "message": {
+      "expectedResults": 3,
+      "pages": 2,
+      "complete": true
+    },
+    "equalTimestampOrderingVerified": true,
+    "queryRestrictedToOwnIDs": true,
+    "desiredKeys": [
+      "ownerKey"
+    ],
+    "cleanupSucceeded": true,
+    "pendingRecords": 0,
+    "skippedExistingRecords": 0,
+    "pendingIO": false,
+    "durableState": {
+      "revision": 21,
+      "phase": "settled",
+      "recordStatusCounts": {
+        "absent": 12
+      },
+      "protocolPassed": true,
+      "cleanupComplete": true,
+      "createAttempted": true,
+      "callsTotal": 10
+    },
+    "fullR02GatePassed": false
+  },
+  "assetGrants": {
+    "status": "incomplete",
+    "errorCode": "GRANT_RESPONSE",
+    "window": {
+      "id": "5930f19b-d80f-48ed-ab1a-78a4825e1b6c",
+      "issuedAt": 1795726590729,
+      "expiresAt": 1795728390729
+    },
+    "networkRequestsAttempted": 1,
+    "maximumRequests": 1,
+    "httpStatusRecorded": false,
+    "responseBodyPersisted": false,
+    "exactHostsDiscovered": false,
+    "actualFailureCause": "unknown",
+    "uploads": 0,
+    "recordWrites": 0,
+    "returnedURLsFollowed": 0,
+    "attemptPreserved": true,
+    "temporaryProviderGrantsMayExist": true,
+    "automaticRetryPerformed": false
+  },
+  "localFix": {
+    "scope": "discovery CLI and production CloudKitAvatarAssets JSON responses",
+    "compressedContentLengthIsNotDecodedBodyLength": true,
+    "decodedResponseBytesLimit": 16384,
+    "chunkAndDeadlineBoundsPreserved": true,
+    "identityLengthMismatchStillRejected": true,
+    "unsupportedEncodingRejected": true,
+    "strictGrantURLAndOwnershipChecksPreserved": true,
+    "closedDiagnosticMetadataOnly": true,
+    "actualAppleFailureCauseNotClaimed": true,
+    "workerDeployed": false
+  },
+  "validation": {
+    "beforeFixRealLoopbackGzip": {
+      "tests": 2,
+      "failed": 2,
+      "expectedRegressionDemonstration": true
+    },
+    "afterFixTargetedNode24": {
+      "tests": 42,
+      "passed": 42
+    },
+    "fullGatewayNode22": {
+      "version": "22.23.5",
+      "tests": 992,
+      "passed": 992,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullGatewayNode24": {
+      "version": "24.22.3",
+      "tests": 992,
+      "passed": 992,
+      "failed": 0,
+      "skipped": 0
+    },
+    "node22SyntaxFiles": 5,
+    "newTestFunctions": 5,
+    "inactiveWorkerBundle": {
+      "built": true,
+      "deployed": false,
+      "indexSHA256": "08c42eddcd90191c310452433561825f3c4244b8c7341fee1a01423700468156",
+      "modules": 3
+    },
+    "iOSRebuilt": false,
+    "iOSCodeChanged": false
+  },
+  "permits": {
+    "queryAndGrantPermitsRevokedAfterRun": true,
+    "attemptsPreserved": true
+  },
+  "nextGrantProbe": {
+    "planSHA256": "fac1e30092f49f99f2b951009775123e56177f767bb5c705420b40c95ff6f422",
+    "status": "prepared_not_approved_not_executed",
+    "maximumRequests": 1,
+    "maximumMinutes": 30,
+    "uploadBytes": false,
+    "recordWrites": false,
+    "networkRequests": 0
+  },
+  "privateEvidenceSHA256": {
+    "queryReport": "ce95bdfc1e9ba8c5bb10ced58aee89881d65d0bbb1b5c64c463edad82fa0b000",
+    "queryAttempt": "4c65fc233d2f324fe257dabf6a95e3391750f4b417bf0058a9be305bf8c0e781",
+    "queryLog": "07eb851cf4befa896ecfc63a4773be926c5d462030a9c06c6778d59575428eb0",
+    "grantAttempt": "844768ae62a9e051d72e987c4000961f8c85113e3bcb975711114031561cb001",
+    "grantLog": "1d98038c904ca27043ff51dbc4f66a90ab546f61d90231f2a1ae8a7da970288e",
+    "queryPermitRevocation": "bde0c001613684d44d3e6117a37c05486dcf2303c159bfc62cd3b1be123689ee",
+    "grantPermitRevocation": "8e527f1bc1c9dc3be37b0ecb745154c9134d313573868f3cbd3e15ffe4279f6d"
+  },
+  "localLogSHA256": {
+    "echoes-avatar-gzip-before-fix.log": "74c071a43d3cd85492600011c9c2610eb3f405ed40fc881cacb8ca8dff86f6c5",
+    "echoes-avatar-gzip-node24-tests.log": "3001c8a8daee279261ea71b9d685816b6f84816a89e49ddd005d759e8e6dda95",
+    "echoes-gateway-after-avatar-gzip-node22.log": "7f0f5c85ab320fe3c4dae07cda34f448278cdfd93e43b0acc30944d4a16f5143",
+    "echoes-gateway-after-avatar-gzip-node24.log": "c8ef02f889d0da11916c720c3045bfe256e4c868fb8b9396c6171a54a2dfe2a5"
+  },
+  "sourceSHA256": {
+    "gateway/scripts/avatar-grant-discovery.mjs": "2795ff76d203e54f71f4c6ae78541d5664443c95b51e16b041a03f2bf6f2fb29",
+    "gateway/src/cloudkit-avatar-assets.mjs": "af0e3a35027163b8cbbc43d6a70943a7e430e331b09a095be68e70ecb32983a1",
+    "gateway/test/avatar-assets.test.mjs": "bbb87cf410319955698f8a586200b2dc79dfd4f0e498160701351eca75e0b50c",
+    "gateway/test/avatar-grant-discovery.test.mjs": "0a936c9ad70221eccda89fd3af1e1cab12a869bb85ccfbfe1218a13773243808",
+    "gateway/test/support/gzip-json-server.mjs": "356e6d50a53cb58b8b33c93ad1cfcebf5b1b5ff149bb32b05fe390f9683f5501"
+  },
+  "remaining": [
+    "full R-02 beyond the restricted own-ID query",
+    "real asset grants and bytes upload/CDN",
+    "Apple OAuth server refresh/revoke",
+    "two ordinary accounts A/B",
+    "retention/erasure/PITR",
+    "ordinary migrated AppServices",
+    "TestFlight preparation"
+  ]
+}

@@ -69,7 +69,9 @@ export class CloudKitAvatarAssets {
       throw new PublicRecordError(response?.status === 429 ? "PUBLIC_THROTTLED" : "PUBLIC_UNAVAILABLE");
     }
     const length = response.headers.get("Content-Length");
+    const encoding = (response.headers.get("Content-Encoding") ?? "identity").trim().toLowerCase();
     if (!/^application\/json(?:\s*;|$)/i.test(response.headers.get("Content-Type") ?? "") || !response.body ||
+        !["identity", "gzip", "x-gzip", "deflate", "br"].includes(encoding) ||
         length !== null && (!/^\d+$/.test(length) || Number(length) > responseLimit)) {
       await response.body?.cancel().catch(() => {}); throw new PublicRecordError("PUBLIC_RESPONSE");
     }
@@ -86,7 +88,9 @@ export class CloudKitAvatarAssets {
         parts.push(value.slice());
       }
       check();
-      if (length !== null && size !== Number(length)) throw new PublicRecordError("PUBLIC_RESPONSE");
+      // Fetch may retain compressed Content-Length after decoding. Always bound decoded bytes;
+      // compare the entity length only when it describes the identity representation.
+      if (encoding === "identity" && length !== null && size !== Number(length)) throw new PublicRecordError("PUBLIC_RESPONSE");
       const bytes = new Uint8Array(size); let offset = 0;
       for (const part of parts) { bytes.set(part, offset); offset += part.byteLength; }
       return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
