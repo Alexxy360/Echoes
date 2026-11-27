@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { CloudKitDevelopmentSigner } from "../src/cloudkit-request.mjs";
 import { plain, publicUUID, digest, recordIdentity } from "../src/public-record-schema.mjs";
 import { queryCanonical } from "./community-query-plan.mjs";
+import { normalizeHTTPSAssetAuthority } from "../src/cloudkit-asset-url.mjs";
 import { readProtocolPrivateFile, ensureProtocolParent, publishProtocolPrivateJSON, requireProtocolFileAbsent } from "./community-protocol-files.mjs";
 
 const codes = new Set(["GRANT_CONFIGURATION", "GRANT_DISABLED", "GRANT_INVENTORY", "GRANT_PERMIT", "GRANT_KEY", "GRANT_WINDOW",
@@ -15,9 +16,13 @@ export class AvatarGrantDiscoveryError extends Error {
 const responseReasons = new Set(["response_type", "http_status", "content_type", "empty_body", "content_length",
   "content_encoding", "body_limit", "length_mismatch", "json", "grant_shape", "token_shape", "token_scope",
   "url_shape", "url_origin", "url_canonical", "url_provider"]);
-const fail = (code, reason) => {
+const fail = (code, reason, comparison) => {
   const error = new AvatarGrantDiscoveryError(code);
   if (responseReasons.has(reason)) error.responseReason = reason;
+  if (reason === "url_canonical") error.urlComparison = Object.freeze({
+    authorityNormalized: comparison?.authorityNormalized === true,
+    explicitDefaultHTTPSPort: comparison?.explicitDefaultHTTPSPort === true,
+  });
   throw error;
 };
 const responseEncoding = response => (response.headers.get("Content-Encoding") ?? "identity").trim().toLowerCase();
@@ -61,19 +66,27 @@ export function discoveredAvatarUploadHosts(prepared, body) {
   const { plan } = verifyAvatarGrantDiscovery(prepared);
   if (!keys(body, ["tokens"]) || !Array.isArray(body.tokens) || body.tokens.length !== 2) fail("GRANT_RESPONSE", "grant_shape");
   const found = new Map();
+  let authorityNormalizedURLCount = 0, defaultHTTPSPortURLCount = 0;
   for (const token of body.tokens) {
     if (!keys(token, ["recordName", "fieldName", "url"])) fail("GRANT_RESPONSE", "token_shape");
     if (token.recordName !== plan.request.tokens[0].recordName || !["image", "thumbnail"].includes(token.fieldName) || found.has(token.fieldName)) fail("GRANT_RESPONSE", "token_scope");
     if (typeof token.url !== "string" || token.url.length > 8192 || /[^\x21-\x7e]/.test(token.url)) fail("GRANT_RESPONSE", "url_shape");
     let url; try { url = new URL(token.url); } catch { fail("GRANT_RESPONSE", "url_shape"); }
-    if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash) fail("GRANT_RESPONSE", "url_origin");
-    if (url.href !== token.url) fail("GRANT_RESPONSE", "url_canonical");
+    if (url.protocol !== "https:" || url.port || url.username || url.password || token.url.includes("#")) fail("GRANT_RESPONSE", "url_origin");
+    const canonical = normalizeHTTPSAssetAuthority(token.url);
+    const explicitDefaultHTTPSPort = /^https:\/\/[a-z0-9.-]+:443(?=\/)/i.test(token.url);
+    if (url.href !== canonical) fail("GRANT_RESPONSE", "url_canonical", {
+      authorityNormalized: canonical !== token.url, explicitDefaultHTTPSPort,
+    });
     if (url.hostname.length > 253 || !/^[a-z0-9]+(?:[.-][a-z0-9]+)*$/.test(url.hostname) ||
         !["icloud-content.com", "icloud.com", "apple-cloudkit.com"].some(domain => url.hostname.endsWith("." + domain))) fail("GRANT_RESPONSE", "url_provider");
     found.set(token.fieldName, url.hostname);
+    authorityNormalizedURLCount += canonical !== token.url ? 1 : 0;
+    defaultHTTPSPortURLCount += explicitDefaultHTTPSPort ? 1 : 0;
   }
   return { fields: Object.fromEntries(["image", "thumbnail"].map(field => [field, found.get(field)])),
-    exactHosts: [...new Set(found.values())].sort(), uploadRequests: 0, recordWrites: 0 };
+    exactHosts: [...new Set(found.values())].sort(), authorityNormalizedURLCount, defaultHTTPSPortURLCount,
+    uploadRequests: 0, recordWrites: 0 };
 }
 
 async function boundedGrantJSON(response, signal, check, diagnostics) {
@@ -198,7 +211,11 @@ export async function avatarGrantDiscoveryCommand(args, { env = process.env, clo
     safe.requestMayHaveStarted = mayHaveStarted;
     // Closed metadata only: never serialize provider reason, headers, URLs, bodies or key paths.
     safe.diagnostics = Object.freeze({ ...diagnostics,
-      responseReason: responseReasons.has(safe.responseReason) ? safe.responseReason : null });
+      responseReason: responseReasons.has(safe.responseReason) ? safe.responseReason : null,
+      urlComparison: safe.urlComparison === undefined ? null : {
+        authorityNormalized: safe.urlComparison?.authorityNormalized === true,
+        explicitDefaultHTTPSPort: safe.urlComparison?.explicitDefaultHTTPSPort === true,
+      } });
     throw safe;
   } finally { clearInterval(watcher); clearTimeout(timer); removeAbort?.(); }
 }

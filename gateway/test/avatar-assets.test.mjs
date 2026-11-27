@@ -153,8 +153,9 @@ test("a durability failure prevents the grant and retains the conservative claim
 
 test("invalid grant URLs cannot turn the signed client into a proxy or receive any binary request", async () => {
   for (const bad of ["http://" + host + "/x", "https://127.0.0.1/x", "https://" + host + ".evil.invalid/x",
-    "https://user:pass@" + host + "/x", "https://" + host + ":8443/x", "https://" + host + "/x#fragment",
-    "https://" + host + "/x\n", "https://other.icloud-content.com/x", "https://" + host + ":443/x"]) {
+    "https://user:pass@" + host + "/x", "https://" + host + ":8443/x", "https://" + host + "/x#fragment", "https://" + host + "/x#",
+    "https://" + host + "/x\n", "https://other.icloud-content.com/x", "https://" + host + ":443/a/../x",
+    "https://%73ynthetic-asset.icloud-content.com/x", "https://" + host + String.fromCharCode(92) + "x"]) {
     const f = await fixture();
     try {
       f.hook(() => Response.json({ tokens: [{ recordName: f.context.recordName, fieldName: "image", url: bad }] }));
@@ -456,6 +457,22 @@ test("encoded responses retain decoded bounds and identity length mismatches sti
       await assert.rejects(() => f.client().upload(f.input()), publicCode("PUBLIC_RESPONSE"));
       assert.equal(f.calls.length, 1);
       assert.equal(f.db.prepare("SELECT phase FROM avatar_asset_transfers_v1").get().phase, "claimed");
+    } finally { f.close(); }
+  }
+});
+
+
+test("trusted HTTPS authority spellings produce the identical isolated upload request", async () => {
+  for (const variant of ["port", "case", "both"]) {
+    const f = await fixture();
+    try {
+      const raw = url.replace(/^https:\/\/([^/]+)/, (_all, value) =>
+        (variant === "port" ? "https://" + value : "HTTPS://" + value.toUpperCase()) + (variant === "case" ? "" : ":443"));
+      f.hook(() => f.calls.length === 1 ? Response.json({ tokens: [{ recordName: f.context.recordName, fieldName: "image", url: raw }] }) : undefined);
+      const client = f.client(), handle = await client.upload(f.input());
+      assert.equal(f.calls.length, 2); assert.equal(f.calls[1].request.url, url);
+      assert.equal(f.calls[1].request.headers.has("Authorization"), false);
+      assert.deepEqual(client.recordField(handle, f.fieldOptions()), { type: "ASSET", value: file(bytes.length) });
     } finally { f.close(); }
   }
 });

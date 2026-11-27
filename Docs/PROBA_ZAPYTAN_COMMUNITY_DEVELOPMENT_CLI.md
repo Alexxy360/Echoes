@@ -1,6 +1,6 @@
 # R-02 — przygotowana próba zapytań mapy i czatu
 
-21 listopada 2026. Implementacja planu [R-02](PROBA_ZAPYTAN_COMMUNITY_DEVELOPMENT_PLAN.md). **Przygotowanie lokalne zakończone; rzeczywiste zapytania Apple nie zostały wykonane.** Nie zmienia to zwykłego klienta aplikacji ani wdrożonego Workera.
+Dokument rozpoczęty 21 listopada 2026. Implementacja planu [R-02](PROBA_ZAPYTAN_COMMUNITY_DEVELOPMENT_PLAN.md). **Ograniczona rzeczywista próba query zaliczona i posprzątana; opis wykonania i granic znajduje się na końcu dokumentu.** Nie zmienia to zwykłego klienta aplikacji ani wdrożonego Workera.
 
 `gateway/scripts/community-query-cli.mjs` obsługuje `prepare`, `inspect`, `run` i `cleanup`. Pierwsze dwa polecenia nie czytają klucza i nie uruchamiają sieci. Dwa pozostałe wymagają odrębnego opt-in `ECHOES_ALLOW_COMMUNITY_QUERY_DEV=1`, prywatnego permitu z dokładnym SHA inwentarza, oknem do 30 minut, ID klucza i odciskiem publicznego SPKI. Permit jest lokalnym zapisem uzyskanej zgody, nie dowodem zgody użytkownika ani aktualnych uprawnień Apple.
 

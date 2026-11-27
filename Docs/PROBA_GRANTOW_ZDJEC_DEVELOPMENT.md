@@ -1,12 +1,12 @@
 # R-03a — rozpoznanie hostów Apple przed uploadem
 
-21 listopada 2026. Narzędzie przygotowane i sprawdzone lokalnie. **Nie zatwierdzono ani nie wykonano próby w Apple.** [Plan całego R-03](PROBA_ASSET_DEVELOPMENT_PLAN.md), [dowody lokalne](evidence/avatar-grant-discovery-preparation.json).
+Dokument rozpoczęty 21 listopada 2026. Narzędzie przygotowane i sprawdzone lokalnie. **Wykonano dwie osobno zatwierdzone próby; hosty nadal nie zostały zaakceptowane. Aktualne wyniki i następny zakres są opisane na końcu dokumentu.** [Plan całego R-03](PROBA_ASSET_DEVELOPMENT_PLAN.md), [dowody lokalne](evidence/avatar-grant-discovery-preparation.json).
 
 ## Co jest gotowe
 
 `gateway/scripts/avatar-grant-discovery.mjs` potrafi przygotować prywatny inwentarz i wysłać najwyżej jedną prośbę `assets/upload` do stałego CloudKit Development. Prośba zawiera tylko dwa pola `image` i `thumbnail` jednego losowego `EchoesAvatarV1`. Nie ma w nim operacji uploadu bajtów, otwierania zwróconych adresów, modyfikacji rekordu ani query.
 
-Parser wymaga dokładnie własnego ID i obu różnych pól. Sprawdza kanoniczny HTTPS, brak portu, userinfo, fragmentu i niedozwolonych znaków oraz domenę dostawcy Apple. Do wyniku przenosi wyłącznie pełne nazwy hostów i przypisanie do pól. Surowe URL-e, ścieżki i tokeny pozostają przejściowo w pamięci; nie trafiają do raportu, terminala lub pliku. Wstępna walidacja nazwy hosta nie jest jeszcze zgodą na połączenie lub wildcard. Przyszły uploader musi otrzymać osobną listę dokładnych zaakceptowanych hostów.
+Parser wymaga dokładnie własnego ID i obu różnych pól. Sprawdza HTTPS, normalizuje wyłącznie równoważny zapis authority (wielkość liter schematu/DNS i jawne443), wymaga niezmienionej kanonicznej ścieżki/query, braku innego portu, userinfo, fragmentu i niedozwolonych znaków oraz domeny dostawcy Apple. Do wyniku przenosi wyłącznie pełne nazwy hostów i przypisanie do pól. Surowe URL-e, ścieżki i tokeny pozostają przejściowo w pamięci; nie trafiają do raportu, terminala lub pliku. Wstępna walidacja nazwy hosta nie jest jeszcze zgodą na połączenie lub wildcard. Przyszły uploader musi otrzymać osobną listę dokładnych zaakceptowanych hostów.
 
 `run` jest domyślnie wyłączony. Wymaga `ECHOES_ALLOW_ASSET_GRANTS_DEV=1`, ścisłego permitu z odrębnym celem, SHA inwentarza, oknem do 30 minut i metadata istniejącego klucza Development. Sprawdzany jest odcisk publicznego SPKI faktycznego prywatnego PEM, scope i model Individual; dawny wycofany klucz jest odrzucany. Permit jest zapisem uzyskanej zgody operatora; samo jego istnienie nie dowodzi zgody użytkownika lub aktualnego nadania praw Apple.
 
@@ -58,3 +58,8 @@ Apple opisuje prośbę o URL, wysłanie danych i przypięcie assetu jako osobne 
 ## Rzeczywiste wykonanie i aktualny wynik
 
 Po późniejszej konkretnej zgodzie wykonano1request z nowego inwentarza SHA68595368…; GRANT_RESPONSE, bez zachowanego statusu/body i bez zaakceptowanych hostów, uploadu, rekordów lub retry. Rzeczywista przyczyna nieznana. Lokalnie odtworzono i naprawiono błąd gzip/Content-Length w CLI i uploaderze oraz dodano zamkniętą diagnostykę bez sekretów.992/992obuNode,42/42focus, bez wdrożenia. [Wynik i granice](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md). Przygotowana [jedna nowa próba](ZAKRES_PONOWNEJ_PROBY_GRANTOW_DEVELOPMENT.md) wymaga osobnej zgody; nie jest ponowieniem starego attempt.
+
+
+## Wynik ponownej próby fac1e300…
+
+Po osobnej zgodzie wykonano1request: HTTP200, JSON/gzip,1293B,2tokeny, odmowa url_canonical. Nie znamy surowej różnicy URL; jawne443 jest hipotezą. Permit usunięto, brak retry/uploadu/rekordu. Wspólna lokalna normalizacja authority obejmuje teraz discovery, upload i chroniony download, bez zmiany hostów lub ścieżki/query.72/72focus, pełne995/995obuNode. [Wynik i ograniczenia](WYNIK_PONOWNEJ_PROBY_GRANTOW.md), [nowa seria do3requestów w jednym30min](ZAKRES_SERII_GRANTOW_DEVELOPMENT.md) przygotowana bez aktywacji i wymaga osobnej zgody.

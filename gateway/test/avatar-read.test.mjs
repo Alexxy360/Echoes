@@ -102,8 +102,10 @@ test("new author login generation preserves published photos without renewing a 
 });
 
 test("unverified, redirected and noncanonical provider URLs never dispatch a download", async () => {
-  for (const url of ["http://synthetic-avatar.icloud-content.com/file", "https://evil.invalid/file", "https://synthetic-avatar.icloud-content.com:443/file",
-    "https://user@synthetic-avatar.icloud-content.com/file", "https://synthetic-avatar.icloud-content.com/file#fragment"]) {
+  for (const url of ["http://synthetic-avatar.icloud-content.com/file", "https://evil.invalid/file", "https://synthetic-avatar.icloud-content.com:444/file",
+    "https://synthetic-avatar.icloud-content.com:443/a/../file", "https://%73ynthetic-avatar.icloud-content.com/file",
+    "https://synthetic-avatar.icloud-content.com" + String.fromCharCode(92) + "file",
+    "https://user@synthetic-avatar.icloud-content.com/file", "https://synthetic-avatar.icloud-content.com/file#fragment", "https://synthetic-avatar.icloud-content.com/file#"]) {
     const f = await avatarReadFixture();
     try {
       const name = recordIdentity(f.signedIn.accountID, "avatar", f.photo.versionID).recordName;
@@ -295,4 +297,22 @@ test("all four cancelled provider reads retain admission until a real dependency
     }
     assert.equal(resumed, true);
   } finally { for (const item of held) item.resolve(); f.close(); }
+});
+
+
+test("trusted HTTPS authority spellings preserve the protected JPEG read and exact destination", async () => {
+  for (const variant of ["port", "case", "both"]) {
+    const f = await avatarReadFixture();
+    try {
+      const name = recordIdentity(f.signedIn.accountID, "avatar", f.photo.versionID).recordName;
+      const field = f.model.records.get(name).fields.thumbnail.value, canonical = field.downloadURL;
+      field.downloadURL = canonical.replace(/^https:\/\/([^/]+)/, (_all, host) =>
+        (variant === "port" ? "https://" + host : "HTTPS://" + host.toUpperCase()) + (variant === "case" ? "" : ":443"));
+      const response = await f.read(); assert.equal(response.status, 200);
+      const bytes = new Uint8Array(await response.arrayBuffer());
+      assert.equal(digest(bytes), JSON.parse(response.headers.get(avatarManifestHeader)).sha256);
+      assert.equal(f.downloads.length, 1); assert.equal(f.downloads[0].request.url, canonical);
+      assert.equal(f.downloads[0].request.headers.has("Authorization"), false);
+    } finally { f.close(); }
+  }
 });

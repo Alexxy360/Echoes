@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
 import { PublicRecordError, plain, publicRecordName, publicRecordTypes, publicUUID } from "./public-record-schema.mjs";
 import { avatarReceipt } from "./avatar-receipt-vault.mjs";
+import { normalizeHTTPSAssetAuthority } from "./cloudkit-asset-url.mjs";
 
 const responseLimit = 16 * 1024;
 const appleDomains = ["icloud-content.com", "icloud.com", "apple-cloudkit.com"];
@@ -59,7 +60,7 @@ export class CloudKitAvatarAssets {
     if (typeof value !== "string" || value.length > 8192 || /[^\x21-\x7e]/.test(value)) throw new PublicRecordError("PUBLIC_RESPONSE");
     let url;
     try { url = new URL(value); } catch { throw new PublicRecordError("PUBLIC_RESPONSE"); }
-    if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash || url.href !== value ||
+    if (url.protocol !== "https:" || url.port || url.username || url.password || value.includes("#") || url.href !== normalizeHTTPSAssetAuthority(value) ||
         !this.#hosts.has(url.hostname)) throw new PublicRecordError("PUBLIC_RESPONSE");
     return url.href;
   }

@@ -1,6 +1,6 @@
 # R-03 — plan rzeczywistego odbioru zdjęć
 
-21 listopada 2026. Plan przed implementacją narzędzia. R-04c.1b nadal czeka na odrębną zgodę; ten etap nie korzysta z Cloudflare ani telefonu.
+Plan rozpoczęty 21 listopada 2026 przed implementacją narzędzia. R-04c.1b zakończono osobną zatwierdzoną próbą logowania. Bieżący stan R-03 opisują sekcje wykonania poniżej; ten etap nie korzysta z Cloudflare ani telefonu.
 
 1. Przygotować zamknięte lokalne narzędzie do rozpoznania hostów uploadu Apple. Dokładny losowy rekord `EchoesAvatarV1`, tylko pola `image` i `thumbnail`; jedna podpisana prośba `assets/upload` o dwa granty. Zwrócone URL-e są sekretami przejściowymi: nie otwierać ich, nie logować ani nie zapisywać. Zapisać wyłącznie zweryfikowane pełne nazwy hostów oraz przypisanie pola. Bez obrazu, `records/modify`, query lub odczytu istniejącego rekordu.
 2. `prepare` i `inspect` bez sieci/klucza. `run` wymaga nowego konkretnego permitu, SHA inwentarza, istniejącego keyID/SPKI, jawnego opt-in i okna do 30 min. Przed jedynym requestem zapisać niepowtarzalną rezerwację. Brak automatycznej powtórki po timeout lub restarcie. Odpowiedź ograniczyć do 16 KiB, 64 fragmentów i 8 s; kontrolować aktualność zgody i zegar wall/monotonic. Nie używać zużytych permitów innych prób.
@@ -21,3 +21,7 @@ Po konkretnej zgodzie właściciela wykonano jeden request R-03a dla SHA68595368
 ## Rzeczywiste wykonanie i aktualny wynik
 
 Powyższa lokalna naprawa została wykonana:2nowe testy rzeczywistego localhost/fetch/gzip odtworzyły błąd przed zmianą; po poprawce42/42focus i pełne992/992obuNode. Zachowano16KiB odkodowanego strumienia i pozostałe ograniczenia oraz dodano metadane błędu bez body/URL/tokenów. Pakiet nieaktywny zbudowany, bez wdrożenia. To nie dowodzi przyczyny odpowiedzi Apple; rzeczywisty request grantów niezaliczony. [Raport i kolejne warunki](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md), [nowy pojedynczy zakres do zgody](ZAKRES_PONOWNEJ_PROBY_GRANTOW_DEVELOPMENT.md).
+
+## Po zatwierdzonej ponownej próbie fac1e300…
+
+Rzeczywiste metadata odpowiedzi: HTTP200, JSON/gzip,1293odkodowane bajty,2tokeny, odmowa url_canonical. Nie znamy surowego URL i nie odzyskujemy go ani nie ponawiamy requestu. Najpierw lokalnie poprawić równoważne zapisy samej authority HTTPS: domyślny port443 i wielkość liter schematu/hosta, z zachowaniem identycznego hosta, zakazu innych portów/credentials/fragmentów i niezmienionej kontroli ścieżki/query. Wprowadzić taką samą regułę w CLI i uploaderze. Testy mają odtworzyć stare odrzucenie i sprawdzić poprawne warianty oraz odmowę niekanonicznej ścieżki, kodowanego hosta i backslash. Raport sukcesu może zawierać wyłącznie liczniki normalizacji, a diagnostyka błędu booleany, nigdy URL/token. Jawny port443 jest hipotezą dla tej odpowiedzi, nie stwierdzonym faktem. Przed kolejnym IO przygotować konkretny ograniczony zakres najwyżej3osobnych inwentarzy/jednego wspólnego okna30min, stop po pierwszym sukcesie, bez dalszych operacji; potrzebna osobna zgoda właściciela na ten budżet, nie rozszerzać zużytego limitu1.

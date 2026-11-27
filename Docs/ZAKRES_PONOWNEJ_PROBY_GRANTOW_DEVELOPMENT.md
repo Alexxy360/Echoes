@@ -1,6 +1,6 @@
 # Jedna ponowna próba adresów uploadu — CloudKit Development
 
-**Gotowe do konkretnej zgody, niewykonane.** Poprzednia jednorazowa próba została wykonana i nie przeszła; nie jest ponawiana automatycznie. [Wynik i poprawka](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md).
+**Wykonane po odpowiedzi „Tak, zatwierdzam jedną ponowną próbę”.** Jednorazowy limit zużyty: HTTP200/JSON/gzip/2tokeny, odmowa url_canonical. [Dokładny wynik](WYNIK_PONOWNEJ_PROBY_GRANTOW.md). Poprzednia jednorazowa próba została wykonana i nie przeszła; nie jest ponawiana automatycznie. [Wynik i poprawka](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md).
 
 Nowy dokładny inwentarz SHA-256: `fac1e30092f49f99f2b951009775123e56177f767bb5c705420b40c95ff6f422`. Nie zmienia się mechanika próby: publiczne **Development**, `iCloud.mpvEcho.Echo`, zespół `22YC9RAP4P`, schema SHA `495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543`.
 
@@ -11,3 +11,8 @@ Użyty zostanie poprawiony CLI: obsługa odkodowanego gzip przy zachowaniu16KiB/
 Bez wysyłania obrazu, otwierania otrzymanych adresów, zapisu/usuwania rekordu, query, danych użytkowników, prywatnych baz/profili, GPS/Muzyki, telefonu, nowych praw, schematu, hostingu/sekretów w Cloudflare, Production, Firebase, TestFlight i opłat. Mogą powstać czasowe granty po stronie Apple także przy niepewnym wyniku, bez utworzenia rekordu/obrazu w tej próbie.
 
 Inwentarz naprawdę przygotowano i odczytano lokalnie przez nieaktywny prepare/inspect, bez permitu/attempt/żądań. Kod, lokalna regresja i pakiet są opisane w [raporcie](WYNIK_PROB_MAPY_CZATU_I_ZDJEC.md). Sukces rozpoznania hostów nie jest odbiorem uploadu plików lub całej migracji.
+
+
+## Po wykonaniu
+
+Nie ponawiano requestu ani nie otwierano URL;0uploadów i0zapisów rekordów. Permit usunięty, attempt zachowany. Lokalnie poprawiono równoważne zapisy authority HTTPS; konkretna różnica wcześniejszego URL pozostaje nieznana. Nowy budżet opisuje [oddzielna seria do3prób](ZAKRES_SERII_GRANTOW_DEVELOPMENT.md), bez zgody, rezerwacji i sieci. Poprzednia zgoda nie obejmuje tej serii.

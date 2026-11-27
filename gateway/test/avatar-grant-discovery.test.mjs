@@ -85,9 +85,10 @@ test("malformed grants and unsafe host/URL forms never become a host allowlist",
   for (const mutate of [p => p.tokens.pop(), p => p.tokens[0].recordName = "foreign", p => p.tokens[0].fieldName = "private",
     p => p.tokens[1].fieldName = p.tokens[0].fieldName, p => p.tokens[0].extra = "unreviewed", p => p.extra = true,
     ...["http://x.icloud-content.com/a", "https://127.0.0.1/a", "https://[::1]/a", "https://icloud-content.com/a",
-      "https://x.icloud-content.com.evil.invalid/a", "https://user:pass@x.icloud-content.com/a", "https://x.icloud-content.com:443/a",
-      "https://x.icloud-content.com:8443/a", "https://x.icloud-content.com/a#fragment", "https://x.icloud-content.com/a\n",
-      "https://X.icloud-content.com/a", "https://x.icloud-content.com/" + "x".repeat(8192)].map(url => p => p.tokens[0].url = url)]) {
+      "https://x.icloud-content.com.evil.invalid/a", "https://user:pass@x.icloud-content.com/a",
+      "https://x.icloud-content.com:8443/a", "https://x.icloud-content.com:443/a/../b",
+      "https://%78.icloud-content.com/a", "https://x.icloud-content.com" + String.fromCharCode(92) + "a", "https://x.icloud-content.com/a#fragment", "https://x.icloud-content.com/a#", "https://x.icloud-content.com/a\n",
+      "https://x.icloud-content.com/" + "x".repeat(8192)].map(url => p => p.tokens[0].url = url)]) {
     const bad = structuredClone(good); mutate(bad); assert.throws(() => discoveredAvatarUploadHosts(prepared, bad), code("GRANT_RESPONSE"));
   }
 });
@@ -190,5 +191,22 @@ test("failure diagnostics identify the rejection without provider text, URL, tok
     assert.equal(calls, 1);
     await assert.rejects(readFile(join(f.info.directory, "report.json")), error => error.code === "ENOENT");
     await assert.rejects(f.run(), code("GRANT_PRIVATE_FILE"));
+  }
+});
+
+
+test("trusted HTTPS authority spellings keep the same host without exposing signed URL data", async t => {
+  for (const variant of ["port", "case", "both"]) {
+    const f = await fixture(t); let calls = 0;
+    const result = await f.run({ fetchImplementation: async () => {
+      calls++; const body = grant(f.prepared);
+      for (const token of body.tokens) token.url = token.url.replace(/^https:\/\/([^/]+)/, (_all, host) =>
+        (variant === "port" ? "https://" + host : "HTTPS://" + host.toUpperCase()) + (variant === "case" ? "" : ":443"));
+      return Response.json(body);
+    } });
+    assert.equal(calls, 1); assert.equal(result.authorityNormalizedURLCount, 2);
+    assert.equal(result.defaultHTTPSPortURLCount, variant === "case" ? 0 : 2);
+    assert.deepEqual(result.exactHosts, ["synthetic-image.icloud-content.com", "synthetic-thumbnail.icloud-content.com"]);
+    assert.equal(JSON.stringify(result).includes("SECRET"), false);
   }
 });

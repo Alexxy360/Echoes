@@ -136,12 +136,13 @@
   },
   "nextGrantProbe": {
     "planSHA256": "fac1e30092f49f99f2b951009775123e56177f767bb5c705420b40c95ff6f422",
-    "status": "prepared_not_approved_not_executed",
+    "status": "executed_failed_url_canonical",
     "maximumRequests": 1,
     "maximumMinutes": 30,
     "uploadBytes": false,
     "recordWrites": false,
-    "networkRequests": 0
+    "networkRequests": 0,
+    "subsequentResults": "asset-grant-authority-development-results.json"
   },
   "privateEvidenceSHA256": {
     "queryReport": "ce95bdfc1e9ba8c5bb10ced58aee89881d65d0bbb1b5c64c463edad82fa0b000",

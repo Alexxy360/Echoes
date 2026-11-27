@@ -1,0 +1,157 @@
+{
+  "schemaVersion": 1,
+  "stage": "R-03a.2",
+  "status": "provider_reply_received_grants_not_accepted_local_fix_verified",
+  "authorization": {
+    "userReply": "Tak, zatwierdzam jedną ponowną próbę",
+    "executedSourceCommit": "ce27fe7d4f0febe317fe0e6895ec00b00fba1a89",
+    "planSHA256": "fac1e30092f49f99f2b951009775123e56177f767bb5c705420b40c95ff6f422",
+    "maximumRequests": 1
+  },
+  "actualProbe": {
+    "requestAttempts": 1,
+    "window": {
+      "id": "bf2122d5-02a1-46e0-9167-0718557cea24",
+      "issuedAt": 1795819436166,
+      "expiresAt": 1795821236166
+    },
+    "status": "incomplete",
+    "errorCode": "GRANT_RESPONSE",
+    "diagnostics": {
+      "phase": "grants",
+      "httpStatus": 200,
+      "jsonContentType": true,
+      "contentEncoding": "gzip",
+      "contentLength": null,
+      "decodedBytes": 1293,
+      "tokenCount": 2,
+      "providerError": null,
+      "responseReason": "url_canonical"
+    },
+    "rawURLsOrBodyPersisted": false,
+    "acceptedHosts": false,
+    "uploads": 0,
+    "recordWrites": 0,
+    "followedURLs": 0,
+    "permitRemoved": true,
+    "attemptPreserved": true,
+    "retryExecuted": false,
+    "exactCanonicalDifference": "not_recorded",
+    "explicitPort443InActualResponseConfirmed": false
+  },
+  "localFix": {
+    "sharedHelper": "gateway/src/cloudkit-asset-url.mjs",
+    "authorityOnlyNormalization": [
+      "scheme_and_DNS_case",
+      "explicit_default_HTTPS_port_443"
+    ],
+    "pathAndQueryPreservedExactly": true,
+    "exactVerifiedHostAllowlistPreserved": true,
+    "nondefaultPortsCredentialsFragmentsAndAmbiguousPathsRejected": true,
+    "usedBy": [
+      "grant_discovery",
+      "asset_upload",
+      "protected_asset_download"
+    ],
+    "noVerifiedHostsAdded": true,
+    "closedNormalizationCountersAndBooleanErrorMetadata": true,
+    "deployed": false,
+    "emptyFragmentsAlsoRejected": true
+  },
+  "validation": {
+    "beforeFix": {
+      "runtime": "22.23.5",
+      "newFunctions": 3,
+      "failed": 3
+    },
+    "targetedNode22": {
+      "tests": 72,
+      "passed": 72,
+      "revision": "before_final_empty_fragment_refinement"
+    },
+    "fullNode22": {
+      "version": "22.23.5",
+      "tests": 995,
+      "passed": 995,
+      "failed": 0,
+      "skipped": 0
+    },
+    "fullNode24": {
+      "version": "24.22.3",
+      "tests": 995,
+      "passed": 995,
+      "failed": 0,
+      "skipped": 0
+    },
+    "syntaxChecksNode22": 7,
+    "inactiveWorkerBundle": {
+      "built": true,
+      "deployed": false,
+      "indexSHA256": "6c81cb31e2f19e87c50f54c6361205253cf35d3dc262f2bdbbada0b18550cf05"
+    },
+    "iOSChangedOrRebuilt": false,
+    "finalFullSuitesIncludeEmptyFragmentRefinement": true
+  },
+  "nextBatch": {
+    "contractSHA256": "c222707fae22a2e0385c2bb0491170c97abc4a50166f70a88d0b2f01c4a25cca",
+    "inventorySHA256": [
+      "978ddde5e42d1cda616f80692f550e47d31a61372655df21f66a19f45788eb4f",
+      "231b827b7d83f3d534efe96e93bbea063cac69df337e774882a5769e0cdcb9c4",
+      "1a2c9f8a809cd8d2e72172ad8767493c141411f1e2d898759dda9d76432183d5"
+    ],
+    "maximumRequests": 3,
+    "maximumRequestsPerInventory": 1,
+    "sharedWindowMilliseconds": 1800000,
+    "stopAfterFirstSuccess": true,
+    "status": "prepared_not_approved_not_executed",
+    "networkRequests": 0,
+    "windowStarted": false,
+    "operatorSourceSHA256": "63b84c662ebe993ea1d5c2e70e9ac12ad86572b8b95e1b9d9f2b8d5a4437d191",
+    "operatorInspect": {
+      "approved": false,
+      "inventoryCount": 3,
+      "reservedAttempts": 0,
+      "maximumAttempts": 3,
+      "approvedMaximumAttempts": 0,
+      "windowStarted": false
+    },
+    "unapprovedOperatorRunRefusedBeforeWindowOrIntent": true,
+    "operatorFullFailureStateMachineNotTested": true,
+    "privateArtifactsPersistedOutsideTemporaryDirectory": true,
+    "approvedMaximumRequests": 0
+  },
+  "sourceSHA256": {
+    "gateway/scripts/avatar-grant-discovery.mjs": "1cdece2bf730bb4bdb3d982f3c77b20e90ca5a5894dec052bd911ae6c9197496",
+    "gateway/src/cloudkit-avatar-assets.mjs": "7089e52a9ef5abf78555c1c73204f1525c7a486f0701c6397648e2cdef9ac06a",
+    "gateway/src/avatar-protected-download.mjs": "9bd940cb01d4f0d958caa941943acc6a14b6174340be95d9e4fd232c533e602d",
+    "gateway/src/cloudkit-asset-url.mjs": "c99d4e094501cf596fea6c6bcb8bbefad5a4e142f2b0ab4b27c1b7628138af30",
+    "gateway/test/avatar-grant-discovery.test.mjs": "9623c952c5df172cd9b6d3a9d77d1fbdf279bf943026dc0628c34a85dc40234b",
+    "gateway/test/avatar-assets.test.mjs": "d8a4ad5f53e7fa63bbe18c5afb9fb84beb4682255d6903ec56b1ce97714e28fe",
+    "gateway/test/avatar-read.test.mjs": "fa8be40c77eda1f96c663c6fda43f0cbea51d51ad4b2cbeb69cde7c7456e72be"
+  },
+  "privateEvidenceSHA256": {
+    "attempt": "b7d7600022160d28cb717dacdf14ab0612748d683beb8a66d59d696c9fd8a4af",
+    "executionLog": "53fa983d7f0a15e1248b70436203499dc7b9451a0dd3b35a0d8678c002028b31",
+    "permitRevocation": "03a5e0133c7e2797e0a59c7662ba27a71119917d6bcfa237628690e2bd665e81"
+  },
+  "localLogSHA256": {
+    "echoes-asset-authority-before-fix.log": "c5f8af7f5d0bf93e520df09588b651370ffbb694b7d84a39cdbe81fc79727ac0",
+    "echoes-asset-authority-node22-focus.log": "6eb84dc061f00c6e1f31eeac2002ddd24fc2a97db94301dc83d9e861f53961dd",
+    "echoes-asset-authority-node22-full.log": "aafe175c7b789bacbfc6cb08a2ab2d0a2366c4e8ac8958982bc7e05a1e6d196d",
+    "echoes-asset-authority-node24-full.log": "28b12540a5282be9f940850857fc35472aac3fad0e1821c4516916bbf9ea81db",
+    "echoes-asset-authority-final-node22-full.log": "8aba94b1ed815d0f5f627be51c80e24609bfb449eb7c1392d0bbed2cfd058f62",
+    "echoes-asset-authority-final-node24-full.log": "0db13e849d4c42011ca95dc7b748d209b79780ec24f4c284a0067ef6c091eeb0"
+  },
+  "notProven": [
+    "actual canonical URL spelling from failed response",
+    "real accepted upload hosts or bytes/CDN",
+    "ordinary-account A/B",
+    "whole R-03",
+    "TestFlight readiness"
+  ],
+  "localEmptyFragmentProof": {
+    "acceptedBeforeGuard": true,
+    "networkRequests": 0,
+    "evidenceSHA256": "53c75bd1adaa10c99ad9d3f3abeb545b7897726fb9e9f14ec1f20bafe61b21cb"
+  }
+}

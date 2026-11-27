@@ -1,3 +1,5 @@
+import { normalizeHTTPSAssetAuthority } from "./cloudkit-asset-url.mjs";
+
 /** Only provider-projected URLs, never request JSON. Shared by publication reads and moderation. */
 export class AvatarDownloadError extends Error {
   constructor() { super("Photo content could not be loaded."); this.code = "AVATAR_DOWNLOAD_RESPONSE"; }
@@ -12,7 +14,7 @@ export function avatarDownloadHosts(value) {
 export function avatarDownloadURL(value, hosts) {
   if (typeof value !== "string" || value.length > 8192 || /[^\x21-\x7e]/.test(value)) throw new AvatarDownloadError();
   let url; try { url = new URL(value); } catch { throw new AvatarDownloadError(); }
-  if (url.protocol !== "https:" || url.port || url.username || url.password || url.hash || url.href !== value || !hosts.has(url.hostname)) throw new AvatarDownloadError();
+  if (url.protocol !== "https:" || url.port || url.username || url.password || value.includes("#") || url.href !== normalizeHTTPSAssetAuthority(value) || !hosts.has(url.hostname)) throw new AvatarDownloadError();
   return url.href;
 }
 /** One scope per retained reader/coordinator. Unknown drain closes admission until recreation. */
