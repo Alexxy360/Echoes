@@ -44,3 +44,7 @@ Swift/UI/Core/projekt, zależności i CI niezmienione, bez powtarzania buildów/
 
 
 CK-04e.3g/h dodają [natywny transport](NATYWNY_TRANSPORT_AVATAROW.md), [cache](NATYWNY_CACHE_AVATAROW.md) i [sterownik świeżego dostępu](NATYWNY_STEROWNIK_AVATAROW.md). CK-04e.3i.1 uzupełnia [serwerowy HTTP/admission i bounded edge](HTTP_AVATAROW_GATEWAY.md), nadal domyślnie wyłączone, przed UI i rzeczywistym odbiorem. Powyższe informacje „jeszcze nie wdrożono” opisują stan pierwotnego CK-04e.3f.
+
+## Zgodność z szablonem nazwy pliku Apple
+
+Helper avatarDownloadURL obsługuje udokumentowany w [saveRecords](https://developer.apple.com/documentation/cloudkitjs/cloudkit.database/saverecords) placeholder `${f}` wyłącznie jako jeden cały końcowy segment ścieżki. Wstawia stałe avatar.jpg; host, dozwolona lista, brak credentials/fragmentu/przekierowań i podpisane bajty query nadal są kontrolowane. Placeholder w authority, query, środku ścieżki lub wielokrotny jest odrzucany. To lokalna naprawa kompatybilności, nie dowód rzeczywistego downloadu lub aktywacji hosta.

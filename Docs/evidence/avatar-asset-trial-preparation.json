@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "status": "prepared_not_approved_not_executed",
+  "sourceBaseCommit": "dcb5a39f35b4b211cadc221a605c5b3402a0021f",
+  "planSHA256": "e0e8274935a04cbba23c0427da515e00b383de7a1daa3b752c9337bd48b52433",
+  "scope": {
+    "team": "22YC9RAP4P",
+    "container": "iCloud.mpvEcho.Echo",
+    "environment": "development",
+    "database": "public",
+    "reviewedSchemaSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543"
+  },
+  "limits": {
+    "apiRequests": 64,
+    "grants": 2,
+    "uploads": 2,
+    "downloads": 2,
+    "uploadedBytes": 16384,
+    "jsonBytes": 16384,
+    "requestMilliseconds": 8000,
+    "windowMilliseconds": 1800000
+  },
+  "uploadHostsObserved": [
+    "cws.icloud-content.com"
+  ],
+  "downloadHostCandidatesNotYetVerified": [
+    "cws.icloud-content.com",
+    "cvws.icloud-content.com"
+  ],
+  "syntheticImages": {
+    "image": {
+      "byteCount": 1649,
+      "width": 192,
+      "height": 96,
+      "sha256": "9c67d12f5d955b4357d7d2a707ce55f421c9c1b7230e0f05aaa77d2389f7be27"
+    },
+    "thumbnail": {
+      "byteCount": 1104,
+      "width": 128,
+      "height": 64,
+      "sha256": "6462e7049dff4d3381508ccc27a8e5c34444cfa9a2c78b8c93683bcc0d9ba65d"
+    }
+  },
+  "networkRequests": 0,
+  "permitExists": false,
+  "attemptExists": false,
+  "localRegistryBytes": 106496,
+  "localPreparationPrivateModesVerified": true,
+  "testRuns": [
+    {
+      "runtime": "v22.23.5",
+      "tests": 1011,
+      "pass": 1011,
+      "fail": 0,
+      "skip": 0,
+      "logSHA256": "f37e9cf127d95c4481cfb318518aa8318a543e9656588557983cfe36b06c4ec3"
+    },
+    {
+      "runtime": "v24.22.3",
+      "tests": 1011,
+      "pass": 1011,
+      "fail": 0,
+      "skip": 0,
+      "logSHA256": "7610eb80f150e72ef43c32b38e90f85474f1586c5e40c94f7a1f41d94677c69e"
+    }
+  ],
+  "newTests": 16,
+  "initialSandboxRun": {
+    "pass": 981,
+    "fail": 27,
+    "allFailuresLoopbackEPERM": true,
+    "logSHA256": "3fbd8b7c1227e56699a8abc967a4cbf4c7b11f803459e1877a2f3232c581f14c"
+  },
+  "syntaxChecks": 7,
+  "testedFilesSHA256": {
+    "gateway/src/public-registry-checkpoint.mjs": "bdcfc031d52f285ed508d5c858ffe7ed310ead6cfaf57f1c59f3174b4eb28556",
+    "gateway/src/cloudkit-public-client.mjs": "6aa16254b0fc9168d0a6eb4aff82398cb7639943983eef3cf33320dce3114951",
+    "gateway/src/avatar-protected-download.mjs": "bc06e70d7b8fec4a1eb3aa8efb0c74883910609d624ab5c8964a1d79d265770a",
+    "gateway/scripts/avatar-asset-trial.mjs": "e155e757e0b31b1b7311bf0b712f5a04b74bb2b168a2e7d69eb2a06462d48e4b",
+    "gateway/test/checkpoint-trial-isolation.test.mjs": "ca9fc78db7678ca2a1ce2b357eace102b3cc7d2409171867051c0d3ac27f3070",
+    "gateway/test/avatar-download-template.test.mjs": "cec397dada1efcc41cb2c217ba024b5caddb96baaa67a36535c5d74387a6ea9c",
+    "gateway/test/avatar-asset-trial.test.mjs": "1e1afa741e607e9e57117bc02b2e3bc0920915beb128d6472fd5875f86155044"
+  },
+  "inactiveBundle": {
+    "deployed": false,
+    "indexSHA256": "2eb8358952f9cc8b51347555ee96460eaaaa35ba6c27357fbd8c1824b1f2990c"
+  },
+  "limitations": [
+    "Apple provider and identity are synthetic in local workflow tests; no new live asset trial",
+    "Download host candidates are trial-only; ordinary Runtime verified host lists remain empty",
+    "No full CloudKitAvatarReader publication/session/3km/A-B proof from this harness",
+    "Checkpoint trial name isolated from the global checkpoint; defaults unchanged",
+    "Record deletion and absence do not prove physical Apple/CDN asset deletion or URL revocation",
+    "A process crash/window expiry retains exact private intents and consumed attempt; no automatic rerun/cleanup extension"
+  ]
+}

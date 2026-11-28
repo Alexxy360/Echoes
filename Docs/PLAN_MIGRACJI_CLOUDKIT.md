@@ -437,3 +437,7 @@ Zatwierdzony pojedynczy request fac1e300… otrzymał HTTP200/JSON/gzip/2tokeny,
 ### R-03a — rzeczywisty host uploadu zaliczony
 
 Po nowej konkretnej zgodzie przyjęto limit1 dla serii SHA c222707f…. [Apple potwierdziło oba granty](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md) na cws.icloud-content.com, z2normalizacjami jawnego443;1request,0upload/recordWrites. Proces terminalny, permit usunięty; dwa pozostałe inwentarze niewykonane. R-03a zakończony; przygotować teraz krok4 planu plików, z osobnym izolowanym checkpointem i własnymi syntetycznymi JPEG, bez zmiany domyślnych hostów/aktywacji Runtime. Pełne R-03 i migracja otwarte.
+
+### R-03b — gotowy izolowany test plików, oczekuje na osobną zgodę
+
+[Zakres](ZAKRES_PROBY_PLIKOW_DEVELOPMENT.md), inwentarz SHA e0e82749…, przygotowany lokalnie:2syntetyczne JPEG/2753 B,2własne rekordy, osobny checkpoint/CAS, istniejący uploader/repozytorium i bounded reader. Dodano opcjonalną ścisłą nazwę checkpointu trial; zwykły klient zachowuje nazwę globalną. Naprawiono udokumentowany placeholder nazwy pliku przy zachowaniu signed query.16nowych testów, pełne1011/1011 na obu Node,7syntax i pakiet nieaktywny. Pierwszy pełny run w sandboxie miał27odmów loopback EPERM; po dopuszczeniu lokalnych portów oba pełne runy bez błędów. Bez wdrożenia/iOS/schematu/nowych zdalnych praw. Rzeczywisty upload niewykonany; nie przełączać AppServices ani Firebase przed pozostałym odbiorem.

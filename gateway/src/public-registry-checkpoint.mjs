@@ -2,6 +2,12 @@ import { PublicRecordError, plain, publicUUID, fieldValues, matchesFields, valid
 
 export const checkpointRecordName = "community-registry-checkpoint-v1";
 export const checkpointRecordType = "EchoesRegistryCheckpointV1";
+/** Trusted operator isolation only; never selected by HTTP input or runtime recovery. */
+export function validCheckpointRecordName(value) {
+  return value === checkpointRecordName || typeof value === "string" &&
+    value.startsWith("community-registry-checkpoint-trial-v1-") &&
+    publicUUID.test(value.slice("community-registry-checkpoint-trial-v1-".length));
+}
 export function validCheckpoint(value) {
   return plain(value) && Object.keys(value).sort().join("|") === "anchorID|parentAnchorID|registeredCount|registryID|schemaVersion" &&
     value.schemaVersion === 1 && typeof value.registryID === "string" && publicUUID.test(value.registryID) &&
@@ -14,8 +20,8 @@ export function checkpointFields(value) {
   if (!validCheckpoint(value)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
   return fieldValues(value);
 }
-export function checkpointRecord(record) {
-  if (!plain(record) || record.recordName !== checkpointRecordName || record.recordType !== checkpointRecordType ||
+export function checkpointRecord(record, expectedName = checkpointRecordName) {
+  if (!validCheckpointRecordName(expectedName) || !plain(record) || record.recordName !== expectedName || record.recordType !== checkpointRecordType ||
       record.serverErrorCode || !validTag(record.recordChangeTag) || !plain(record.fields)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
   const value = Object.fromEntries(Object.entries(record.fields).map(([key, field]) => [key, field?.value]));
   if (!validCheckpoint(value) || !matchesFields(record.fields, checkpointFields(value))) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
@@ -25,10 +31,12 @@ export function sameCheckpoint(a, b) { return validCheckpoint(a) && validCheckpo
 
 /** A durable outbox, not a cached count. A missing/forked/rolled-back anchor never bootstraps itself. */
 export class PublicRegistryCheckpoint {
-  #registry; #client; #tail = Promise.resolve();
+  #registry; #client; #recordName; #tail = Promise.resolve();
   constructor({ registry, client } = {}) {
     if (typeof registry?.checkpointState !== "function" || typeof registry.prepareCheckpoint !== "function" ||
         typeof client?.lookupCheckpoint !== "function" || typeof client.replaceCheckpoint !== "function") throw new PublicRecordError();
+    this.#recordName = client.checkpointRecordName ?? checkpointRecordName;
+    if (!validCheckpointRecordName(this.#recordName)) throw new PublicRecordError();
     this.#registry = registry; this.#client = client;
   }
   #check(signal) { if (signal?.aborted) throw new PublicRecordError(); }
@@ -44,7 +52,7 @@ export class PublicRegistryCheckpoint {
   async #read(signal) {
     this.#check(signal);
     const record = await this.#client.lookupCheckpoint({ signal });
-    this.#check(signal); return checkpointRecord(record);
+    this.#check(signal); return checkpointRecord(record, this.#recordName);
   }
   async #validated(signal) {
     const remote = await this.#read(signal), local = await this.#registry.checkpointState();
@@ -66,7 +74,7 @@ export class PublicRegistryCheckpoint {
     this.#check(signal);
     // A duplicate conditional replace can lose to the original in-flight copy. Reconcile once.
     if (raw?.serverErrorCode === "CONFLICT") raw = await this.#client.lookupCheckpoint({ signal });
-    const remote = checkpointRecord(raw);
+    const remote = checkpointRecord(raw, this.#recordName);
     this.#check(signal);
     if (!sameCheckpoint(remote.value, pending.value)) throw new PublicRecordError("PUBLIC_REGISTRY_UNVERIFIED");
     await this.#registry.confirmPendingCheckpoint(pending, remote); this.#check(signal); return remote;

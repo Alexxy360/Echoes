@@ -1,6 +1,6 @@
 import { CloudKitDevelopmentSigner } from "./cloudkit-request.mjs";
 import { PublicRecordError, plain, publicRecordName, publicRecordTypes, validTag } from "./public-record-schema.mjs";
-import { checkpointRecordName, checkpointRecordType, checkpointFields } from "./public-registry-checkpoint.mjs";
+import { checkpointRecordName, checkpointRecordType, checkpointFields, validCheckpointRecordName } from "./public-registry-checkpoint.mjs";
 import { approximateLocation, communityCoordinate, communityPolicy } from "./community-domain.mjs";
 
 const responseLimit = 512 * 1024;
@@ -9,16 +9,18 @@ const recordCodes = new Set(["NOT_FOUND", "EXISTS", "CONFLICT", "ACCESS_DENIED",
 const types = new Set([...Object.values(publicRecordTypes), checkpointRecordType]);
 /** Server-only, fixed Development/public target. It is never an HTTP proxy or a client signer. */
 export class CloudKitPublicClient {
-  #signer; #fetch; #enabled; #clock; #timeout; #pending = new Set(); #unsafeDrain = false;
+  #signer; #fetch; #enabled; #clock; #timeout; #checkpointName; #pending = new Set(); #unsafeDrain = false;
   constructor({ container, environment, keyID, privateKeyPEM, fetchImplementation = fetch,
-    isEnabled, clock = Date.now, timeoutMilliseconds = 8000 } = {}) {
+    isEnabled, clock = Date.now, timeoutMilliseconds = 8000, checkpointName = checkpointRecordName } = {}) {
     if (container !== "iCloud.mpvEcho.Echo" || environment !== "development" || typeof fetchImplementation !== "function" ||
         typeof isEnabled !== "function" || typeof clock !== "function" || !Number.isInteger(timeoutMilliseconds) ||
-        timeoutMilliseconds < 1 || timeoutMilliseconds > 8000) throw new PublicRecordError();
+        timeoutMilliseconds < 1 || timeoutMilliseconds > 8000 || !validCheckpointRecordName(checkpointName)) throw new PublicRecordError();
     try { this.#signer = new CloudKitDevelopmentSigner({ container, environment, keyID, privateKeyPEM }); }
     catch { throw new PublicRecordError(); }
     this.#fetch = fetchImplementation; this.#enabled = isEnabled; this.#clock = clock; this.#timeout = timeoutMilliseconds;
+    this.#checkpointName = checkpointName;
   }
+  get checkpointRecordName() { return this.#checkpointName; }
   #check(signal) {
     if (this.#unsafeDrain || signal?.aborted) throw new PublicRecordError();
     let enabled; try { enabled = this.#enabled(); } catch { throw new PublicRecordError(); }
@@ -128,20 +130,20 @@ export class CloudKitPublicClient {
     return result;
   }
   async lookupCheckpoint({ signal } = {}) {
-    return (await this.#call("records/lookup", { records: [{ recordName: checkpointRecordName }] }, [checkpointRecordName], signal)).get(checkpointRecordName);
+    return (await this.#call("records/lookup", { records: [{ recordName: this.#checkpointName }] }, [this.#checkpointName], signal)).get(this.#checkpointName);
   }
   async replaceCheckpoint(value, expectedTag, { signal } = {}) {
     if (!validTag(expectedTag) || value?.parentAnchorID === "") throw new PublicRecordError("PUBLIC_INPUT");
     return (await this.#call("records/modify", { atomic: false, operations: [{ operationType: "replace", record: {
-      recordName: checkpointRecordName, recordType: checkpointRecordType, recordChangeTag: expectedTag,
-      fields: checkpointFields(value) } }] }, [checkpointRecordName], signal)).get(checkpointRecordName);
+      recordName: this.#checkpointName, recordType: checkpointRecordType, recordChangeTag: expectedTag,
+      fields: checkpointFields(value) } }] }, [this.#checkpointName], signal)).get(this.#checkpointName);
   }
   /** Trusted one-time operator operation after inventory/approval. Never called by runtime recovery. */
   async createCheckpointForBootstrap(value, { signal } = {}) {
     if (value?.parentAnchorID !== "" || value?.registeredCount !== 0) throw new PublicRecordError("PUBLIC_INPUT");
     return (await this.#call("records/modify", { atomic: false, operations: [{ operationType: "create", record: {
-      recordName: checkpointRecordName, recordType: checkpointRecordType, fields: checkpointFields(value) } }] },
-    [checkpointRecordName], signal)).get(checkpointRecordName);
+      recordName: this.#checkpointName, recordType: checkpointRecordType, fields: checkpointFields(value) } }] },
+    [this.#checkpointName], signal)).get(this.#checkpointName);
   }
   async modify(operations, { signal } = {}) {
     if (!Array.isArray(operations) || operations.length < 1 || operations.length > 25 ||

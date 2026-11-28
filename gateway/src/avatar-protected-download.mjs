@@ -13,6 +13,13 @@ export function avatarDownloadHosts(value) {
 }
 export function avatarDownloadURL(value, hosts) {
   if (typeof value !== "string" || value.length > 8192 || /[^\x21-\x7e]/.test(value)) throw new AvatarDownloadError();
+  // CloudKit documents a filename placeholder. Expand one entire terminal path segment only;
+  // never replace bytes in the signed query, authority or any caller-provided filename.
+  if (value.includes("${f}")) {
+    const query = value.indexOf("?"), path = query < 0 ? value : value.slice(0, query);
+    if (value.split("${f}").length !== 2 || !path.endsWith("/${f}")) throw new AvatarDownloadError();
+    value = value.replace("${f}", "avatar.jpg");
+  }
   let url; try { url = new URL(value); } catch { throw new AvatarDownloadError(); }
   if (url.protocol !== "https:" || url.port || url.username || url.password || value.includes("#") || url.href !== normalizeHTTPSAssetAuthority(value) || !hosts.has(url.hostname)) throw new AvatarDownloadError();
   return url.href;

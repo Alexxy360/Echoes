@@ -29,3 +29,7 @@ Rzeczywiste metadata odpowiedzi: HTTP200, JSON/gzip,1293odkodowane bajty,2tokeny
 ## R-03a — rzeczywiste rozpoznanie zakończone
 
 [Jedna zatwierdzona próba](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md) kodem4d9aa7a: hosts_discovered, oba pola na cws.icloud-content.com,2normalizacje/2jawne443,1request/0upload/0recordWrites. Przyjęto limit1; pozostałe inwentarze nieuruchomione. Następny krok4 jest teraz możliwy do przygotowania. Domyślne listy hostów nadal puste; brak pełnego odbioru R-03.
+
+## R-03b — test plików przygotowany po rozpoznaniu hosta
+
+Przygotowano [konkretny izolowany przebieg](ZAKRES_PROBY_PLIKOW_DEVELOPMENT.md), SHA e0e82749…: istniejące kodeki, rejestr/SQLite, uploader/repozytorium, dwa małe JPEG (2753 B), rzeczywisty checkpoint pod własnym UUID, CAS, bounded download i warunkowe sprzątanie. Prepare/inspect wykonane bez sieci/klucza/permitu/attempt. Nowe16testów, pełne1011/1011 obu Node; nieaktywny pakiet zbudowany bez wdrożenia. Pełna R-03 nadal otwarta; trial używa lokalnej syntetycznej tożsamości, nie dowodzi sesji/3km/publikacji/SDK A-B. Następny krok: osobna zgoda na ten zamknięty zakres, dopiero potem rzeczywisty przebieg.
