@@ -1,6 +1,6 @@
 # Seria R-03b — najwyżej dwie próby plików w jednym oknie
 
-**Przygotowana, niezatwierdzona i niewykonana.** [Wynik poprzedniej próby](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md): oba uploady przyjęte, przypięcie HTTP 400, sprzątanie rekordów potwierdzone. Zużytego inwentarza nie ponawiamy.
+**Zatwierdzona do dwóch prób; pierwsza zakończona, cleanup domknięte. Drugi inwentarz jeszcze nieużyty; obowiązuje pierwotny wspólny termin.** [Wynik poprzedniej próby](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md): oba uploady przyjęte, przypięcie HTTP 400, sprzątanie rekordów potwierdzone. Zużytego inwentarza nie ponawiamy.
 
 Kontrakt SHA-256: **86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1**. Dwa odrębne inwentarze:
 
@@ -30,3 +30,7 @@ Trwałe intenty przed żądaniami, jedna rezerwacja na inwentarz. Prywatny opera
 **Bez danych użytkowników, prywatnych profili/bazy, telefonu, GPS/Muzyki, SIWA, Cloudflare/hostingu/transferu PEM, nowych praw, Production, Firebase, TestFlight i opłat.** To odbiór transportu plików z lokalną syntetyczną tożsamością, nie pełnej autoryzacji sesji, publikacji, 3 km albo A/B.
 
 [Dowody przygotowania](evidence/avatar-asset-wire-batch-preparation.json): dwa rzeczywiste lokalne prepare/inspect bez sieci, materiały 0700/0600 poza Git; operator skompilowany i sprawdzona odmowa bez zgody. Pełna maszyna awarii prywatnego operatora nie jest lokalnie przetestowana. Kod CLI/komponentów ma 1014/1014 testów na obu Node; nowej serii nie uruchomiono i nie rozpoczęto okna. Przed i po każdym przebiegu operator sprawdzi źródła i zapisze rzeczywisty wynik. Źródło formatu assetów: [Apple Uploading Assets](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/UploadAssets.html).
+
+## Wykonanie po uzyskaniu zgody
+
+Właściciel „zgadzam sie” zatwierdził limit2. Pierwszy inwentarz wykonano; create przyjęty, odczyt odmówiony przez ASSETID. Serię wstrzymano. Cleanup dokładnie tych samych rekordów zakończono osobno w tym samym oryginalnym oknie i pierwszym budżecie:29/64API łącznie, oba ID NOT_FOUND,0pending. Pierwotny raport nie został nadpisany, operator sprawdza dodatkowy dowód i jego budżet/termin. [Bieżący wynik](WYNIK_SERII_PLIKOW_DEVELOPMENT.md). Drugi inwentarz jeszcze niewykonany; nie rozpoczyna się nowego okna.

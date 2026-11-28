@@ -50,7 +50,7 @@ export function validateAvatarRecord(record, context, descriptor, commitments) {
     const field = record.fields[variant], value = field?.value, expected = commitments?.[variant];
     if (!expected || expected.sha256 !== descriptor[variant].sha256 || expected.byteCount !== descriptor[variant].byteCount ||
         !plain(field) || Object.keys(field).some(key => !["value", "type"].includes(key)) ||
-        field.type !== undefined && field.type !== "ASSET" || !plain(value) ||
+        field.type !== undefined && !["ASSET", "ASSETID"].includes(field.type) || !plain(value) ||
         Object.keys(value).some(key => !["fileChecksum", "size", "receipt", "referenceChecksum", "wrappingKey", "downloadURL"].includes(key)) ||
         value.size !== expected.byteCount || !opaque(value.fileChecksum) || digest(value.fileChecksum) !== expected.fileChecksumHash ||
         ["receipt", "referenceChecksum", "wrappingKey", "downloadURL"].some(key => Object.hasOwn(value, key) && !opaque(value[key]))) throw new PublicRecordError("PUBLIC_RESPONSE");

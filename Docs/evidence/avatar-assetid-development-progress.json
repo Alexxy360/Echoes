@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "contractSHA256": "86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1",
+  "approvalText": "zgadzam sie",
+  "approvedMaximumAttempts": 2,
+  "firstPlanSHA256": "21f2bb4e14eb6fecada386b5f261fbad873b75051f0cf00fd6b3734a9c549de6",
+  "firstSourceCommit": "78d63e60eba781d6827c63b87ef945ce5ec02341",
+  "firstResult": {
+    "childTerminated": true,
+    "permitRemoved": true,
+    "processExitCode": 3,
+    "planSHA256": "21f2bb4e14eb6fecada386b5f261fbad873b75051f0cf00fd6b3734a9c549de6",
+    "result": {
+      "status": "incomplete",
+      "protocolSucceeded": false,
+      "cleanupSucceeded": false,
+      "errorCode": "PUBLIC_RESPONSE",
+      "failedPhase": "stage",
+      "failureDiagnostics": {
+        "kind": "api",
+        "operation": "records/lookup",
+        "httpStatus": 200,
+        "decodedBytes": 3938,
+        "jsonContentType": true,
+        "contentEncoding": "gzip"
+      },
+      "cleanupErrorCode": "PUBLIC_RESPONSE",
+      "counts": {
+        "api": 26,
+        "grants": 2,
+        "uploads": 2,
+        "downloads": 0
+      },
+      "pendingIO": false,
+      "providerPhysicalAssetDeletionVerified": false,
+      "realSessionAuthorizationVerified": false
+    },
+    "completedAt": 1795874122079
+  },
+  "cleanupOnly": {
+    "cleanupSucceeded": true,
+    "requests": 3,
+    "deleteAcknowledgements": 2,
+    "pendingIO": false,
+    "errorCode": null,
+    "diagnostics": {
+      "operation": "records/lookup",
+      "httpStatus": 200,
+      "decodedBytes": 381
+    },
+    "assetFieldTypes": {
+      "image": "ASSETID",
+      "thumbnail": "ASSETID"
+    },
+    "uploads": 0,
+    "downloads": 0,
+    "creates": 0,
+    "providerPhysicalAssetDeletionVerified": false,
+    "sameOriginalWindow": true,
+    "originalAPIRequests": 26,
+    "totalFirstInventoryAPIRequests": 29,
+    "helperSHA256": "8eeded915c34fc746144f3c88cbadd4bc17bca2cf2d7de0eb3464adf40f28667",
+    "completedAt": 1795874697759
+  },
+  "cleanupAuthorizationBasis": "Same two already-authorized conditional deletes, unchanged original window, 3 additional API requests within the 64 first-inventory limit. No upload, create, window reset or full attempt restart.",
+  "cleanupRecordAbsenceVerified": true,
+  "physicalProviderAssetDeletionVerified": false,
+  "originalFirstResultSHA256": "f1f0ba775e30a8d5c34d29797b82f6b5ee60598c5b008593ce9d4ecfa398719c",
+  "cleanupResultSHA256": "fb7fb99915f507256c11eaaa19c6428a9c4b9255d5b6f24c59caa19816ac97f8",
+  "cleanupReservationSHA256": "313d0242a6762266166f158eed4b7e664ddb6047602ed008858ace3f0d42714e",
+  "sourceValidatorDuringCleanupSHA256": "8c5f925c1440307085ab8417bab52b071382858ccf0eef68bef8d470b404de70",
+  "localFix": {
+    "normalReadTypes": [
+      "absent",
+      "ASSET",
+      "ASSETID"
+    ],
+    "unknownTypesRejected": true,
+    "beforeFixASSETIDTestFailed": true,
+    "newTests": 7,
+    "testRuns": [
+      {
+        "runtime": "v22.23.5",
+        "pass": 1021,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "a48a5a42820b10bb9a8ee64321384b53e52bc47ace3065a96f6c4792ef5cf201"
+      },
+      {
+        "runtime": "v24.22.3",
+        "pass": 1021,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "3f7ca2166c28092b01eaa95a46a37c7a00f64d4406381b2704d935930a1f01a9"
+      }
+    ],
+    "syntaxChecks": 4,
+    "testedFilesSHA256": {
+      "gateway/src/avatar-record-schema.mjs": "4e054dfe23054047ca2283999dcd201c58751ea38e9667db16157ccbbc8105d3",
+      "gateway/scripts/avatar-asset-cleanup.mjs": "8eeded915c34fc746144f3c88cbadd4bc17bca2cf2d7de0eb3464adf40f28667",
+      "gateway/test/avatar-asset-cleanup.test.mjs": "7c4f43935e0a00d4b568fd7ea85e980cf51470499bdd2110addb861791dbc525",
+      "gateway/test/avatar-asset-wire.test.mjs": "b84ed7b33a9c739b14113e7b718b593c65726f635101712b9b9f46a8eb6231e4"
+    },
+    "bundleIndexSHA256": "45775a4a0fd98a639442c998b64caacf971e3a165aba4c979efde9faad99bea8",
+    "deployed": false
+  },
+  "operatorRecovery": {
+    "sourceSHA256": "0454f553801569d17d60ca40769faf6abe43d7f6c7372f3bf880c7c48c7c16ec",
+    "guardChecks": 7,
+    "actualReceiptRecognized": true,
+    "originalFailureReceiptPreserved": true,
+    "firstAPIRequestsIncludingCleanup": 29,
+    "fullFailureStateMachineTested": false
+  },
+  "secondInventoryUsed": false,
+  "remainingWork": "Second original inventory after verified cleanup and source checkpoint, only if unchanged shared window is still valid. No extra attempts or deadline extension."
+}

@@ -22,3 +22,23 @@ test("asset create matches Apple's documented value-only Asset field form", asyn
     assert.equal(observed, true); assert.equal(result.status, "staged");
   } finally { f.close(); }
 });
+test("fetched ASSETID fields observed in CloudKit preserve exact receipt commitments", async () => {
+  const f = await avatarRecordFixture();
+  try {
+    f.setRecordHook(() => {
+      for (const record of f.model.records.values()) if (record.recordType === "EchoesAvatarV1") {
+        for (const v of ["image", "thumbnail"]) record.fields[v].type = "ASSETID";
+      }
+    });
+    assert.equal((await f.make().stage(f.input())).status, "staged");
+  } finally { f.close(); }
+});
+test("unrecognized fetched asset labels remain rejected by the normal repository", async () => {
+  const f = await avatarRecordFixture();
+  try {
+    f.setRecordHook(() => {
+      for (const record of f.model.records.values()) if (record.recordType === "EchoesAvatarV1") record.fields.image.type = "UNKNOWN_ASSET";
+    });
+    await assert.rejects(f.make().stage(f.input()), error => error.code === "PUBLIC_RESPONSE");
+  } finally { f.close(); }
+});
