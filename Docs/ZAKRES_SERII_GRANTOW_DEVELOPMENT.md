@@ -1,6 +1,6 @@
 # Seria rozpoznania grantów — do3 żądań CloudKit Development
 
-**Przygotowana, niezatwierdzona i niewykonana.** Poprzedni zatwierdzony request fac1e300… zakończył się HTTP200/2granty/url_canonical. [Wynik i sprawdzona lokalnie poprawka](WYNIK_PONOWNEJ_PROBY_GRANTOW.md). Ten zakres jest nowym budżetem, nie przedłużeniem poprzedniego okna.
+**Zakończona po jednej zatwierdzonej próbie; dwa pozostałe inwentarze niewykonane i niezatwierdzone.** Poprzedni zatwierdzony request fac1e300… zakończył się HTTP200/2granty/url_canonical. [Wynik i sprawdzona lokalnie poprawka](WYNIK_PONOWNEJ_PROBY_GRANTOW.md). Ten zakres jest nowym budżetem, nie przedłużeniem poprzedniego okna.
 
 Kontrakt SHA-256: `c222707fae22a2e0385c2bb0491170c97abc4a50166f70a88d0b2f01c4a25cca`. Dokładne inwentarze:
 
@@ -25,3 +25,7 @@ Pełny kontrakt i dowody przygotowania opisuje [raport](WYNIK_PONOWNEJ_PROBY_GRA
 Prywatne inwentarze, kontrakt i operator są zachowane lokalnie poza Git w trwałym katalogu operatora, z prawami0700/0600; nie kopiowano klucza. Okno serii nie jest rozpoczęte. Odtworzenie runtime przed startem nie zużywa rezerwacji.
 
 Właściciel może ograniczyć zgodę do jednej próby. Operator wymaga zapisanego jawnego limitu1–3 i odmawia przekroczenia go, niezależnie od górnej granicy3 w kontrakcie. Bez nowej odpowiedzi zatwierdzony limit wynosi0.
+
+## Wynik przyjętej zgody
+
+Właściciel odpowiedział „zgadzam sie/potwierdzam”; przyjęto węższy limit1. Pierwszy inwentarz zakończył się sukcesem po1request; proces terminalny i permit usunięty. Dwa pozostałe niewykonane i niezatwierdzone do użycia. [Wynik](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md). Przyjęty budżet jest zużyty; nie ponawiać serii.

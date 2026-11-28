@@ -433,3 +433,7 @@ Ograniczone query Apple zaliczone po konkretnej zgodzie: po3wyniki/2strony prese
 ## R-03a.2 — kolejny wynik grantów i normalizacja HTTPS
 
 Zatwierdzony pojedynczy request fac1e300… otrzymał HTTP200/JSON/gzip/2tokeny, lecz został odrzucony przez porównanie URL.href. Bez rawURL nie znamy konkretnej różnicy. Lokalnie poprawiono discovery/upload/chroniony download dla równoważnej authority HTTPS, zachowując dokładne hosty i ścieżkę/query.3nowe testy odtworzyły błąd;72/72focus i995/995obuNode, nieaktywny pakiet bez wdrożenia. [Wynik i granice](WYNIK_PONOWNEJ_PROBY_GRANTOW.md). Przygotowana [seria do3requestów/jednego30min](ZAKRES_SERII_GRANTOW_DEVELOPMENT.md), bez zgody/okna/sieci; poprzedni limit1zużyty. Pełny R-03, A/B i migracja nadal wymagane; bez iOS/schematu/praw/hostingu/Production/Firebase/opłat.
+
+### R-03a — rzeczywisty host uploadu zaliczony
+
+Po nowej konkretnej zgodzie przyjęto limit1 dla serii SHA c222707f…. [Apple potwierdziło oba granty](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md) na cws.icloud-content.com, z2normalizacjami jawnego443;1request,0upload/recordWrites. Proces terminalny, permit usunięty; dwa pozostałe inwentarze niewykonane. R-03a zakończony; przygotować teraz krok4 planu plików, z osobnym izolowanym checkpointem i własnymi syntetycznymi JPEG, bez zmiany domyślnych hostów/aktywacji Runtime. Pełne R-03 i migracja otwarte.

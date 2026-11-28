@@ -1,6 +1,6 @@
 # R-03a — rozpoznanie hostów Apple przed uploadem
 
-Dokument rozpoczęty 21 listopada 2026. Narzędzie przygotowane i sprawdzone lokalnie. **Wykonano dwie osobno zatwierdzone próby; hosty nadal nie zostały zaakceptowane. Aktualne wyniki i następny zakres są opisane na końcu dokumentu.** [Plan całego R-03](PROBA_ASSET_DEVELOPMENT_PLAN.md), [dowody lokalne](evidence/avatar-grant-discovery-preparation.json).
+Dokument rozpoczęty 21 listopada 2026. Narzędzie przygotowane i sprawdzone lokalnie. **Po dwóch nieudanych próbach kolejna osobno zatwierdzona próba poprawnie rozpoznała host uploadu. Bieżący wynik jest na końcu dokumentu.** [Plan całego R-03](PROBA_ASSET_DEVELOPMENT_PLAN.md), [dowody lokalne](evidence/avatar-grant-discovery-preparation.json).
 
 ## Co jest gotowe
 
@@ -63,3 +63,7 @@ Po późniejszej konkretnej zgodzie wykonano1request z nowego inwentarza SHA6859
 ## Wynik ponownej próby fac1e300…
 
 Po osobnej zgodzie wykonano1request: HTTP200, JSON/gzip,1293B,2tokeny, odmowa url_canonical. Nie znamy surowej różnicy URL; jawne443 jest hipotezą. Permit usunięto, brak retry/uploadu/rekordu. Wspólna lokalna normalizacja authority obejmuje teraz discovery, upload i chroniony download, bez zmiany hostów lub ścieżki/query.72/72focus, pełne995/995obuNode. [Wynik i ograniczenia](WYNIK_PONOWNEJ_PROBY_GRANTOW.md), [nowa seria do3requestów w jednym30min](ZAKRES_SERII_GRANTOW_DEVELOPMENT.md) przygotowana bez aktywacji i wymaga osobnej zgody.
+
+## R-03a — kolejna osobno zatwierdzona próba zakończona sukcesem
+
+[Wynik](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md): przy limicie1 pierwszy request nowej serii poprawnie rozpoznał cws.icloud-content.com dla obu pól. ObaURL wymagały normalizacji jawnego443. Nie wykonano uploadu, zapisu rekordu lub pobrania. Następny krok to przygotowanie oddzielnego testu plików, nie ponowne grant discovery.

@@ -25,3 +25,7 @@ Powyższa lokalna naprawa została wykonana:2nowe testy rzeczywistego localhost/
 ## Po zatwierdzonej ponownej próbie fac1e300…
 
 Rzeczywiste metadata odpowiedzi: HTTP200, JSON/gzip,1293odkodowane bajty,2tokeny, odmowa url_canonical. Nie znamy surowego URL i nie odzyskujemy go ani nie ponawiamy requestu. Najpierw lokalnie poprawić równoważne zapisy samej authority HTTPS: domyślny port443 i wielkość liter schematu/hosta, z zachowaniem identycznego hosta, zakazu innych portów/credentials/fragmentów i niezmienionej kontroli ścieżki/query. Wprowadzić taką samą regułę w CLI i uploaderze. Testy mają odtworzyć stare odrzucenie i sprawdzić poprawne warianty oraz odmowę niekanonicznej ścieżki, kodowanego hosta i backslash. Raport sukcesu może zawierać wyłącznie liczniki normalizacji, a diagnostyka błędu booleany, nigdy URL/token. Jawny port443 jest hipotezą dla tej odpowiedzi, nie stwierdzonym faktem. Przed kolejnym IO przygotować konkretny ograniczony zakres najwyżej3osobnych inwentarzy/jednego wspólnego okna30min, stop po pierwszym sukcesie, bez dalszych operacji; potrzebna osobna zgoda właściciela na ten budżet, nie rozszerzać zużytego limitu1.
+
+## R-03a — rzeczywiste rozpoznanie zakończone
+
+[Jedna zatwierdzona próba](WYNIK_ROZPOZNANIA_HOSTOW_DEVELOPMENT.md) kodem4d9aa7a: hosts_discovered, oba pola na cws.icloud-content.com,2normalizacje/2jawne443,1request/0upload/0recordWrites. Przyjęto limit1; pozostałe inwentarze nieuruchomione. Następny krok4 jest teraz możliwy do przygotowania. Domyślne listy hostów nadal puste; brak pełnego odbioru R-03.

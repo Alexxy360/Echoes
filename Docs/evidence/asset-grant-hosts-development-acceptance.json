@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "sourceCommit": "4d9aa7ae7cad463b81ad73e6f4864f645c746016",
+  "batchContractSHA256": "c222707fae22a2e0385c2bb0491170c97abc4a50166f70a88d0b2f01c4a25cca",
+  "approvedMaximumRequests": 1,
+  "executedPlanSHA256": "978ddde5e42d1cda616f80692f550e47d31a61372655df21f66a19f45788eb4f",
+  "status": "hosts_discovered",
+  "networkRequests": 1,
+  "uploadRequests": 0,
+  "recordWrites": 0,
+  "fields": {
+    "image": "cws.icloud-content.com",
+    "thumbnail": "cws.icloud-content.com"
+  },
+  "exactHosts": [
+    "cws.icloud-content.com"
+  ],
+  "authorityNormalizedURLCount": 2,
+  "defaultHTTPSPortURLCount": 2,
+  "processExitCode": 0,
+  "childTerminated": true,
+  "permitRemoved": true,
+  "unusedInventoriesExecuted": 0,
+  "privateReportSHA256": "64e1d7d54f41073ae71595991dc2a632b8ba388d2618e0b7a0b92400f119bd7a",
+  "privateAttemptSHA256": "dd25ab94db5f1660a95a35b72071f32d9491d0d56779c217ed729ab18cde6bb9",
+  "privateReceiptSHA256": "b3c5554ba8a9fdb58f3ab4ce3e18d9abe6b84a81c287eb6279ade506a9d7e7fd",
+  "completedAtUTC": "2026-11-28T00:24:25.912000+00:00",
+  "limits": [
+    "No image bytes, returned URL follow, record writes/deletes or Cloudflare activation",
+    "Host discovery proves upload grants only, not download hosts or full R-03",
+    "Previous fac1e300 failure did not preserve raw URLs; its exact difference remains unknown",
+    "No physical asset cleanup claim; provider may retain temporary grants"
+  ]
+}
