@@ -74,8 +74,12 @@ export class CloudKitAvatarRepository {
     await this.#checkpoint.advance({ signal: options.signal }); this.#current(options, context);
     const authorizeMutation = () => this.#permit(options, context.accountID);
     const fields = avatarMetadata(context, descriptor);
-    for (const variant of ["image", "thumbnail"]) fields[variant] = this.#assets.resumedRecordField({
-      context, variant, authorizeMutation, signal: options.signal });
+    for (const variant of ["image", "thumbnail"]) {
+      const field = this.#assets.resumedRecordField({ context, variant, authorizeMutation, signal: options.signal });
+      // Apple's upload example uses a value-only Asset dictionary. Keep our internal ASSET
+      // marker out of the optional Web Services wire-type enum; the installed schema defines it.
+      fields[variant] = { value: field.value };
+    }
     this.#current(options, context);
     const response = (await this.#client.modify([{ operationType: "create", record: {
       recordName: context.recordName, recordType: context.recordType, fields } }], { signal: options.signal })).get(context.recordName);

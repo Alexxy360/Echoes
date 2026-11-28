@@ -39,3 +39,7 @@ Kolejność dalszej pracy: serwerowa normalizacja/dekodowanie i pomiar CPU/pami�
 ## Aktualizacja CK-04e.3d
 
 Powyższy CK-04e.3b opisuje pierwszy etap transportu. Obecny kod wymaga AvatarReceiptVault: ACK zawiera dodatkowo hash provider fileChecksum i zaszyfrowaną kopertę receipt z terminem użycia. Rejestr ustawia claim mask w tej samej transakcji co rezerwacja wariantu; brak metadanych nie zwalnia próby. Osobne resumedRecordField odtwarza tylko istniejący, aktualny receipt po ponownym sprawdzeniu konta/operacji. Nowy repository wykonuje trzeci krok create-only, dokładny lookup i settled/cleanup; dalej nie publikuje zdjęcia w profilu. Utrata odpowiedzi samego uploadu pozostaje nieznana i nie uruchamia reuploadu. [Aktualny kontrakt i otwarte integracje](REKORD_AVATARA_I_ODZYSKIWANIE.md).
+
+## Postać zapisu Asset w Web Services
+
+CloudKitAvatarRepository zapisuje oba pola assetów jako słownik value-only zgodnie z [przykładem Apple](https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/UploadAssets.html); wewnętrzny znacznik ASSET z kontrolowanego buildera nie jest wysyłany jako opcjonalny wire type. Receipty nadal pochodzą wyłącznie z powiązanych, zaszyfrowanych, zatwierdzonych transferów. Pierwszy rzeczywisty upload obu wariantów udał się, create zwrócił HTTP 400; pominięcie etykiety jest lokalną poprawką do osobnego odbioru, nie potwierdzoną przyczyną tej odpowiedzi. [Wynik i ograniczenia](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md).

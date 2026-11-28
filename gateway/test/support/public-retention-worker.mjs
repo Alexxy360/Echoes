@@ -62,6 +62,7 @@ export class RetentionProofAuthority extends DurableObject {
       const registry = new PublicRecordRegistry(storage, { clock });
       const authentication = new AuthenticationState(storage, { clock, renewalProofs: proofs });
       const records = new Map(p.records.map(r => [r.recordName, r]));
+      const currentAvatarBefore = p.currentAvatarName ? JSON.stringify(records.get(p.currentAvatarName)) : null;
       const known = new Set(storage.sql.exec("SELECT record_name FROM public_records_v1").toArray().map(r => r.record_name));
       known.add(checkpointRecordName);
       let sequence = 0, signatures = 0, metadataOnly = 0;
@@ -140,8 +141,9 @@ export class RetentionProofAuthority extends DurableObject {
         presenceRestored: restored.fields.erased.value === 0 && registry.readable(restored.recordName, "presence") !== null,
         profilePreserved: records.get(p.profileName)?.fields.name?.value === "Trwały profil",
         avatarTransfersRemaining: p.retiredAvatarName ? storage.sql.exec("SELECT count(*) n FROM avatar_asset_transfers_v1 WHERE record_name=?", p.retiredAvatarName).toArray()[0].n : null,
-        currentAvatarPreserved: p.currentAvatarName ? records.get(p.currentAvatarName)?.fields.image?.type === "ASSET" &&
-          records.get(p.currentAvatarName)?.fields.thumbnail?.type === "ASSET" && registry.readable(p.currentAvatarName, "avatar") !== null : null,
+        currentAvatarPreserved: p.currentAvatarName ? JSON.stringify(records.get(p.currentAvatarName)) === currentAvatarBefore &&
+          records.get(p.currentAvatarName)?.fields.image?.value !== undefined &&
+          records.get(p.currentAvatarName)?.fields.thumbnail?.value !== undefined && registry.readable(p.currentAvatarName, "avatar") !== null : null,
         expiredSelectionRetained: p.expiredAvatarAccountID ? new AvatarPolicyState(storage, { registry, clock }).snapshot(p.expiredAvatarAccountID).status === "expired" : null,
         occupiedAfterDrain: processor.isOccupied }, { headers: { "Cache-Control": "no-store" } });
     } catch (error) { return Response.json({ error: error.code ?? "SYNTHETIC_PROOF_FAILED" }, { status: 400 }); }

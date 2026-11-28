@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "sourceCommitExecuted": "d9d57064857f1498af8a867d28880bfc0acbf47f",
+  "executedPlanSHA256": "e0e8274935a04cbba23c0427da515e00b383de7a1daa3b752c9337bd48b52433",
+  "approvalText": "zgoda",
+  "maximumAttemptsApproved": 1,
+  "status": "incomplete",
+  "providerResult": {
+    "status": "incomplete",
+    "protocolSucceeded": false,
+    "cleanupSucceeded": true,
+    "errorCode": "PUBLIC_UNAVAILABLE",
+    "failedPhase": "stage",
+    "failureDiagnostics": {
+      "kind": "api",
+      "operation": "records/modify",
+      "httpStatus": 400,
+      "decodedBytes": null,
+      "jsonContentType": true,
+      "contentEncoding": "gzip"
+    },
+    "cleanupErrorCode": null,
+    "planSHA256": "e0e8274935a04cbba23c0427da515e00b383de7a1daa3b752c9337bd48b52433",
+    "counts": {
+      "api": 28,
+      "grants": 2,
+      "uploads": 2,
+      "downloads": 0
+    },
+    "pendingIO": false,
+    "providerPhysicalAssetDeletionVerified": false,
+    "realSessionAuthorizationVerified": false
+  },
+  "transferAcknowledgements": [
+    {
+      "variant": "image",
+      "phase": "acknowledged",
+      "byteCount": 1649,
+      "encryptedReceiptStored": true
+    },
+    {
+      "variant": "thumbnail",
+      "phase": "acknowledged",
+      "byteCount": 1104,
+      "encryptedReceiptStored": true
+    }
+  ],
+  "cleanup": {
+    "verifiedDuringTrial": true,
+    "checkpointConditionalDeletes": 1,
+    "avatarNOTFOUNDAtCleanup": true,
+    "bothInventoryRecordsNOTFOUNDAtEnd": true,
+    "physicalAssetDeletionVerified": false,
+    "unattachedProviderAssetsMayRemain": true
+  },
+  "childTerminated": true,
+  "processExitCode": 3,
+  "permitRemoved": true,
+  "completedAtUTC": "2026-11-28T12:46:49.347000+00:00",
+  "privateAttemptSHA256": "621ca78f93efed0d9d81819666db77bb97bfa65264531cd8b511939970cb4e95",
+  "privateReportSHA256": "abafe8558bad89f0646089da0f8f15041f549f4ffbe9cdac0dabf4187a4cd101",
+  "privateExecutionResultSHA256": "f7f5d35cabc7da06bc37606353dcd44366a4b678e8d3a09ad1f1fc53d6f7ea3c",
+  "privateIntentsSHA256": "2ba2b1aba916baefe168a1f1b6f6e9c0b80edfb43ea67ec544a9fad60bc77456",
+  "http400BodyPreserved": false,
+  "actualHTTP400CauseKnown": false,
+  "localRepair": {
+    "description": "Omit optional type on the two outbound Asset fields, matching the Apple value-only example; preserve internal validation and receipts. Parse bounded HTTP error JSON into closed enums only; deny another request while concrete IO remains pending.",
+    "newTests": 3,
+    "beforeRepairWireTestFailed": true,
+    "initialRegressionFailure": "One retention provider-model assertion required explicit ASSET instead of checking the preserved record. Changed to immutable whole-record snapshot equality and asset-value/readability checks.",
+    "testRuns": [
+      {
+        "runtime": "v22.23.5",
+        "tests": 1014,
+        "pass": 1014,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "9409677649acec9ae030e34d3eeb2c218377874522491a933800922ae229e997"
+      },
+      {
+        "runtime": "v24.22.3",
+        "tests": 1014,
+        "pass": 1014,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "da58a7834374add377fbd904475c24c575a0d6289b88aec89ecb51ec4b379a69"
+      }
+    ],
+    "syntaxChecks": 5,
+    "testedFilesSHA256": {
+      "gateway/src/cloudkit-avatar-repository.mjs": "049ffdb24f816936c92d209d95a970c0acc0994bbc9b410ee7ed8e1147d4baff",
+      "gateway/scripts/avatar-asset-trial.mjs": "158cb5ce50b60e700320d2c4644aca42b3f830792213cf4f3149428cb59fead3",
+      "gateway/test/avatar-asset-wire.test.mjs": "7832232b2f2969e753ee5ee3e10943b8ca3819d438ea460c50686a8db6b833ec",
+      "gateway/test/avatar-asset-trial.test.mjs": "749d600d4e3bd1f9b03410e84157e1c64867d93441234e933eaaa70dccd46825",
+      "gateway/test/support/public-retention-worker.mjs": "d9ef02fbe58a2746450bf504c1fff6e6b64abffbca2fe2b92e469cee5e68ae13"
+    },
+    "bundleIndexSHA256": "6bba68c20fecd89f57bc3d04291ed8e4d2ee14949d8acbfff3ec84bdb6f08fdb",
+    "deployed": false,
+    "appleExample": "https://developer.apple.com/library/archive/documentation/DataManagement/Conceptual/CloudKitWebServicesReference/UploadAssets.html",
+    "officialCloudKitJSReadOnlySHA256": "7df0ca4172f3ec8bc84b80d8bba3a8a9aeb53a1db924208c9ecd02ef9eeb0930"
+  },
+  "nextBatch": {
+    "contractSHA256": "86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1",
+    "inventorySHA256": [
+      "21f2bb4e14eb6fecada386b5f261fbad873b75051f0cf00fd6b3734a9c549de6",
+      "08a807146a5abc40d2f4936fb9d3da52140205264d7756356d08537a0c9a1d82"
+    ],
+    "approved": false,
+    "approvedMaximumAttempts": 0,
+    "networkRequests": 0
+  },
+  "limitations": [
+    "HTTP400 cause is a hypothesis; original provider body was not captured",
+    "Local tests model Apple and identity; no new remote request with the repair",
+    "No accepted download host, bytes, full CloudKitAvatarReader/session/3km/A-B or complete R-03",
+    "Do not reuse the consumed inventory/window; do not infer physical provider cleanup from record absence"
+  ]
+}

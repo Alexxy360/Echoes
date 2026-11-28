@@ -160,6 +160,9 @@ test("late fetch remains retained after cancellation and grant is not repeated",
     body: JSON.stringify({ tokens: [{ recordName: f.p.avatarRecordName, recordType: "EchoesAvatarV1", fieldName: "image" }] }) });
   const work = transport.fetch(request(), { signal: controller.signal }); await ready; controller.abort();
   await assert.rejects(work); assert.equal(await transport.drain(1), false);
+  const next = new Request("https://api.apple-cloudkit.com/database/1/iCloud.mpvEcho.Echo/development/public/assets/upload", { method: "POST", redirect: "manual",
+    body: JSON.stringify({ tokens: [{ recordName: f.p.avatarRecordName, recordType: "EchoesAvatarV1", fieldName: "thumbnail" }] }) });
+  await assert.rejects(transport.fetch(next, { signal: new AbortController().signal }), e => e.code === "ASSET_TRIAL_PENDING_IO");
   complete(Response.json({ tokens: [] })); assert.equal(await transport.drain(), true);
   await assert.rejects(transport.fetch(request(), { signal: new AbortController().signal })); assert.equal(transport.counts.grants, 1);
 });
@@ -170,4 +173,30 @@ test("API budget is enforced before the sixty-fifth fetch", async t => {
   for (let i = 0; i < 64; i++) await transport.fetch(request(), { signal: new AbortController().signal });
   await assert.rejects(transport.fetch(request(), { signal: new AbortController().signal }));
   assert.equal(calls, 64); assert.equal(transport.counts.api, 64);
+});
+test("bounded error JSON exposes only closed provider codes and heuristic categories", async t => {
+  const f = await setup(t), secret = "SYNTHETIC-SECRET-URL-RECEIPT-REASON";
+  for (const [code, reason, expectedCode, category] of [
+    ["BAD_REQUEST", "Unknown enum type ASSET " + secret, "BAD_REQUEST", "asset_type"],
+    [secret, "Bad asset receipt " + secret, "OTHER", "asset_receipt"],
+    ["BAD_REQUEST", "Unknown field " + secret, "BAD_REQUEST", "schema_field"],
+    ["BAD_REQUEST", secret, "BAD_REQUEST", "other"],
+  ]) {
+    const transport = new AssetTrialTransport({ plan: f.p, check() {}, saveIntent: async () => {}, fetchImplementation: async () =>
+      Response.json({ serverErrorCode: code, reason, downloadURL: secret, receipt: secret }, { status: 400 }) });
+    const request = new Request("https://api.apple-cloudkit.com/database/1/iCloud.mpvEcho.Echo/development/public/records/lookup", { method: "POST", redirect: "manual", body: JSON.stringify({ records: [{ recordName: f.p.avatarRecordName }] }) });
+    await assert.rejects(transport.fetch(request, { signal: new AbortController().signal }));
+    assert.equal(await transport.drain(), true);
+    const d = transport.diagnostics; assert.equal(d.httpStatus, 400); assert.equal(d.providerErrorCode, expectedCode); assert.equal(d.providerReasonCategory, category);
+    assert.ok(d.decodedBytes > 0); assert.ok(!JSON.stringify(d).includes(secret));
+  }
+});
+test("oversized error JSON stays bounded and never yields provider text", async t => {
+  const f = await setup(t);
+  const transport = new AssetTrialTransport({ plan: f.p, check() {}, saveIntent: async () => {}, fetchImplementation: async () =>
+    Response.json({ serverErrorCode: "BAD_REQUEST", reason: "PRIVATE".repeat(3000) }, { status: 400 }) });
+  const request = new Request("https://api.apple-cloudkit.com/database/1/iCloud.mpvEcho.Echo/development/public/records/lookup", { method: "POST", redirect: "manual", body: JSON.stringify({ records: [{ recordName: f.p.avatarRecordName }] }) });
+  await assert.rejects(transport.fetch(request, { signal: new AbortController().signal }));
+  assert.equal(await transport.drain(), true); assert.ok(!JSON.stringify(transport.diagnostics).includes("PRIVATE"));
+  assert.equal(transport.diagnostics.providerErrorCode, undefined);
 });

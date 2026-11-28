@@ -441,3 +441,9 @@ Po nowej konkretnej zgodzie przyjęto limit1 dla serii SHA c222707f…. [Apple p
 ### R-03b — gotowy izolowany test plików, oczekuje na osobną zgodę
 
 [Zakres](ZAKRES_PROBY_PLIKOW_DEVELOPMENT.md), inwentarz SHA e0e82749…, przygotowany lokalnie:2syntetyczne JPEG/2753 B,2własne rekordy, osobny checkpoint/CAS, istniejący uploader/repozytorium i bounded reader. Dodano opcjonalną ścisłą nazwę checkpointu trial; zwykły klient zachowuje nazwę globalną. Naprawiono udokumentowany placeholder nazwy pliku przy zachowaniu signed query.16nowych testów, pełne1011/1011 na obu Node,7syntax i pakiet nieaktywny. Pierwszy pełny run w sandboxie miał27odmów loopback EPERM; po dopuszczeniu lokalnych portów oba pełne runy bez błędów. Bez wdrożenia/iOS/schematu/nowych zdalnych praw. Rzeczywisty upload niewykonany; nie przełączać AppServices ani Firebase przed pozostałym odbiorem.
+
+### R-03b — upload zaliczony, attachment/download nadal do odbioru
+
+[Zatwierdzona pojedyncza próba](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md) kodem d9d5706: oba uploady/2753 B przyjęte, records/modify create avatara HTTP 400. 28 API, 0 pobrań. Cleanup własnych rekordów potwierdzony (1 warunkowy delete checkpointu, oba ID NOT_FOUND), brak pending IO; fizyczne pliki u Apple/CDN niepotwierdzone. Budżet wykorzystany, permit usunięty, bez retry.
+
+Lokalnie poprawiono value-only Asset zgodnie z przykładem Apple oraz bounded, zamkniętą diagnostykę błędu i odmowę nowego żądania podczas pending IO. Rzeczywista przyczyna HTTP 400 pozostaje nieznana. Poprawiono model retencji: porównuje cały niezmieniony rekord zamiast wymagać opcjonalnej etykiety ASSET. 1014/1014 na obu Node, 0 skipów, nieaktywny bundle bez wdrożenia. [Dwie nowe zamknięte próby](ZAKRES_SERII_PLIKOW_DEVELOPMENT.md), SHA86327f1d…, przygotowane i niezatwierdzone: jedno wspólne okno do 30 minut, stop po sukcesie albo niepełnym sprzątaniu. Pozostałe bramki R-03/R-04/R-05 i przełączenie klienta nadal otwarte.

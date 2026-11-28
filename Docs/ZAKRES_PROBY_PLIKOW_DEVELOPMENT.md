@@ -1,6 +1,6 @@
 # R-03b — zakres próby dwóch syntetycznych JPEG
 
-**Przygotowany, niezatwierdzony i niewykonany.** Narzędzie: `gateway/scripts/avatar-asset-trial.mjs`. [Lokalne dowody](evidence/avatar-asset-trial-preparation.json). Poprzednia zgoda obejmowała wyłącznie granty i jest już wykorzystana; nie obejmuje tego uploadu.
+**Wykonany po zgodzie; budżet jednego przebiegu zużyty.** [Wynik](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md): oba uploady przyjęte, przypięcie HTTP 400, cleanup rekordów potwierdzony. Dalszy zakres jest osobny: [seria dwóch nowych inwentarzy](ZAKRES_SERII_PLIKOW_DEVELOPMENT.md). Poniższy opis zachowuje zakres historycznej zgody. Narzędzie: `gateway/scripts/avatar-asset-trial.mjs`. [Lokalne dowody](evidence/avatar-asset-trial-preparation.json). Poprzednia zgoda obejmowała wyłącznie granty i jest już wykorzystana; nie obejmuje tego uploadu.
 
 Inwentarz SHA-256: **e0e8274935a04cbba23c0427da515e00b383de7a1daa3b752c9337bd48b52433**. Prywatnie zachowano dokładne losowe identyfikatory dwóch rekordów, początkowy checkpoint, manifesty, SQLite i lokalny klucz szyfrowania krótkotrwałych receiptów. Brak permitu, attempt i rozpoczętego okna.
 

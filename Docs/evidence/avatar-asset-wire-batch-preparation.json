@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "status": "prepared_not_approved_not_executed",
+  "contract": {
+    "schemaVersion": 1,
+    "purpose": "echoes-avatar-assets-development-batch-v1",
+    "scope": {
+      "team": "22YC9RAP4P",
+      "container": "iCloud.mpvEcho.Echo",
+      "environment": "development",
+      "database": "public",
+      "reviewedSchemaSHA256": "495cdbdc95308a0d88b6b0e2d73b8d3bae7f5988aad1acac24e13f3cf4d01543"
+    },
+    "keyID": "e601721628f60c732d866bf669dcea4c2dfc7e99cb7dc9f68643a5a778330b10",
+    "publicKeySHA256": "dff346013b6931700abe67b7b2358fcd2f36c8c9dd22481dbadbae9f5b9aee60",
+    "inventorySHA256": [
+      "21f2bb4e14eb6fecada386b5f261fbad873b75051f0cf00fd6b3734a9c549de6",
+      "08a807146a5abc40d2f4936fb9d3da52140205264d7756356d08537a0c9a1d82"
+    ],
+    "maximumAttempts": 2,
+    "maximumWindowMilliseconds": 1800000,
+    "perAttemptLimits": {
+      "apiRequests": 64,
+      "grants": 2,
+      "uploads": 2,
+      "downloads": 2,
+      "uploadedBytes": 16384,
+      "jsonBytes": 16384,
+      "requestMilliseconds": 8000,
+      "windowMilliseconds": 1800000
+    },
+    "totalLimits": {
+      "apiRequests": 128,
+      "uploads": 4,
+      "downloads": 4,
+      "uploadedBytes": 5506
+    },
+    "uploadHosts": [
+      "cws.icloud-content.com"
+    ],
+    "downloadHostCandidates": [
+      "cws.icloud-content.com",
+      "cvws.icloud-content.com"
+    ],
+    "stopAfterFirstSuccess": true,
+    "stopOnIncompleteCleanup": true,
+    "localFormatAndDiagnosticsRepairsAllowed": true,
+    "newHostingRolesSchemaProductionOrFees": false
+  },
+  "contractSHA256": "86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1",
+  "operatorSHA256": "22895a8ad128c11f0263ce8e83b2b05df488bb34bab4814b5065e48b49b056ad",
+  "approvedMaximumAttempts": 0,
+  "windowStarted": false,
+  "reservedAttempts": 0,
+  "localPrepareInspectNetworkRequests": 0,
+  "operatorSyntaxVerified": true,
+  "operatorPreApprovalRefusalVerified": true,
+  "operatorFullStateMachineTested": false,
+  "runtimeTests": [
+    {
+      "runtime": "v22.23.5",
+      "tests": 1014,
+      "pass": 1014,
+      "fail": 0,
+      "skip": 0,
+      "logSHA256": "9409677649acec9ae030e34d3eeb2c218377874522491a933800922ae229e997"
+    },
+    {
+      "runtime": "v24.22.3",
+      "tests": 1014,
+      "pass": 1014,
+      "fail": 0,
+      "skip": 0,
+      "logSHA256": "da58a7834374add377fbd904475c24c575a0d6289b88aec89ecb51ec4b379a69"
+    }
+  ],
+  "privateMaterialsOutsideGit": true,
+  "limitations": [
+    "Private operator guard flow compiled/read/refusal checked; full operator failure state machine not tested",
+    "CLI workflow tests use a provider model; remote repaired attachment/download not yet accepted",
+    "Download hosts are fixed trial candidates; ordinary Runtime defaults remain empty"
+  ]
+}

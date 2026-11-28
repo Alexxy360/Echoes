@@ -29,6 +29,20 @@ const limits = Object.freeze({ apiRequests: 64, grants: 2, uploads: 2, downloads
 const uploadHosts = ["cws.icloud-content.com"], downloadHosts = ["cws.icloud-content.com", "cvws.icloud-content.com"];
 const registeredKey = Object.freeze({ keyID: "e601721628f60c732d866bf669dcea4c2dfc7e99cb7dc9f68643a5a778330b10",
   publicKeySHA256: "dff346013b6931700abe67b7b2358fcd2f36c8c9dd22481dbadbae9f5b9aee60" });
+const providerErrors = new Set(["BAD_REQUEST", "ACCESS_DENIED", "AUTHENTICATION_FAILED", "AUTHENTICATION_REQUIRED",
+  "THROTTLED", "QUOTA_EXCEEDED", "INTERNAL_ERROR", "TRY_AGAIN_LATER", "NOT_FOUND", "EXISTS", "CONFLICT"]);
+// Closed heuristic hints, not provider text or a statement of the underlying cause.
+function failureHints(bytes) {
+  try {
+    const body = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
+    const code = plain(body) && typeof body.serverErrorCode === "string" ? body.serverErrorCode : null;
+    const reason = plain(body) && typeof body.reason === "string" ? body.reason : "";
+    return { providerErrorCode: code === null ? null : providerErrors.has(code) ? code : "OTHER",
+      providerReasonCategory: /asset/i.test(reason) && /type|enum/i.test(reason) ? "asset_type" :
+        /asset/i.test(reason) && /receipt|checksum|reference/i.test(reason) ? "asset_receipt" :
+        /field|column|record type/i.test(reason) && /unknown|not found|invalid/i.test(reason) ? "schema_field" : "other" };
+  } catch { return { providerErrorCode: null, providerReasonCategory: "unreadable" }; }
+}
 const fail = code => { throw new AssetTrialError(code); };
 const exact = (value, keys) => plain(value) && Object.keys(value).sort().join() === [...keys].sort().join();
 const same = (a, b) => queryCanonical(a) === queryCanonical(b);
@@ -120,7 +134,8 @@ export class AssetTrialTransport {
   get creates() { return new Set(this.#creates); }
   allowDownload(url) { this.#downloadURLs.add(avatarDownloadURL(url, avatarDownloadHosts(this.#plan.downloadHosts))); }
   async fetch(request, options = {}) {
-    this.#check(); if (!(request instanceof Request) || request.redirect !== "manual" || !options.signal || options.signal.aborted) fail("ASSET_TRIAL_SCOPE");
+    this.#check(); if (this.#pending.size) fail("ASSET_TRIAL_PENDING_IO");
+    if (!(request instanceof Request) || request.redirect !== "manual" || !options.signal || options.signal.aborted) fail("ASSET_TRIAL_SCOPE");
     const u = new URL(request.url), p = this.#plan; let kind, variant, operation, mutations;
     if (u.origin === "https://api.apple-cloudkit.com") {
       const base = "https://api.apple-cloudkit.com/database/1/iCloud.mpvEcho.Echo/development/public/";
@@ -199,7 +214,7 @@ export class AssetTrialTransport {
       if (response instanceof Response) this.#diagnostics = { ...this.#diagnostics, httpStatus: response.status,
         jsonContentType: /^application\/json(?:\s*;|$)/i.test(response.headers.get("content-type") ?? ""),
         contentEncoding: [null, "identity", "gzip", "x-gzip", "deflate", "br"].includes(response.headers.get("content-encoding")) ? response.headers.get("content-encoding") : "other" };
-      if (!(response instanceof Response) || !response.ok || response.redirected || response.url && response.url !== request.url || !response.body) fail("ASSET_TRIAL_RESPONSE");
+      if (!(response instanceof Response) || response.redirected || response.url && response.url !== request.url || !response.body) fail("ASSET_TRIAL_RESPONSE");
       const max = kind === "download" ? limits.uploadedBytes : limits.jsonBytes;
       const encoding = response.headers.get("content-encoding") ?? "identity", length = response.headers.get("content-length");
       if (length !== null && (!/^\d+$/.test(length) || +length > max) ||
@@ -212,6 +227,12 @@ export class AssetTrialTransport {
       this.#check(); if (options.signal.aborted || encoding === "identity" && length !== null && size !== +length) fail("ASSET_TRIAL_RESPONSE");
       this.#diagnostics = { ...this.#diagnostics, decodedBytes: size };
       const bytes = new Uint8Array(size); let at = 0; for (const part of parts) { bytes.set(part, at); at += part.length; part.fill(0); }
+      if (!response.ok) {
+        try {
+          if (this.#diagnostics.jsonContentType) this.#diagnostics = { ...this.#diagnostics, ...failureHints(bytes) };
+          fail("ASSET_TRIAL_RESPONSE");
+        } finally { bytes.fill(0); }
+      }
       return new Response(bytes, { status: response.status, headers: response.headers });
     } finally { if (reader) { await reader.cancel(); reader.releaseLock(); } else await response?.body?.cancel(); }
   }
