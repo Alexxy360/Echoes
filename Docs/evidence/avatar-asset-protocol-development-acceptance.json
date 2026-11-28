@@ -1,0 +1,178 @@
+{
+  "schemaVersion": 1,
+  "status": "provider_asset_protocol_accepted",
+  "contractSHA256": "86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1",
+  "sourceCommitSecondTrial": "bc7d817102fbb21d5d02338d441987a65b120b3a",
+  "approvedMaximumAttempts": 2,
+  "executedAttempts": 2,
+  "sharedWindowWasNotReset": true,
+  "completedWithinOriginalWindow": true,
+  "elapsedWindowMilliseconds": 1094346,
+  "firstTrialOriginalResult": {
+    "childTerminated": true,
+    "permitRemoved": true,
+    "processExitCode": 3,
+    "planSHA256": "21f2bb4e14eb6fecada386b5f261fbad873b75051f0cf00fd6b3734a9c549de6",
+    "result": {
+      "status": "incomplete",
+      "protocolSucceeded": false,
+      "cleanupSucceeded": false,
+      "errorCode": "PUBLIC_RESPONSE",
+      "failedPhase": "stage",
+      "failureDiagnostics": {
+        "kind": "api",
+        "operation": "records/lookup",
+        "httpStatus": 200,
+        "decodedBytes": 3938,
+        "jsonContentType": true,
+        "contentEncoding": "gzip"
+      },
+      "cleanupErrorCode": "PUBLIC_RESPONSE",
+      "counts": {
+        "api": 26,
+        "grants": 2,
+        "uploads": 2,
+        "downloads": 0
+      },
+      "pendingIO": false,
+      "providerPhysicalAssetDeletionVerified": false,
+      "realSessionAuthorizationVerified": false
+    },
+    "completedAt": 1795874122079
+  },
+  "firstTrialSeparateCleanup": {
+    "cleanupSucceeded": true,
+    "requests": 3,
+    "deleteAcknowledgements": 2,
+    "pendingIO": false,
+    "errorCode": null,
+    "diagnostics": {
+      "operation": "records/lookup",
+      "httpStatus": 200,
+      "decodedBytes": 381
+    },
+    "assetFieldTypes": {
+      "image": "ASSETID",
+      "thumbnail": "ASSETID"
+    },
+    "uploads": 0,
+    "downloads": 0,
+    "creates": 0,
+    "providerPhysicalAssetDeletionVerified": false,
+    "sameOriginalWindow": true,
+    "originalAPIRequests": 26,
+    "totalFirstInventoryAPIRequests": 29,
+    "helperSHA256": "8eeded915c34fc746144f3c88cbadd4bc17bca2cf2d7de0eb3464adf40f28667",
+    "completedAt": 1795874697759
+  },
+  "secondTrial": {
+    "childTerminated": true,
+    "permitRemoved": true,
+    "processExitCode": 0,
+    "planSHA256": "08a807146a5abc40d2f4936fb9d3da52140205264d7756356d08537a0c9a1d82",
+    "result": {
+      "status": "asset_protocol_verified",
+      "protocolSucceeded": true,
+      "cleanupSucceeded": true,
+      "errorCode": null,
+      "failedPhase": null,
+      "failureDiagnostics": null,
+      "cleanupErrorCode": null,
+      "counts": {
+        "api": 36,
+        "grants": 2,
+        "uploads": 2,
+        "downloads": 2
+      },
+      "pendingIO": false,
+      "providerPhysicalAssetDeletionVerified": false,
+      "realSessionAuthorizationVerified": false
+    },
+    "completedAt": 1795875204293
+  },
+  "totals": {
+    "apiRequests": 65,
+    "apiLimit": 128,
+    "grantsIncludedInAPI": 4,
+    "uploads": 4,
+    "uploadLimit": 4,
+    "downloads": 2,
+    "downloadLimit": 4,
+    "uploadedBytes": 5506,
+    "uploadByteLimit": 5506,
+    "downloadedBytesSHA256Verified": 2753
+  },
+  "acceptedAssertions": [
+    "Production Wasm normalization regenerated both approved manifests and source bytes",
+    "Both variants granted and uploaded with receipt/checksum commitments",
+    "Immutable avatar CREATE and exact lookup accepted with ASSETID",
+    "Registry settled against real isolated CloudKit checkpoint",
+    "A stale checkpoint recordChangeTag was rejected as CONFLICT",
+    "Both downloads matched exact manifest size and SHA256",
+    "Conditional deletion acknowledged both second-trial records and final lookups returned NOT_FOUND",
+    "First-trial records also absent after separately verified same-window conditional cleanup"
+  ],
+  "manifests": {
+    "image": {
+      "width": 192,
+      "height": 96,
+      "byteCount": 1649,
+      "sha256": "9c67d12f5d955b4357d7d2a707ce55f421c9c1b7230e0f05aaa77d2389f7be27"
+    },
+    "thumbnail": {
+      "width": 128,
+      "height": 64,
+      "byteCount": 1104,
+      "sha256": "6462e7049dff4d3381508ccc27a8e5c34444cfa9a2c78b8c93683bcc0d9ba65d"
+    }
+  },
+  "allProcessesTerminal": true,
+  "allPermitsRemoved": true,
+  "pendingIO": false,
+  "providerPhysicalAssetDeletionVerified": false,
+  "realSessionAuthorizationVerified": false,
+  "privateProofSHA256": {
+    "result0": "f1f0ba775e30a8d5c34d29797b82f6b5ee60598c5b008593ce9d4ecfa398719c",
+    "result1": "cabd7a07845adc16474a6af4b2bf41f826b70801283a140b8138a755974e11f8",
+    "cleanup0": "fb7fb99915f507256c11eaaa19c6428a9c4b9255d5b6f24c59caa19816ac97f8",
+    "secondReport": "6251a10c7b3883f1830a6510f18e828cc26ca1cefe35c2a677f7b8a502af18f2",
+    "secondIntents": "15fbd2d6988dc50269a988922e005d4ea9588f6c4c89e3be05cecd5a6cf7743e"
+  },
+  "safeHostReportingAddedAfterAcceptance": {
+    "observedTransferHostsOnly": true,
+    "noRawURLOrTokens": true,
+    "actualAcceptedDownloadHostnameWasNotRetained": true,
+    "successfulTrialAllowedDownloadHosts": [
+      "cws.icloud-content.com",
+      "cvws.icloud-content.com"
+    ],
+    "doNotClaimEitherIndividuallyObserved": true,
+    "networkRetriedForHostMetadata": false,
+    "focusedRuns": [
+      {
+        "runtime": "v22.23.5",
+        "pass": 22,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "6d20201f5b38e65ecbb8d88cdd2e20ec0286181b9f558ebd7542f92407901c2d"
+      },
+      {
+        "runtime": "v24.22.3",
+        "pass": 22,
+        "fail": 0,
+        "skip": 0,
+        "logSHA256": "d33b71324ab93e7ee935e0862ee8631a41b4b8b8f7da3659269812c985bea43a"
+      }
+    ],
+    "scriptSHA256": "4bd9e304b1e00e37a20e94d8d17a58ab5d9f469cd2591bf84136f4e1566d667d",
+    "testSHA256": "e1d0158a48e6ab2143c6c8f9b08e7c1e1bb957bee8a84eb74507fe5cac19e72a"
+  },
+  "limits": [
+    "Local synthetic identity, not real SIWA/publication/3km/CloudKitAvatarReader/A-B acceptance",
+    "Record absence is not physical Apple/CDN erasure or URL revocation proof",
+    "Ordinary Runtime host defaults remain empty and Firebase/AppServices cutover is not performed",
+    "No Cloudflare deployment, secret transfer, new rights, Production or fees"
+  ],
+  "localSeriesActivationDisabledAfterCompletion": true,
+  "privateClosureReceiptSHA256": "7c30215ea686c0df104fb6758bd780d641ddc69b5bda53c936c1db46ba97605b"
+}

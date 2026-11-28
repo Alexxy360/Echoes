@@ -43,3 +43,7 @@ Zgodnie z przykładem Apple builder zapisuje teraz assety jako value-only zamias
 ## Rzeczywista zgodność ASSETID
 
 [Wykonany pierwszy inwentarz serii](WYNIK_SERII_PLIKOW_DEVELOPMENT.md): create przyjęty, odczyt zawiera ASSETID, którego dotąd walidator nie dopuszczał. Cleanup-only w tej samej zgodzie/oknie:3API, oba rekordy usunięte warunkowo i nieobecne; pierwszy budżet29/64. Poprawka zamkniętej listy typów i1021/1021obuNode. Drugi zatwierdzony inwentarz pozostaje nieużyty i może być uruchomiony dopiero po świeżym checkpointcie kodu, przy niezmienionym nadal ważnym wspólnym terminie i potwierdzonym cleanup. Historycznych wyników nie przepisywać.
+
+## Transport plików zaliczony w drugiej próbie serii
+
+[Wynik](WYNIK_SERII_PLIKOW_DEVELOPMENT.md): oba warianty przeszły rzeczywiste granty/upload/przypięcie/exactlookup/settle/staryCAS/download-SHA i warunkowe sprzątanie. Cała seria65API/4uploady/2pobrania, oba inwentarze wykorzystane w oryginalnym oknie. Nie uruchamiać dalszych requestów w tej serii. Następne bramki dotyczą pełnego Runtime i autoryzacji/publikacji/retencji, nie kolejnych modeli transportu. Nazwy hostów będą raportowane bez URL w przyszłych próbach; historyczna wersja nie zachowała wybranego hosta downloadu, domyślne listy Runtime pozostają puste.

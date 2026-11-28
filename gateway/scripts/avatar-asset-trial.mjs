@@ -124,6 +124,7 @@ export async function prepareAssetTrial(parent) {
 export class AssetTrialTransport {
   #plan; #fetch; #check; #save; #counts = { api: 0, grants: 0, uploads: 0, downloads: 0 }; #pending = new Set();
   #diagnostics = null;
+  #observedHosts = { upload: new Set(), download: new Set() };
   #grants = new Set(); #uploads = new Set(); #downloads = new Set(); #downloadURLs = new Set(); #creates = new Set();
   constructor({ plan, fetchImplementation, check, saveIntent }) {
     this.#plan = verifyPrepared({ plan, sha256: digest(queryCanonical(plan)) }).plan;
@@ -131,6 +132,7 @@ export class AssetTrialTransport {
   }
   get counts() { return { ...this.#counts }; }
   get diagnostics() { return this.#diagnostics && { ...this.#diagnostics }; }
+  get observedTransferHosts() { return { upload: [...this.#observedHosts.upload].sort(), download: [...this.#observedHosts.download].sort() }; }
   get creates() { return new Set(this.#creates); }
   allowDownload(url) { this.#downloadURLs.add(avatarDownloadURL(url, avatarDownloadHosts(this.#plan.downloadHosts))); }
   async fetch(request, options = {}) {
@@ -233,6 +235,7 @@ export class AssetTrialTransport {
           fail("ASSET_TRIAL_RESPONSE");
         } finally { bytes.fill(0); }
       }
+      if (kind !== "api") this.#observedHosts[kind].add(new URL(request.url).hostname);
       return new Response(bytes, { status: response.status, headers: response.headers });
     } finally { if (reader) { await reader.cancel(); reader.releaseLock(); } else await response?.body?.cancel(); }
   }
@@ -368,6 +371,7 @@ export async function assetTrialCommand(args, { env = process.env, clock = Date.
   }
   const result = { status: protocolSucceeded && cleanupSucceeded ? "asset_protocol_verified" : "incomplete", protocolSucceeded, cleanupSucceeded, errorCode,
     failedPhase, failureDiagnostics, cleanupErrorCode,
+    observedTransferHosts: transport?.observedTransferHosts ?? { upload: [], download: [] },
     planSHA256: sha256, counts: transport?.counts ?? { api: 0, grants: 0, uploads: 0, downloads: 0 },
     pendingIO, providerPhysicalAssetDeletionVerified: false, realSessionAuthorizationVerified: false };
   if (started) await publishProtocolPrivateJSON(join(directory, "report.json"), result);

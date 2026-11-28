@@ -1,6 +1,6 @@
 # Seria R-03b — najwyżej dwie próby plików w jednym oknie
 
-**Zatwierdzona do dwóch prób; pierwsza zakończona, cleanup domknięte. Drugi inwentarz jeszcze nieużyty; obowiązuje pierwotny wspólny termin.** [Wynik poprzedniej próby](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md): oba uploady przyjęte, przypięcie HTTP 400, sprzątanie rekordów potwierdzone. Zużytego inwentarza nie ponawiamy.
+**Seria zakończona; dwa inwentarze zużyte. Drugi przyjęty w całości, oba cleanup potwierdzone. Brak dalszych prób w tym budżecie.** [Wynik poprzedniej próby](WYNIK_PIERWSZEJ_PROBY_PLIKOW_DEVELOPMENT.md): oba uploady przyjęte, przypięcie HTTP 400, sprzątanie rekordów potwierdzone. Zużytego inwentarza nie ponawiamy.
 
 Kontrakt SHA-256: **86327f1d532d5e757790fb930e976d0c321debc7aeb0442013926209d4dfdea1**. Dwa odrębne inwentarze:
 
@@ -34,3 +34,5 @@ Trwałe intenty przed żądaniami, jedna rezerwacja na inwentarz. Prywatny opera
 ## Wykonanie po uzyskaniu zgody
 
 Właściciel „zgadzam sie” zatwierdził limit2. Pierwszy inwentarz wykonano; create przyjęty, odczyt odmówiony przez ASSETID. Serię wstrzymano. Cleanup dokładnie tych samych rekordów zakończono osobno w tym samym oryginalnym oknie i pierwszym budżecie:29/64API łącznie, oba ID NOT_FOUND,0pending. Pierwotny raport nie został nadpisany, operator sprawdza dodatkowy dowód i jego budżet/termin. [Bieżący wynik](WYNIK_SERII_PLIKOW_DEVELOPMENT.md). Drugi inwentarz jeszcze niewykonany; nie rozpoczyna się nowego okna.
+
+Końcowy [wynik](WYNIK_SERII_PLIKOW_DEVELOPMENT.md):65API/4uploady/2pobrania, drugi protokół przyjęty, wszystkiepermity usunięte,0pending. Nie resetować okna lub inwentarzy.

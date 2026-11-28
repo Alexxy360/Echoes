@@ -77,6 +77,7 @@ test("asset trial uses production codecs/registry/assets/repository, exact bytes
   assert.deepEqual({ ...result.counts, api: 0 }, { api: 0, grants: 2, uploads: 2, downloads: 2 });
   assert.ok(result.counts.api < f.p.limits.apiRequests); assert.equal(f.records.size, 0);
   assert.equal(result.realSessionAuthorizationVerified, false); assert.equal(result.providerPhysicalAssetDeletionVerified, false);
+  assert.deepEqual(result.observedTransferHosts, { upload: ["cws.icloud-content.com"], download: ["cvws.icloud-content.com"] });
   const count = f.calls.length;
   await assert.rejects(assetTrialCommand(f.args, f.options)); assert.equal(f.calls.length, count);
   const output = await readFile(join(f.directory, "report.json"), "utf8"); assert.ok(!/SYNTHETIC|downloadURL|receipt|privateKey/.test(output));
@@ -119,6 +120,7 @@ test("unknown projected download host is never followed and both records are cle
   });
   const result = await assetTrialCommand(f.args, f.options);
   assert.equal(result.protocolSucceeded, false); assert.equal(result.cleanupSucceeded, true); assert.equal(result.counts.downloads, 0); assert.equal(f.records.size, 0);
+  assert.deepEqual(result.observedTransferHosts.download, []);
 });
 test("malformed bootstrap echo after remote create is reconciled and cleaned", async t => {
   const f = await setup(t); let malformed = false;
